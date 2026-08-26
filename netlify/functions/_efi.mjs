@@ -1,5 +1,9 @@
 import https from 'node:https';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 function ambiente() {
   return (process.env.EFI_ENV || 'homologation').toLowerCase() === 'production' ? 'production' : 'homologation';
 }
@@ -9,8 +13,10 @@ function baseUrl() {
 }
 
 function certificado() {
+  const arquivo = path.join(__dirname, 'efi-cert.p12');
+  if (fs.existsSync(arquivo)) return fs.readFileSync(arquivo);
   const b64 = (process.env.EFI_CERT_P12_BASE64 || '').trim();
-  if (!b64) throw new Error('EFI_CERT_P12_BASE64 não configurado.');
+  if (!b64) throw new Error('Certificado da Efí não encontrado.');
   return Buffer.from(b64, 'base64');
 }
 
