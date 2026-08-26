@@ -1,3 +1,4 @@
+.
 # Capivarinha Love — integração Pix com Efí Bank
 
 Este pacote já está preparado para o fluxo:
