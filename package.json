@@ -1,0 +1,9 @@
+{
+  "name": "capivarinha-love",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Site + funções de pagamento Pix (Efí Bank) do Capivarinha Love",
+  "dependencies": {
+    "@netlify/blobs": "^8"
+  }
+}
