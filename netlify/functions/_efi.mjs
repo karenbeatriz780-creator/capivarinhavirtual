@@ -12,6 +12,12 @@ function baseUrl() {
   return ambiente() === 'production' ? 'https://pix.api.efipay.com.br' : 'https://pix-h.api.efipay.com.br';
 }
 
+export function certificadoDisponivel() {
+  const arquivo = path.join(pastaAtual, 'efi-cert.p12');
+  if (fs.existsSync(arquivo)) return true;
+  return !!(process.env.EFI_CERT_P12_BASE64 || '').trim();
+}
+
 function certificado() {
   const arquivo = path.join(pastaAtual, 'efi-cert.p12');
   if (fs.existsSync(arquivo)) return fs.readFileSync(arquivo);
