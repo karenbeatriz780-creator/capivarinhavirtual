@@ -1,4 +1,4 @@
-import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
+import { obterToken, efiRequest, erroEfi, modoTeste, certificadoDisponivel } from './_efi.mjs';
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -19,7 +19,7 @@ export default async (req) => {
     EFI_CLIENT_ID: !!(process.env.EFI_CLIENT_ID || '').trim(),
     EFI_CLIENT_SECRET: !!(process.env.EFI_CLIENT_SECRET || '').trim(),
     EFI_PIX_KEY: !!chave,
-    EFI_CERT_P12_BASE64: !!(process.env.EFI_CERT_P12_BASE64 || '').trim(),
+    EFI_CERT_P12_BASE64: certificadoDisponivel(),
     EFI_ENV: (process.env.EFI_ENV || 'homologation').toLowerCase(),
     EFI_WEBHOOK_URL: !!(process.env.EFI_WEBHOOK_URL || '').trim(),
     EFI_WEBHOOK_SECRET: !!(process.env.EFI_WEBHOOK_SECRET || '').trim()
@@ -36,16 +36,4 @@ export default async (req) => {
       const r = await efiRequest('/v2/webhook/' + encodeURIComponent(chave), { token });
       webhook = r.ok
         ? { consultado: true, configurado: true, detalhe: r.data }
-        : { consultado: true, configurado: false, status: r.status, detalhe: erroEfi(r.data, r.status) };
-    }
-    return json({
-      ok: true,
-      ambiente: modoTeste() ? 'homologation' : 'production',
-      autenticacao: 'ok',
-      vars,
-      webhook
-    });
-  } catch (e) {
-    return json({ ok: false, etapa: 'autenticacao', vars, erro: e && e.message ? e.message : 'Falha ao autenticar na Efí.' }, 502);
-  }
-};
+        : { consultado: true, configurado: false, status: r.status, detalhe: erroEfi(r.data,
