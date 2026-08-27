@@ -11,7 +11,14 @@ function esc(s) {
 export default async (req) => {
   try {
     const url = new URL(req.url);
-    const id = url.searchParams.get('id') || '';
+    let id = url.searchParams.get('id') || '';
+    if (!id) {
+      // reforço: se por algum motivo o id não veio certo na query string,
+      // tenta pegar do próprio caminho da URL (ex.: .../og/ABC123)
+      const partes = url.pathname.split('/').filter(Boolean);
+      id = decodeURIComponent(partes[partes.length - 1] || '');
+      if (id === 'og') id = '';
+    }
     const origem = url.origin;
 
     let titulo = 'Você tem um presente especial esperando! 💕';
