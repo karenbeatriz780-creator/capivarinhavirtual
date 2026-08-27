@@ -7,6 +7,6 @@
   included_files = ["netlify/functions/efi-cert.p12"]
 
 [[redirects]]
-  from = "/p/:id"
-  to = "/.netlify/functions/og?id=:id"
+  from = "/p/*"
+  to = "/.netlify/functions/og?id=:splat"
   status = 200
