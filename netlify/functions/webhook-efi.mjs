@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 
-const HORAS_EXPIRA = { relampago: 48 };
+const HORAS_48 = 48;
 
 function seguroIgual(a, b) {
   const aa = Buffer.from(String(a || ''));
@@ -45,7 +45,7 @@ export default async (req) => {
       presente.pago = true;
       presente.pagoEm = presente.pagoEm || agora;
       presente.criadoEm = presente.criadoEm || agora;
-      presente.expiraEm = HORAS_EXPIRA[presente.produto] ? presente.criadoEm + HORAS_EXPIRA[presente.produto] * 3600 * 1000 : null;
+      presente.expiraEm = (presente.duracao === 'h48') ? presente.criadoEm + HORAS_48 * 3600 * 1000 : null;
       presente.pagamento = Object.assign({}, presente.pagamento || {}, {
         provedor: 'efi', txid, status: 'CONCLUIDA', e2eid: evento.endToEndId || null,
         valorRecebido: evento.valor || null, pagoEm: presente.pagoEm
