@@ -609,7 +609,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 /* --- CORPO DO PRESENTE --- */
 .g-body{padding-bottom:4rem;}
 .g-hero{position:relative;padding:3.4rem 1.4rem 2.6rem;text-align:center;overflow:hidden;
-  background:radial-gradient(ellipse at 50% 0%,#3A1424,transparent 70%);}
+  background-color:#0D0206;background-image:radial-gradient(ellipse at 50% 0%,#3A1424,transparent 70%);}
 .g-hero-cover{width:min(190px,52vw);aspect-ratio:1;border-radius:26px;margin:0 auto 1.5rem;overflow:hidden;
   box-shadow:0 22px 52px rgba(227,43,109,.4);border:3px solid rgba(255,255,255,.14);}
 .g-hero-cover img{width:100%;height:100%;object-fit:cover;}
@@ -648,9 +648,9 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .tl-i{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:center;
   margin-bottom:2.3rem;opacity:0;transform:translateY(26px);transition:all .75s var(--ease);}
 .tl-i.in{opacity:1;transform:none;}
-.tl-i::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:15px;height:15px;border-radius:50%;background:var(--rose);border:3px solid var(--gbg);
-  box-shadow:0 0 0 4px rgba(227,43,109,.22);z-index:3;}
+.tl-i::before{content:"♥";display:flex;align-items:center;justify-content:center;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:17px;height:17px;border-radius:50%;background:var(--rose);border:3px solid var(--gbg);
+  box-shadow:0 0 0 4px rgba(227,43,109,.22);z-index:3;color:#fff;font-size:9px;line-height:1;}
 .tl-i:nth-child(odd) .tl-card{grid-column:1;}
 .tl-i:nth-child(odd) .tl-txt{grid-column:2;text-align:left;}
 .tl-i:nth-child(even) .tl-card{grid-column:2;}
@@ -674,7 +674,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   .tl{padding-left:2.9rem;}
   .tl::before{left:.75rem;transform:none;}
   .tl-i{grid-template-columns:1fr;gap:.55rem;margin-bottom:1.9rem;align-items:start;}
-  .tl-i::before{left:.75rem;top:.4rem;transform:translate(-50%,0);width:12px;height:12px;border-width:2.5px;}
+  .tl-i::before{left:-2.15rem;top:.4rem;transform:translate(-50%,0);width:12px;height:12px;border-width:2.5px;font-size:7px;}
   .tl-i:nth-child(odd) .tl-card,.tl-i:nth-child(even) .tl-card{grid-column:1;}
   .tl-i:nth-child(odd) .tl-txt,.tl-i:nth-child(even) .tl-txt{grid-column:1;grid-row:1;text-align:left;}
   .tl-card{max-width:12.5rem;}
@@ -784,7 +784,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 
 /* --- ROLETA CASSINO --- */
 .roleta-stage{position:relative;display:flex;flex-direction:column;align-items:center;}
-.wheel-box{position:relative;width:min(320px,86vw);aspect-ratio:1;margin:.5rem auto 1.4rem;}
+.wheel-box{position:relative;width:min(320px,86vw);aspect-ratio:1;margin:.5rem auto 1.4rem;flex-shrink:0;}
 .wheel-rim{position:absolute;inset:0;border-radius:50%;
   background:conic-gradient(from 0deg,#F6D57A,#B8860B,#FFE9A8,#B8860B,#F6D57A,#8C6209,#FFE9A8,#B8860B,#F6D57A);
   box-shadow:0 0 0 3px #7A5307,0 16px 44px rgba(0,0,0,.6),inset 0 0 22px rgba(0,0,0,.4);}
@@ -796,11 +796,11 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   transition:transform 5.4s cubic-bezier(.14,.85,.16,1);filter:drop-shadow(0 6px 16px rgba(0,0,0,.45));}
 .wheel-svg text{font-family:'Inter',sans-serif;font-weight:800;fill:#fff;
   paint-order:stroke;stroke:rgba(0,0,0,.28);stroke-width:2.6px;stroke-linejoin:round;}
-.wheel-hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:19%;height:19%;aspect-ratio:auto;
+.wheel-hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:19%;height:19%;
   border-radius:50%;background:radial-gradient(circle at 34% 30%,#FFF6DA,#E8B44A 62%,#B8860B);
   display:flex;align-items:center;justify-content:center;z-index:5;
   box-shadow:0 5px 16px rgba(0,0,0,.5),inset 0 -2px 6px rgba(0,0,0,.25);}
-.wheel-hub svg{width:46%;height:46%;fill:var(--rose-deep);display:block;}
+.wheel-hub svg{width:46%;height:46%;fill:var(--rose-deep);display:block;transform:translateY(6%);}
 .wheel-ptr{position:absolute;top:-3.5%;left:50%;transform:translateX(-50%);z-index:6;
   filter:drop-shadow(0 4px 8px rgba(0,0,0,.65));width:11%;}
 .wheel-ptr svg{width:100%;display:block;}
