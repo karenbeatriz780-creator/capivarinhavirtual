@@ -1002,6 +1002,14 @@ function presentes(){ return jget('cl_presentes',{}); }
 function salvarPresente(p){
   var all=presentes(); all[p.id]=p;
   var ok=jset('cl_presentes',all);
+  if(!ok){
+    var idsAntigoPrimeiro=Object.keys(all).sort(function(a,b){ return (all[a].criadoEm||0)-(all[b].criadoEm||0); });
+    while(!ok && idsAntigoPrimeiro.length>1){
+      var maisAntigo=idsAntigoPrimeiro.shift();
+      delete all[maisAntigo];
+      ok=jset('cl_presentes',all);
+    }
+  }
   if(!ok) toast("Espaço cheio no navegador. Apague um presente antigo em “Meus presentes”.");
   return ok;
 }
