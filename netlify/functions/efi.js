@@ -3,22 +3,32 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// A Netlify empacota estas functions como CJS por baixo dos panos, mesmo
-// sendo arquivos .mjs — nesse formato o __dirname nativo já vem pronto,
-// mas import.meta.url fica vazio e quebraria a leitura do certificado.
-// Por isso usamos __dirname quando ele existe (caso real na Netlify) e só
-// caímos pra import.meta.url fora desse empacotador (ex.: testes locais).
-function diretorioAtual() {
-  if (typeof __dirname !== 'undefined') return __dirname;
-  return path.dirname(fileURLToPath(import.meta.url));
-}
-const pastaAtual = diretorioAtual();
 // Certificados costumam passar de 3KB em Base64, e a soma de todas as
 // variáveis de ambiente de uma function na Netlify não pode passar de 4KB
 // (limite da AWS Lambda por baixo do capô). Por isso o certificado é lido
-// de um arquivo enviado junto com o código (netlify/functions/efi-cert.p12),
-// e só cai para a variável de ambiente EFI_CERT_P12_BASE64 se esse arquivo
-// não existir — útil pra testes locais ou certificados pequenos.
+// de um arquivo enviado junto com o código (netlify/functions/efi-cert.p12).
+// A forma como a Netlify empacota e carrega as functions faz com que nem
+// __dirname nem import.meta.url sejam confiáveis aqui, então procuramos o
+// arquivo em vários lugares possíveis e usamos o primeiro que existir.
+function localizarCertificado() {
+  const nome = 'efi-cert.p12';
+  const candidatos = [];
+  if (process.env.LAMBDA_TASK_ROOT) {
+    candidatos.push(path.join(process.env.LAMBDA_TASK_ROOT, 'netlify', 'functions', nome));
+  }
+  candidatos.push(path.join(process.cwd(), 'netlify', 'functions', nome));
+  candidatos.push(path.join(process.cwd(), nome));
+  if (typeof __dirname !== 'undefined') {
+    candidatos.push(path.join(__dirname, nome));
+  }
+  try {
+    candidatos.push(path.join(path.dirname(fileURLToPath(import.meta.url)), nome));
+  } catch {}
+  for (const c of candidatos) {
+    try { if (c && fs.existsSync(c)) return c; } catch {}
+  }
+  return null;
+}
 function ambiente() {
   return (process.env.EFI_ENV || 'homologation').toLowerCase() === 'production' ? 'production' : 'homologation';
 }
@@ -28,14 +38,13 @@ function baseUrl() {
 }
 
 export function certificadoDisponivel() {
-  const arquivo = path.join(pastaAtual, 'efi-cert.p12');
-  if (fs.existsSync(arquivo)) return true;
+  if (localizarCertificado()) return true;
   return !!(process.env.EFI_CERT_P12_BASE64 || '').trim();
 }
 
 function certificado() {
-  const arquivo = path.join(pastaAtual, 'efi-cert.p12');
-  if (fs.existsSync(arquivo)) return fs.readFileSync(arquivo);
+  const arquivo = localizarCertificado();
+  if (arquivo) return fs.readFileSync(arquivo);
   const b64 = (process.env.EFI_CERT_P12_BASE64 || '').trim();
   if (!b64) throw new Error('Certificado da Efí não encontrado: nem netlify/functions/efi-cert.p12 nem EFI_CERT_P12_BASE64 estão configurados.');
   return Buffer.from(b64, 'base64');
