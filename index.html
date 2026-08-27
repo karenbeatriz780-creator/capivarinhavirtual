@@ -723,16 +723,18 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   color:var(--rose);margin-bottom:.45rem;}
 .tl-c{font-size:.93rem;color:#E6D6DD;line-height:1.6;}
 @media(max-width:600px){
-  .tl{padding-left:2.9rem;}
-  .tl::before{left:.75rem;transform:none;}
-  .tl-i{grid-template-columns:1fr;gap:.55rem;margin-bottom:1.9rem;align-items:start;}
-  .tl-i::before{left:-2.15rem;top:.4rem;transform:translate(-50%,0);width:12px;height:12px;border-width:2.5px;font-size:7px;}
-  .tl-i:nth-child(odd) .tl-card,.tl-i:nth-child(even) .tl-card{grid-column:1;}
-  .tl-i:nth-child(odd) .tl-txt,.tl-i:nth-child(even) .tl-txt{grid-column:1;grid-row:1;text-align:left;}
-  .tl-card{max-width:12.5rem;}
-  .tl-hand{font-size:.92rem;min-height:2.1em;padding:.4rem .3rem .6rem;}
-  .tl-d{margin-bottom:.15rem;}
-  .tl-c{font-size:.82rem;color:#B99BA8;}
+  .tl{padding-left:0;}
+  .tl::before{left:50%;transform:translateX(-50%);}
+  .tl-i{grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1.9rem;align-items:start;}
+  .tl-i::before{left:50%;top:.5rem;transform:translate(-50%,0);width:13px;height:13px;border-width:2.5px;font-size:7px;}
+  .tl-i:nth-child(odd) .tl-card{grid-column:1;padding-right:.2rem;}
+  .tl-i:nth-child(odd) .tl-txt{grid-column:2;grid-row:1;text-align:left;padding-left:.7rem;}
+  .tl-i:nth-child(even) .tl-card{grid-column:2;padding-left:.2rem;}
+  .tl-i:nth-child(even) .tl-txt{grid-column:1;grid-row:1;text-align:right;padding-right:.7rem;}
+  .tl-card{max-width:100%;}
+  .tl-hand{font-size:.8rem;min-height:2em;padding:.35rem .2rem .5rem;}
+  .tl-d{margin-bottom:.15rem;font-size:.66rem;}
+  .tl-c{font-size:.76rem;color:#B99BA8;}
 }
 
 /* stories */
@@ -995,6 +997,111 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   border-radius:100px;display:flex;align-items:center;gap:.4rem;white-space:nowrap;}
 .lock-tag svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.2;}
 
+/* ---------- PRÉVIA NO WIZARD ---------- */
+.wz-acoes{display:flex;gap:.6rem;}
+.wz-acoes .btn{flex:1;}
+.wz-prev{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;flex:0 0 auto!important;
+  padding-left:1.1rem;padding-right:1.1rem;}
+.wz-prev svg{width:16px;height:16px;}
+.prev-bar{position:fixed;left:0;right:0;bottom:0;z-index:200;display:flex;align-items:center;
+  justify-content:space-between;gap:.8rem;padding:.85rem 1.1rem;background:rgba(13,2,6,.94);
+  backdrop-filter:blur(8px);border-top:1px solid rgba(255,255,255,.12);}
+.prev-bar span{display:inline-flex;align-items:center;gap:.45rem;color:#fff;font-size:.8rem;font-weight:600;}
+.prev-bar svg{width:15px;height:15px;stroke:var(--rose-1);}
+.prev-bar button{border:none;cursor:pointer;background:var(--rose);color:#fff;font-weight:700;
+  padding:.65rem 1.2rem;border-radius:100px;font-size:.82rem;white-space:nowrap;}
+.pk-dur .pp{font-size:1.5rem;font-weight:800;color:var(--rose);margin:.4rem 0 .3rem;}
+
+/* ---------- CARDS DE PACOTE EM BLOCO ---------- */
+.planb{position:relative;border-radius:30px;padding:2rem 1.6rem 1.8rem;overflow:hidden;
+  display:flex;flex-direction:column;min-height:430px;}
+.pb-rib{position:absolute;top:1rem;left:50%;transform:translateX(-50%);background:#1E3A20;color:#fff;
+  font-size:.66rem;font-weight:800;letter-spacing:.12em;padding:.5rem 1.1rem;border-radius:100px;
+  white-space:nowrap;z-index:3;}
+.planb .pb-rib{background:rgba(0,0,0,.55);}
+.pb-top{position:relative;z-index:2;}
+.pb-t{font-size:clamp(1.6rem,6vw,2.15rem);font-weight:800;line-height:1.05;letter-spacing:-.02em;margin-top:1.4rem;}
+.pb-pr{font-size:.9rem;font-weight:700;margin-top:.5rem;opacity:.85;}
+.pb-pr span{font-weight:500;opacity:.7;}
+.pb-cta{margin-top:1.1rem;border:none;cursor:pointer;border-radius:100px;padding:.85rem 1.6rem;
+  font-size:1rem;font-weight:700;display:inline-flex;align-items:center;gap:.6rem;transition:transform .2s;}
+.pb-cta:hover{transform:translateY(-2px);}
+.pb-cta span{font-size:1.1rem;}
+.pb-mock{position:relative;flex:1;display:flex;align-items:flex-end;justify-content:center;
+  gap:.6rem;margin-top:1.4rem;min-height:170px;}
+.pb-list{list-style:none;margin-top:1.2rem;display:flex;flex-wrap:wrap;gap:.4rem .9rem;position:relative;z-index:2;}
+.pb-list li{display:flex;align-items:center;gap:.32rem;font-size:.72rem;opacity:.85;}
+.pb-list svg{width:12px;height:12px;flex:none;}
+
+.pb-completo{background:#D8E9BC;color:#1E3A20;}
+.pb-completo .pb-cta{background:#1E3A20;color:#fff;}
+.pb-completo .pb-list svg{stroke:#1E3A20;}
+.pb-carta{background:#F6D9E4;color:#6E1030;}
+.pb-carta .pb-cta{background:#fff;color:#B5124E;}
+.pb-carta .pb-list svg{stroke:#B5124E;}
+.pb-livro{background:#9C7BE8;color:#fff;}
+.pb-livro .pb-cta{background:#fff;color:#5B3AA8;}
+.pb-livro .pb-list svg{stroke:#fff;}
+.pb-relampago{background:#F5C86B;color:#4A3208;}
+.pb-relampago .pb-cta{background:#4A3208;color:#fff;}
+.pb-relampago .pb-list svg{stroke:#4A3208;}
+.pb-album{background:#A9D8E8;color:#123B4A;}
+.pb-album .pb-cta{background:#123B4A;color:#fff;}
+.pb-album .pb-list svg{stroke:#123B4A;}
+.pb-jogo{background:#2A1620;color:#fff;}
+.pb-jogo .pb-cta{background:var(--rose);color:#fff;}
+.pb-jogo .pb-list svg{stroke:var(--rose-1);}
+
+/* mockups desenhados */
+.mk-ph{width:96px;background:#111;border-radius:14px;padding:5px;box-shadow:0 14px 30px rgba(0,0,0,.35);}
+.mk-ph.mk-a{transform:rotate(-4deg) translateY(6px);}
+.mk-ph.mk-b{transform:rotate(5deg);}
+.mk-ph.mk-solo{width:118px;transform:rotate(-2deg);}
+.mk-scr{background:#FFF7F9;border-radius:10px;height:150px;overflow:hidden;padding:8px;position:relative;}
+.mk-ph.mk-dark .mk-scr{background:#160B12;}
+.mk-hero{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.mk-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(45deg,#FA7E1E,#E32B6D,#833AB4);}
+.mk-nm{width:56px;height:7px;border-radius:4px;background:var(--rose-1);}
+.mk-ct{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:100%;margin-top:3px;}
+.mk-ct i{height:19px;border-radius:4px;background:linear-gradient(135deg,var(--rose-deep),var(--rose));}
+.mk-clock{color:#F5C86B;font-weight:800;font-size:1.1rem;margin-top:6px;}
+.mk-tl,.mk-grid{display:grid;gap:5px;}
+.mk-tl{grid-template-columns:1fr;}
+.mk-grid{grid-template-columns:1fr 1fr;}
+.mk-pol{background:#fff;padding:3px 3px 8px;transform:rotate(var(--r,0deg));box-shadow:0 3px 8px rgba(0,0,0,.16);}
+.mk-pol i{display:block;height:38px;background:linear-gradient(150deg,#5A2740,#2C3E50);}
+.mk-pol b{display:block;height:4px;width:70%;margin:4px auto 0;border-radius:3px;background:#e5d8dd;}
+.mk-carta{background:linear-gradient(170deg,#FFFCF8,#FDF2E9);border-radius:6px;height:100%;padding:9px;position:relative;}
+.mk-foto{position:absolute;top:7px;right:7px;width:26px;height:30px;background:#fff;padding:2px;
+  transform:rotate(7deg);box-shadow:0 3px 7px rgba(0,0,0,.2);}
+.mk-foto::after{content:"";display:block;width:100%;height:100%;background:linear-gradient(150deg,#5A2740,#2C3E50);}
+.mk-l{height:4px;border-radius:3px;background:#d8c8bd;margin-bottom:5px;}
+.mk-l.l1{width:44%;background:#B5124E;height:6px;margin-top:24px;}
+.mk-l.l2{width:80%;} .mk-l.l3{width:72%;} .mk-l.l4{width:60%;}
+.mk-sig{width:38px;height:7px;border-radius:3px;background:#B5124E;margin:14px 0 0 auto;}
+.mk-lacre{position:absolute;bottom:8px;right:9px;width:14px;height:14px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#C0392B,#8B1A12);}
+.mk-livro{display:flex;position:relative;width:150px;border-radius:5px;overflow:hidden;
+  box-shadow:0 16px 34px rgba(0,0,0,.4);transform:rotate(-2deg);}
+.mk-lp{width:50%;height:140px;padding:10px;}
+.mk-lp-e{background:#F3E9D6;} .mk-lp-d{background:#FBF4E8;}
+.mk-lomb{position:absolute;left:50%;top:0;bottom:0;width:5px;margin-left:-2.5px;
+  background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(0,0,0,.06),rgba(0,0,0,.28));}
+.mk-roleta{width:88px;height:88px;border-radius:50%;position:relative;overflow:hidden;margin:6px auto 0;
+  box-shadow:0 0 0 4px #E8B44A;}
+.mk-roleta span{position:absolute;inset:0;clip-path:polygon(50% 50%,50% 0,93% 25%);transform-origin:50% 50%;}
+.mk-roleta span:nth-child(1){background:var(--rose);transform:rotate(0deg);}
+.mk-roleta span:nth-child(2){background:#6E1030;transform:rotate(60deg);}
+.mk-roleta span:nth-child(3){background:var(--rose);transform:rotate(120deg);}
+.mk-roleta span:nth-child(4){background:#6E1030;transform:rotate(180deg);}
+.mk-roleta span:nth-child(5){background:var(--rose);transform:rotate(240deg);}
+.mk-roleta span:nth-child(6){background:#6E1030;transform:rotate(300deg);}
+.mk-hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:22px;height:22px;
+  border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF6DA,#E8B44A 62%,#B8860B);}
+.mk-btn{width:64px;height:12px;border-radius:100px;background:linear-gradient(180deg,#F6D57A,#E8B44A);
+  margin:10px auto 0;}
+@media(max-width:640px){ .planb{min-height:380px;padding:1.6rem 1.2rem 1.4rem;} }
+
 /* --- NÚMEROS GIGANTES EM FAIXAS (apresentação) --- */
 .marq-full{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
   gap:2px;overflow:hidden;pointer-events:none;}
@@ -1141,27 +1248,26 @@ var CONFIG = {
 };
 
 var PACOTES = {
-  completo:  {nome:"Pacote Completo", preco:25.99, dur:"Pra sempre", horas:null,
-              desc:"Tudo liberado, sem limite de tempo. Fotos, linha do tempo, stories, carta, música e todos os jogos.", icone:"💝", destaque:true},
-  livro:     {nome:"Livro Interativo", preco:16, dur:"Pra sempre", horas:null,
+  completo:  {nome:"Retrospectiva Completa", preco:25.99, preco48:16,
+              desc:"Tudo liberado: fotos, linha do tempo, stories, carta, contador ao vivo e todos os jogos.", icone:"💝", destaque:true},
+  livro:     {nome:"Livro Interativo", preco:16, preco48:12,
               desc:"Um livro digital de verdade — folheia as páginas, tem raspadinha surpresa e conta cada segundo de vocês.", icone:"📖"},
-  relampago: {nome:"Pacote 48 horas", preco:16, dur:"48 horas no ar", horas:48,
-              desc:"O pacote completo, mas o link expira em 48 horas. Ideal pra surpresa de última hora.", icone:"⚡"},
-  album:     {nome:"Álbum de Fotos", preco:9,  dur:"Pra sempre", horas:null,
-              desc:"Até 10 fotos em linha do tempo e em stories, com data e legenda.", icone:"📸"},
-  jogo:      {nome:"Jogo do Casal", preco:9,  dur:"Pra sempre", horas:null,
-              desc:"Roleta do encontro, caça-palavras, quebra-cabeça e quiz — só os jogos.", icone:"🎲"},
-  carta:     {nome:"Carta Virtual", preco:6,  dur:"Pra sempre", horas:null,
-              desc:"Só a carta, com abertura de envelope e assinatura de quem enviou.", icone:"💌"}
+  carta:     {nome:"Carta Virtual", preco:6, preco48:4,
+              desc:"A carta com foto colada, abertura de envelope, lacre e assinatura de quem enviou.", icone:"💌", destaque:true}
 };
 var RECURSOS = {
   completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1},
   livro:     {fotos:14, carta:0, musica:0, contador:1, timeline:1, stories:0, jogos:1},
-  relampago: {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1},
-  album:     {fotos:10, carta:0, musica:0, contador:0, timeline:1, stories:1, jogos:0},
-  jogo:      {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:1},
-  carta:     {fotos:0,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0}
+  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0}
 };
+var DURACOES = {
+  vitalicio: {nome:'Pra sempre', desc:'O link fica no ar pra sempre. Dá pra revisitar quando quiser.', horas:null},
+  h48:       {nome:'48 horas',   desc:'O link some do ar 48 horas depois. Ideal pra surpresa de última hora.', horas:48}
+};
+function precoDe(produto, duracao){
+  var p=PACOTES[produto]; if(!p) return 0;
+  return duracao==='h48' ? p.preco48 : p.preco;
+}
 
 /* ---------- armazenamento com fallback ---------- */
 var MEM = {};
@@ -1223,6 +1329,10 @@ function copiar(txt,msg){
   }
 }
 function fmtData(d){ if(!d) return ''; var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function fmtPreco(v){
+  v=Number(v)||0;
+  return (Number.isInteger(v)?String(v):v.toFixed(2).replace('.',','));
+}
 var MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 var MESES_C=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 function fmtMesAno(d){ if(!d) return ''; var p=d.split('-'); return MESES_C[parseInt(p[1],10)-1]+' '+p[0]; }
@@ -1340,6 +1450,7 @@ var IC={
   refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 6"/><path d="M20 5v6h-6"/></svg>',
   gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M3 13h18M12 9v12"/><path d="M12 9S9.5 4 7.5 4a2.5 2.5 0 0 0 0 5M12 9s2.5-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>',
   mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5.5 12 5.5 22.5 12 22.5 12 19 18.5 12 18.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2"/></svg>',
   photo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="M3 17l5-4 4 3 3-2 6 5"/></svg>',
   play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
   pause:'<svg viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>',
@@ -1722,9 +1833,42 @@ function cardAvaliacao(d, apagavel){
   '</article>';
 }
 
+function mockPacote(k){
+  function tela(inner,cls){ return '<div class="mk-ph '+(cls||'')+'"><div class="mk-scr">'+inner+'</div></div>'; }
+  var polas=function(n){
+    var out='';
+    for(var i=0;i<n;i++) out+='<div class="mk-pol" style="--r:'+((i%2)?3:-3)+'deg"><i></i><b></b></div>';
+    return out;
+  };
+  if(k==='completo'){
+    return tela('<div class="mk-hero"><div class="mk-av"></div><div class="mk-nm"></div><div class="mk-ct">'+
+      '<i></i><i></i><i></i><i></i><i></i><i></i></div></div>','mk-a')+
+      tela('<div class="mk-tl">'+polas(2)+'</div>','mk-b');
+  }
+  if(k==='carta'){
+    return tela('<div class="mk-carta"><div class="mk-foto"></div>'+
+      '<div class="mk-l l1"></div><div class="mk-l l2"></div><div class="mk-l l3"></div>'+
+      '<div class="mk-l l4"></div><div class="mk-sig"></div><div class="mk-lacre"></div></div>','mk-solo');
+  }
+  if(k==='livro'){
+    return '<div class="mk-livro"><div class="mk-lp mk-lp-e"><div class="mk-l l1"></div><div class="mk-l l2"></div></div>'+
+      '<div class="mk-lp mk-lp-d"><div class="mk-pol" style="--r:-2deg"><i></i><b></b></div></div>'+
+      '<div class="mk-lomb"></div></div>';
+  }
+  if(k==='jogo'){
+    return tela('<div class="mk-roleta"><span></span><span></span><span></span><span></span><span></span><span></span>'+
+      '<div class="mk-hub"></div></div><div class="mk-btn"></div>','mk-solo mk-dark');
+  }
+  if(k==='album'){
+    return tela('<div class="mk-grid">'+polas(4)+'</div>','mk-solo');
+  }
+  return tela('<div class="mk-hero"><div class="mk-av"></div><div class="mk-nm"></div>'+
+    '<div class="mk-clock">48h</div></div>','mk-solo mk-dark');
+}
+
 function telaHome(){
   var media=mediaNota(), total=todasAvaliacoes().length;
-  var planos = ['completo','livro','relampago','album','jogo','carta'].map(function(k){
+  var planos = ['completo','carta','livro'].map(function(k){
     var p=PACOTES[k], r=RECURSOS[k];
     var itens=[];
     if(r.fotos) itens.push('Até '+r.fotos+' fotos com data e legenda');
@@ -1736,17 +1880,17 @@ function telaHome(){
     if(r.jogos) itens.push(k==='jogo' ? 'Roleta, caça-palavras, quebra-cabeça e quiz' : 'Todos os 4 jogos inclusos');
     itens.push('Link + QR Code pra enviar');
     var offs=[];
-    if(k==='relampago') offs.push('Some do ar depois de 48 horas');
     if(!r.jogos && k!=='jogo') offs.push('Sem os jogos do casal');
     if(!r.fotos && k!=='jogo') offs.push('Sem fotos');
-    return '<article class="plan rv '+(p.destaque?'feat':'')+'">'+
-      (p.destaque?'<span class="rib">Mais escolhido</span>':'')+
-      '<div class="ico">'+p.icone+'</div>'+
-      '<h3>'+p.nome+'</h3><div class="dur">'+p.dur+'</div>'+
-      '<div class="pr"><sup>R$</sup>'+p.preco+'<small>pagamento único, sem assinatura</small></div>'+
-      '<ul>'+ itens.map(function(i){ return '<li>'+IC.check+'<span>'+i+'</span></li>'; }).join('') +
-             offs.map(function(i){ return '<li class="off">'+IC.x+'<span>'+i+'</span></li>'; }).join('') +'</ul>'+
-      '<button class="btn '+(p.destaque?'btn-primary':'btn-ghost')+' btn-block" data-plano="'+k+'">Escolher este</button>'+
+    return '<article class="planb rv pb-'+k+'">'+
+      (p.destaque?'<span class="pb-rib">★ Mais popular</span>':'')+
+      '<div class="pb-top">'+
+        '<h3 class="pb-t">'+p.nome+'.</h3>'+
+        '<div class="pb-pr">a partir de R$ '+fmtPreco(p.preco48)+'</div>'+
+        '<button class="pb-cta" data-plano="'+k+'">Criar agora <span>↗</span></button>'+
+      '</div>'+
+      '<div class="pb-mock">'+mockPacote(k)+'</div>'+
+      '<ul class="pb-list">'+ itens.slice(0,4).map(function(i){ return '<li>'+IC.check+'<span>'+i+'</span></li>'; }).join('') +'</ul>'+
     '</article>';
   }).join('');
 
@@ -1811,6 +1955,7 @@ function telaHome(){
     '<div class="tabs" id="tabs">'+
       '<button class="tab on" data-t="retro">'+IC.heartO+'Retrospectiva</button>'+
       '<button class="tab" data-t="album">'+IC.gift+'Álbum do casal</button>'+
+      '<button class="tab" data-t="jogos">🎲 Jogos</button>'+
       '<button class="tab" data-t="carta">'+IC.mail+'Cartas e mensagens</button>'+
     '</div>'+
     '<div class="phone-stage"><div class="phone"><div class="phone-scr" id="phoneScr"></div></div></div>'+
@@ -1915,11 +2060,11 @@ function previewFake(tipo){
   var s=el('phoneScr'); if(!s) return;
   var css='position:absolute;inset:0;background:#120A0F;color:#fff;font-family:Inter,sans-serif;overflow:hidden;';
   if(tipo==='retro'){
-    s.innerHTML='<div style="'+css+'display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.4rem">'+
-      '<div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:#FF9EC2;font-weight:800;margin-bottom:.8rem">Nossa história</div>'+
-      '<div id="pvN" style="font-family:Fraunces,serif;font-size:3.4rem;font-weight:600;line-height:1;background:linear-gradient(180deg,#fff,#FFB3CF);-webkit-background-clip:text;background-clip:text;color:transparent">0</div>'+
+    s.innerHTML='<div style="'+css+'display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.2rem">'+
+      '<div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:#FF9EC2;font-weight:800;margin-bottom:.6rem">Nossa história</div>'+
+      '<div id="pvN" style="font-family:Fraunces,serif;font-size:3.1rem;font-weight:600;line-height:1;background:linear-gradient(180deg,#fff,#FFB3CF);-webkit-background-clip:text;background-clip:text;color:transparent">0</div>'+
       '<div style="font-size:.78rem;color:#D9BEC9;margin-top:.5rem;font-weight:600">dias juntos</div>'+
-      '<div style="font-family:\'Grand Hotel\',cursive;font-size:1.6rem;color:#FF9EC2;margin-top:1.4rem">Ana &amp; Lucas</div>'+
+      '<div style="font-family:\'Grand Hotel\',cursive;font-size:1.5rem;color:#FF9EC2;margin-top:1.1rem">Ana &amp; Lucas</div>'+
       '<div style="font-size:.68rem;color:#9C8590;margin-top:.4rem">e a contagem não para 💗</div>'+
       '<div style="position:absolute;inset:0;pointer-events:none" id="pvH"></div></div>';
     var alvo=1247,n=0,e2=el('pvN');
@@ -1941,7 +2086,7 @@ function previewFake(tipo){
       fotos.map(function(c,i){ return '<div class="pvS" data-i="'+i+'" style="position:absolute;inset:0;opacity:'+(i?0:1)+';transition:opacity .5s;background:linear-gradient(160deg,'+c+',#160B12)">'+
         '<div style="position:absolute;left:0;right:0;bottom:0;padding:3rem 1rem 1.5rem;background:linear-gradient(0deg,rgba(0,0,0,.9),transparent)">'+
         '<span style="display:inline-block;font-size:.55rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:#E32B6D;padding:.25rem .55rem;border-radius:100px">'+caps[i][0]+'</span>'+
-        '<div style="font-family:Fraunces,serif;font-size:1.1rem;font-weight:600;margin-top:.55rem">'+caps[i][1]+'</div></div></div>'; }).join('')+
+        '<div style="font-family:Fraunces,serif;font-size:1.02rem;font-weight:600;margin-top:.55rem">'+caps[i][1]+'</div></div></div>'; }).join('')+
       '</div>';
     var idx=0;
     var bars=s.querySelectorAll('#pvBars i');
@@ -1953,14 +2098,41 @@ function previewFake(tipo){
       idx=(idx+1)%fotos.length;
     }
     passo(); _pvT.push(setInterval(passo,2500));
+  } else if(tipo==='jogos'){
+    var opcoes=['Cinema','Jantar fora','Praia','Sorvete','Dia de preguiça','Viagem surpresa'];
+    s.innerHTML='<div style="'+css+'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.1rem;text-align:center">'+
+      '<div style="font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:#FF9EC2;font-weight:800;margin-bottom:.9rem">Roleta do encontro</div>'+
+      '<div style="position:relative;width:150px;height:150px">'+
+        '<div id="pvWheel" style="width:100%;height:100%;border-radius:50%;overflow:hidden;box-shadow:0 0 0 5px #E8B44A,0 10px 26px rgba(0,0,0,.5);transition:transform 3.2s cubic-bezier(.2,.85,.2,1)">'+
+          '<svg viewBox="0 0 100 100" style="width:100%;height:100%;display:block">'+
+            opcoes.map(function(o,i){
+              var a0=i*60-90, a1=(i+1)*60-90, r=48;
+              var x0=50+r*Math.cos(a0*Math.PI/180), y0=50+r*Math.sin(a0*Math.PI/180);
+              var x1=50+r*Math.cos(a1*Math.PI/180), y1=50+r*Math.sin(a1*Math.PI/180);
+              return '<path d="M50,50 L'+x0+','+y0+' A'+r+','+r+' 0 0,1 '+x1+','+y1+' Z" fill="'+(i%2?'#6E1030':'#E32B6D')+'"/>';
+            }).join('')+
+          '</svg></div>'+
+        '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF6DA,#E8B44A 62%,#B8860B);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.4)">'+
+          '<svg viewBox="0 0 24 24" style="width:14px;fill:#B5124E"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.2 2.3 4 6.4 4c2.1 0 3.7 1.2 5.6 3.6C13.9 5.2 15.5 4 17.6 4 21.7 4 23.6 8.2 22 11.7 19.5 16.4 12 21 12 21z"/></svg></div>'+
+        '<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:11px solid #E8B44A"></div>'+
+      '</div>'+
+      '<div style="font-size:.72rem;color:#D9BEC9;margin-top:1.1rem">+ caça-palavras, quebra-cabeça e quiz do casal</div>'+
+    '</div>';
+    var w=el('pvWheel'), voltas=0;
+    function girar(){ voltas+=1; if(w) w.style.transform='rotate('+(voltas*720+Math.floor(Math.random()*300))+'deg)'; }
+    girar(); _pvT.push(setInterval(girar,3300));
   } else {
-    s.innerHTML='<div style="'+css+'display:flex;align-items:center;justify-content:center;padding:1.2rem">'+
-      '<div style="background:linear-gradient(170deg,#FFFCF8,#FDF2E9);border-radius:14px;padding:1.5rem 1.2rem;color:#3B2C31;width:100%;position:relative;overflow:hidden;box-shadow:0 16px 34px rgba(0,0,0,.4)">'+
-        '<div style="text-align:center;color:#E32B6D;margin-bottom:.8rem"><svg viewBox="0 0 24 24" style="width:24px;fill:currentColor"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.2 2.3 4 6.4 4c2.1 0 3.7 1.2 5.6 3.6C13.9 5.2 15.5 4 17.6 4 21.7 4 23.6 8.2 22 11.7 19.5 16.4 12 21 12 21z"/></svg></div>'+
-        '<div style="font-family:\'Grand Hotel\',cursive;font-size:1.3rem;color:#B5124E;text-align:center;margin-bottom:.8rem">Para a minha Ana</div>'+
-        '<div id="pvC" style="font-family:Fraunces,serif;font-size:.78rem;line-height:1.75;min-height:7.5em"></div>'+
-        '<div style="text-align:right;margin-top:1rem"><div style="font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:#9A8A90;font-weight:700">com amor,</div>'+
-        '<div style="font-family:\'Grand Hotel\',cursive;font-size:1.3rem;color:#B5124E">Lucas</div></div>'+
+    s.innerHTML='<div style="'+css+'display:flex;align-items:center;justify-content:center;padding:1.1rem">'+
+      '<div style="background:linear-gradient(170deg,#FFFCF8,#FDF2E9);border-radius:14px;padding:1.3rem 1.1rem;color:#3B2C31;width:100%;position:relative;overflow:hidden;box-shadow:0 16px 34px rgba(0,0,0,.4)">'+
+        '<div style="width:44px;background:#fff;padding:3px 3px 8px;transform:rotate(6deg);box-shadow:0 5px 12px rgba(0,0,0,.22);position:absolute;top:10px;right:10px;z-index:2">'+
+          '<div style="width:100%;aspect-ratio:.85;background:linear-gradient(150deg,#5A2740,#2C3E50)"></div></div>'+
+        '<div style="font-family:Fraunces,serif;font-style:italic;color:#8a7a6a;font-size:.58rem;line-height:1.5;margin-bottom:.9rem;max-width:70%">Nossa cidade,<br>27 de junho de 2022</div>'+
+        '<div style="font-family:\'Grand Hotel\',cursive;font-size:1.15rem;color:#B5124E;margin-bottom:.6rem">Para a minha Ana,</div>'+
+        '<div id="pvC" style="font-family:Fraunces,serif;font-size:.72rem;line-height:1.7;min-height:7em"></div>'+
+        '<div style="text-align:right;margin-top:.9rem"><div style="font-size:.48rem;letter-spacing:.08em;text-transform:uppercase;color:#9A8A90;font-weight:700">com todo o meu amor,</div>'+
+        '<div style="font-family:\'Grand Hotel\',cursive;font-size:1.2rem;color:#B5124E">Lucas</div></div>'+
+        '<div style="position:absolute;bottom:10px;right:12px;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#C0392B,#8B1A12);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 7px rgba(0,0,0,.3)">'+
+          '<svg viewBox="0 0 24 24" style="width:11px;fill:rgba(255,255,255,.85)"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.2 2.3 4 6.4 4c2.1 0 3.7 1.2 5.6 3.6C13.9 5.2 15.5 4 17.6 4 21.7 4 23.6 8.2 22 11.7 19.5 16.4 12 21 12 21z"/></svg></div>'+
         '<div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.6) 50%,transparent 62%);transform:translateX(-100%);animation:lshine 3.6s ease-in-out 1s infinite"></div>'+
       '</div></div>';
     var txt='Tem dias em que eu te olho e penso: como eu tive tanta sorte? Com você até o caos parece mais leve. Obrigado por existir e por escolher ficar.';
@@ -1983,6 +2155,7 @@ function novoEstado(prod){
     id:uid(), produto:prod||null, perfil:null, meuNome:'', parceiroNome:'',
     dataEspecial:'', horaEspecial:'', cidade:'', titulo:'', carta:'',
     fotos:[], capa:null, musica:null, musicaBusca:'',
+    duracao:'vitalicio',
     jogos:{roleta:false, palavra:false, caca:false, quebra:false, quiz:false},
     roletaOpcoes:['Cinema','Jantar fora','Praia','Dia de preguiça','Sorvete','Viagem surpresa'],
     palavraSecreta:'', palavraPergunta:'O que eu mais amo em você?',
@@ -2046,11 +2219,11 @@ function passos(){
   var s=[];
   if(!p) return ['produto'];
   s.push('produto','perfil','nomes');
-  if(p==='completo'||p==='relampago'||p==='livro') s.push('data','titulo');
+  if(p==='completo'||p==='livro') s.push('data','titulo');
   if(r.fotos) s.push('fotos');
   if(r.carta) s.push('carta');
   if(r.jogos) s.push('jogos');
-  s.push('checkout');
+  s.push('duracao','checkout');
   return s;
 }
 
@@ -2068,12 +2241,50 @@ function telaWizard(prod){
     '</div>'+
     '<div class="wz-wrap" id="wzBody"></div>'+
     '<div class="wz-bottom"><div class="wz-bottom-in">'+
-      '<button class="btn btn-primary btn-block" id="wzNext">Continuar</button>'+
+      '<div class="wz-acoes">'+
+        '<button class="btn btn-ghost wz-prev" id="wzPrev">'+IC.eye+'Ver prévia</button>'+
+        '<button class="btn btn-primary" id="wzNext">Continuar</button>'+
+      '</div>'+
       '<span class="wz-skip" id="wzSkip" style="display:none"></span>'+
     '</div></div>';
   el('wzBack').onclick=voltarPasso;
   el('wzNext').onclick=function(){ proximoPasso(); };
+  el('wzPrev').onclick=abrirPrevia;
   desenharPasso();
+}
+
+function abrirPrevia(){
+  var falta=[];
+  if(!W.produto) falta.push('escolher o tipo de presente');
+  if(!W.meuNome && !W.parceiroNome) falta.push('preencher os nomes');
+  if(falta.length){ toast('Antes da prévia, falta '+falta.join(' e ')+'.'); return; }
+
+  var g=JSON.parse(JSON.stringify(W));
+  g.pago=true; g.previa=true;
+  g.criadoEm=g.criadoEm||Date.now();
+  g.expiraEm=null;
+  if(!g.meuNome) g.meuNome='Você';
+  if(!g.parceiroNome) g.parceiroNome='quem você ama';
+
+  var sc=el('gScope');
+  if(!sc){
+    sc=document.createElement('div');
+    sc.id='gScope'; sc.className='g-scope';
+    document.body.appendChild(sc);
+  }
+  sc.style.display='';
+  document.body.style.overflow='hidden';
+  montarCorpo(g);
+
+  var barra=document.createElement('div');
+  barra.className='prev-bar';
+  barra.innerHTML='<span>'+IC.eye+'Prévia — é assim que vai ficar</span>'+
+    '<button id="prevFechar">Voltar a editar</button>';
+  sc.appendChild(barra);
+  el('prevFechar').onclick=function(){
+    sc.innerHTML=''; sc.style.display='none';
+    document.body.style.overflow='';
+  };
 }
 
 function desenharPasso(opts){
@@ -2129,18 +2340,32 @@ function htmlPasso(k){
   switch(k){
 
   case 'produto': {
-    var lista=['completo','livro','relampago','album','jogo','carta'].map(function(p){
+    var lista=['completo','carta','livro'].map(function(p){
       var d=PACOTES[p];
       return '<button class="pk '+(W.produto===p?'on':'')+'" data-p="'+p+'">'+
         (d.destaque?'<span class="tg">Mais escolhido</span>':'')+
-        '<h3>'+d.nome+'</h3>'+
-        '<div class="pp">R$ '+d.preco+' <span>· '+d.dur+'</span></div>'+
+        '<h3>'+d.icone+' '+d.nome+'</h3>'+
         '<p>'+d.desc+'</p></button>';
     }).join('');
     return guia("Oi! Eu sou a Capivarinha. Me conta: que tipo de presente você quer criar hoje?")+
-      '<div class="wz-t">Escolha o pacote</div>'+
-      '<div class="wz-s">Pagamento único por Pix. Dá pra trocar de pacote depois, é só voltar aqui.</div>'+
+      '<div class="wz-t">O que você quer criar?</div>'+
+      '<div class="wz-s">Monte tudo com calma e veja como vai ficar antes de decidir. Você só escolhe o valor no final.</div>'+
       '<div class="pick">'+lista+'</div>';
+  }
+
+  case 'duracao': {
+    var op=Object.keys(DURACOES).map(function(dk){
+      var d=DURACOES[dk], pr=precoDe(W.produto,dk);
+      return '<button class="pk pk-dur '+(W.duracao===dk?'on':'')+'" data-dur="'+dk+'">'+
+        (dk==='vitalicio'?'<span class="tg">Mais escolhido</span>':'')+
+        '<h3>'+d.nome+'</h3>'+
+        '<div class="pp">R$ '+fmtPreco(pr)+'</div>'+
+        '<p>'+d.desc+'</p></button>';
+    }).join('');
+    return guia("Ficou lindo! Agora só falta escolher por quanto tempo o presente fica no ar.")+
+      '<div class="wz-t">Por quanto tempo?</div>'+
+      '<div class="wz-s">Pagamento único por Pix, sem assinatura. Você pode ver a prévia de novo antes de pagar.</div>'+
+      '<div class="pick">'+op+'</div>';
   }
 
   case 'perfil': {
@@ -2261,12 +2486,12 @@ function htmlPasso(k){
   case 'checkout': {
     var p=PACOTES[W.produto];
     var linhas='<div class="sum-r"><span>Presente</span><span>'+p.nome+'</span></div>'+
-      '<div class="sum-r"><span>Duração do link</span><span>'+p.dur+'</span></div>';
+      '<div class="sum-r"><span>Duração do link</span><span>'+DURACOES[W.duracao||'vitalicio'].nome+'</span></div>';
     var nf=W.fotos.filter(Boolean).length;
     if(nf) linhas+='<div class="sum-r"><span>Fotos</span><span>'+nf+'</span></div>';
     var jn=Object.keys(W.jogos).filter(function(x){return W.jogos[x];}).length;
     if(jn) linhas+='<div class="sum-r"><span>Jogos ativos</span><span>'+jn+'</span></div>';
-    linhas+='<div class="sum-r tot"><span>Total</span><span>R$ '+p.preco+',00</span></div>';
+    linhas+='<div class="sum-r tot"><span>Total</span><span>R$ '+fmtPreco(precoDe(W.produto,W.duracao))+'</span></div>';
     return guia("Última etapa! Só precisa do seu e-mail — o código Pix aparece aqui mesmo, sem sair da página.")+
       '<div class="wz-t">Finalizar</div>'+
       '<div class="sum">'+linhas+'</div>'+
@@ -2349,9 +2574,11 @@ function ligarPasso(k){
   if(k==='produto'){
     on('[data-p]','onclick',function(e){
       W.produto=e.dataset.p;
-      if(W.produto==='jogo'){ W.jogos.roleta=true; W.jogos.palavra=true; W.jogos.caca=true; W.jogos.quebra=true; }
       redesenharSemPular();
     });
+  }
+  if(k==='duracao'){
+    on('[data-dur]','onclick',function(e){ W.duracao=e.dataset.dur; redesenharSemPular(); });
   }
   if(k==='perfil'){ on('[data-v]','onclick',function(e){ W.perfil=e.dataset.v; redesenharSemPular(); }); }
   if(k==='nomes'){
@@ -2587,7 +2814,7 @@ function finalizar(){
     }
     W.pago=false; W.criadoEm=Date.now();
     salvarPresente(W);
-    mostrarPix(res.d.payload, W.id, res.d.teste, PACOTES[W.produto].preco);
+    mostrarPix(res.d.payload, W.id, res.d.teste, precoDe(W.produto,W.duracao));
   })
   .catch(function(){
     toast('Sem conexão com o servidor de pagamento. Confira sua internet e tente de novo.');
@@ -3464,6 +3691,7 @@ function montarCorpo(g){
   }
 
   /* avaliação + rodapé */
+  if(!g.previa){
   h+='<section class="g-sec"><div class="rate-cta">'+
       '<div style="font-size:.68rem;letter-spacing:.19em;text-transform:uppercase;color:var(--rose);font-weight:800">Gostou?</div>'+
       '<h2 style="font-family:Fraunces;font-size:1.4rem;font-weight:600;margin-top:.55rem">Conta pra gente o que achou</h2>'+
@@ -3471,7 +3699,12 @@ function montarCorpo(g){
       '<div class="rate-stars">'+[1,2,3,4,5].map(function(i){ return '<button class="on">'+IC.star+'</button>'; }).join('')+'</div>'+
       '<a class="btn btn-primary" href="#/avaliar/'+esc(g.id)+'">Deixar minha avaliação</a>'+
     '</div></section>';
+  }
 
+  if(g.previa){
+    h+='<div class="g-foot"><img src="'+MASCOTE+'" alt="">'+
+      '<p>Esta é a prévia do seu presente.<br>Volte a editar pra ajustar o que quiser.</p></div>';
+  } else {
   h+='<div class="g-foot"><img src="'+MASCOTE+'" alt="">'+
     '<p>Presente feito com carinho por <b style="color:#fff">'+esc(g.meuNome)+'</b><br>'+
     'no <a href="#/">'+CONFIG.marca+'</a> — crie o seu também.</p>'+
@@ -3479,6 +3712,7 @@ function montarCorpo(g){
     '<div style="margin-top:1.1rem"><a href="https://wa.me/'+CONFIG.whatsapp+'" target="_blank" rel="noopener" '+
       'style="font-size:.78rem;color:#8E7280;display:inline-flex;align-items:center;gap:.35rem">'+
       '<span style="width:14px;height:14px;display:inline-flex">'+IC.wpp+'</span>Precisa de ajuda? Fale com a gente</a></div></div>';
+  }
   h+='</div>';
 
   var sc=el('gScope');
