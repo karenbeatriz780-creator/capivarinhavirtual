@@ -3,12 +3,9 @@ import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 
 const PACOTES = {
-  completo:  { nome: 'Pacote Completo', preco: 25.99 },
-  livro:     { nome: 'Livro Interativo', preco: 16 },
-  relampago: { nome: 'Pacote 48 horas', preco: 16 },
-  album:     { nome: 'Álbum de Fotos',  preco: 9 },
-  jogo:      { nome: 'Jogo do Casal',   preco: 9 },
-  carta:     { nome: 'Carta Virtual',   preco: 6 },
+  completo:  { nome: 'Retrospectiva Completa', preco: 25.99, preco48: 16 },
+  livro:     { nome: 'Livro Interativo', preco: 16, preco48: 12 },
+  carta:     { nome: 'Carta Virtual',   preco: 6, preco48: 4 },
   extra:         { nome: 'Lembrancinhas',  preco: 4 },
   extra_tema:    { nome: 'QR temático',    preco: 2.99 },
   extra_carta:   { nome: 'Cartinha',       preco: 3.99 },
@@ -47,24 +44,26 @@ export default async (req) => {
     if (!chavePix) return json({ erro: 'Servidor sem EFI_PIX_KEY configurada.' }, 500);
 
     const pacote = PACOTES[presente.produto];
+    const duracao = presente.duracao === 'h48' ? 'h48' : 'vitalicio';
+    const precoFinal = (duracao === 'h48' && pacote.preco48 != null) ? pacote.preco48 : pacote.preco;
     const txid = criarTxid(presente.id);
     const criadoEm = Date.now();
     const salvo = Object.assign({}, presente, {
       pago: false,
       criadoEm,
-      pagamento: { provedor: 'efi', txid, status: 'ATIVA', valor: pacote.preco }
+      pagamento: { provedor: 'efi', txid, status: 'ATIVA', valor: precoFinal, duracao }
     });
 
     try {
       await getStore('presentes').setJSON(presente.id, salvo);
-      await getStore('efi-txid').setJSON(txid, { giftId: presente.id, produto: presente.produto, valor: pacote.preco, criadoEm });
+      await getStore('efi-txid').setJSON(txid, { giftId: presente.id, produto: presente.produto, valor: precoFinal, duracao, criadoEm });
 
       const token = await obterToken();
       const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
         method: 'PUT', token,
         body: {
           calendario: { expiracao: 7200 },
-          valor: { original: Number(pacote.preco).toFixed(2) },
+          valor: { original: Number(precoFinal).toFixed(2) },
           chave: chavePix,
           solicitacaoPagador: (pacote.nome + ' - Capivarinha Love').slice(0, 140),
           infoAdicionais: [
