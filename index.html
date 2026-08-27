@@ -995,6 +995,65 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   border-radius:100px;display:flex;align-items:center;gap:.4rem;white-space:nowrap;}
 .lock-tag svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.2;}
 
+/* --- NÚMEROS GIGANTES EM FAIXAS (apresentação) --- */
+.marq-full{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+  gap:2px;overflow:hidden;pointer-events:none;}
+.marq-l{display:flex;white-space:nowrap;overflow:hidden;padding:.1em 0;}
+.marq-l span{font-family:'Fraunces';font-weight:700;font-size:clamp(2.6rem,15vw,5rem);line-height:1;
+  padding-right:.4em;animation:marqRun 9s linear infinite;}
+.marq-l:nth-child(even) span{animation-direction:reverse;animation-duration:11s;}
+@keyframes marqRun{from{transform:translateX(0);}to{transform:translateX(-100%);}}
+.marq-c0{background:#E32B6D;} .marq-c0 span{color:#FFF3C4;}
+.marq-c1{background:#4CAF7D;} .marq-c1 span{color:#0D0206;}
+.marq-c2{background:#D96BA8;} .marq-c2 span{color:#2A0715;}
+.marq-c3{background:#E8853A;} .marq-c3 span{color:#2A0715;}
+.marq-c4{background:#6A2BC4;} .marq-c4 span{color:#F6E96B;}
+.marq-cap{position:absolute;left:0;right:0;bottom:16%;text-align:center;color:#fff;font-size:.95rem;
+  background:rgba(10,4,7,.6);padding:.7rem 1rem;backdrop-filter:blur(3px);}
+.marq-cap b{color:#FF9EC2;}
+
+/* --- NOSSA JORNADA --- */
+.jorn{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1.6rem .9rem;padding-top:1.2rem;}
+.jorn-i{position:relative;padding-top:14px;opacity:0;transform:translateY(16px) rotate(var(--r,-2deg));
+  transition:opacity .6s var(--ease) var(--d,0s), transform .6s var(--ease) var(--d,0s);}
+.jorn-i:nth-child(even){--r:2deg;}
+.jorn-i.in{opacity:1;transform:translateY(0) rotate(var(--r,-2deg));}
+.jorn-clip{position:absolute;top:0;left:50%;transform:translateX(-50%);width:26px;height:16px;
+  background:linear-gradient(180deg,#F6E3C0,#D8BE92);border-radius:3px;z-index:2;
+  box-shadow:0 2px 5px rgba(0,0,0,.35);}
+.jorn-pol{background:#fff;padding:8px 8px 12px;box-shadow:0 12px 26px rgba(0,0,0,.4);}
+.jorn-pol img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.jorn-dt{text-align:center;font-weight:700;color:#2A0715;font-size:.78rem;margin-top:.5rem;}
+.jorn-cap{text-align:center;font-family:'Fraunces';font-style:italic;color:#8a5468;font-size:.68rem;margin-top:.1rem;}
+.jorn-fim{text-align:center;color:var(--rose-1);font-family:'Fraunces';font-style:italic;
+  font-size:.9rem;margin-top:1.8rem;display:flex;align-items:center;justify-content:center;gap:.5rem;}
+.jorn-fim svg{width:13px;height:13px;fill:var(--rose);}
+
+/* --- CABINE DE FOTOS --- */
+.cab-wrap{display:flex;justify-content:center;padding-top:.6rem;}
+.cab-tira{background:#FBF4E8;padding:12px 12px 6px;box-shadow:0 18px 40px rgba(0,0,0,.5);
+  transform:rotate(-2deg);width:min(210px,62vw);opacity:0;transition:opacity .7s var(--ease);}
+.cab-tira.in{opacity:1;}
+.cab-f{margin-bottom:8px;}
+.cab-f img{width:100%;aspect-ratio:1.15;object-fit:cover;display:block;}
+.cab-lb{text-align:center;font-size:.62rem;letter-spacing:.3em;color:#8a5468;padding:.3rem 0 .5rem;}
+
+/* --- CARTA (melhorias) --- */
+.letter-foto{position:absolute;top:14px;right:14px;width:74px;background:#fff;padding:5px 5px 14px;
+  transform:rotate(5deg);box-shadow:0 8px 18px rgba(0,0,0,.22);z-index:3;}
+.letter-foto img{width:100%;aspect-ratio:.85;object-fit:cover;display:block;}
+.letter-foto .tp{position:absolute;width:34px;height:13px;background:rgba(226,214,190,.85);
+  box-shadow:0 1px 3px rgba(0,0,0,.12);}
+.letter-foto .tp1{top:-6px;left:-8px;transform:rotate(-38deg);}
+.letter-foto .tp2{bottom:2px;right:-10px;transform:rotate(-38deg);}
+.letter-local{font-family:'Fraunces';font-style:italic;color:#8a7a6a;font-size:.78rem;
+  line-height:1.5;margin-bottom:1.3rem;}
+.letter-risco{width:120px;height:1px;background:#b9a894;margin:.5rem 0 0 auto;}
+.letter-lacre{position:absolute;bottom:16px;right:18px;width:38px;height:38px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#C0392B,#8B1A12);display:flex;align-items:center;
+  justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.3);}
+.letter-lacre svg{width:16px;height:16px;fill:rgba(255,255,255,.85);}
+
 /* ---------- LIVRO INTERATIVO ---------- */
 .lv-scope{position:fixed;inset:0;background:#1a1114;display:flex;flex-direction:column;
   align-items:center;justify-content:center;z-index:5;padding:1rem;}
@@ -2983,6 +3042,14 @@ function montarIntro(g){
       '<div class="is-big" data-cont="'+t.abracos+'" data-esc="1">0</div>'+
       '<div class="is-lbl">'+escalaCom(t.abracos,'abraços')+'</div>'+
       '<div class="is-sub">Alguns rápidos, outros daqueles que seguram o mundo.</div>');
+
+    var nDias=nnum(t.dias);
+    slides.push('<div class="marq-full">'+
+        [0,1,2,3,4,5,6].map(function(i){
+          return '<div class="marq-l marq-c'+(i%5)+'"><span>'+nDias+'</span><span>'+nDias+'</span></div>';
+        }).join('')+
+      '</div>'+
+      '<div class="marq-cap"><b>'+nDias+'</b> dias — e cada um deles com você.</div>');
   }
   var nf=(g.fotos||[]).filter(Boolean).length;
   if(nf) slides.push('<div class="is-eb">Guardamos aqui</div>'+
@@ -3336,13 +3403,54 @@ function montarCorpo(g){
       '<h2>Escrita à mão, com o coração</h2></div>'+
       '<div class="letter-wrap"><div class="letter seal-in" id="letter">'+
         '<div class="petals" id="petals"></div>'+
-        '<div class="letter-orn">'+IC.heart+'</div>'+
-        '<div class="letter-to">Para '+esc(g.parceiroNome||'você')+'</div>'+
+        (fotos[0]?'<div class="letter-foto"><img src="'+esc(fotos[0].src)+'" alt=""><i class="tp tp1"></i><i class="tp tp2"></i></div>':'')+
+        ((g.cidade&&g.cidade.trim())||g.dataEspecial ?
+          '<div class="letter-local">'+
+            ((g.cidade&&g.cidade.trim())?esc(g.cidade)+',<br>':'')+
+            (g.dataEspecial?fmtExtenso(g.dataEspecial):'')+
+          '</div>' : '')+
+        '<div class="letter-to">Para '+esc(g.parceiroNome||'você')+',</div>'+
         '<div class="letter-tx" id="letterTx"></div>'+
-        '<div class="letter-sig"><div class="lb">com amor,</div><div class="nm">'+
-          (g.anonimo ? 'alguém que gosta muito de você' : esc(g.meuNome||''))+'</div></div>'+
+        '<div class="letter-sig"><div class="lb">Com todo o meu amor,</div><div class="nm">'+
+          (g.anonimo ? 'alguém que gosta muito de você' : esc(g.meuNome||''))+'</div>'+
+          '<div class="letter-risco"></div></div>'+
+        '<div class="letter-lacre">'+IC.heart+'</div>'+
         '<div class="letter-shine"></div>'+
       '</div></div></section>';
+  }
+
+  /* Nossa Jornada — fotos penduradas com data */
+  if(fotos.length>=2){
+    var comData=fotos.filter(function(f){ return f.data; })
+      .sort(function(a,b){ return a.data<b.data?-1:1; });
+    var jornada=(comData.length>=2?comData:fotos).slice(0,6);
+    h+='<section class="g-sec g-sec-dark"><div class="g-sec-h"><span class="k">Nossa jornada</span>'+
+      '<h2>Cada momento que nos trouxe até aqui</h2></div>'+
+      '<div class="jorn">'+
+        jornada.map(function(f,i){
+          return '<div class="jorn-i rv" style="--d:'+(i*.09)+'s">'+
+            '<i class="jorn-clip"></i>'+
+            '<div class="jorn-pol"><img src="'+esc(f.src)+'" alt="">'+
+              '<div class="jorn-dt">'+(f.data?fmtData(f.data):'')+'</div>'+
+              (f.legenda?'<div class="jorn-cap">'+esc(f.legenda)+'</div>':'')+
+            '</div></div>';
+        }).join('')+
+      '</div>'+
+      '<div class="jorn-fim">'+IC.heart+' E estamos apenas começando! '+IC.heart+'</div>'+
+    '</section>';
+  }
+
+  /* Cabine de fotos — tirinha */
+  if(fotos.length>=3){
+    var tira=fotos.slice(0,4);
+    var iniciais=((g.meuNome||'?').trim().charAt(0)+' & '+(g.parceiroNome||'?').trim().charAt(0)).toUpperCase();
+    h+='<section class="g-sec g-sec-dark"><div class="g-sec-h"><span class="k">Cabine de fotos</span>'+
+      '<h2>Os nossos melhores momentos</h2></div>'+
+      '<div class="cab-wrap"><div class="cab-tira rv">'+
+        tira.map(function(f){ return '<div class="cab-f"><img src="'+esc(f.src)+'" alt=""></div>'; }).join('')+
+        '<div class="cab-lb">'+esc(iniciais)+'</div>'+
+      '</div></div>'+
+    '</section>';
   }
 
   /* jogos */
