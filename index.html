@@ -595,6 +595,13 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   max-width:20rem;font-weight:500;}
 .is-names{font-family:'Grand Hotel',cursive;font-size:clamp(2.6rem,12vw,4.4rem);color:#FF9EC2;line-height:1.15;}
 .is-sub{font-size:.92rem;color:#C6A9B6;margin-top:1.1rem;line-height:1.6;max-width:22rem;}
+.is-foto-wrap{width:min(230px,60vw);aspect-ratio:.8;background:#fff;padding:9px 9px 26px;
+  box-shadow:0 22px 54px rgba(0,0,0,.55);transform:scale(.85) rotate(-3deg);opacity:0;
+  animation:isFotoIn .85s cubic-bezier(.2,.8,.2,1) forwards;}
+@keyframes isFotoIn{to{transform:scale(1) rotate(-2deg);opacity:1;}}
+.is-foto-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.is-foto-cap{font-family:'Fraunces';font-style:italic;text-align:center;margin-top:.9rem;color:#fff;font-size:1rem;}
+.is-foto-dt{font-size:.74rem;text-align:center;color:#C6A9B6;margin-top:.2rem;}
 .wordwave span{display:inline-block;opacity:0;animation:wwIn .6s var(--ease) forwards;}
 @keyframes wwIn{from{opacity:0;transform:translateY(22px) rotate(5deg);}to{opacity:1;transform:none;}}
 .intro-dots{position:absolute;bottom:2.2rem;left:50%;transform:translateX(-50%);display:flex;gap:.4rem;}
@@ -614,6 +621,32 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   padding:4px;background:linear-gradient(45deg,#FEDA75,#FA7E1E,#E32B6D,#C13584,#833AB4);
   box-shadow:0 22px 52px rgba(227,43,109,.45);}
 .g-hero-cover img{width:100%;height:100%;object-fit:cover;border-radius:50%;border:3px solid #1A0810;display:block;}
+.g-hero-cover.tocavel{position:relative;cursor:pointer;}
+.g-hero-ping{position:absolute;bottom:6px;right:6px;width:22px;height:22px;border-radius:50%;
+  background:var(--rose);border:2px solid #1A0810;box-shadow:0 0 0 0 rgba(227,43,109,.6);
+  animation:pfPing 2.2s ease-out infinite;}
+@keyframes pfPing{0%{box-shadow:0 0 0 0 rgba(227,43,109,.55);}70%{box-shadow:0 0 0 12px rgba(227,43,109,0);}100%{box-shadow:0 0 0 0 rgba(227,43,109,0);}}
+.g-hero-dica{font-size:.68rem;color:#C6A9B6;margin-top:.7rem;opacity:.8;}
+.perfil-modal{position:fixed;inset:0;z-index:150;background:rgba(10,4,7,.72);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:1.4rem;
+  opacity:0;pointer-events:none;transition:opacity .3s ease;}
+.perfil-modal.on{opacity:1;pointer-events:auto;}
+.perfil-card{background:#FBF4E8;border-radius:22px;padding:2rem 1.6rem 1.6rem;max-width:22rem;width:100%;
+  text-align:center;position:relative;transform:scale(.92) translateY(10px);transition:transform .35s cubic-bezier(.2,.8,.2,1);}
+.perfil-modal.on .perfil-card{transform:scale(1) translateY(0);}
+.perfil-x{position:absolute;top:.7rem;right:.9rem;background:none;border:none;font-size:1.6rem;
+  line-height:1;color:#B99BA8;cursor:pointer;}
+.perfil-foto{width:88px;height:88px;border-radius:50%;overflow:hidden;margin:0 auto .9rem;
+  border:3px solid #fff;box-shadow:0 8px 20px rgba(0,0,0,.2);}
+.perfil-foto img{width:100%;height:100%;object-fit:cover;display:block;}
+.perfil-nomes{font-family:'Grand Hotel',cursive;font-size:1.7rem;color:var(--rose-deep);}
+.perfil-desde{font-size:.78rem;color:#8a5468;margin-top:.3rem;}
+.perfil-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:1.2rem;}
+.pf-c{background:linear-gradient(135deg,var(--rose-deep),var(--rose));border-radius:12px;padding:.6rem .3rem;}
+.pf-c b{display:block;color:#fff;font-size:1.2rem;font-family:'Fraunces';}
+.pf-c span{color:rgba(255,255,255,.85);font-size:.62rem;letter-spacing:.05em;}
+.perfil-cidade{margin-top:1rem;font-size:.76rem;color:#8a5468;display:inline-flex;align-items:center;gap:.3rem;}
+.perfil-fotos{margin-top:.4rem;font-size:.72rem;color:#B99BA8;}
 .g-names{font-family:'Grand Hotel',cursive;font-size:clamp(2.2rem,10vw,3.4rem);color:#FF9EC2;line-height:1.2;}
 .g-title{font-family:'Fraunces';font-style:italic;font-size:clamp(1.2rem,5vw,1.7rem);font-weight:500;
   margin-top:.7rem;color:#fff;max-width:24rem;margin-left:auto;margin-right:auto;line-height:1.35;}
@@ -952,6 +985,69 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   border-radius:100px;display:flex;align-items:center;gap:.4rem;white-space:nowrap;}
 .lock-tag svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.2;}
 
+/* ---------- LIVRO INTERATIVO ---------- */
+.lv-scope{position:fixed;inset:0;background:#1a1114;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:5;padding:1rem;}
+.lv-hint{position:absolute;top:1.2rem;left:0;right:0;text-align:center;color:var(--gold);
+  font-size:.72rem;letter-spacing:.08em;opacity:.85;transition:opacity .6s ease;pointer-events:none;}
+.lv-livro{position:relative;width:min(420px,92vw);height:min(560px,72vh);display:flex;
+  border-radius:6px;box-shadow:0 40px 90px rgba(0,0,0,.65);background:#2a1a14;perspective:2400px;}
+.lv-lombada{position:absolute;left:50%;top:0;bottom:0;width:12px;margin-left:-6px;z-index:60;
+  pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.4),rgba(0,0,0,.08) 30%,rgba(0,0,0,.08) 70%,rgba(0,0,0,.4));}
+.lv-col-esq{width:50%;height:100%;background:#F3E9D6;position:relative;overflow:hidden;border-radius:6px 0 0 6px;}
+.lv-col-dir{width:50%;height:100%;position:relative;}
+.lv-pag{position:absolute;inset:0;overflow:hidden;}
+.lv-esq{position:relative;}
+.lv-dir{background:#FBF4E8;border-radius:0 6px 6px 0;transform-origin:left center;
+  transform-style:preserve-3d;backface-visibility:hidden;cursor:pointer;}
+.lv-tex{position:absolute;inset:0;opacity:.05;background-image:
+  repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 1px,transparent 1px 3px);mix-blend-mode:multiply;pointer-events:none;}
+.lv-brilho{position:absolute;top:-40%;left:-60%;width:60%;height:180%;pointer-events:none;
+  background:linear-gradient(75deg,transparent 42%,rgba(255,255,255,.5) 50%,transparent 58%);
+  animation:lvBrilho 6s ease-in-out infinite;}
+@keyframes lvBrilho{0%,70%{transform:translateX(-20%);opacity:0;}78%{opacity:1;}100%{transform:translateX(260%);opacity:0;}}
+.lv-amb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:1.6rem;font-family:'Fraunces';font-style:italic;color:#7A2340;
+  font-size:.92rem;line-height:1.7;opacity:.85;}
+.lv-conteudo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:1.2rem;}
+.lv-k{color:var(--rose);font-size:.66rem;letter-spacing:.16em;font-weight:800;}
+.lv-cap-cover{width:64%;aspect-ratio:1;border-radius:50%;overflow:hidden;margin-bottom:.9rem;
+  border:3px solid #fff;box-shadow:0 10px 24px rgba(227,43,109,.35);display:flex;align-items:center;justify-content:center;
+  background:var(--rose-soft);}
+.lv-cap-cover img{width:100%;height:100%;object-fit:cover;display:block;}
+.lv-cap-cover svg{width:38%;height:38%;fill:var(--rose);}
+.lv-cap-nomes{font-family:'Fraunces';font-style:italic;color:var(--rose-deep);font-size:clamp(1.15rem,5vw,1.5rem);line-height:1.2;}
+.lv-cap-titulo{color:#7A2340;font-family:'Fraunces';font-style:italic;font-size:.8rem;margin-top:.5rem;opacity:.85;}
+.lv-cap-dica{color:#B99BA8;font-size:.62rem;letter-spacing:.06em;margin-top:1.4rem;}
+.lv-ctr{display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;width:100%;margin-top:.7rem;}
+.lv-cc{background:linear-gradient(135deg,var(--rose-deep),var(--rose));border-radius:8px;padding:.55rem .2rem;}
+.lv-cc .n{color:#fff;font-size:1.05rem;font-weight:800;font-family:'Fraunces';}
+.lv-cc .l{color:rgba(255,255,255,.85);font-size:.55rem;letter-spacing:.05em;margin-top:.1rem;}
+.lv-foto-card{background:#fff;padding:.5rem .5rem 1.2rem;box-shadow:0 8px 20px rgba(0,0,0,.2);
+  width:76%;transform:rotate(-1.5deg);}
+.lv-foto-card img{width:100%;height:auto;aspect-ratio:.95;object-fit:cover;display:block;}
+.lv-foto-card .cap{font-family:'Fraunces';font-style:italic;font-size:.72rem;text-align:center;
+  margin-top:.45rem;color:#3A1424;}
+.lv-foto-card .dt{font-size:.6rem;text-align:center;color:#B99BA8;margin-top:.15rem;}
+.lv-rasp{position:relative;width:100%;max-width:150px;aspect-ratio:1;border-radius:12px;
+  overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.3);margin-top:.6rem;}
+.lv-rasp-msg{position:absolute;inset:0;background:var(--rose-soft);display:flex;align-items:center;
+  justify-content:center;padding:.7rem;text-align:center;font-family:'Fraunces';font-style:italic;
+  color:var(--rose-deep);font-size:.72rem;line-height:1.4;}
+.lv-rasp-cv{position:absolute;inset:0;width:100%;height:100%;}
+.lv-final-de{color:#7A2340;font-size:.82rem;opacity:.85;}
+.lv-final-nome{font-family:'Fraunces';font-style:italic;color:var(--rose-deep);font-size:1.6rem;margin-top:.4rem;}
+.lv-final-cor{margin-top:1.1rem;color:var(--rose);}
+.lv-final-cor svg{width:22px;height:22px;fill:var(--rose);}
+.lv-dots{display:flex;gap:.35rem;margin-top:1.1rem;}
+.lv-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.22);transition:background .3s;}
+.lv-dots i.on{background:var(--rose);}
+.lv-nav{display:flex;gap:.6rem;margin-top:.9rem;}
+.lv-nav button{width:40px;height:40px;border-radius:50%;border:none;font-size:1.1rem;cursor:pointer;
+  background:rgba(255,255,255,.1);color:#fff;}
+.lv-nav button:last-child{background:var(--rose);}
+
 </style>
 </head>
 <body>
@@ -976,8 +1072,10 @@ var CONFIG = {
 };
 
 var PACOTES = {
-  completo:  {nome:"Pacote Completo", preco:26, dur:"Pra sempre", horas:null,
+  completo:  {nome:"Pacote Completo", preco:25.99, dur:"Pra sempre", horas:null,
               desc:"Tudo liberado, sem limite de tempo. Fotos, linha do tempo, stories, carta, música e todos os jogos.", icone:"💝", destaque:true},
+  livro:     {nome:"Livro Interativo", preco:16, dur:"Pra sempre", horas:null,
+              desc:"Um livro digital de verdade — folheia as páginas, tem raspadinha surpresa e conta cada segundo de vocês.", icone:"📖"},
   relampago: {nome:"Pacote 48 horas", preco:16, dur:"48 horas no ar", horas:48,
               desc:"O pacote completo, mas o link expira em 48 horas. Ideal pra surpresa de última hora.", icone:"⚡"},
   album:     {nome:"Álbum de Fotos", preco:9,  dur:"Pra sempre", horas:null,
@@ -989,6 +1087,7 @@ var PACOTES = {
 };
 var RECURSOS = {
   completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1},
+  livro:     {fotos:14, carta:0, musica:0, contador:1, timeline:1, stories:0, jogos:1},
   relampago: {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1},
   album:     {fotos:10, carta:0, musica:0, contador:0, timeline:1, stories:1, jogos:0},
   jogo:      {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:1},
@@ -1105,6 +1204,53 @@ function comprimir(file, maxLado, q){
       img.src=e.target.result;
     };
     fr.readAsDataURL(file);
+  });
+}
+
+/* ---------- lê a data em que a foto foi tirada (metadado EXIF) ---------- */
+function dataExif(file){
+  return new Promise(function(res){
+    if(file.type!=='image/jpeg'){ res(null); return; }
+    var fr=new FileReader();
+    fr.onload=function(e){
+      try{
+        var view=new DataView(e.target.result);
+        if(view.getUint16(0,false)!==0xFFD8){ res(null); return; }
+        var offset=2, length=view.byteLength;
+        while(offset<length-4){
+          if(view.getUint16(offset,false)===0xFFE1){
+            var tiffOffset=offset+10;
+            var little=view.getUint16(tiffOffset,false)===0x4949;
+            var dirOffset=tiffOffset+view.getUint32(tiffOffset+4,little);
+            var entries=view.getUint16(dirOffset,little);
+            for(var i=0;i<entries;i++){
+              var entryOffset=dirOffset+2+i*12;
+              if(view.getUint16(entryOffset,little)===0x8769){
+                var exifIFD=tiffOffset+view.getUint32(entryOffset+8,little);
+                var subEntries=view.getUint16(exifIFD,little);
+                for(var j=0;j<subEntries;j++){
+                  var subOffset=exifIFD+2+j*12;
+                  var subTag=view.getUint16(subOffset,little);
+                  if(subTag===0x9003||subTag===0x9004){
+                    var strOffset=tiffOffset+view.getUint32(subOffset+8,little);
+                    var str='';
+                    for(var k=0;k<19;k++){ var c=view.getUint8(strOffset+k); if(!c) break; str+=String.fromCharCode(c); }
+                    var m=/^(\d{4}):(\d{2}):(\d{2})/.exec(str);
+                    res(m?(m[1]+'-'+m[2]+'-'+m[3]):null); return;
+                  }
+                }
+              }
+            }
+            res(null); return;
+          } else {
+            offset += 2 + view.getUint16(offset+2,false);
+          }
+        }
+        res(null);
+      }catch(err){ res(null); }
+    };
+    fr.onerror=function(){ res(null); };
+    fr.readAsArrayBuffer(file.slice(0,131072));
   });
 }
 
@@ -1509,7 +1655,7 @@ function cardAvaliacao(d, apagavel){
 
 function telaHome(){
   var media=mediaNota(), total=todasAvaliacoes().length;
-  var planos = ['completo','relampago','album','jogo','carta'].map(function(k){
+  var planos = ['completo','livro','relampago','album','jogo','carta'].map(function(k){
     var p=PACOTES[k], r=RECURSOS[k];
     var itens=[];
     if(r.fotos) itens.push('Até '+r.fotos+' fotos com data e legenda');
@@ -1831,7 +1977,7 @@ function passos(){
   var s=[];
   if(!p) return ['produto'];
   s.push('produto','perfil','nomes');
-  if(p==='completo'||p==='relampago') s.push('data','titulo');
+  if(p==='completo'||p==='relampago'||p==='livro') s.push('data','titulo');
   if(r.fotos) s.push('fotos');
   if(r.carta) s.push('carta');
   if(r.jogos) s.push('jogos');
@@ -1914,7 +2060,7 @@ function htmlPasso(k){
   switch(k){
 
   case 'produto': {
-    var lista=['completo','relampago','album','jogo','carta'].map(function(p){
+    var lista=['completo','livro','relampago','album','jogo','carta'].map(function(p){
       var d=PACOTES[p];
       return '<button class="pk '+(W.produto===p?'on':'')+'" data-p="'+p+'">'+
         (d.destaque?'<span class="tg">Mais escolhido</span>':'')+
@@ -2171,7 +2317,7 @@ function ligarPasso(k){
     el('fileIn').onchange=function(ev){
       var files=Array.prototype.slice.call(ev.target.files); ev.target.value='';
       if(!files.length) return;
-      var max=RECURSOS[W.produto].fotos;
+      var max=(RECURSOS[W.produto]||RECURSOS.completo).fotos;
       toast('Preparando as fotos...');
       if(multi){
         var livres=[];
@@ -2179,15 +2325,18 @@ function ligarPasso(k){
         if(alvo!=null && livres.indexOf(alvo)>=0){ livres.splice(livres.indexOf(alvo),1); livres.unshift(alvo); }
         var usar=files.slice(0,livres.length);
         if(files.length>livres.length) toast('Cabem só '+livres.length+' foto(s) agora.');
-        Promise.all(usar.map(function(f){ return comprimir(f).catch(function(){ return null; }); }))
+        Promise.all(usar.map(function(f){
+          return Promise.all([comprimir(f).catch(function(){ return null; }), dataExif(f)]);
+        }))
           .then(function(res){
-            res.forEach(function(src,i){ if(src) W.fotos[livres[i]]={src:src,legenda:'',data:''}; });
+            res.forEach(function(par,i){ var src=par[0], dt=par[1]; if(src) W.fotos[livres[i]]={src:src,legenda:'',data:dt||''}; });
             redesenharSemPular();
           });
       } else {
         var ant=W.fotos[alvo];
-        comprimir(files[0]).then(function(src){
-          W.fotos[alvo]={src:src, legenda:(ant&&ant.legenda)||'', data:(ant&&ant.data)||''};
+        Promise.all([comprimir(files[0]), dataExif(files[0])]).then(function(res){
+          var src=res[0], dt=res[1];
+          W.fotos[alvo]={src:src, legenda:(ant&&ant.legenda)||'', data:(ant&&ant.data)||dt||''};
           redesenharSemPular();
         }).catch(function(){ toast('Não consegui ler essa imagem. Tente outra.'); });
       }
@@ -2782,7 +2931,7 @@ function montarIntro(g){
     '<div class="is-sub">Este presente foi feito só para você.</div>');
 
   slides.push('<div class="is-eb">Para</div>'+
-    '<div class="is-names">'+n2+'</div>'+
+    '<div class="is-names wordwave">'+ondaTexto(n2)+'</div>'+
     '<div class="is-sub">de '+n1+', com todo o carinho do mundo.</div>');
 
   if(t){
@@ -2816,6 +2965,14 @@ function montarIntro(g){
     '<div class="is-big" data-cont="'+nf+'">0</div>'+
     '<div class="is-lbl">'+(nf===1?'memória':'memórias')+'</div>'+
     '<div class="is-sub">Cada uma escolhida a dedo por '+n1+'.</div>');
+
+  var fotosIntro=(g.fotos||[]).filter(Boolean).slice(0,5);
+  fotosIntro.forEach(function(f,i){
+    slides.push('<div class="is-eb">'+(i===0?'Um pouquinho da história':'E também')+'</div>'+
+      '<div class="is-foto-wrap"><img src="'+esc(f.src)+'" alt=""></div>'+
+      (f.legenda?'<div class="is-foto-cap">'+esc(f.legenda)+'</div>':'')+
+      (f.data?'<div class="is-foto-dt">'+fmtData(f.data)+'</div>':''));
+  });
 
   slides.push('<div class="is-eb">Então é isso</div>'+
     '<div class="is-txt wordwave">'+ondaTexto('Aproveita.')+'</div>'+
@@ -2853,6 +3010,9 @@ function montarIntro(g){
     sl.querySelectorAll('.wordwave span').forEach(function(sp){
       sp.style.animation='none'; void sp.offsetWidth; sp.style.animation='';
     });
+    sl.querySelectorAll('.is-foto-wrap').forEach(function(fw){
+      fw.style.animation='none'; void fw.offsetWidth; fw.style.animation='';
+    });
     contar(sl);
     clearTimeout(timer);
     timer=setTimeout(function(){ avancar(); }, i===0?2900:3400);
@@ -2865,12 +3025,180 @@ function montarIntro(g){
   function fim(){
     clearTimeout(timer);
     box.style.transition='opacity .7s ease'; box.style.opacity='0';
-    setTimeout(function(){ box.remove(); montarCorpo(g); },700);
+    setTimeout(function(){ box.remove(); (g.produto==='livro'?montarLivro:montarCorpo)(g); },700);
   }
   box.onclick=function(e){ if(e.target.id==='skipIntro') return; avancar(); };
   el('skipIntro').onclick=function(e){ e.stopPropagation(); fim(); };
   aoSair(function(){ clearTimeout(timer); });
   mostrar(0);
+}
+
+/* ---------- 3b. LIVRO INTERATIVO (pacote "livro") ---------- */
+function montarLivro(g){
+  var fotos=(g.fotos||[]).filter(Boolean);
+  var n1=esc(g.meuNome||''), n2=esc(g.parceiroNome||'');
+  var paginas=[];
+
+  paginas.push({tipo:'capa'});
+  if(g.dataEspecial) paginas.push({tipo:'contador'});
+  fotos.forEach(function(f){ paginas.push({tipo:'foto', foto:f}); });
+  paginas.push({tipo:'raspadinha'});
+  paginas.push({tipo:'final'});
+
+  function esqAmbiente(txt){
+    return '<div class="lv-pag lv-esq"><div class="lv-tex"></div><div class="lv-brilho"></div>'+
+      '<div class="lv-amb">'+esc(txt)+'</div></div>';
+  }
+  function htmlDireita(p){
+    var body='';
+    if(p.tipo==='capa'){
+      body='<div class="lv-cap-cover">'+(fotos[0]?('<img src="'+esc(fotos[0].src)+'" alt="">'):IC.heart)+'</div>'+
+        '<div class="lv-cap-nomes">'+(n1&&n2?n1+' &amp; '+n2:(n2||n1||'Para você'))+'</div>'+
+        (g.titulo?'<div class="lv-cap-titulo">'+esc(g.titulo)+'</div>':'')+
+        '<div class="lv-cap-dica">vire a página →</div>';
+    } else if(p.tipo==='contador'){
+      body='<div class="lv-k">TEMPO DE VOCÊS</div>'+
+        '<div class="lv-ctr">'+
+          '<div class="lv-cc"><div class="n" id="cA">0</div><div class="l">Anos</div></div>'+
+          '<div class="lv-cc"><div class="n" id="cMe">0</div><div class="l">Meses</div></div>'+
+          '<div class="lv-cc"><div class="n" id="cD">0</div><div class="l">Dias</div></div>'+
+          '<div class="lv-cc"><div class="n" id="cH">0</div><div class="l">Horas</div></div>'+
+          '<div class="lv-cc"><div class="n" id="cM">0</div><div class="l">Min</div></div>'+
+          '<div class="lv-cc"><div class="n" id="cSg">0</div><div class="l">Seg</div></div>'+
+        '</div>';
+    } else if(p.tipo==='foto'){
+      body='<div class="lv-foto-card"><img src="'+esc(p.foto.src)+'" alt="">'+
+        (p.foto.legenda?'<div class="cap">'+esc(p.foto.legenda)+'</div>':'')+
+        (p.foto.data?'<div class="dt">'+fmtData(p.foto.data)+'</div>':'')+
+        '</div>';
+    } else if(p.tipo==='raspadinha'){
+      var msg=g.titulo?esc(g.titulo):'Alguém preparou esse presente com muito carinho pra você. 💕';
+      body='<div class="lv-k">MOMENTO SECRETO</div>'+
+        '<div class="lv-rasp" data-msg="'+esc(msg)+'">'+
+          '<div class="lv-rasp-msg">'+msg+'</div>'+
+          '<canvas class="lv-rasp-cv"></canvas>'+
+        '</div>';
+    } else if(p.tipo==='final'){
+      body='<div class="lv-final-de">Com todo o carinho,</div>'+
+        '<div class="lv-final-nome">'+(n1||'quem te ama')+'</div>'+
+        '<div class="lv-final-cor">'+IC.heart+'</div>';
+    }
+    return '<div class="lv-pag lv-dir" data-tipo="'+p.tipo+'">'+
+      '<div class="lv-tex"></div><div class="lv-brilho"></div>'+
+      '<div class="lv-conteudo">'+body+'</div></div>';
+  }
+
+  var h='<div class="lv-scope" id="lvScope">'+
+    '<div class="lv-hint" id="lvHint">toque nas laterais pra virar a página</div>'+
+    '<div class="lv-livro" id="lvLivro">'+
+      '<div class="lv-lombada"></div>'+
+      '<div class="lv-col-esq" id="lvEsq"></div>'+
+      '<div class="lv-col-dir" id="lvDir">'+
+        paginas.map(function(p,i){ return htmlDireita(p); }).join('')+
+      '</div>'+
+    '</div>'+
+    '<div class="lv-dots">'+paginas.map(function(_,i){ return '<i'+(i===0?' class="on"':'')+'></i>'; }).join('')+'</div>'+
+    '<div class="lv-nav"><button id="lvPrev">‹</button><button id="lvNext">›</button></div>'+
+  '</div>';
+
+  el('gScope').innerHTML=h;
+  document.body.style.overflow='hidden';
+  aoSair(function(){ document.body.style.overflow=''; pararAudio(); });
+
+  var esqTextos=[
+    'Desde '+(g.dataEspecial?fmtData(g.dataEspecial):'sempre')+', tudo faz mais sentido.',
+    'Cada detalhe daqui foi escolhido a dedo.',
+    'Um livro só de vocês dois.',
+    'Um segredinho, só nosso.',
+    'E a história continua...'
+  ];
+  var esqEl=el('lvEsq');
+  var dirPags=el('lvDir').querySelectorAll('.lv-pag');
+  var dots=el('lvLivro').parentNode.querySelectorAll('.lv-dots i');
+  var atual=0, virando=false;
+
+  function pintarEsquerda(i){
+    var txt=esqTextos[Math.min(i,esqTextos.length-1)];
+    esqEl.innerHTML='<div class="lv-tex"></div><div class="lv-brilho"></div><div class="lv-amb">'+esc(txt)+'</div>';
+  }
+  pintarEsquerda(0);
+  dirPags.forEach(function(pg,i){ pg.style.zIndex=paginas.length-i; });
+  ligarPaginaDireita(dirPags[0], g);
+
+  function ir(delta){
+    var alvo=atual+delta;
+    if(alvo<0 || alvo>=paginas.length || virando) return;
+    virando=true;
+    var saindo=dirPags[delta>0?atual:alvo];
+    saindo.style.zIndex=90;
+    saindo.style.transition='transform .7s cubic-bezier(.4,.1,.2,1)';
+    saindo.style.transform='rotateY('+(delta>0?-176:0)+'deg)';
+    setTimeout(function(){
+      atual=alvo;
+      if(delta<0){ saindo.style.transition='none'; saindo.style.transform='rotateY(0deg)'; }
+      dirPags.forEach(function(pg,i){
+        if(i===saindo.__idx) return;
+        pg.style.zIndex = i<atual ? (paginas.length-i) : (paginas.length-i);
+      });
+      dirPags.forEach(function(pg,i){ if(i<atual && pg!==saindo) pg.style.transform='rotateY(-176deg)'; if(i>=atual && pg!==saindo) pg.style.transform='rotateY(0deg)'; });
+      pintarEsquerda(atual);
+      dots.forEach(function(d,i){ d.classList.toggle('on', i===atual); });
+      ligarPaginaDireita(dirPags[atual], g);
+      virando=false;
+    },700);
+  }
+  dirPags.forEach(function(pg,i){ pg.__idx=i; });
+
+  el('lvNext').onclick=function(){ ir(1); };
+  el('lvPrev').onclick=function(){ ir(-1); };
+  el('lvDir').onclick=function(e){
+    if(e.target.closest('.lv-rasp')) return;
+    var r=el('lvDir').getBoundingClientRect();
+    var x=e.clientX-r.left;
+    ir(x>r.width*0.4 ? 1 : -1);
+  };
+  setTimeout(function(){ var h2=el('lvHint'); if(h2) h2.style.opacity='0'; },3200);
+}
+function ligarPaginaDireita(pgEl, g){
+  if(!pgEl) return;
+  var tipo=pgEl.dataset.tipo;
+  if(tipo==='contador' && g.dataEspecial) ligarContador(g);
+  if(tipo==='raspadinha') ligarRaspadinha(pgEl.querySelector('.lv-rasp'));
+}
+function ligarRaspadinha(box){
+  if(!box || box.__ligado) return; box.__ligado=true;
+  var cv=box.querySelector('.lv-rasp-cv');
+  var rect=box.getBoundingClientRect();
+  cv.width=rect.width; cv.height=rect.height;
+  var ctx=cv.getContext('2d');
+  var grad=ctx.createLinearGradient(0,0,cv.width,cv.height);
+  grad.addColorStop(0,'#F6D57A'); grad.addColorStop(.5,'#E8B44A'); grad.addColorStop(1,'#B8860B');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='rgba(122,83,7,.9)'; ctx.font='700 14px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('RASPE AQUI', cv.width/2, cv.height/2);
+  var revelado=false, desenhando=false;
+  function pos(e){
+    var r=cv.getBoundingClientRect(); var p=e.touches?e.touches[0]:e;
+    return {x:p.clientX-r.left, y:p.clientY-r.top};
+  }
+  function riscar(e){
+    if(revelado) return;
+    var p=pos(e);
+    ctx.globalCompositeOperation='destination-out';
+    ctx.beginPath(); ctx.arc(p.x,p.y,20,0,Math.PI*2); ctx.fill();
+    var data=ctx.getImageData(0,0,cv.width,cv.height).data;
+    var transp=0,total=0;
+    for(var i=3;i<data.length;i+=4*30){ total++; if(data[i]<30) transp++; }
+    if(transp/total>0.55){ revelado=true; cv.style.transition='opacity .6s ease'; cv.style.opacity='0'; }
+  }
+  cv.style.touchAction='none';
+  cv.addEventListener('mousedown',function(){ desenhando=true; });
+  cv.addEventListener('mouseup',function(){ desenhando=false; });
+  cv.addEventListener('mouseleave',function(){ desenhando=false; });
+  cv.addEventListener('mousemove',function(e){ if(desenhando) riscar(e); });
+  cv.addEventListener('touchstart',function(e){ desenhando=true; riscar(e); });
+  cv.addEventListener('touchend',function(){ desenhando=false; });
+  cv.addEventListener('touchmove',riscar);
 }
 
 /* ---------- 3. CORPO DO PRESENTE ---------- */
@@ -2882,14 +3210,32 @@ function montarCorpo(g){
 
   /* capa */
   h+='<div class="g-hero">';
-  if(fotos[0]) h+='<div class="g-hero-cover"><img src="'+fotos[0].src+'" alt=""></div>';
+  if(fotos[0]) h+='<div class="g-hero-cover'+(t?' tocavel':'')+'" id="perfilAbrir">'+
+    '<img src="'+fotos[0].src+'" alt="">'+(t?'<span class="g-hero-ping"></span>':'')+'</div>';
   else h+='<img src="'+MASCOTE+'" alt="" style="width:110px;margin:0 auto 1.2rem">';
   h+='<div class="g-names">'+esc(g.meuNome)+' &amp; '+esc(g.parceiroNome)+'</div>';
   if(g.titulo) h+='<div class="g-title">'+esc(g.titulo)+'</div>';
   if(g.dataEspecial) h+='<div class="g-since">desde '+fmtExtenso(g.dataEspecial)+
     (g.horaEspecial?(', às '+g.horaEspecial):'')+'</div>';
   if(g.cidade && g.cidade.trim()) h+='<div class="g-place">'+IC.pin+esc(g.cidade)+'</div>';
+  if(t) h+='<div class="g-hero-dica">toque na foto pra ver o perfil do casal</div>';
   h+='</div>';
+
+  if(t){
+    h+='<div class="perfil-modal" id="perfilModal"><div class="perfil-card">'+
+      '<button class="perfil-x" id="perfilX" aria-label="Fechar">&times;</button>'+
+      (fotos[0]?'<div class="perfil-foto"><img src="'+fotos[0].src+'" alt=""></div>':'')+
+      '<div class="perfil-nomes">'+esc(g.meuNome)+' &amp; '+esc(g.parceiroNome)+'</div>'+
+      '<div class="perfil-desde">Juntos desde '+fmtExtenso(g.dataEspecial)+'</div>'+
+      '<div class="perfil-grid">'+
+        '<div class="pf-c"><b>'+t.anos+'</b><span>anos</span></div>'+
+        '<div class="pf-c"><b>'+t.meses+'</b><span>meses</span></div>'+
+        '<div class="pf-c"><b>'+(t.dias%30)+'</b><span>dias</span></div>'+
+      '</div>'+
+      (g.cidade && g.cidade.trim()?'<div class="perfil-cidade">'+IC.pin+esc(g.cidade)+'</div>':'')+
+      (fotos.length?'<div class="perfil-fotos">'+(fotos.length)+' '+(fotos.length===1?'memória guardada':'memórias guardadas')+'</div>':'')+
+    '</div></div>';
+  }
 
   /* contador ao vivo */
   if(r.contador && t){
@@ -3005,6 +3351,12 @@ function montarCorpo(g){
   document.body.style.overflow='hidden';
 
   if(r.contador && t) ligarContador(g);
+  if(t && el('perfilAbrir')){
+    var pm=el('perfilModal');
+    el('perfilAbrir').onclick=function(){ pm.classList.add('on'); };
+    el('perfilX').onclick=function(){ pm.classList.remove('on'); };
+    pm.onclick=function(e){ if(e.target===pm) pm.classList.remove('on'); };
+  }
   if(r.musica && g.musica && g.musica.preview) ligarPlayer();
   if(r.carta && g.carta) ligarCarta(g);
   if(r.stories && fotos.length) el('stOpen').onclick=function(){ abrirStories(fotos, g); };
