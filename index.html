@@ -339,6 +339,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   outline:none;font-family:'Fraunces',serif;accent-color:var(--rose);}
 
 .pick{display:flex;flex-direction:column;gap:.8rem;}
+.pick-rica{gap:1.2rem;}
 .pk{border:1.5px solid var(--line);border-radius:var(--r-md);padding:1.15rem 1.25rem;background:#fff;
   transition:all .2s var(--ease);text-align:left;width:100%;position:relative;}
 .pk:hover{border-color:var(--rose-1);}
@@ -1126,6 +1127,9 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pb-jogo{background:#2A1620;color:#fff;}
 .pb-jogo .pb-cta{background:var(--rose);color:#fff;}
 .pb-jogo .pb-list svg{stroke:var(--rose-1);}
+.pb-convite{background:#FDE49A;color:#5A3B0A;}
+.pb-convite .pb-cta{background:#5A3B0A;color:#fff;}
+.pb-convite .pb-list svg{stroke:#5A3B0A;}
 
 /* mockups desenhados */
 .mk-ph{width:96px;background:#111;border-radius:14px;padding:5px;box-shadow:0 14px 30px rgba(0,0,0,.35);}
@@ -1175,6 +1179,14 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF6DA,#E8B44A 62%,#B8860B);}
 .mk-btn{width:64px;height:12px;border-radius:100px;background:linear-gradient(180deg,#F6D57A,#E8B44A);
   margin:10px auto 0;}
+.mk-cv-ph .mk-scr{background:linear-gradient(180deg,#FBAE4B,#8B4A1E);}
+.mk-cv{display:flex;flex-direction:column;align-items:center;padding-top:4px;}
+.mk-cv-ilus{width:58px;}
+.mk-cv-nm{color:#fff;font-family:'Fraunces';font-weight:700;font-size:.68rem;margin-top:2px;text-align:center;}
+.mk-cv-b{width:76px;height:9px;border-radius:100px;margin-top:5px;}
+.mk-cv-b1{background:#fff;}
+.mk-cv-b2{background:rgba(255,255,255,.55);}
+.mk-cv-b3{background:rgba(255,255,255,.3);}
 .mk-carta-nm{font-family:'Grand Hotel',cursive;font-size:.72rem;color:#B5124E;margin-top:6px;}
 .mk-nm2{font-family:'Grand Hotel',cursive;font-size:.62rem;color:#8a5468;text-align:center;margin-top:5px;}
 
@@ -1968,6 +1980,13 @@ function mockPacote(k){
   if(k==='album'){
     return tela('<div class="mk-grid">'+polas(4)+'</div>','mk-solo');
   }
+  if(k==='convite'){
+    return tela('<div class="mk-cv">'+
+      '<div class="mk-cv-ilus">'+ilustracaoTema('savana')+'</div>'+
+      '<div class="mk-cv-nm">Gael · 3 aninhos</div>'+
+      '<div class="mk-cv-b mk-cv-b1"></div><div class="mk-cv-b mk-cv-b2"></div><div class="mk-cv-b mk-cv-b3"></div>'+
+    '</div>','mk-solo mk-cv-ph');
+  }
   return tela('<div class="mk-hero"><div class="mk-av"></div><div class="mk-nm">Ana &amp; Lucas</div>'+
     '<div class="mk-clock">48h</div></div>','mk-solo mk-dark');
 }
@@ -1984,6 +2003,12 @@ function telaHome(){
     if(r.musica) itens.push('Música do casal tocando junto');
     if(r.contador) itens.push('Contador ao vivo do tempo juntos');
     if(r.jogos) itens.push(k==='jogo' ? 'Roleta, caça-palavras, quebra-cabeça e quiz' : 'Todos os 4 jogos inclusos');
+    if(k==='convite'){
+      itens.push('3 temas ilustrados à escolha');
+      itens.push('Confirmação de presença cai no seu WhatsApp');
+      itens.push('Lista de sugestões de presente');
+      itens.push('Exporta em PDF pra imprimir ou enviar');
+    }
     itens.push('Link + QR Code pra enviar');
     var offs=[];
     if(!r.jogos && k!=='jogo') offs.push('Sem os jogos do casal');
@@ -2579,17 +2604,36 @@ function htmlPasso(k){
   switch(k){
 
   case 'produto': {
-    var lista=['completo','carta','convite'].map(function(p){
-      var d=PACOTES[p];
-      return '<button class="pk '+(W.produto===p?'on':'')+'" data-p="'+p+'">'+
-        (d.destaque?'<span class="tg">Mais escolhido</span>':'')+
-        '<h3>'+d.icone+' '+d.nome+'</h3>'+
-        '<p>'+d.desc+'</p></button>';
+    var lista=['completo','carta','convite'].map(function(k){
+      var p=PACOTES[k], r=RECURSOS[k];
+      var itens=[];
+      if(r.fotos) itens.push('Até '+r.fotos+' fotos com data e legenda');
+      if(r.timeline) itens.push('Linha do tempo da história de vocês');
+      if(r.stories) itens.push('Álbum em stories, deslizando com o dedo');
+      if(r.carta) itens.push('Carta com abertura de envelope');
+      if(r.contador) itens.push('Contador ao vivo do tempo juntos');
+      if(r.jogos) itens.push('Todos os 4 jogos inclusos');
+      if(k==='convite'){
+        itens.push('3 temas ilustrados à escolha');
+        itens.push('Confirmação de presença cai no seu WhatsApp');
+        itens.push('Lista de sugestões de presente');
+      }
+      itens.push('Link + QR Code pra enviar');
+      return '<article class="planb pb-'+k+'">'+
+        (p.destaque?'<span class="pb-rib">★ Mais popular</span>':'')+
+        '<div class="pb-top">'+
+          '<h3 class="pb-t">'+p.nome+'.</h3>'+
+          '<div class="pb-pr">a partir de R$ '+fmtPreco(p.preco48)+'</div>'+
+          '<button class="pb-cta" data-pcta="'+k+'">Criar agora <span>↗</span></button>'+
+        '</div>'+
+        '<div class="pb-mock">'+mockPacote(k)+'</div>'+
+        '<ul class="pb-list">'+ itens.slice(0,4).map(function(i){ return '<li>'+IC.check+'<span>'+i+'</span></li>'; }).join('') +'</ul>'+
+      '</article>';
     }).join('');
     return guia("Oi! Eu sou a Capivarinha. Me conta: que tipo de presente você quer criar hoje?")+
       '<div class="wz-t">O que você quer criar?</div>'+
       '<div class="wz-s">Monte tudo com calma e veja como vai ficar antes de decidir. Você só escolhe o valor no final.</div>'+
-      '<div class="pick">'+lista+'</div>';
+      '<div class="pick pick-rica">'+lista+'</div>';
   }
 
   case 'tema': {
@@ -2867,9 +2911,9 @@ function ligarPasso(k){
   function on(sel,ev,fn){ b.querySelectorAll(sel).forEach(function(e){ e[ev]=fn.bind(null,e); }); }
 
   if(k==='produto'){
-    on('[data-p]','onclick',function(e){
-      W.produto=e.dataset.p;
-      redesenharSemPular();
+    on('[data-pcta]','onclick',function(e){
+      W.produto=e.dataset.pcta;
+      proximoPasso();
     });
   }
   if(k==='tema'){
