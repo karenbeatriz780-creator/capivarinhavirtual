@@ -1019,6 +1019,74 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   padding:.8rem 1rem;font-size:.84rem;font-weight:700;margin:1.1rem 0 1.5rem;cursor:pointer;}
 .prev-full svg{width:15px;height:15px;stroke:var(--rose-deep);flex:none;}
 
+/* ---------- CONVITE CRIATIVO ---------- */
+.cv-scope{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;z-index:5;}
+.cv-body{max-width:32rem;margin:0 auto;padding:2.4rem 1.3rem 3rem;}
+.cv-hero{text-align:center;opacity:0;transform:translateY(18px);transition:all .8s var(--ease);}
+.cv-hero.in{opacity:1;transform:none;}
+.cv-ilus{width:150px;margin:0 auto 1.1rem;filter:drop-shadow(0 14px 26px rgba(0,0,0,.35));}
+.cv-nome{font-family:'Fraunces';font-weight:800;font-size:clamp(2rem,10vw,2.8rem);line-height:1;}
+.cv-idade{font-family:'Fraunces';font-style:italic;font-size:1.2rem;margin-top:.4rem;opacity:.92;}
+.cv-conv{font-size:.9rem;line-height:1.6;max-width:22rem;margin:1rem auto 0;opacity:.92;}
+.cv-quando{display:flex;gap:.7rem;justify-content:center;margin-top:1.6rem;opacity:0;transform:translateY(14px);transition:all .7s var(--ease) .1s;flex-wrap:wrap;}
+.cv-quando.in{opacity:1;transform:none;}
+.cv-qi{background:rgba(255,255,255,.16);backdrop-filter:blur(4px);border-radius:16px;padding:.8rem 1.3rem;text-align:center;min-width:8rem;}
+.cv-ql{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;opacity:.8;}
+.cv-qd{font-family:'Fraunces';font-weight:700;font-size:1.02rem;margin-top:.2rem;}
+.cv-btns{display:flex;flex-direction:column;gap:.7rem;margin-top:1.8rem;opacity:0;transform:translateY(14px);transition:all .7s var(--ease) .2s;}
+.cv-btns.in{opacity:1;transform:none;}
+.cv-btn{display:flex;align-items:center;gap:.7rem;padding:.9rem 1.1rem;border-radius:100px;
+  font-weight:700;font-size:.88rem;text-decoration:none;box-shadow:0 8px 20px rgba(0,0,0,.22);}
+.cv-bic{width:20px;height:20px;flex:none;display:inline-flex;}
+.cv-bic svg{width:100%;height:100%;}
+.cv-presentes{margin-top:2.2rem;background:rgba(255,255,255,.94);border-radius:22px;padding:1.5rem 1.3rem;
+  opacity:0;transform:translateY(14px);transition:all .7s var(--ease) .1s;}
+.cv-presentes.in{opacity:1;transform:none;}
+.cv-presentes h2{font-family:'Fraunces';font-size:1.15rem;color:#2A1620;text-align:center;margin-bottom:1rem;}
+.cv-pres-i{display:flex;align-items:center;gap:.7rem;padding:.6rem 0;border-bottom:1px solid #F1E4E8;color:#3B2C31;font-size:.88rem;}
+.cv-pres-i:last-child{border-bottom:none;}
+.cv-pres-ic{font-size:1.2rem;flex:none;}
+
+.cv-aranha{background:radial-gradient(ellipse at 50% 0%,#1E3A8A,#050A1A 75%);color:#fff;}
+.cv-aranha .cv-btn{background:#E32B6D;color:#fff;}
+.cv-aranha .cv-bic svg{fill:#fff;stroke:#fff;}
+
+.cv-savana{background:linear-gradient(180deg,#FBAE4B,#7A3B12 85%);color:#fff;}
+.cv-savana .cv-btn{background:#8B4A1E;color:#fff;}
+.cv-savana .cv-bic svg{fill:#fff;stroke:#fff;}
+
+.cv-fashion{background:radial-gradient(ellipse at 50% 0%,#FF9FCB,#7A1F52 85%);color:#fff;}
+.cv-fashion .cv-btn{background:#fff;color:#B5124E;}
+.cv-fashion .cv-bic svg{fill:#B5124E;stroke:#B5124E;}
+
+.pk-tema{overflow:hidden;position:relative;}
+.tema-ic{font-size:1.8rem;display:block;margin-bottom:.4rem;}
+.tema-aranha.on{border-color:#2C4EA0;background:#EEF2FF;}
+.tema-savana.on{border-color:#C97A2E;background:#FFF4E6;}
+.tema-fashion.on{border-color:#E85CA0;background:#FFEEF6;}
+
+.pres-i{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;}
+.pres-ic{font-size:1.3rem;flex:none;}
+.pres-txt{flex:1;}
+.pres-emojis{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;}
+.pres-emo{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:#fff;
+  font-size:1.2rem;cursor:pointer;}
+
+.cv-pdf-btn{display:inline-flex;align-items:center;gap:.5rem;margin-top:1.3rem;padding:.55rem 1.1rem;
+  border-radius:100px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);
+  color:inherit;font-size:.76rem;font-weight:700;cursor:pointer;backdrop-filter:blur(4px);}
+.cv-pdf-btn svg{width:14px;height:14px;}
+
+@media print{
+  .no-print, .prev-bar, .wz-scope, header, .hsparks, .sparks{display:none!important;}
+  body, .cv-scope{background:#fff!important;overflow:visible!important;position:static!important;height:auto!important;}
+  .cv-scope, .cv-scope *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;}
+  .cv-scope .rv{opacity:1!important;transform:none!important;}
+  .cv-body{max-width:100%;padding:.6cm;}
+  .cv-btn{box-shadow:none!important;}
+  @page{margin:0.6cm;}
+}
+
 /* ---------- CARDS DE PACOTE EM BLOCO ---------- */
 .planb{position:relative;border-radius:30px;padding:2rem 1.6rem 1.8rem;overflow:hidden;
   display:flex;flex-direction:column;min-height:430px;}
@@ -1281,11 +1349,14 @@ var PACOTES = {
   completo:  {nome:"Retrospectiva Completa", preco:25.99, preco48:16,
               desc:"Tudo liberado: fotos, linha do tempo, stories, carta, contador ao vivo e todos os jogos.", icone:"💝", destaque:true},
   carta:     {nome:"Carta Virtual", preco:6, preco48:4,
-              desc:"A carta com foto colada, abertura de envelope, lacre e assinatura de quem enviou.", icone:"💌", destaque:true}
+              desc:"A carta com foto colada, abertura de envelope, lacre e assinatura de quem enviou.", icone:"💌", destaque:true},
+  convite:   {nome:"Convite Criativo", preco:14, preco48:10,
+              desc:"Convite de aniversário animado, com tema à escolha, presença confirmada no seu WhatsApp e lista de presentes.", icone:"🎉"}
 };
 var RECURSOS = {
   completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1},
-  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0}
+  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0},
+  convite:   {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0}
 };
 var DURACOES = {
   vitalicio: {nome:'Pra sempre', desc:'O link fica no ar pra sempre. Dá pra revisitar quando quiser.', horas:null},
@@ -1477,6 +1548,7 @@ var IC={
   refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 6"/><path d="M20 5v6h-6"/></svg>',
   gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M3 13h18M12 9v12"/><path d="M12 9S9.5 4 7.5 4a2.5 2.5 0 0 0 0 5M12 9s2.5-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>',
   mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+  download:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-5-5m5 5l5-5M4 20h16"/></svg>',
   eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5.5 12 5.5 22.5 12 22.5 12 19 18.5 12 18.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2"/></svg>',
   photo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="M3 17l5-4 4 3 3-2 6 5"/></svg>',
   play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
@@ -1902,7 +1974,7 @@ function mockPacote(k){
 
 function telaHome(){
   var media=mediaNota(), total=todasAvaliacoes().length;
-  var planos = ['completo','carta'].map(function(k){
+  var planos = ['completo','carta','convite'].map(function(k){
     var p=PACOTES[k], r=RECURSOS[k];
     var itens=[];
     if(r.fotos) itens.push('Até '+r.fotos+' fotos com data e legenda');
@@ -2196,7 +2268,9 @@ function novoEstado(prod){
     cacaPalavras:['AMOR','SORRISO','ABRACO','SEMPRE'],
     quebraFoto:0, quebraPecas:12,
     quiz:[{q:'Onde foi o nosso primeiro encontro?', a:'', b:'', c:''}],
-    email:'', anonimo:false, pagamento:'pix', criadoEm:null, expiraEm:null, pago:false
+    email:'', anonimo:false, pagamento:'pix', criadoEm:null, expiraEm:null, pago:false,
+    tema:'aranha', aniversarianteNome:'', idade:'', dataFesta:'', horaFesta:'',
+    local:'', whatsappHost:'', presentes:[]
   };
 }
 
@@ -2249,9 +2323,11 @@ var CARTAS = {
 };
 
 function passos(){
-  var p=W.produto, r=RECURSOS[p]||RECURSOS.completo;
-  var s=[];
+  var p=W.produto;
   if(!p) return ['produto'];
+  if(p==='convite') return ['produto','tema','aniversariante','quando','local','whatsapp','presentes','duracao','checkout'];
+  var r=RECURSOS[p]||RECURSOS.completo;
+  var s=[];
   s.push('produto','perfil','nomes');
   if(p==='completo') s.push('data','titulo');
   if(r.fotos) s.push('fotos');
@@ -2359,7 +2435,7 @@ function abrirPreviaCompleta(){
   }
   sc.style.display='';
   document.body.style.overflow='hidden';
-  montarCorpo(g);
+  (g.produto==='convite' ? montarConvite : montarCorpo)(g);
 
   var barra=document.createElement('div');
   barra.className='prev-bar';
@@ -2503,7 +2579,7 @@ function htmlPasso(k){
   switch(k){
 
   case 'produto': {
-    var lista=['completo','carta'].map(function(p){
+    var lista=['completo','carta','convite'].map(function(p){
       var d=PACOTES[p];
       return '<button class="pk '+(W.produto===p?'on':'')+'" data-p="'+p+'">'+
         (d.destaque?'<span class="tg">Mais escolhido</span>':'')+
@@ -2514,6 +2590,61 @@ function htmlPasso(k){
       '<div class="wz-t">O que você quer criar?</div>'+
       '<div class="wz-s">Monte tudo com calma e veja como vai ficar antes de decidir. Você só escolhe o valor no final.</div>'+
       '<div class="pick">'+lista+'</div>';
+  }
+
+  case 'tema': {
+    var temas=[
+      ['aranha','🕷️','Herói Aracnídeo','Vermelho e azul, clima de gibi'],
+      ['savana','🦁','Rei da Savana','Laranja pôr do sol, cheio de aventura'],
+      ['fashion','💖','Princesa Fashion','Rosa e laços, um estilo só dela']
+    ];
+    var lista=temas.map(function(t){
+      return '<button class="pk pk-tema tema-'+t[0]+' '+(W.tema===t[0]?'on':'')+'" data-tema="'+t[0]+'">'+
+        '<span class="tema-ic">'+t[1]+'</span><h3>'+t[2]+'</h3><p>'+t[3]+'</p></button>';
+    }).join('');
+    return guia("Agora escolhe o clima do convite. Cada tema vem com cor e ilustração própria.")+
+      '<div class="wz-t">Qual o tema?</div>'+
+      '<div class="pick">'+lista+'</div>';
+  }
+
+  case 'aniversariante': {
+    return guia("De quem é a festa? E quantos aninhos vai fazer?")+
+      '<div class="wz-t">O aniversariante</div>'+
+      '<div class="field"><label>Nome</label><input class="inp" id="fAnivNome" value="'+esc(W.aniversarianteNome)+'" placeholder="Ex: Gael"></div>'+
+      '<div class="field"><label>Idade (opcional)</label><input class="inp" id="fAnivIdade" value="'+esc(W.idade)+'" placeholder="Ex: 3"></div>';
+  }
+
+  case 'quando': {
+    return guia("Quando vai ser a festa?")+
+      '<div class="wz-t">Data e horário</div>'+
+      '<div class="field"><label>Data</label><input class="inp" type="date" id="fDataFesta" value="'+esc(W.dataFesta)+'"></div>'+
+      '<div class="field"><label>Horário (opcional)</label><input class="inp" type="time" id="fHoraFesta" value="'+esc(W.horaFesta)+'"></div>';
+  }
+
+  case 'local': {
+    return guia("Onde vai ser a festa? Pode colar o endereço completo, ou um link do mapa.")+
+      '<div class="wz-t">Local</div>'+
+      '<div class="field"><textarea class="inp" id="fLocal" placeholder="Endereço completo, nome do salão, ou link do Google Maps...">'+esc(W.local)+'</textarea></div>';
+  }
+
+  case 'whatsapp': {
+    return guia("Quando alguém tocar em \"confirmar presença\", a mensagem cai direto no seu WhatsApp. Qual o número?")+
+      '<div class="wz-t">Seu WhatsApp</div>'+
+      '<div class="wz-s">Usamos só pra receber as confirmações — não aparece em nenhum outro lugar do convite.</div>'+
+      '<div class="field"><label>WhatsApp com DDD</label><input class="inp" type="tel" id="fWpp" value="'+esc(W.whatsappHost)+'" placeholder="Ex: 94 99999-9999"></div>';
+  }
+
+  case 'presentes': {
+    var itens=(W.presentes||[]).map(function(pr,i){
+      return '<div class="pres-i"><span class="pres-ic">'+esc(pr.icone||'🎁')+'</span>'+
+        '<input class="inp pres-txt" data-pi="'+i+'" value="'+esc(pr.texto||'')+'" placeholder="Ex: Roupa tamanho 3 anos">'+
+        '<button class="row-x" data-prx="'+i+'">×</button></div>';
+    }).join('');
+    return guia("Quer deixar sugestões de presente? É opcional, mas ajuda muito quem for comprar.")+
+      '<div class="wz-t">Sugestões de presente</div>'+
+      '<div class="wz-s">Opcional — toque num ícone pra adicionar uma sugestão.</div>'+
+      '<div id="presLista">'+itens+'</div>'+
+      '<div class="pres-emojis">'+['👟','👕','🧸','👶','📚','🎨','🎁'].map(function(e){ return '<button class="pres-emo" data-pe="'+e+'">'+e+'</button>'; }).join('')+'</div>';
   }
 
   case 'duracao': {
@@ -2741,6 +2872,34 @@ function ligarPasso(k){
       redesenharSemPular();
     });
   }
+  if(k==='tema'){
+    on('[data-tema]','onclick',function(e){ W.tema=e.dataset.tema; redesenharSemPular(); });
+  }
+  if(k==='aniversariante'){
+    el('fAnivNome').oninput=function(e){ W.aniversarianteNome=e.target.value; };
+    el('fAnivIdade').oninput=function(e){ W.idade=e.target.value; };
+  }
+  if(k==='quando'){
+    el('fDataFesta').onchange=function(e){ W.dataFesta=e.target.value; };
+    el('fHoraFesta').onchange=function(e){ W.horaFesta=e.target.value; };
+  }
+  if(k==='local'){
+    el('fLocal').oninput=function(e){ W.local=e.target.value; };
+  }
+  if(k==='whatsapp'){
+    el('fWpp').oninput=function(e){ W.whatsappHost=e.target.value; };
+  }
+  if(k==='presentes'){
+    on('[data-pe]','onclick',function(e){
+      W.presentes.push({icone:e.dataset.pe, texto:''});
+      redesenharSemPular();
+    });
+    on('[data-pi]','oninput',function(e){ W.presentes[parseInt(e.dataset.pi,10)].texto=e.value; });
+    on('[data-prx]','onclick',function(e){
+      W.presentes.splice(parseInt(e.dataset.prx,10),1);
+      redesenharSemPular();
+    });
+  }
   if(k==='duracao'){
     on('[data-dur]','onclick',function(e){ W.duracao=e.dataset.dur; redesenharSemPular(); });
     var vt=el('verTudo'); if(vt) vt.onclick=abrirPreviaCompleta;
@@ -2933,6 +3092,10 @@ function validar(k){
     if(W.produto==='jogo' && !Object.keys(W.jogos).some(function(x){return W.jogos[x];}))
       return erro('Ative pelo menos um jogo.');
   }
+  if(k==='aniversariante' && !W.aniversarianteNome.trim()) return erro('Campo obrigatório','fAnivNome');
+  if(k==='quando' && !W.dataFesta) return erro('Campo obrigatório','fDataFesta');
+  if(k==='local' && !W.local.trim()) return erro('Campo obrigatório','fLocal');
+  if(k==='whatsapp' && (W.whatsappHost||'').replace(/\D/g,'').length<10) return erro('Digite um WhatsApp válido, com DDD.','fWpp');
   if(k==='checkout'){
     if(!W.email.trim()) return erro('Campo obrigatório','fEmail');
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(W.email.trim())) return erro('E-mail inválido — confira o endereço.','fEmail');
@@ -3261,6 +3424,7 @@ function abrirPresenteChecado(g){
   if(g.expiraEm && Date.now()>g.expiraEm){ telaPresenteExpirado(); return; }
   document.body.style.overflow='hidden';
   aoSair(function(){ document.body.style.overflow=''; pararAudio(); });
+  if(g.produto==='convite'){ montarConvite(g); return; }
   montarPortao(g);
 }
 function telaPresenteNaoEncontrado(){
@@ -3521,6 +3685,87 @@ function montarIntro(g){
 }
 
 /* ---------- 3b. LIVRO INTERATIVO (pacote "livro") ---------- */
+/* ---------- 3c. CONVITE CRIATIVO (pacote "convite") ---------- */
+function ilustracaoTema(tema){
+  if(tema==='savana'){
+    return '<svg viewBox="0 0 160 160"><defs><radialGradient id="gS" cx="50%" cy="30%"><stop offset="0%" stop-color="#FFD98A"/><stop offset="100%" stop-color="#F2924A"/></radialGradient></defs>'+
+      '<circle cx="80" cy="80" r="78" fill="url(#gS)"/>'+
+      '<circle cx="80" cy="82" r="46" fill="#E8A94E"/>'+
+      '<circle cx="80" cy="82" r="34" fill="#F7C877"/>'+
+      '<path d="M50 60l-14-18M110 60l14-18M45 78h-16M115 78h16" stroke="#C97A2E" stroke-width="7" stroke-linecap="round"/>'+
+      '<circle cx="66" cy="80" r="4.2" fill="#4A2A12"/><circle cx="94" cy="80" r="4.2" fill="#4A2A12"/>'+
+      '<ellipse cx="80" cy="94" rx="7" ry="5" fill="#4A2A12"/>'+
+      '<path d="M60 34l8 14h24l8-14-10 6-10-10-10 10z" fill="#E8B44A" stroke="#B8860B" stroke-width="2" stroke-linejoin="round"/>'+
+    '</svg>';
+  }
+  if(tema==='fashion'){
+    return '<svg viewBox="0 0 160 160"><defs><radialGradient id="gF" cx="50%" cy="30%"><stop offset="0%" stop-color="#FFD6EA"/><stop offset="100%" stop-color="#E85CA0"/></radialGradient></defs>'+
+      '<circle cx="80" cy="80" r="78" fill="url(#gF)"/>'+
+      '<path d="M80 118c-26 0-34-18-34-30 0-10 8-16 34-16s34 6 34 16c0 12-8 30-34 30z" fill="#fff"/>'+
+      '<circle cx="80" cy="62" r="26" fill="#FFDCC2"/>'+
+      '<circle cx="70" cy="62" r="2.6" fill="#7A3350"/><circle cx="90" cy="62" r="2.6" fill="#7A3350"/>'+
+      '<path d="M72 72q8 6 16 0" stroke="#7A3350" stroke-width="2.4" fill="none" stroke-linecap="round"/>'+
+      '<path d="M80 34l-10 8 10 6 10-6z" fill="#E32B6D"/>'+
+      '<circle cx="80" cy="40" r="5" fill="#E32B6D"/>'+
+    '</svg>';
+  }
+  return '<svg viewBox="0 0 160 160"><defs><radialGradient id="gA" cx="50%" cy="30%"><stop offset="0%" stop-color="#4A7FE0"/><stop offset="100%" stop-color="#16234A"/></radialGradient></defs>'+
+    '<circle cx="80" cy="80" r="78" fill="url(#gA)"/>'+
+    '<path d="M80 12v136M12 80h136M28 28l104 104M132 28L28 132" stroke="#2C3E7A" stroke-width="2" opacity=".5"/>'+
+    '<ellipse cx="80" cy="80" rx="44" ry="48" fill="#E32B6D"/>'+
+    '<path d="M50 46q30-14 60 0M46 100q34 18 68 0" stroke="#0D0206" stroke-width="2.4" fill="none" opacity=".55"/>'+
+    '<path d="M56 68q10-14 24-2q-12 10-24 2z" fill="#fff"/>'+
+    '<path d="M104 68q-10-14-24-2q12 10 24 2z" fill="#fff"/>'+
+  '</svg>';
+}
+function montarConvite(g){
+  var tema=g.tema||'aranha';
+  var idadeTxt = g.idade ? (g.idade+' aninhos') : '';
+  var dataTxt = g.dataFesta ? fmtExtenso(g.dataFesta) : '';
+  var localStr=(g.local||'').trim();
+  var localUrl = /^https?:\/\//i.test(localStr) ? localStr :
+    'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(localStr);
+  var wppNum=(g.whatsappHost||'').replace(/\D/g,'');
+  if(wppNum.length===10||wppNum.length===11) wppNum='55'+wppNum;
+  var msgRsvp='Oi! Só passando pra confirmar presença na festa de '+(g.aniversarianteNome||'')+'! 🎉';
+  var wppUrl='https://wa.me/'+wppNum+'?text='+encodeURIComponent(msgRsvp);
+  var presentes=(g.presentes||[]).filter(function(p){ return p.texto && p.texto.trim(); });
+
+  var h='<div class="cv-scope cv-'+esc(tema)+'"><div class="cv-body">'+
+    '<div class="cv-hero rv">'+
+      '<div class="cv-ilus">'+ilustracaoTema(tema)+'</div>'+
+      '<div class="cv-nome">'+esc(g.aniversarianteNome||'')+'</div>'+
+      (idadeTxt?'<div class="cv-idade">'+esc(idadeTxt)+'</div>':'')+
+      '<div class="cv-conv">Você é meu convidado especial pra comemorar esse dia tão importante!</div>'+
+      '<button class="cv-pdf-btn no-print" id="cvPdf">'+IC.download+'Baixar convite em PDF</button>'+
+    '</div>'+
+    (dataTxt||g.horaFesta ? '<div class="cv-quando rv">'+
+        (dataTxt?'<div class="cv-qi"><div class="cv-ql">Dia</div><div class="cv-qd">'+esc(dataTxt)+'</div></div>':'')+
+        (g.horaFesta?'<div class="cv-qi"><div class="cv-ql">Horário</div><div class="cv-qd">'+esc(g.horaFesta)+'</div></div>':'')+
+      '</div>' : '')+
+    '<div class="cv-btns rv">'+
+      (wppNum.length>=12?'<a class="cv-btn" href="'+wppUrl+'" target="_blank" rel="noopener"><span class="cv-bic">'+IC.wpp+'</span>Confirmar presença</a>':'')+
+      (localStr?'<a class="cv-btn" href="'+esc(localUrl)+'" target="_blank" rel="noopener"><span class="cv-bic">'+IC.pin+'</span>Localização da festa</a>':'')+
+      (presentes.length?'<a class="cv-btn" href="#cvPresentes"><span class="cv-bic">🎁</span>Sugestões de presentes</a>':'')+
+    '</div>'+
+    (presentes.length ? '<div class="cv-presentes rv" id="cvPresentes"><h2>Sugestões de presentes</h2>'+
+      presentes.map(function(p){ return '<div class="cv-pres-i"><span class="cv-pres-ic">'+esc(p.icone||'🎁')+'</span><span>'+esc(p.texto)+'</span></div>'; }).join('')+
+    '</div>' : '')+
+    (g.previa ?
+      '<div class="g-foot no-print"><img src="'+MASCOTE+'" alt=""><p>Esta é a prévia do seu convite.<br>Volte a editar pra ajustar o que quiser.</p></div>' :
+      '<div class="g-foot no-print"><img src="'+MASCOTE+'" alt=""><p>Convite feito com carinho no <a href="#/">'+CONFIG.marca+'</a> — crie o seu também.</p>'+
+      '<a class="btn btn-ghost" href="#/criar" style="margin-top:1.2rem">Quero criar um convite</a></div>')+
+  '</div></div>';
+
+  var sc=el('gScope');
+  sc.innerHTML=h;
+  sc.scrollTop=0;
+  document.body.style.overflow='hidden';
+  revelarNo(sc);
+  var pdfBtn=el('cvPdf');
+  if(pdfBtn) pdfBtn.onclick=function(){ window.print(); };
+}
+
 function montarLivro(g){
   var fotos=(g.fotos||[]).filter(Boolean);
   var n1=esc(g.meuNome||''), n2=esc(g.parceiroNome||'');
