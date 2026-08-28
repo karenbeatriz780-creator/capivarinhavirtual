@@ -1014,6 +1014,10 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .prev-vazio{min-height:70vh;display:flex;align-items:center;justify-content:center;text-align:center;
   padding:2rem;color:#B99BA8;font-size:.95rem;line-height:1.6;max-width:20rem;margin:0 auto;}
 .prev-etapa{padding-top:2.5rem;}
+.prev-full{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;
+  background:var(--rose-soft);color:var(--rose-deep);border:1px dashed var(--rose);border-radius:100px;
+  padding:.8rem 1rem;font-size:.84rem;font-weight:700;margin:1.1rem 0 1.5rem;cursor:pointer;}
+.prev-full svg{width:15px;height:15px;stroke:var(--rose-deep);flex:none;}
 
 /* ---------- CARDS DE PACOTE EM BLOCO ---------- */
 .planb{position:relative;border-radius:30px;padding:2rem 1.6rem 1.8rem;overflow:hidden;
@@ -1105,6 +1109,16 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   margin:10px auto 0;}
 .mk-carta-nm{font-family:'Grand Hotel',cursive;font-size:.72rem;color:#B5124E;margin-top:6px;}
 .mk-nm2{font-family:'Grand Hotel',cursive;font-size:.62rem;color:#8a5468;text-align:center;margin-top:5px;}
+
+.mk-cyc{position:relative;height:100%;}
+.mk-fr{position:absolute;inset:0;opacity:0;animation:mkCyc 7s ease-in-out infinite;}
+.mk-fr1{animation-delay:0s;}
+.mk-fr2{animation-delay:3.5s;}
+@keyframes mkCyc{0%,4%{opacity:0;}9%,42%{opacity:1;}47%,100%{opacity:0;}}
+.mk-carr{display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 2px;}
+.mk-carr .mk-pol{margin:0;}
+.mk-roleta-sm{width:44px;height:44px;position:absolute;bottom:6px;right:6px;box-shadow:0 0 0 2px #E8B44A;}
+.mk-roleta-sm .mk-hub{width:12px;height:12px;}
 @media(max-width:640px){ .planb{min-height:380px;padding:1.6rem 1.2rem 1.4rem;} }
 
 /* brilho passando nos mockups dos pacotes */
@@ -1266,14 +1280,11 @@ var CONFIG = {
 var PACOTES = {
   completo:  {nome:"Retrospectiva Completa", preco:25.99, preco48:16,
               desc:"Tudo liberado: fotos, linha do tempo, stories, carta, contador ao vivo e todos os jogos.", icone:"💝", destaque:true},
-  livro:     {nome:"Livro Interativo", preco:16, preco48:12,
-              desc:"Um livro digital de verdade — folheia as páginas, tem raspadinha surpresa e conta cada segundo de vocês.", icone:"📖"},
   carta:     {nome:"Carta Virtual", preco:6, preco48:4,
               desc:"A carta com foto colada, abertura de envelope, lacre e assinatura de quem enviou.", icone:"💌", destaque:true}
 };
 var RECURSOS = {
   completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1},
-  livro:     {fotos:14, carta:0, musica:0, contador:1, timeline:1, stories:0, jogos:1},
   carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0}
 };
 var DURACOES = {
@@ -1857,9 +1868,14 @@ function mockPacote(k){
     return out;
   };
   if(k==='completo'){
-    return tela('<div class="mk-hero"><div class="mk-av"></div><div class="mk-nm">Ana &amp; Lucas</div><div class="mk-ct">'+
-      '<i></i><i></i><i></i><i></i><i></i><i></i></div></div>','mk-a')+
-      tela('<div class="mk-tl">'+polas(2)+'</div>','mk-b');
+    return tela('<div class="mk-cyc">'+
+        '<div class="mk-hero mk-fr mk-fr1"><div class="mk-av"></div><div class="mk-nm">Ana &amp; Lucas</div><div class="mk-ct">'+
+          '<i></i><i></i><i></i><i></i><i></i><i></i></div></div>'+
+        '<div class="mk-fr mk-fr2 mk-carr">'+polas(3)+'</div>'+
+      '</div>','mk-a')+
+      tela('<div class="mk-tl">'+polas(2)+'</div>'+
+        '<div class="mk-roleta mk-roleta-sm"><span></span><span></span><span></span><span></span><span></span><span></span>'+
+        '<div class="mk-hub"></div></div>','mk-b');
   }
   if(k==='carta'){
     return tela('<div class="mk-carta"><div class="mk-foto"></div>'+
@@ -1886,7 +1902,7 @@ function mockPacote(k){
 
 function telaHome(){
   var media=mediaNota(), total=todasAvaliacoes().length;
-  var planos = ['completo','carta','livro'].map(function(k){
+  var planos = ['completo','carta'].map(function(k){
     var p=PACOTES[k], r=RECURSOS[k];
     var itens=[];
     if(r.fotos) itens.push('Até '+r.fotos+' fotos com data e legenda');
@@ -2237,7 +2253,7 @@ function passos(){
   var s=[];
   if(!p) return ['produto'];
   s.push('produto','perfil','nomes');
-  if(p==='completo'||p==='livro') s.push('data','titulo');
+  if(p==='completo') s.push('data','titulo');
   if(r.fotos) s.push('fotos');
   if(r.carta) s.push('carta');
   if(r.jogos) s.push('jogos');
@@ -2326,14 +2342,57 @@ function htmlSecoesFotos(g, fotos){
   return h;
 }
 
+function abrirPreviaCompleta(){
+  limpar();
+  var g=JSON.parse(JSON.stringify(W));
+  g.pago=true; g.previa=true;
+  g.criadoEm=g.criadoEm||Date.now();
+  g.expiraEm=null;
+  if(!g.meuNome) g.meuNome='Você';
+  if(!g.parceiroNome) g.parceiroNome='quem você ama';
+
+  var sc=el('gScope');
+  if(!sc){
+    sc=document.createElement('div');
+    sc.id='gScope'; sc.className='g-scope';
+    document.body.appendChild(sc);
+  }
+  sc.style.display='';
+  document.body.style.overflow='hidden';
+  montarCorpo(g);
+
+  var barra=document.createElement('div');
+  barra.className='prev-bar';
+  barra.innerHTML='<span>'+IC.eye+'Prévia completa — é assim que vai ficar</span>'+
+    '<button id="prevFechar">Voltar a editar</button>';
+  sc.appendChild(barra);
+  el('prevFechar').onclick=function(){
+    limpar();
+    sc.innerHTML=''; sc.style.display='none';
+    document.body.style.overflow='';
+  };
+}
+
 function abrirPreviaEtapa(tipo){
+  limpar();
   var g=JSON.parse(JSON.stringify(W));
   g.meuNome=g.meuNome||'Você'; g.parceiroNome=g.parceiroNome||'quem você ama';
   var fotos=(g.fotos||[]).filter(Boolean);
   var corpo='';
   var titulo='';
 
-  if(tipo==='carta'){
+  if(tipo==='tudo'){
+    titulo='Prévia completa';
+    var r=RECURSOS[g.produto]||RECURSOS.completo;
+    corpo=htmlSecaoCarta(g, fotos) + htmlSecoesFotos(g, fotos);
+    if(r.jogos && g.jogos && Object.keys(g.jogos).some(function(x){ return g.jogos[x]; })){
+      corpo+='<div class="prev-jogos-nota">'+IC.gift+' Os jogos escolhidos ('+
+        Object.keys(g.jogos).filter(function(x){ return g.jogos[x]; }).map(function(x){
+          return {roleta:'Roleta',palavra:'Caça-palavras',caca:'Caça ao tesouro',quebra:'Quebra-cabeça',quiz:'Quiz'}[x]||x;
+        }).join(', ')+') aparecem no presente de verdade, com a animação de girar/jogar — aqui na prévia eles ficam só listados.</div>';
+    }
+    if(!corpo) corpo='<div class="prev-vazio">Ainda não tem conteúdo suficiente pra mostrar. Volta e preenche fotos ou a carta.</div>';
+  } else if(tipo==='carta'){
     titulo='Prévia da carta';
     if(!g.carta || !g.carta.trim()){
       corpo='<div class="prev-vazio">Escreve a carta primeiro — assim que tiver algum texto, a prévia aparece aqui.</div>';
@@ -2359,7 +2418,15 @@ function abrirPreviaEtapa(tipo){
   document.body.style.overflow='hidden';
   sc.innerHTML='<div class="g-body prev-etapa">'+corpo+'</div>';
 
-  if(tipo==='carta' && g.carta && g.carta.trim()) ligarCarta(g);
+  if(tipo==='carta' && g.carta && g.carta.trim()){
+    for(var pk=0;pk<14;pk++){
+      var pt=document.createElement('span'); pt.className='petal';
+      pt.style.cssText='left:'+(Math.random()*100)+'%;width:'+(9+Math.random()*9)+'px;'+
+        'animation-duration:'+(7+Math.random()*7)+'s;animation-delay:'+(Math.random()*8)+'s;';
+      pt.innerHTML=IC.heart; var petBox=el('petals'); if(petBox) petBox.appendChild(pt);
+    }
+    var ltx=el('letterTx'); if(ltx) ltx.textContent=g.carta;
+  }
   observarReveal(sc);
 
   var barra=document.createElement('div');
@@ -2368,6 +2435,7 @@ function abrirPreviaEtapa(tipo){
     '<button id="prevFechar">Voltar a editar</button>';
   sc.appendChild(barra);
   el('prevFechar').onclick=function(){
+    limpar();
     sc.innerHTML=''; sc.style.display='none';
     document.body.style.overflow='';
   };
@@ -2434,7 +2502,7 @@ function htmlPasso(k){
   switch(k){
 
   case 'produto': {
-    var lista=['completo','carta','livro'].map(function(p){
+    var lista=['completo','carta'].map(function(p){
       var d=PACOTES[p];
       return '<button class="pk '+(W.produto===p?'on':'')+'" data-p="'+p+'">'+
         (d.destaque?'<span class="tg">Mais escolhido</span>':'')+
@@ -2458,7 +2526,8 @@ function htmlPasso(k){
     }).join('');
     return guia("Ficou lindo! Agora só falta escolher por quanto tempo o presente fica no ar.")+
       '<div class="wz-t">Por quanto tempo?</div>'+
-      '<div class="wz-s">Pagamento único por Pix, sem assinatura. Você pode ver a prévia de novo antes de pagar.</div>'+
+      '<div class="wz-s">Pagamento único por Pix, sem assinatura.</div>'+
+      '<button class="prev-full" id="verTudo">'+IC.eye+'Ver o presente inteiro, do jeito que vai chegar</button>'+
       '<div class="pick">'+op+'</div>';
   }
 
@@ -2673,6 +2742,7 @@ function ligarPasso(k){
   }
   if(k==='duracao'){
     on('[data-dur]','onclick',function(e){ W.duracao=e.dataset.dur; redesenharSemPular(); });
+    var vt=el('verTudo'); if(vt) vt.onclick=abrirPreviaCompleta;
   }
   if(k==='perfil'){ on('[data-v]','onclick',function(e){ W.perfil=e.dataset.v; redesenharSemPular(); }); }
   if(k==='nomes'){
@@ -2732,7 +2802,7 @@ function ligarPasso(k){
       }
     };
     on('[data-cap]','oninput',function(e){ W.fotos[parseInt(e.dataset.cap,10)].legenda=e.value; });
-    on('[data-cdt]','oninput',function(e){ W.fotos[parseInt(e.dataset.cdt,10)].data=e.value; });
+    on('[data-cdt]','onchange',function(e){ W.fotos[parseInt(e.dataset.cdt,10)].data=e.value; redesenharSemPular(); });
   }
   if(k==='musica'){
     var inp=el('fMus'), t;
@@ -3441,7 +3511,7 @@ function montarIntro(g){
   function fim(){
     clearTimeout(timer);
     box.style.transition='opacity .7s ease'; box.style.opacity='0';
-    setTimeout(function(){ box.remove(); (g.produto==='livro'?montarLivro:montarCorpo)(g); },700);
+    setTimeout(function(){ box.remove(); montarCorpo(g); },700);
   }
   box.onclick=function(e){ if(e.target.id==='skipIntro') return; avancar(); };
   el('skipIntro').onclick=function(e){ e.stopPropagation(); fim(); };
@@ -3865,6 +3935,7 @@ function ligarCarta(g){
     },{root:el('gScope'), threshold:.3});
     io.observe(el('letter'));
     aoSair(function(){ io.disconnect(); clearInterval(iv); });
+    setTimeout(digitar,450);
   } else digitar();
 }
 
