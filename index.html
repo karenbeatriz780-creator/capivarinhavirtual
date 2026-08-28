@@ -1023,26 +1023,23 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 /* ---------- CONVITE CRIATIVO ---------- */
 .cv-scope{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;z-index:5;}
 .cv-body{max-width:32rem;margin:0 auto;padding:2.4rem 1.3rem 3rem;}
-.cv-hero{text-align:center;opacity:0;transform:translateY(18px);transition:all .8s var(--ease);}
-.cv-hero.in{opacity:1;transform:none;}
+.cv-anim{animation:cvIn .7s var(--ease) both;animation-delay:var(--cvd,0s);}
+@keyframes cvIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+.cv-hero{text-align:center;}
 .cv-ilus{width:150px;margin:0 auto 1.1rem;filter:drop-shadow(0 14px 26px rgba(0,0,0,.35));}
 .cv-nome{font-family:'Fraunces';font-weight:800;font-size:clamp(2rem,10vw,2.8rem);line-height:1;}
 .cv-idade{font-family:'Fraunces';font-style:italic;font-size:1.2rem;margin-top:.4rem;opacity:.92;}
 .cv-conv{font-size:.9rem;line-height:1.6;max-width:22rem;margin:1rem auto 0;opacity:.92;}
-.cv-quando{display:flex;gap:.7rem;justify-content:center;margin-top:1.6rem;opacity:0;transform:translateY(14px);transition:all .7s var(--ease) .1s;flex-wrap:wrap;}
-.cv-quando.in{opacity:1;transform:none;}
+.cv-quando{display:flex;gap:.7rem;justify-content:center;margin-top:1.6rem;flex-wrap:wrap;}
 .cv-qi{background:rgba(255,255,255,.16);backdrop-filter:blur(4px);border-radius:16px;padding:.8rem 1.3rem;text-align:center;min-width:8rem;}
 .cv-ql{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;opacity:.8;}
 .cv-qd{font-family:'Fraunces';font-weight:700;font-size:1.02rem;margin-top:.2rem;}
-.cv-btns{display:flex;flex-direction:column;gap:.7rem;margin-top:1.8rem;opacity:0;transform:translateY(14px);transition:all .7s var(--ease) .2s;}
-.cv-btns.in{opacity:1;transform:none;}
+.cv-btns{display:flex;flex-direction:column;gap:.7rem;margin-top:1.8rem;}
 .cv-btn{display:flex;align-items:center;gap:.7rem;padding:.9rem 1.1rem;border-radius:100px;
   font-weight:700;font-size:.88rem;text-decoration:none;box-shadow:0 8px 20px rgba(0,0,0,.22);}
 .cv-bic{width:20px;height:20px;flex:none;display:inline-flex;}
 .cv-bic svg{width:100%;height:100%;}
-.cv-presentes{margin-top:2.2rem;background:rgba(255,255,255,.94);border-radius:22px;padding:1.5rem 1.3rem;
-  opacity:0;transform:translateY(14px);transition:all .7s var(--ease) .1s;}
-.cv-presentes.in{opacity:1;transform:none;}
+.cv-presentes{margin-top:2.2rem;background:rgba(255,255,255,.94);border-radius:22px;padding:1.5rem 1.3rem;}
 .cv-presentes h2{font-family:'Fraunces';font-size:1.15rem;color:#2A1620;text-align:center;margin-bottom:1rem;}
 .cv-pres-i{display:flex;align-items:center;gap:.7rem;padding:.6rem 0;border-bottom:1px solid #F1E4E8;color:#3B2C31;font-size:.88rem;}
 .cv-pres-i:last-child{border-bottom:none;}
@@ -3778,23 +3775,23 @@ function montarConvite(g){
   var presentes=(g.presentes||[]).filter(function(p){ return p.texto && p.texto.trim(); });
 
   var h='<div class="cv-scope cv-'+esc(tema)+'"><div class="cv-body">'+
-    '<div class="cv-hero rv">'+
+    '<div class="cv-hero cv-anim" style="--cvd:.05s">'+
       '<div class="cv-ilus">'+ilustracaoTema(tema)+'</div>'+
       '<div class="cv-nome">'+esc(g.aniversarianteNome||'')+'</div>'+
       (idadeTxt?'<div class="cv-idade">'+esc(idadeTxt)+'</div>':'')+
       '<div class="cv-conv">Você é meu convidado especial pra comemorar esse dia tão importante!</div>'+
       '<button class="cv-pdf-btn no-print" id="cvPdf">'+IC.download+'Baixar convite em PDF</button>'+
     '</div>'+
-    (dataTxt||g.horaFesta ? '<div class="cv-quando rv">'+
+    (dataTxt||g.horaFesta ? '<div class="cv-quando cv-anim" style="--cvd:.2s">'+
         (dataTxt?'<div class="cv-qi"><div class="cv-ql">Dia</div><div class="cv-qd">'+esc(dataTxt)+'</div></div>':'')+
         (g.horaFesta?'<div class="cv-qi"><div class="cv-ql">Horário</div><div class="cv-qd">'+esc(g.horaFesta)+'</div></div>':'')+
       '</div>' : '')+
-    '<div class="cv-btns rv">'+
+    '<div class="cv-btns cv-anim" style="--cvd:.35s">'+
       (wppNum.length>=12?'<a class="cv-btn" href="'+wppUrl+'" target="_blank" rel="noopener"><span class="cv-bic">'+IC.wpp+'</span>Confirmar presença</a>':'')+
       (localStr?'<a class="cv-btn" href="'+esc(localUrl)+'" target="_blank" rel="noopener"><span class="cv-bic">'+IC.pin+'</span>Localização da festa</a>':'')+
       (presentes.length?'<a class="cv-btn" href="#cvPresentes"><span class="cv-bic">🎁</span>Sugestões de presentes</a>':'')+
     '</div>'+
-    (presentes.length ? '<div class="cv-presentes rv" id="cvPresentes"><h2>Sugestões de presentes</h2>'+
+    (presentes.length ? '<div class="cv-presentes cv-anim" style="--cvd:.5s" id="cvPresentes"><h2>Sugestões de presentes</h2>'+
       presentes.map(function(p){ return '<div class="cv-pres-i"><span class="cv-pres-ic">'+esc(p.icone||'🎁')+'</span><span>'+esc(p.texto)+'</span></div>'; }).join('')+
     '</div>' : '')+
     (g.previa ?
@@ -3811,7 +3808,6 @@ function montarConvite(g){
   sc.innerHTML=h;
   sc.scrollTop=0;
   document.body.style.overflow='hidden';
-  revelarNo(sc);
   var pdfBtn=el('cvPdf');
   if(pdfBtn) pdfBtn.onclick=function(){ window.print(); };
 }
