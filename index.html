@@ -2560,10 +2560,12 @@ function desenharPasso(opts){
   ligarPasso(k);
   var pv=el('wzPrev');
   var mostraFotos = k==='fotos' && W.produto!=='carta';
-  if(mostraFotos || k==='carta'){
+  var passosConvitePrevia=['aniversariante','quando','local','whatsapp','presentes'];
+  var mostraConvite = W.produto==='convite' && passosConvitePrevia.indexOf(k)!==-1;
+  if(mostraFotos || k==='carta' || mostraConvite){
     pv.style.display='';
-    pv.innerHTML=IC.eye+(k==='carta' ? 'Ver prévia da carta' : 'Ver prévia das fotos');
-    pv.onclick=function(){ abrirPreviaEtapa(k); };
+    pv.innerHTML=IC.eye+(k==='carta' ? 'Ver prévia da carta' : (mostraConvite ? 'Ver prévia do convite' : 'Ver prévia das fotos'));
+    pv.onclick=function(){ mostraConvite ? abrirPreviaCompleta() : abrirPreviaEtapa(k); };
   } else {
     pv.style.display='none';
   }
@@ -3802,6 +3804,10 @@ function montarConvite(g){
   '</div></div>';
 
   var sc=el('gScope');
+  if(!sc){
+    el('app').innerHTML='<div class="g-scope" id="gScope"></div>';
+    sc=el('gScope');
+  }
   sc.innerHTML=h;
   sc.scrollTop=0;
   document.body.style.overflow='hidden';
