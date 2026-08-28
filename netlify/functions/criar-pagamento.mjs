@@ -4,8 +4,8 @@ import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 
 const PACOTES = {
   completo:  { nome: 'Retrospectiva Completa', preco: 25.99, preco48: 16 },
-  livro:     { nome: 'Livro Interativo', preco: 16, preco48: 12 },
   carta:     { nome: 'Carta Virtual',   preco: 6, preco48: 4 },
+  convite:   { nome: 'Convite Criativo', preco: 14, preco48: 10 },
   extra:         { nome: 'Lembrancinhas',  preco: 4 },
   extra_tema:    { nome: 'QR temático',    preco: 2.99 },
   extra_carta:   { nome: 'Cartinha',       preco: 3.99 },
