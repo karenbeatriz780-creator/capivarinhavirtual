@@ -1020,6 +1020,59 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   padding:.8rem 1rem;font-size:.84rem;font-weight:700;margin:1.1rem 0 1.5rem;cursor:pointer;}
 .prev-full svg{width:15px;height:15px;stroke:var(--rose-deep);flex:none;}
 
+/* ---------- VITRINE "tudo que já vai no seu presente" ---------- */
+.vt-grid{display:flex;flex-direction:column;gap:.8rem;margin-top:.4rem;}
+.vt-anim{animation:vtIn .55s var(--ease) both;animation-delay:var(--vd,0s);}
+@keyframes vtIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.vt-card{display:flex;align-items:center;gap:.9rem;background:#fff;border:1px solid var(--line);
+  border-radius:18px;padding:.85rem;box-shadow:var(--shadow-sm);}
+.vt-tx{flex:1;min-width:0;}
+.vt-ic{font-size:1.05rem;}
+.vt-tx h4{font-size:.95rem;font-weight:800;color:var(--plum);margin:.1rem 0 .18rem;}
+.vt-tx p{font-size:.78rem;color:var(--muted);line-height:1.5;}
+.vt-mini{flex:none;width:74px;height:74px;border-radius:14px;overflow:hidden;position:relative;
+  background:linear-gradient(160deg,#2A1620,#160B12);display:flex;align-items:center;justify-content:center;}
+.vtm-ctr{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;width:80%;}
+.vtm-ctr i{height:14px;border-radius:3px;background:linear-gradient(135deg,var(--rose-deep),var(--rose));}
+.vtm-fotos{display:flex;gap:3px;}
+.vtm-fotos span{width:17px;height:22px;background:#fff;padding:1.5px;box-shadow:0 2px 5px rgba(0,0,0,.3);}
+.vtm-fotos span:nth-child(1){transform:rotate(-7deg);}
+.vtm-fotos span:nth-child(3){transform:rotate(7deg);}
+.vtm-fotos span::after{content:"";display:block;width:100%;height:100%;background:linear-gradient(150deg,#5A2740,#2C3E50);}
+.vtm-tl{display:flex;flex-direction:column;gap:4px;width:72%;}
+.vtm-tl b{height:10px;width:60%;border-radius:2px;background:#fff;}
+.vtm-tl span{height:5px;width:80%;border-radius:3px;background:rgba(255,158,194,.55);align-self:flex-end;}
+.vtm-st{display:flex;gap:4px;}
+.vtm-st i{width:13px;height:34px;border-radius:4px;background:linear-gradient(180deg,#E32B6D,#6E1030);}
+.vtm-st i:nth-child(2){transform:scale(1.16);background:linear-gradient(180deg,#FF9EC2,#B5124E);}
+.vtm-carta{background:linear-gradient(170deg,#FFFCF8,#F0E2D0);width:74%;height:80%;border-radius:3px;padding:6px;position:relative;}
+.vtm-carta b{display:block;width:52%;height:4px;background:#B5124E;border-radius:2px;margin-bottom:4px;}
+.vtm-carta i{display:block;height:2.5px;background:#cbb8ab;border-radius:2px;margin-bottom:3px;}
+.vtm-carta i:nth-child(3){width:88%;} .vtm-carta i:nth-child(4){width:70%;}
+.vtm-carta u{position:absolute;bottom:5px;right:5px;width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#C0392B,#8B1A12);}
+.vtm-env{display:flex;gap:3px;}
+.vtm-env span{width:19px;height:14px;background:linear-gradient(160deg,#FBF3E4,#E6D6BC);border-radius:2px;position:relative;}
+.vtm-env span::after{content:"";position:absolute;top:0;left:0;right:0;height:56%;
+  background:#F0E2C8;clip-path:polygon(0 0,100% 0,50% 100%);}
+.vtm-env span:nth-child(2){transform:translateY(3px);}
+.vtm-rol i{display:block;width:40px;height:40px;border-radius:50%;box-shadow:0 0 0 3px #E8B44A;
+  background:conic-gradient(#E32B6D 0 60deg,#6E1030 60deg 120deg,#E32B6D 120deg 180deg,#6E1030 180deg 240deg,#E32B6D 240deg 300deg,#6E1030 300deg 360deg);}
+.vtm-qr{width:38px;height:38px;background:
+  repeating-linear-gradient(90deg,#fff 0 4px,#160B12 4px 8px),
+  repeating-linear-gradient(0deg,#fff 0 4px,#160B12 4px 8px);
+  background-blend-mode:difference;border:3px solid #fff;border-radius:3px;}
+
+/* destaque do plano vitalício */
+.pk-dur-vit{position:relative;border-color:var(--rose)!important;
+  box-shadow:0 10px 30px rgba(227,43,109,.18);}
+.pk-benef{display:flex;align-items:flex-start;gap:.4rem;margin-top:.7rem;padding-top:.7rem;
+  border-top:1px dashed var(--line);font-size:.75rem;color:var(--rose-deep);font-weight:600;text-align:left;}
+.pk-benef svg{width:13px;height:13px;flex:none;margin-top:.15rem;stroke:var(--rose);}
+.up-nota{display:flex;gap:.7rem;align-items:flex-start;margin-top:1rem;padding:.9rem 1rem;
+  background:var(--rose-soft);border-radius:16px;font-size:.8rem;line-height:1.55;color:var(--rose-deep);}
+.up-nota svg{width:16px;height:16px;flex:none;fill:var(--rose);margin-top:.15rem;}
+
 /* ---------- CARTAS DOS SENTIMENTOS (cartão de capa + tela cheia) ---------- */
 .aq-anim{animation:aqIn .65s var(--ease) both;animation-delay:var(--aqd,0s);}
 @keyframes aqIn{from{opacity:0;transform:translateY(18px) rotate(-1deg);}to{opacity:1;transform:none;}}
@@ -2438,7 +2491,7 @@ var CARTAS = {
 function passos(){
   var p=W.produto;
   if(!p) return ['produto'];
-  if(p==='convite') return ['produto','tema','aniversariante','quando','local','whatsapp','presentes','duracao','checkout'];
+  if(p==='convite') return ['produto','tema','aniversariante','quando','local','whatsapp','presentes','vitrine','duracao','checkout'];
   var r=RECURSOS[p]||RECURSOS.completo;
   var s=[];
   s.push('produto','perfil','nomes');
@@ -2446,7 +2499,7 @@ function passos(){
   if(r.fotos) s.push('fotos');
   if(r.carta) s.push('carta');
   if(r.jogos) s.push('jogos');
-  s.push('duracao','checkout');
+  s.push('vitrine','duracao','checkout');
   return s;
 }
 
@@ -2878,20 +2931,70 @@ function htmlPasso(k){
       '<div class="pres-emojis">'+['👟','👕','🧸','👶','📚','🎨','🎁'].map(function(e){ return '<button class="pres-emo" data-pe="'+e+'">'+e+'</button>'; }).join('')+'</div>';
   }
 
+  case 'vitrine': {
+    var r=RECURSOS[W.produto]||RECURSOS.completo;
+    var cards=[];
+    function card(icone, titulo, txt, mini){
+      cards.push('<div class="vt-card vt-anim" style="--vd:'+(cards.length*.07)+'s">'+
+        '<div class="vt-mini">'+mini+'</div>'+
+        '<div class="vt-tx"><span class="vt-ic">'+icone+'</span>'+
+        '<h4>'+titulo+'</h4><p>'+txt+'</p></div></div>');
+    }
+    if(r.contador) card('⏱️','O tempo de vocês, ao vivo',
+      'Anos, meses, dias, horas e segundos juntos — contando na tela, sem parar.',
+      '<div class="vtm-ctr"><i></i><i></i><i></i><i></i><i></i><i></i></div>');
+    if(r.fotos) card('📸','Seus melhores momentos',
+      'Até '+r.fotos+' fotos com data e legenda, em linha do tempo, carrossel e cabine de fotos.',
+      '<div class="vtm-fotos"><span></span><span></span><span></span></div>');
+    if(r.timeline) card('🗓️','A história em ordem',
+      'Cada foto no seu lugar, uma de cada lado, com a data em destaque.',
+      '<div class="vtm-tl"><b></b><span></span><b></b><span></span></div>');
+    if(r.stories) card('📱','Álbum em stories',
+      'Igual Instagram: desliza com o dedo e vai passando cada memória.',
+      '<div class="vtm-st"><i></i><i></i><i></i></div>');
+    if(r.carta) card('💌','Uma carta pra guardar pra sempre',
+      'Escrita à mão, com envelope, lacre de cera e a foto de vocês colada no canto.',
+      '<div class="vtm-carta"><b></b><i></i><i></i><i></i><u></u></div>');
+    if(r.carta) card('✉️','Cartas dos Sentimentos',
+      '7 cartas seladas já escritas: "abra quando bater a saudade", "abra num dia difícil"... ela abre uma de cada vez.',
+      '<div class="vtm-env"><span></span><span></span><span></span></div>');
+    if(r.jogos) card('🎲','Jogos pra vocês dois',
+      'Roleta do encontro, caça-palavras, quebra-cabeça com foto de vocês e quiz do casal.',
+      '<div class="vtm-rol"><i></i></div>');
+    card('🔗','Link e QR Code prontos',
+      'Manda no WhatsApp ou imprime o QR — quando ela abrir, a surpresa começa sozinha.',
+      '<div class="vtm-qr"></div>');
+
+    return guia("Olha só tudo que já está incluso no seu presente. Nada disso é extra — vem tudo junto.")+
+      '<div class="wz-t">Tudo isso já vai no seu presente</div>'+
+      '<div class="wz-s">Sem taxa extra, sem pacote adicional. É tudo parte do que você está montando.</div>'+
+      '<div class="vt-grid">'+cards.join('')+'</div>';
+  }
+
   case 'duracao': {
-    var op=Object.keys(DURACOES).map(function(dk){
-      var d=DURACOES[dk], pr=precoDe(W.produto,dk);
-      return '<button class="pk pk-dur '+(W.duracao===dk?'on':'')+'" data-dur="'+dk+'">'+
-        (dk==='vitalicio'?'<span class="tg">Mais escolhido</span>':'')+
-        '<h3>'+d.nome+'</h3>'+
-        '<div class="pp">R$ '+fmtPreco(pr)+'</div>'+
-        '<p>'+d.desc+'</p></button>';
-    }).join('');
-    return guia("Ficou lindo! Agora só falta escolher por quanto tempo o presente fica no ar.")+
+    var vit=precoDe(W.produto,'vitalicio'), h48=precoDe(W.produto,'h48');
+    var dif=(vit-h48);
+    var op=
+      '<button class="pk pk-dur pk-dur-vit '+(W.duracao==='vitalicio'?'on':'')+'" data-dur="vitalicio">'+
+        '<span class="tg">⭐ Mais escolhido</span>'+
+        '<h3>Pra sempre</h3>'+
+        '<div class="pp">R$ '+fmtPreco(vit)+'</div>'+
+        '<p>O link nunca sai do ar. Ela vai poder voltar e rever esse presente daqui a meses, daqui a anos.</p>'+
+        '<div class="pk-benef">'+IC.check+'<span>Vira uma lembrança guardada, não só uma surpresa do dia</span></div>'+
+      '</button>'+
+      '<button class="pk pk-dur '+(W.duracao==='h48'?'on':'')+'" data-dur="h48">'+
+        '<h3>48 horas</h3>'+
+        '<div class="pp">R$ '+fmtPreco(h48)+'</div>'+
+        '<p>O link sai do ar depois de 48 horas. Serve pra surpresa de última hora, mas depois se perde.</p>'+
+      '</button>';
+    return guia("Ficou lindo! Agora só falta escolher por quanto tempo esse presente vai ficar de pé.")+
       '<div class="wz-t">Por quanto tempo?</div>'+
-      '<div class="wz-s">Pagamento único por Pix, sem assinatura.</div>'+
+      '<div class="wz-s">Pagamento único por Pix, sem assinatura, sem renovação.</div>'+
       '<button class="prev-full" id="verTudo">'+IC.eye+'Ver o presente inteiro, do jeito que vai chegar</button>'+
-      '<div class="pick">'+op+'</div>';
+      '<div class="pick">'+op+'</div>'+
+      (W.duracao==='h48' ? '<div class="up-nota">'+IC.heart+
+        '<div><b>Por mais R$ '+fmtPreco(dif)+', ela guarda pra sempre.</b><br>'+
+        'A maioria escolhe o "pra sempre" — o presente deixa de ser só do dia e vira uma lembrança que ela pode rever quando quiser.</div></div>' : '');
   }
 
   case 'perfil': {
@@ -2957,8 +3060,8 @@ function htmlPasso(k){
           '</div>':'')+
       '</div>';
     }
-    return guia("Agora a melhor parte: as fotos de vocês. Escolha até "+max+" — e capriche na legenda.")+
-      '<div class="wz-t">Fotos e memórias</div>'+
+    return guia("Agora a melhor parte. Escolha até "+max+" fotos — cada uma vira uma página da história de vocês.")+
+      '<div class="wz-t">Transforme seus melhores momentos em uma história 📸</div>'+
       '<div class="wz-s">A primeira foto vira a capa. A data de cada foto organiza a linha do tempo automaticamente.</div>'+
       '<div class="ph-grid">'+slots+'</div>'+
       '<button class="btn btn-ghost btn-block upload-all" id="addMulti">'+IC.plus+'Enviar várias fotos de uma vez</button>'+
@@ -2968,7 +3071,7 @@ function htmlPasso(k){
   case 'carta': {
     var para=W.parceiroNome||'quem você ama', de=W.meuNome||'você';
     return guia("Escreve com o coração. Se travar, eu gero algumas cartas prontas pra você adaptar.")+
-      '<div class="wz-t">A carta</div>'+
+      '<div class="wz-t">Escreva algo que ela vai querer guardar pra sempre 💌</div>'+
       '<div class="wz-s">Ela abre com um envelope animado e termina assinada: <b>de '+esc(de)+' para '+esc(para)+'</b>.</div>'+
       '<div class="field"><textarea class="inp" id="fCarta" placeholder="Escreva aqui a sua mensagem...">'+esc(W.carta)+'</textarea>'+
         '<div class="hint"><span id="cCount">'+W.carta.length+'</span> caracteres</div></div>'+
@@ -3018,12 +3121,10 @@ function htmlPasso(k){
     var jn=Object.keys(W.jogos).filter(function(x){return W.jogos[x];}).length;
     if(jn) linhas+='<div class="sum-r"><span>Jogos ativos</span><span>'+jn+'</span></div>';
     linhas+='<div class="sum-r tot"><span>Total</span><span>R$ '+fmtPreco(precoDe(W.produto,W.duracao))+'</span></div>';
-    return guia("Última etapa! Só precisa do seu e-mail — o código Pix aparece aqui mesmo, sem sair da página.")+
+    return guia("Última etapa! O código Pix aparece aqui mesmo, sem sair da página.")+
       '<div class="wz-t">Finalizar</div>'+
       '<div class="sum">'+linhas+'</div>'+
       '<div id="checkoutForm">'+
-      '<div class="field"><label>Seu e-mail</label><input class="inp" type="email" id="fEmail" value="'+esc(W.email)+'" placeholder="seu@email.com" autocomplete="email">'+
-        '<div class="hint">Usamos só pra te reenviar o link se você perder.</div></div>'+
       '<div class="demo-note info">'+IC.shield+
         '<div><b>Pix gerado na hora, aqui mesmo.</b> Assim que cair o pagamento, seu link é liberado sozinho.</div></div>'+
       '<div id="pagErro" style="display:none" class="demo-note"></div>'+
@@ -3222,9 +3323,6 @@ function ligarPasso(k){
     on('[data-qzx]','onclick',function(e){ W.quiz.splice(parseInt(e.dataset.qzx,10),1); redesenharSemPular(); });
     var qa2=el('qzAdd'); if(qa2) qa2.onclick=function(){ W.quiz.push({q:'',a:'',b:'',c:''}); redesenharSemPular(); };
   }
-  if(k==='checkout'){
-    el('fEmail').oninput=function(e){ W.email=e.target.value; };
-  }
 }
 
 function gerarTitulos(){
@@ -3327,10 +3425,6 @@ function validar(k){
   if(k==='quando' && !W.dataFesta) return erro('Campo obrigatório','fDataFesta');
   if(k==='local' && !W.local.trim()) return erro('Campo obrigatório','fLocal');
   if(k==='whatsapp' && (W.whatsappHost||'').replace(/\D/g,'').length<10) return erro('Digite um WhatsApp válido, com DDD.','fWpp');
-  if(k==='checkout'){
-    if(!W.email.trim()) return erro('Campo obrigatório','fEmail');
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(W.email.trim())) return erro('E-mail inválido — confira o endereço.','fEmail');
-  }
   return null;
 }
 function proximoPasso(pular){
