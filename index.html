@@ -1020,6 +1020,97 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   padding:.8rem 1rem;font-size:.84rem;font-weight:700;margin:1.1rem 0 1.5rem;cursor:pointer;}
 .prev-full svg{width:15px;height:15px;stroke:var(--rose-deep);flex:none;}
 
+/* ---------- CARTAS DOS SENTIMENTOS (cartão de capa + tela cheia) ---------- */
+.aq-anim{animation:aqIn .65s var(--ease) both;animation-delay:var(--aqd,0s);}
+@keyframes aqIn{from{opacity:0;transform:translateY(18px) rotate(-1deg);}to{opacity:1;transform:none;}}
+
+/* cartão de capa, na página normal */
+.aq-capa{position:relative;display:flex;align-items:center;gap:1rem;width:100%;border:none;cursor:pointer;
+  text-align:left;overflow:hidden;border-radius:20px;padding:1.3rem 1.2rem;
+  background:linear-gradient(120deg,#4A0E22,#7A1830 55%,#4A0E22);
+  box-shadow:0 16px 34px rgba(74,14,34,.4);}
+.aq-capa-selo{flex:none;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 35% 30%,#F6D57A,#C79A26);box-shadow:0 4px 10px rgba(0,0,0,.35);}
+.aq-capa-selo svg{width:22px;height:22px;fill:#fff;}
+.aq-capa-tx{flex:1;display:flex;flex-direction:column;gap:.15rem;}
+.aq-capa-k{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#E8B44A;font-weight:800;}
+.aq-capa-t{font-family:'Fraunces';font-weight:700;font-size:1.18rem;color:#fff;}
+.aq-capa-s{font-size:.74rem;color:#D9AFC0;}
+.aq-capa-seta{flex:none;font-size:1.6rem;color:#E8B44A;opacity:.85;}
+.aq-capa::after{content:"";position:absolute;top:-50%;left:-70%;width:45%;height:220%;pointer-events:none;
+  background:linear-gradient(75deg,transparent 42%,rgba(255,255,255,.28) 50%,transparent 58%);
+  animation:aqShine 5.5s ease-in-out infinite;}
+
+/* tela cheia */
+.aq-tela{position:fixed;inset:0;z-index:180;background:#3A0A18;
+  background-image:radial-gradient(ellipse at 50% 0%,#6E1230,transparent 62%);
+  opacity:0;pointer-events:none;transition:opacity .38s ease;overflow-y:auto;}
+.aq-tela.on{opacity:1;pointer-events:auto;}
+.aq-tela-in{position:relative;max-width:34rem;margin:0 auto;padding:3.4rem 1.3rem 3rem;min-height:100%;}
+.aq-fechar-tela{position:absolute;top:1.1rem;right:1.1rem;background:rgba(255,255,255,.1);border:none;
+  width:36px;height:36px;border-radius:50%;color:#fff;font-size:1.4rem;line-height:1;cursor:pointer;z-index:5;}
+.aq-view{display:none;}
+.aq-view.on{display:block;}
+.aq-tela-h{text-align:center;}
+.aq-tela-h .k{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--rose-1);font-weight:800;}
+.aq-tela-h p{color:#D9AFC0;font-size:.86rem;margin-top:.5rem;}
+.aq-titulo{font-family:'Fraunces';font-weight:800;letter-spacing:.02em;font-size:clamp(1.8rem,8vw,2.4rem);margin-top:.3rem;
+  background:linear-gradient(90deg,#F6E3B8,#E8B44A,#FFF3D0,#E8B44A,#F6E3B8);background-size:280% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:aqGlow 4.5s linear infinite;text-transform:uppercase;}
+@keyframes aqGlow{0%{background-position:0% 50%;}100%{background-position:280% 50%;}}
+.aq-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-top:1.7rem;}
+.aq-env{position:relative;display:block;width:100%;aspect-ratio:1.5;border:none;cursor:pointer;overflow:hidden;
+  background:linear-gradient(160deg,#FBF3E4,#EFE2CC);border-radius:6px;padding:0;
+  box-shadow:0 12px 26px rgba(0,0,0,.42);transition:transform .3s var(--ease),box-shadow .3s var(--ease);}
+.aq-env:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 18px 34px rgba(0,0,0,.5);}
+.aq-env::before,.aq-env::after{content:"";position:absolute;top:0;width:52%;height:74%;
+  border-top:1px solid rgba(180,120,90,.42);pointer-events:none;}
+.aq-env::before{left:0;transform-origin:top left;transform:skewY(31deg);}
+.aq-env::after{right:0;transform-origin:top right;transform:skewY(-31deg);}
+.aq-flap{position:absolute;top:0;left:0;right:0;height:56%;
+  background:linear-gradient(170deg,#F7EEDC,#E6D6BC);
+  clip-path:polygon(0 0,100% 0,50% 100%);
+  box-shadow:0 3px 7px rgba(0,0,0,.14);transform-origin:top center;
+  transition:transform .55s var(--ease);z-index:2;}
+.aq-env.aberta .aq-flap{transform:rotateX(-172deg);}
+.aq-selo{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:3;
+  box-shadow:0 3px 8px rgba(0,0,0,.35),inset 0 -2px 4px rgba(0,0,0,.25);
+  transition:opacity .4s ease,transform .4s ease;}
+.aq-selo svg{width:15px;height:15px;fill:rgba(255,255,255,.9);}
+.aq-selo-ouro{background:radial-gradient(circle at 35% 30%,#F6D57A,#C79A26);}
+.aq-selo-cobre{background:radial-gradient(circle at 35% 30%,#E8935A,#B05A22);}
+.aq-selo-vinho{background:radial-gradient(circle at 35% 30%,#A82D45,#6E1230);}
+.aq-env.aberta .aq-selo{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(20deg);}
+.aq-num{position:absolute;left:8px;bottom:7px;font-size:.55rem;letter-spacing:.14em;color:#A8917A;z-index:4;}
+.aq-tit{position:absolute;left:0;right:0;bottom:12px;padding:0 .7rem;z-index:4;
+  font-family:'Grand Hotel',cursive;font-size:.95rem;color:#4A2A18;line-height:1.15;text-align:center;}
+.aq-brilho{position:absolute;top:-40%;left:-70%;width:55%;height:190%;pointer-events:none;z-index:5;
+  background:linear-gradient(75deg,transparent 42%,rgba(255,255,255,.72) 50%,transparent 58%);
+  animation:aqShine 5.2s ease-in-out infinite;}
+.aq-env:nth-child(even) .aq-brilho{animation-delay:1.3s;}
+.aq-env:nth-child(3n) .aq-brilho{animation-delay:2.6s;}
+@keyframes aqShine{0%,66%{transform:translateX(-10%);opacity:0;}74%{opacity:1;}100%{transform:translateX(250%);opacity:0;}}
+.aq-prog{display:flex;align-items:center;justify-content:center;gap:.7rem;margin-top:1.8rem;
+  font-family:'Fraunces';font-style:italic;font-size:.82rem;color:#E8C89A;}
+.aq-dots{display:flex;gap:.28rem;}
+.aq-dots i{width:6px;height:6px;border-radius:50%;background:rgba(232,180,74,.28);transition:background .35s;}
+.aq-dots i.on{background:#E8B44A;}
+
+.aq-voltar{background:none;border:none;color:#E8C89A;font-size:.82rem;font-weight:700;cursor:pointer;
+  padding:0;margin-bottom:1.3rem;}
+.aq-carta{background:linear-gradient(170deg,#FFFCF8,#F6EAD8);border-radius:16px;padding:2rem 1.5rem 1.6rem;
+  max-width:23rem;width:100%;margin:0 auto;position:relative;color:#3B2C31;
+  box-shadow:0 26px 60px rgba(0,0,0,.5);}
+.aq-c-eb{font-family:'Fraunces';font-weight:700;font-size:.72rem;letter-spacing:.13em;
+  text-transform:uppercase;color:#B5124E;margin-bottom:1rem;}
+.aq-c-para{font-family:'Grand Hotel',cursive;font-size:1.6rem;color:var(--rose-deep);margin-bottom:.7rem;}
+.aq-c-tx{font-family:'Fraunces';font-size:.94rem;line-height:1.85;white-space:pre-wrap;}
+.aq-c-sig{margin-top:1.4rem;text-align:right;}
+.aq-c-sig span{display:block;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:#9A8A90;font-weight:700;}
+.aq-c-sig b{font-family:'Grand Hotel',cursive;font-size:1.4rem;color:var(--rose-deep);font-weight:400;}
+
 /* ---------- CONVITE CRIATIVO ---------- */
 .cv-scope{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;z-index:5;}
 .cv-body{max-width:32rem;margin:0 auto;padding:2.4rem 1.3rem 3rem;}
@@ -2384,6 +2475,101 @@ function telaWizard(prod){
   desenharPasso();
 }
 
+var ABRA_QUANDO = [
+  {t:'Abra quando bater a saudade', sel:'ouro',
+   m:'Se você está lendo isso, é porque a distância resolveu apertar. Respira. Fecha os olhos e lembra do som da minha risada quando você fala alguma bobagem. Tá vendo? Eu não fui a lugar nenhum. Saudade é só o amor esperando a hora de encontrar de novo — e a nossa hora sempre chega.'},
+  {t:'Abra num dia difícil', sel:'cobre',
+   m:'Dias difíceis existem, e não é fraqueza sua sentir o peso deles. Você não precisa ser forte agora. Só precisa saber que tem alguém que acredita em você mesmo nos dias em que você não consegue acreditar. Amanhã a gente tenta de novo, junto. Hoje, só descansa.'},
+  {t:'Abra quando precisar sorrir', sel:'vinho',
+   m:'Lembra daquela vez que a gente riu tanto de uma besteira que nem lembra mais qual era? Pois é. É disso que eu tenho mais certeza na vida: com você, até o dia mais sem graça vira história boa. Agora para de ler e vai sorrir, que eu sei que você já está sorrindo.'},
+  {t:'Abra quando a gente estiver longe', sel:'ouro',
+   m:'A distância é só um detalhe chato no meio de uma história muito bonita. Enquanto você lê isso, eu estou em algum lugar pensando em você — provavelmente lembrando de algo que você disse e rindo sozinho. A gente se encontra de novo. A gente sempre se encontra.'},
+  {t:'Abra quando estiver com raiva', sel:'cobre',
+   m:'Raiva também é uma forma de amor que não sabe onde colocar a dor. Respira fundo antes de dizer qualquer coisa que você não possa voltar atrás. Eu não preciso que você esteja bem agora — só preciso que você saiba que isso vai passar, e que eu vou estar aqui do outro lado, esperando você respirar.'},
+  {t:'Abra quando não conseguir dormir', sel:'vinho',
+   m:'Se o sono não vem, deixa eu te fazer companhia. Não pensa em nada que precisa resolver agora — nada disso vai a lugar nenhum até amanhã. Imagina que eu estou aí do lado, em silêncio, só pra você não ficar sozinho. Descansa. Eu fico de vigia.'},
+  {t:'Abra pra lembrar do começo', sel:'ouro',
+   m:'No começo eu não fazia ideia de que ia dar tudo isso. Era só uma conversa, um encontro, um talvez. E olha só onde a gente chegou. Se eu pudesse voltar, faria tudo igualzinho — inclusive os erros, porque foram eles que trouxeram a gente até aqui.'}
+];
+function htmlSecaoAbraQuando(g){
+  var para=esc(g.parceiroNome||'você');
+  var de=g.anonimo ? 'alguém que gosta muito de você' : esc(g.meuNome||'');
+  return '<section class="g-sec aq-sec">'+
+    '<button class="aq-capa aq-anim" id="aqAbrirCapa">'+
+      '<span class="aq-capa-selo">'+IC.heart+'</span>'+
+      '<span class="aq-capa-tx"><span class="aq-capa-k">Para os dias que vierem</span>'+
+      '<span class="aq-capa-t">Cartas dos Sentimentos</span>'+
+      '<span class="aq-capa-s">Toque para abrir · '+ABRA_QUANDO.length+' cartas seladas</span></span>'+
+      '<span class="aq-capa-seta">›</span>'+
+    '</button>'+
+    '<div class="aq-tela" id="aqTela">'+
+      '<div class="aq-tela-in">'+
+        '<button class="aq-fechar-tela" id="aqFecharTela" aria-label="Fechar">&times;</button>'+
+        '<div class="aq-view on" id="aqViewGrid">'+
+          '<div class="aq-tela-h"><span class="k">Para os dias que vierem</span>'+
+            '<h2 class="aq-titulo">Abra quando...</h2>'+
+            '<p>Cartas seladas, uma para cada momento. Toque num envelope para quebrar o lacre e ler.</p></div>'+
+          '<div class="aq-grid">'+
+            ABRA_QUANDO.map(function(c,i){
+              return '<button class="aq-env aq-anim" style="--aqd:'+(i*.06)+'s" data-aq="'+i+'">'+
+                '<span class="aq-num">Nº '+String(i+1).padStart(2,'0')+'</span>'+
+                '<span class="aq-flap"></span>'+
+                '<span class="aq-selo aq-selo-'+c.sel+'">'+IC.heart+'</span>'+
+                '<span class="aq-tit">'+esc(c.t)+'</span>'+
+                '<span class="aq-brilho"></span>'+
+              '</button>';
+            }).join('')+
+          '</div>'+
+          '<div class="aq-prog"><span class="aq-dots">'+
+            ABRA_QUANDO.map(function(){ return '<i></i>'; }).join('')+
+            '</span><span id="aqCont">0 de '+ABRA_QUANDO.length+' lidas</span></div>'+
+        '</div>'+
+        '<div class="aq-view aq-view-carta" id="aqViewCarta">'+
+          '<button class="aq-voltar" id="aqVoltar">‹ Voltar às cartas</button>'+
+          '<div class="aq-carta">'+
+            '<div class="aq-c-eb" id="aqCEb"></div>'+
+            '<div class="aq-c-para">Para '+para+',</div>'+
+            '<div class="aq-c-tx" id="aqCTx"></div>'+
+            '<div class="aq-c-sig"><span>Com carinho,</span><b>'+de+'</b></div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+  '</section>';
+}
+function ligarAbraQuando(g){
+  var tela=el('aqTela'), capa=el('aqAbrirCapa');
+  if(!tela || !capa) return;
+  var viewGrid=el('aqViewGrid'), viewCarta=el('aqViewCarta');
+  var lidas={}, cont=el('aqCont');
+  var dots=tela.querySelectorAll('.aq-dots i');
+
+  capa.onclick=function(){
+    tela.classList.add('on'); document.body.style.overflow='hidden';
+    viewCarta.classList.remove('on'); viewGrid.classList.add('on');
+  };
+  function fecharTela(){ tela.classList.remove('on'); document.body.style.overflow=''; }
+  el('aqFecharTela').onclick=fecharTela;
+  el('aqVoltar').onclick=function(){ viewCarta.classList.remove('on'); viewGrid.classList.add('on'); };
+
+  tela.querySelectorAll('[data-aq]').forEach(function(b){
+    b.onclick=function(){
+      var i=parseInt(b.dataset.aq,10), c=ABRA_QUANDO[i];
+      if(!c) return;
+      b.classList.add('aberta');
+      if(!lidas[i]){
+        lidas[i]=true;
+        var n=Object.keys(lidas).length;
+        if(cont) cont.textContent=n+' de '+ABRA_QUANDO.length+(n===1?' lida':' lidas');
+        if(dots[n-1]) dots[n-1].classList.add('on');
+        if(n===ABRA_QUANDO.length) setTimeout(function(){ confetes(50); },400);
+      }
+      el('aqCEb').textContent=c.t;
+      el('aqCTx').textContent=c.m;
+      viewGrid.classList.remove('on'); viewCarta.classList.add('on');
+    };
+  });
+}
 function htmlSecaoCarta(g, fotos){
   if(!g.carta) return '';
   return '<section class="g-sec"><div class="g-sec-h"><span class="k">Uma carta pra você</span>'+
@@ -2482,7 +2668,7 @@ function abrirPreviaEtapa(tipo){
   if(tipo==='tudo'){
     titulo='Prévia completa';
     var r=RECURSOS[g.produto]||RECURSOS.completo;
-    corpo=htmlSecaoCarta(g, fotos) + htmlSecoesFotos(g, fotos);
+    corpo=htmlSecaoCarta(g, fotos) + (g.carta?htmlSecaoAbraQuando(g):'') + htmlSecoesFotos(g, fotos);
     if(r.jogos && g.jogos && Object.keys(g.jogos).some(function(x){ return g.jogos[x]; })){
       corpo+='<div class="prev-jogos-nota">'+IC.gift+' Os jogos escolhidos ('+
         Object.keys(g.jogos).filter(function(x){ return g.jogos[x]; }).map(function(x){
@@ -2495,7 +2681,7 @@ function abrirPreviaEtapa(tipo){
     if(!g.carta || !g.carta.trim()){
       corpo='<div class="prev-vazio">Escreve a carta primeiro — assim que tiver algum texto, a prévia aparece aqui.</div>';
     } else {
-      corpo=htmlSecaoCarta(g, fotos);
+      corpo=htmlSecaoCarta(g, fotos) + htmlSecaoAbraQuando(g);
     }
   } else if(tipo==='fotos'){
     titulo='Prévia das fotos';
@@ -2524,7 +2710,9 @@ function abrirPreviaEtapa(tipo){
       pt.innerHTML=IC.heart; var petBox=el('petals'); if(petBox) petBox.appendChild(pt);
     }
     var ltx=el('letterTx'); if(ltx) ltx.textContent=g.carta;
+    ligarAbraQuando(g);
   }
+  if(tipo==='completa' && g.carta && g.carta.trim()) ligarAbraQuando(g);
   observarReveal(sc);
 
   var barra=document.createElement('div');
@@ -4082,6 +4270,7 @@ function montarCorpo(g){
 
   /* carta */
   h+=htmlSecaoCarta(g, fotos);
+  if(r.carta && g.carta) h+=htmlSecaoAbraQuando(g);
 
   h+=htmlSecoesFotos(g, fotos);
 
@@ -4134,7 +4323,7 @@ function montarCorpo(g){
     pm.onclick=function(e){ if(e.target===pm) pm.classList.remove('on'); };
   }
   if(r.musica && g.musica && g.musica.preview) ligarPlayer();
-  if(r.carta && g.carta) ligarCarta(g);
+  if(r.carta && g.carta){ ligarCarta(g); ligarAbraQuando(g); }
   if(r.stories && fotos.length) el('stOpen').onclick=function(){ abrirStories(fotos, g); };
   if(r.jogos){
     var j2=g.jogos||{};
