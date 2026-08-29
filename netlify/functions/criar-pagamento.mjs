@@ -36,9 +36,6 @@ export default async (req) => {
     if (!presente || !presente.id || !presente.produto || !PACOTES[presente.produto]) {
       return json({ erro: 'Dados do presente incompletos.' }, 400);
     }
-    if (!presente.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(presente.email)) {
-      return json({ erro: 'E-mail inválido.' }, 400);
-    }
 
     const chavePix = (process.env.EFI_PIX_KEY || '').trim();
     if (!chavePix) return json({ erro: 'Servidor sem EFI_PIX_KEY configurada.' }, 500);
