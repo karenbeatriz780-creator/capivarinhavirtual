@@ -793,6 +793,54 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .st-nav b{flex:1;}
 .st-hearts{position:absolute;inset:0;pointer-events:none;z-index:7;overflow:hidden;}
 
+/* medidor de amor */
+.md-open{width:100%;border-radius:var(--r-lg);overflow:hidden;position:relative;min-height:190px;
+  background:linear-gradient(160deg,#2A1620,#160B12);box-shadow:var(--shadow-lg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7rem;
+  padding:2rem 1.2rem;text-align:center;}
+.md-preview{display:flex;align-items:flex-end;gap:.5rem;margin-bottom:.2rem;}
+.md-preview i{display:block;border-radius:50%;background:radial-gradient(circle at 35% 30%,#4a2a3c,#170b12 75%);
+  box-shadow:0 0 0 1.5px rgba(232,180,74,.5);}
+.md-preview i:nth-child(1){width:16px;height:16px;}
+.md-preview i:nth-child(2){width:26px;height:26px;}
+.md-preview i:nth-child(3){width:38px;height:38px;}
+.md-preview i:nth-child(4){width:52px;height:52px;box-shadow:0 0 0 1.5px rgba(255,127,171,.7);}
+.md-open .pl{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.12);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);}
+.md-open .pl svg{width:22px;height:22px;fill:#fff;margin-left:3px;}
+.md-open b{font-family:'Fraunces';font-size:1.1rem;font-weight:600;color:#fff;}
+.md-open .sub{font-size:.83rem;color:#C6A9B6;}
+.md-track{flex:1;position:relative;overflow:hidden;background:#000;}
+.md-slide{position:absolute;inset:0;opacity:0;transition:opacity .5s ease;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.3rem;
+  padding:5.4rem 1.6rem 2rem;}
+.md-slide.on{opacity:1;pointer-events:auto;}
+.md-nome{font-family:'Fraunces';font-style:italic;color:#fff;font-size:clamp(1.4rem,6.6vw,2rem);
+  text-align:center;line-height:1.2;}
+.md-desc{font-size:.85rem;color:#D9C7CE;text-align:center;max-width:23rem;line-height:1.55;}
+.md-medal{position:relative;border-radius:50%;flex-shrink:0;
+  background:radial-gradient(circle at 35% 30%,#4a2a3c,#170b12 75%);
+  box-shadow:0 0 0 1.5px rgba(232,180,74,.45),0 22px 54px rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.md-medal svg{width:42%;height:42%;color:var(--gold);}
+.md-medal::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);
+  transform:translateX(-130%);animation:mdshine 3s ease-in-out infinite;}
+@keyframes mdshine{0%{transform:translateX(-130%);}55%,100%{transform:translateX(130%);}}
+.md-slide.final .md-nome{font-family:'Grand Hotel',cursive;font-weight:400;
+  font-size:clamp(2.1rem,9vw,3rem);color:var(--rose-1);}
+.md-slide.final .md-medal{box-shadow:0 0 0 1.5px rgba(255,127,171,.65),0 0 60px rgba(255,127,171,.5),
+  0 22px 54px rgba(0,0,0,.55);animation:mdpulse 1.8s ease-in-out infinite;}
+@keyframes mdpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.045);}}
+.md-slide.final .md-medal svg{color:var(--rose-1);}
+.md-assin{font-family:'Grand Hotel',cursive;font-size:clamp(1.3rem,5.6vw,1.8rem);color:#FFD9E6;margin-top:-.7rem;}
+.md-ref{position:absolute;right:1.1rem;bottom:calc(2.1rem + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;align-items:center;gap:.35rem;z-index:2;}
+.md-ref .md-medal{width:56px;height:56px;box-shadow:0 0 0 1.5px rgba(232,180,74,.35),0 10px 24px rgba(0,0,0,.5);}
+.md-ref .md-medal::after{display:none;}
+.md-ref .md-medal svg{width:44%;height:44%;}
+.md-ref span{font-size:.64rem;color:#C6A9B6;font-weight:700;text-align:center;max-width:5.4rem;line-height:1.25;}
+
 /* carta */
 .letter-wrap{perspective:1400px;}
 .letter{background:linear-gradient(170deg,#FFFCF8,#FDF2E9);border-radius:var(--r-md);padding:2.2rem 1.7rem 1.9rem;
@@ -1081,6 +1129,14 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   repeating-linear-gradient(90deg,#fff 0 4px,#160B12 4px 8px),
   repeating-linear-gradient(0deg,#fff 0 4px,#160B12 4px 8px);
   background-blend-mode:difference;border:3px solid #fff;border-radius:3px;}
+.vtm-md{display:flex;align-items:flex-end;gap:3px;}
+.vtm-md i{display:block;border-radius:50%;background:radial-gradient(circle at 35% 30%,#F6D57A,#B8860B);
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.25);}
+.vtm-md i:nth-child(1){width:11px;height:11px;}
+.vtm-md i:nth-child(2){width:18px;height:18px;}
+.vtm-md i:nth-child(3){width:27px;height:27px;}
+.vt-soon{display:inline-block;background:var(--gold);color:#3A2405;font-size:.6rem;font-weight:800;
+  padding:.1rem .45rem;border-radius:100px;margin-left:.35rem;letter-spacing:.02em;text-transform:uppercase;vertical-align:1px;}
 
 /* destaque do plano vitalício */
 .pk-dur-vit{position:relative;border-color:var(--rose)!important;
@@ -1268,6 +1324,8 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pb-list{list-style:none;margin-top:1.2rem;display:flex;flex-direction:column;gap:.42rem;position:relative;z-index:2;}
 .pb-list li{display:flex;align-items:flex-start;gap:.42rem;font-size:.75rem;opacity:.88;line-height:1.4;}
 .pb-list svg{width:12px;height:12px;flex:none;margin-top:.18rem;}
+.pb-soon{display:inline-block;background:var(--gold);color:#3A2405;font-size:.58rem;font-weight:800;
+  padding:.08rem .4rem;border-radius:100px;margin-left:.3rem;letter-spacing:.02em;text-transform:uppercase;vertical-align:1px;}
 
 .pb-completo{background:#D8E9BC;color:#1E3A20;}
 .pb-completo .pb-cta{background:#1E3A20;color:#fff;}
@@ -2171,6 +2229,7 @@ function itensDoPacote(k){
   if(r.carta) itens.push('Carta com envelope, lacre de cera e foto colada');
   if(r.carta) itens.push('Cartas dos Sentimentos: 7 cartas seladas já escritas');
   if(r.jogos) itens.push('Roleta do encontro, caça-palavras, quebra-cabeça e quiz');
+  if(r.jogos) itens.push('Medidor de amor: do T-Rex ao sol, até chegar no maior de todos<span class="pb-soon">em breve</span>');
   itens.push('Apresentação animada quando ela abre pela primeira vez');
   itens.push('Link + QR Code pra enviar');
   return itens;
@@ -2418,7 +2477,7 @@ function previewFake(tipo){
           '<svg viewBox="0 0 24 24" style="width:14px;fill:#B5124E"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.2 2.3 4 6.4 4c2.1 0 3.7 1.2 5.6 3.6C13.9 5.2 15.5 4 17.6 4 21.7 4 23.6 8.2 22 11.7 19.5 16.4 12 21 12 21z"/></svg></div>'+
         '<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:11px solid #E8B44A"></div>'+
       '</div>'+
-      '<div style="font-size:.72rem;color:#D9BEC9;margin-top:1.1rem">+ caça-palavras, quebra-cabeça e quiz do casal</div>'+
+      '<div style="font-size:.72rem;color:#D9BEC9;margin-top:1.1rem">+ caça-palavras, quebra-cabeça, quiz e medidor de amor</div>'+
     '</div>';
     var w=el('pvWheel'), voltas=0;
     function girar(){ voltas+=1; if(w) w.style.transform='rotate('+(voltas*720+Math.floor(Math.random()*300))+'deg)'; }
@@ -2458,7 +2517,7 @@ function novoEstado(prod){
     dataEspecial:'', horaEspecial:'', cidade:'', titulo:'', carta:'',
     fotos:[], capa:null, musica:null, musicaBusca:'',
     duracao:'vitalicio',
-    jogos:{roleta:false, palavra:false, caca:false, quebra:false, quiz:false},
+    jogos:{roleta:false, palavra:false, caca:false, quebra:false, quiz:false, medidor:false},
     roletaOpcoes:['Cinema','Jantar fora','Praia','Dia de preguiça','Sorvete','Viagem surpresa'],
     palavraSecreta:'', palavraPergunta:'O que eu mais amo em você?',
     cacaPalavras:['AMOR','SORRISO','ABRACO','SEMPRE'],
@@ -2979,6 +3038,9 @@ function htmlPasso(k){
     if(r.jogos) card('🎲','Jogos pra vocês dois',
       'Roleta do encontro, caça-palavras, quebra-cabeça com foto de vocês e quiz do casal.',
       '<div class="vtm-rol"><i></i></div>');
+    if(r.jogos) card('📏','Medidor de amor<span class="vt-soon">em breve</span>',
+      'Uma jornada crescente: do T-Rex à baleia, da árvore ao sol — até chegar no maior de todos, o nosso amor.',
+      '<div class="vtm-md"><i></i><i></i><i></i></div>');
     card('🔗','Link e QR Code prontos',
       'Manda no WhatsApp ou imprime o QR — quando ela abrir, a surpresa começa sozinha.',
       '<div class="vtm-qr"></div>');
@@ -3117,7 +3179,8 @@ function htmlPasso(k){
       ['palavra','💭','Palavra secreta','Uma pergunta e uma palavra pra adivinhar'],
       ['caca','🔤','Caça-palavras','Palavras de vocês escondidas num tabuleiro'],
       ['quebra','🧩','Quebra-cabeça','Uma foto de vocês pra montar peça por peça'],
-      ['quiz','❓','Quiz do casal','Perguntas sobre vocês, com alternativas']
+      ['quiz','❓','Quiz do casal','Perguntas sobre vocês, com alternativas'],
+      ['medidor','📏','Medidor de amor','Uma jornada crescente do T-Rex ao sol, até chegar no maior de todos: o amor de vocês']
     ].map(function(x){
       return '<button class="ex '+(j[x[0]]?'on':'')+'" data-j="'+x[0]+'">'+
         '<span class="ic">'+x[1]+'</span><span class="tx"><h4>'+x[2]+'</h4><p>'+x[3]+'</p></span>'+
@@ -4396,6 +4459,7 @@ function montarCorpo(g){
     if(j.quiz && g.quiz && g.quiz.length) h+=secQuiz(g);
     if(j.caca) h+=secCaca(g);
     if(j.quebra && fotos.length) h+=secQuebra(g);
+    if(j.medidor) h+=secMedidor(g);
   }
 
   /* avaliação + rodapé */
@@ -4446,6 +4510,7 @@ function montarCorpo(g){
     if(j2.quiz && g.quiz && g.quiz.length) ligarQuiz(g);
     if(j2.caca) ligarCaca(g);
     if(j2.quebra && fotos.length) ligarQuebra(g);
+    if(j2.medidor) el('mdOpen').onclick=function(){ abrirMedidorAmor(g); };
   }
   revelarNo(sc);
 }
@@ -4605,6 +4670,101 @@ function abrirStories(fotos, g){
   }
   aoSair(function(){ fechar(); document.removeEventListener('keydown',tecla); });
   ir2(0);
+}
+
+/* =========================================================
+   MEDIDOR DE AMOR — jornada crescente, do menor ao maior
+   ========================================================= */
+var MD_ITENS = [
+  {nome:'T-Rex', desc:'cerca de 12 metros de ponta a ponta',
+    ic:'<svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="16.3" rx="5.4" ry="4.1"/>'+
+       '<ellipse cx="5.6" cy="7.7" rx="2" ry="3" transform="rotate(-24 5.6 7.7)"/>'+
+       '<ellipse cx="12" cy="5.3" rx="2.3" ry="3.5"/>'+
+       '<ellipse cx="18.4" cy="7.7" rx="2" ry="3" transform="rotate(24 18.4 7.7)"/></svg>'},
+  {nome:'Baleia azul', desc:'até 30 metros — o maior animal que já existiu',
+    ic:'<svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="10" cy="13" rx="7.2" ry="4.1"/>'+
+       '<polygon points="17,13 22,9 22,17"/><circle cx="5.2" cy="12.3" r=".9" opacity=".4"/></svg>'},
+  {nome:'A maior árvore', desc:'sequoias gigantes passam de 80 metros de altura',
+    ic:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="9.5" r="7"/><rect x="10.4" y="15.5" width="3.2" height="6.5" rx="1"/></svg>'},
+  {nome:'A lua', desc:'3.474 km de diâmetro',
+    ic:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/>'+
+       '<circle cx="16.4" cy="8.6" r="7" fill="#170b12"/></svg>'},
+  {nome:'Planeta Terra', desc:'12.742 km de diâmetro',
+    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/>'+
+       '<ellipse cx="12" cy="12" rx="3.6" ry="9"/><path d="M3 12h18M4.3 7h15.4M4.3 17h15.4"/></svg>'},
+  {nome:'O sol', desc:'1.392.000 km de diâmetro — mais de cem Terras enfileiradas',
+    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">'+
+       '<circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>'+
+       '<path d="M12 2v2.6M12 19.4V22M22 12h-2.6M4.6 12H2M18.8 5.2l-1.8 1.8M7 17.8l-1.8 1.8M18.8 18.8l-1.8-1.8M7 6.2 5.2 5.2"/></svg>'},
+  {nome:'Meu amor por você', desc:'maior que tudo isso junto — e cresce um pouco mais a cada dia',
+    ic:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.2 2.3 4 6.4 4c2.1 0 3.7 1.2 5.6 3.6C13.9 5.2 15.5 4 17.6 4 21.7 4 23.6 8.2 22 11.7 19.5 16.4 12 21 12 21z"/></svg>'}
+];
+function tituloMedidor(){ return 'Vamos medir o tamanho do nosso amor?'; }
+function secMedidor(g){
+  return '<section class="g-sec"><div class="g-sec-h"><span class="k">Medidor de amor</span>'+
+    '<h2>'+tituloMedidor()+'</h2><p>Uma jornada crescente até o maior amor de todos: o nosso.</p></div>'+
+    '<button class="md-open" id="mdOpen">'+
+      '<div class="md-preview"><i></i><i></i><i></i><i></i></div>'+
+      '<div class="pl">'+IC.play+'</div>'+
+      '<b>Ver o medidor</b><span class="sub">em tela cheia, do menor ao maior</span></button></section>';
+}
+function abrirMedidorAmor(g){
+  var itens=MD_ITENS;
+  var n=itens.length-1, i=0, timer=null, DUR=4400;
+  var box=document.createElement('div'); box.className='stories';
+  box.innerHTML=
+    '<div class="st-bars">'+itens.slice(1).map(function(){ return '<div class="st-bar"><i></i></div>'; }).join('')+'</div>'+
+    '<button class="st-close" id="mdX">×</button>'+
+    '<div class="md-track" id="mdTrack">'+itens.slice(1).map(function(item,k){
+      var idx=k+1, prev=itens[idx-1], isFinal=(idx===n);
+      var tam=Math.min(120+(idx-1)*20,236);
+      var nome1=g.meuNome||'', nome2=g.parceiroNome||'';
+      return '<div class="md-slide'+(k===0?' on':'')+(isFinal?' final':'')+'" data-k="'+k+'">'+
+        '<div class="md-nome">'+esc(item.nome)+'</div>'+
+        '<div class="md-medal" style="width:'+tam+'px;height:'+tam+'px;max-width:58vw;max-height:58vw">'+item.ic+'</div>'+
+        '<div class="md-desc">'+esc(item.desc)+'</div>'+
+        (isFinal && (nome1||nome2) ? '<div class="md-assin">'+esc(nome1)+(nome1&&nome2?' &amp; ':'')+esc(nome2)+'</div>' : '')+
+        '<div class="md-ref"><div class="md-medal">'+prev.ic+'</div><span>'+esc(prev.nome)+'</span></div>'+
+      '</div>';
+    }).join('')+'</div>'+
+    '<div class="st-nav"><b id="mdPrev"></b><b id="mdNext"></b></div>'+
+    '<div class="st-hearts" id="mdH"></div>';
+  document.body.appendChild(box);
+  var bars=box.querySelectorAll('.st-bar'), slides=box.querySelectorAll('.md-slide');
+  function ir(k){
+    if(k<0) k=0;
+    if(k>=n){ fechar(); return; }
+    i=k;
+    slides.forEach(function(s,ix){ s.classList.toggle('on',ix===i); });
+    bars.forEach(function(b,ix){
+      b.classList.remove('now','done');
+      var f=b.querySelector('i'); f.style.animation='none'; f.style.width='';
+      if(ix<i){ b.classList.add('done'); }
+      else if(ix===i){ void f.offsetWidth; b.classList.add('now'); f.style.animationDuration=(DUR/1000)+'s'; }
+    });
+    clearTimeout(timer); timer=setTimeout(function(){ ir(i+1); },DUR);
+    if(i===n-1) confetes(70);
+  }
+  function fechar(){ clearTimeout(timer); box.remove(); }
+  el('mdX').onclick=fechar;
+  el('mdNext').onclick=function(){ ir(i+1); };
+  el('mdPrev').onclick=function(){ ir(i-1); };
+  var x0=null;
+  box.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; },{passive:true});
+  box.addEventListener('touchend',function(e){
+    if(x0==null) return;
+    var dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>52){ ir(dx<0?i+1:i-1); }
+    x0=null;
+  },{passive:true});
+  document.addEventListener('keydown',tecla);
+  function tecla(e){
+    if(e.key==='Escape') fechar();
+    if(e.key==='ArrowRight') ir(i+1);
+    if(e.key==='ArrowLeft') ir(i-1);
+  }
+  aoSair(function(){ fechar(); document.removeEventListener('keydown',tecla); });
+  ir(0);
 }
 
 /* =========================================================
