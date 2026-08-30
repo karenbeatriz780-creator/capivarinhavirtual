@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-564D0HDRMK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-564D0HDRMK');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#E32B6D">
@@ -657,6 +665,27 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   animation:pfPing 2.2s ease-out infinite;}
 @keyframes pfPing{0%{box-shadow:0 0 0 0 rgba(227,43,109,.55);}70%{box-shadow:0 0 0 12px rgba(227,43,109,0);}100%{box-shadow:0 0 0 0 rgba(227,43,109,0);}}
 .g-hero-dica{font-size:.68rem;color:#C6A9B6;margin-top:.7rem;opacity:.8;}
+
+/* trilha sonora de fundo */
+.g-musica-btn{position:absolute;top:1rem;right:1rem;z-index:3;width:44px;height:44px;border-radius:50%;
+  background:rgba(20,8,13,.55);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.22);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(0,0,0,.4);
+  animation:gmIn .8s var(--ease) .25s both;}
+@keyframes gmIn{from{opacity:0;transform:scale(.6);}to{opacity:1;transform:none;}}
+.g-musica-btn svg{width:18px;height:18px;fill:#fff;}
+.g-musica-btn .barras{display:flex;align-items:flex-end;gap:2.5px;height:16px;}
+.g-musica-btn .barras i{display:block;width:3px;border-radius:2px;background:#fff;opacity:.55;}
+.g-musica-btn.tocando .barras i{opacity:1;animation:gmBar .9s ease-in-out infinite;}
+.g-musica-btn .barras i:nth-child(1){height:6px;animation-delay:0s;}
+.g-musica-btn .barras i:nth-child(2){height:14px;animation-delay:.15s;}
+.g-musica-btn .barras i:nth-child(3){height:9px;animation-delay:.3s;}
+@keyframes gmBar{0%,100%{transform:scaleY(.4);}50%{transform:scaleY(1);}}
+.g-musica-dica{position:absolute;top:1rem;right:5rem;z-index:3;background:rgba(20,8,13,.72);
+  backdrop-filter:blur(6px);color:#F0DCE4;font-size:.66rem;font-weight:700;padding:.4rem .7rem;
+  border-radius:100px;opacity:0;transform:translateX(6px);pointer-events:none;white-space:nowrap;
+  transition:opacity .4s ease, transform .4s ease;}
+.g-musica-dica.on{opacity:1;transform:none;animation:gmDicaOut .4s ease 3.2s forwards;}
+@keyframes gmDicaOut{to{opacity:0;transform:translateX(6px);}}
 .perfil-modal{position:fixed;inset:0;z-index:150;background:rgba(10,4,7,.72);backdrop-filter:blur(4px);
   display:flex;align-items:center;justify-content:center;padding:1.4rem;
   opacity:0;pointer-events:none;transition:opacity .3s ease;}
@@ -1713,6 +1742,24 @@ function toast(msg){
   var t=el('toast'); t.textContent=msg; t.classList.add('on');
   clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove('on'); },2600);
 }
+
+/* ---------- funil (GA4) ---------- */
+function gaEvento(nome, params){
+  try{ if(typeof gtag==='function') gtag('event', nome, params||{}); }catch(e){}
+}
+function gaPasso(){
+  var ps=passos(); var k=ps[wStep];
+  gaEvento('passo_wizard', {passo:k, indice:wStep+1, total_passos:ps.length, produto:W.produto||'(nenhum)'});
+}
+function gaCompraUnica(id, g){
+  var feitas=jget('cl_ga_compras',{});
+  if(feitas[id]) return;
+  feitas[id]=1; jset('cl_ga_compras',feitas);
+  gaEvento('purchase',{
+    transaction_id:id, value:precoDe(g.produto,g.duracao), currency:'BRL',
+    produto:g.produto, duracao:g.duracao
+  });
+}
 function copiar(txt,msg){
   var done=function(){ toast(msg||"Copiado!"); };
   if(navigator.clipboard && window.isSecureContext){
@@ -2684,6 +2731,7 @@ function telaWizard(prod){
   el('wzBack').onclick=voltarPasso;
   el('wzNext').onclick=function(){ proximoPasso(); };
   desenharPasso();
+  gaPasso();
 }
 
 var ABRA_QUANDO = [
@@ -3351,6 +3399,7 @@ function ligarPasso(k){
   if(k==='produto'){
     on('[data-pcta]','onclick',function(e){
       W.produto=e.dataset.pcta;
+      gaEvento('selecionar_produto',{produto:W.produto});
       proximoPasso();
     });
   }
@@ -3590,14 +3639,17 @@ function proximoPasso(pular){
   }
   if(k==='checkout'){ finalizar(); return; }
   wStep++; desenharPasso();
+  gaPasso();
 }
 function voltarPasso(){
   if(wStep<=0){ ir(''); return; }
   wStep--; desenharPasso();
+  gaPasso();
 }
 
 /* ---------- finalizar: gera uma cobrança Pix dinâmica na Efí ---------- */
 function finalizar(){
+  gaEvento('begin_checkout',{produto:W.produto, duracao:W.duracao, valor:precoDe(W.produto,W.duracao)});
   var btn=el('wzNext');
   if(btn){ btn.disabled=true; btn.textContent='Gerando o Pix...'; }
   var boxErro=el('pagErro');
@@ -3731,6 +3783,7 @@ function telaConfirmandoDemorado(id){
 
 function telaSucesso(id){
   var g=pegarPresente(id); if(!g){ ir(''); return; }
+  gaCompraUnica(id, g);
   var link=linkPresente(id);
   var msg='Oi '+(g.parceiroNome||'')+'! Fiz um presente pra você 💗 '+link;
   el('app').innerHTML=
@@ -4419,7 +4472,10 @@ function montarCorpo(g){
   var h='<div class="g-body">';
 
   /* capa */
-  h+='<div class="g-hero g-hero-poster"><div class="sparks" id="heroSparks"></div>';
+  h+='<div class="g-hero g-hero-poster"><div class="sparks" id="heroSparks"></div>'+
+    '<button class="g-musica-btn" id="gMusicaBtn" aria-label="Música">'+
+      '<div class="barras"><i></i><i></i><i></i></div></button>'+
+    '<div class="g-musica-dica" id="gMusicaDica">toque pra ouvir com música</div>';
   if(fotos[0]) h+='<div class="g-poster-foto'+(t?' tocavel':'')+'" id="perfilAbrir">'+
     '<img src="'+fotos[0].src+'" alt="">'+(t?'<span class="g-hero-ping"></span>':'')+'</div>';
   else h+='<div class="g-poster-foto"><img src="'+MASCOTE+'" alt="" style="object-fit:contain;padding:22%"></div>';
@@ -4431,6 +4487,7 @@ function montarCorpo(g){
     ((g.cidade && g.cidade.trim())?'<div class="g-place">'+IC.pin+esc(g.cidade)+'</div>':'')+
     (t?'<div class="g-hero-dica">toque na foto pra ver o perfil do casal</div>':'')+
   '</div>';
+  h+='<audio id="gMusicaTema" loop preload="auto" src="/musica-tema.mp3"></audio>';
   h+='</div>';
 
   if(t){
@@ -4563,6 +4620,7 @@ function montarCorpo(g){
 
   if(r.contador && t) ligarContador(g);
   coracoesFlutuantes(el('heroSparks'), 10);
+  ligarMusicaTema();
   if(t && el('perfilAbrir')){
     var pm=el('perfilModal');
     el('perfilAbrir').onclick=function(){ pm.classList.add('on'); };
@@ -4617,6 +4675,24 @@ function ligarContador(g){
 /* player */
 var _audio=null;
 function pararAudio(){ if(_audio){ try{_audio.pause();}catch(e){} _audio=null; } }
+/* trilha sonora de fundo — toca baixinho em loop; começa muda (o navegador exige isso)
+   e o toque no botão libera o som de verdade. Falta só subir o arquivo /musica-tema.mp3
+   na raiz do site, ao lado do index.html, pra tocar de verdade. */
+function ligarMusicaTema(){
+  var au=el('gMusicaTema'), btn=el('gMusicaBtn'), dica=el('gMusicaDica');
+  if(!au || !btn) return;
+  au.volume=0.32;
+  au.muted=true;
+  au.play().catch(function(){});
+  var tocando=false;
+  btn.onclick=function(){
+    tocando=!tocando;
+    au.muted=!tocando;
+    if(tocando) au.play().catch(function(){});
+    btn.classList.toggle('tocando', tocando);
+  };
+  if(dica) dica.classList.add('on');
+}
 function ligarPlayer(){
   var a=el('mpAudio'); if(!a) return; _audio=a;
   var btn=el('mpBtn'), fill=el('mpFill'), bar=el('mpBar'), art=el('mpArt');
