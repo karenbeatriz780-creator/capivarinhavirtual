@@ -3,8 +3,8 @@ import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 
 const PACOTES = {
-  completo:  { nome: 'Retrospectiva Completa', preco: 25.99, preco48: 16 },
-  carta:     { nome: 'Carta Virtual',   preco: 6, preco48: 4 },
+  completo:  { nome: 'Retrospectiva Completa', preco: 21, preco48: 9.99 },
+  carta:     { nome: 'Carta Virtual',   preco: 6, preco48: 3.99 },
   convite:   { nome: 'Convite Criativo', preco: 14, preco48: 10 },
   extra:         { nome: 'Lembrancinhas',  preco: 4 },
   extra_tema:    { nome: 'QR temático',    preco: 2.99 },
