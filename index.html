@@ -422,6 +422,14 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .ex .tx p{font-size:.76rem;color:var(--muted);margin-top:.12rem;line-height:1.35;}
 .ex .tgl{width:40px;height:23px;border-radius:100px;background:var(--line);position:relative;flex-shrink:0;transition:background .2s;}
 .ex.on .tgl{background:var(--rose);}
+.mus-prev{display:flex;align-items:center;gap:.7rem;margin-top:1rem;padding:.9rem 1rem;border-radius:var(--r-md);
+  background:var(--cream-2);border:1px solid var(--line);}
+.mus-prev-btn{width:42px;height:42px;border-radius:50%;background:var(--rose);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(227,43,109,.35);}
+.mus-prev-btn svg{width:16px;height:16px;fill:#fff;}
+.mus-prev-tx{flex:1;min-width:0;}
+.mus-prev-tx b{display:block;font-size:.86rem;font-weight:800;}
+.mus-prev-tx span{font-size:.76rem;color:var(--muted);}
 .ex .tgl::after{content:"";position:absolute;top:2.5px;left:2.5px;width:18px;height:18px;border-radius:50%;
   background:#fff;transition:left .2s var(--ease);}
 .ex.on .tgl::after{left:19px;}
@@ -1682,9 +1690,9 @@ var PACOTES = {
               desc:"Convite de aniversário animado, com tema à escolha, presença confirmada no seu WhatsApp e lista de presentes.", icone:"🎉"}
 };
 var RECURSOS = {
-  completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1},
-  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0},
-  convite:   {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0}
+  completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1},
+  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0},
+  convite:   {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0}
 };
 var DURACOES = {
   vitalicio: {nome:'Pra sempre', desc:'O link fica no ar pra sempre. Dá pra revisitar quando quiser.', horas:null},
@@ -1898,6 +1906,7 @@ var IC={
   eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5.5 12 5.5 22.5 12 22.5 12 19 18.5 12 18.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2"/></svg>',
   photo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="M3 17l5-4 4 3 3-2 6 5"/></svg>',
   play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+  pause:'<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
   pause:'<svg viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>',
   pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>',
   chat:'<svg viewBox="0 0 24 24"><path d="M12 3C6.9 3 3 6.4 3 10.6c0 2.3 1.2 4.4 3.1 5.8L5.4 20l3.9-2a10.6 10.6 0 0 0 2.7.3c5.1 0 9-3.4 9-7.6S17.1 3 12 3z"/></svg>',
@@ -2631,7 +2640,7 @@ function novoEstado(prod){
   return {
     id:uid(), produto:prod||null, perfil:null, meuNome:'', parceiroNome:'',
     dataEspecial:'', horaEspecial:'', cidade:'', titulo:'', carta:'',
-    fotos:[], capa:null, musica:null, musicaBusca:'',
+    fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:true,
     duracao:'vitalicio',
     jogos:{roleta:false, palavra:false, caca:false, quebra:false, quiz:false, medidor:false},
     roletaOpcoes:['Cinema','Jantar fora','Praia','Dia de preguiça','Sorvete','Viagem surpresa'],
@@ -2704,6 +2713,7 @@ function passos(){
   if(r.fotos) s.push('fotos');
   if(r.carta) s.push('carta');
   if(r.jogos) s.push('jogos');
+  if(r.trilha) s.push('trilha');
   s.push('vitrine','duracao','checkout');
   return s;
 }
@@ -3290,6 +3300,19 @@ function htmlPasso(k){
         '<div style="font-size:.78rem;color:var(--muted)">'+esc(W.musica.artista)+'</div></div>'+
         '<button class="row-x" id="musX">×</button></div></div>':'');
 
+  case 'trilha': {
+    var on=W.trilhaOn!==false;
+    return guia("Essa aqui é especial: uma trilha exclusiva feita pra acompanhar a retrospectiva inteira.")+
+      '<div class="wz-t">Trilha sonora</div>'+
+      '<div class="wz-s">Toca baixinho, em loop, do início ao fim da apresentação. Dá pra desativar se preferir sem música.</div>'+
+      '<button class="ex'+(on?' on':'')+'" id="trilhaTgl">'+
+        '<span class="ic">🎵</span><span class="tx"><h4>Essa é a nossa história</h4>'+
+        '<p>Trilha exclusiva do Capivarinha Love</p></span><span class="tgl"></span></button>'+
+      '<div class="mus-prev"><button class="mus-prev-btn" id="musPrevBtn">'+IC.play+'</button>'+
+        '<div class="mus-prev-tx"><b>Ouvir um trecho</b><span>antes de decidir</span></div></div>'+
+      '<audio id="musAudioPrev" src="/musica-tema.mp3" preload="none"></audio>';
+  }
+
   case 'jogos': {
     var j=W.jogos, itens=[
       ['roleta','🎡','Roleta do encontro','Ela gira e sorteia o próximo programa de vocês'],
@@ -3318,6 +3341,8 @@ function htmlPasso(k){
     if(nf) linhas+='<div class="sum-r"><span>Fotos</span><span>'+nf+'</span></div>';
     var jn=Object.keys(W.jogos).filter(function(x){return W.jogos[x];}).length;
     if(jn) linhas+='<div class="sum-r"><span>Jogos ativos</span><span>'+jn+'</span></div>';
+    if(RECURSOS[W.produto] && RECURSOS[W.produto].trilha && W.trilhaOn)
+      linhas+='<div class="sum-r"><span>Trilha sonora</span><span>Incluída</span></div>';
     linhas+='<div class="sum-r tot"><span>Total</span><span>R$ '+fmtPreco(precoDe(W.produto,W.duracao))+'</span></div>';
     return guia("Última etapa! O código Pix aparece aqui mesmo, sem sair da página.")+
       '<div class="wz-t">Finalizar</div>'+
@@ -3500,6 +3525,17 @@ function ligarPasso(k){
     inp.oninput=function(e){ W.musicaBusca=e.target.value; clearTimeout(t); t=setTimeout(function(){ buscarMusica(e.target.value); },420); };
     if(W.musicaBusca) buscarMusica(W.musicaBusca);
     var mx=el('musX'); if(mx) mx.onclick=function(){ W.musica=null; redesenharSemPular(); };
+  }
+  if(k==='trilha'){
+    var tglBtn=el('trilhaTgl');
+    if(tglBtn) tglBtn.onclick=function(){ W.trilhaOn=!W.trilhaOn; tglBtn.classList.toggle('on',W.trilhaOn); };
+    var pb=el('musPrevBtn'), pau=el('musAudioPrev'), pTocando=false;
+    if(pb) pb.onclick=function(){
+      pTocando=!pTocando;
+      if(pTocando){ pau.play().catch(function(){ pTocando=false; }); pb.innerHTML=IC.pause; }
+      else{ pau.pause(); pb.innerHTML=IC.play; }
+    };
+    if(pau) pau.onended=function(){ pTocando=false; if(pb) pb.innerHTML=IC.play; };
   }
   if(k==='jogos'){
     on('[data-j]','onclick',function(e,ev){
@@ -4472,10 +4508,11 @@ function montarCorpo(g){
   var h='<div class="g-body">';
 
   /* capa */
+  var comTrilha = !!(r.trilha && g.trilhaOn!==false);
   h+='<div class="g-hero g-hero-poster"><div class="sparks" id="heroSparks"></div>'+
-    '<button class="g-musica-btn" id="gMusicaBtn" aria-label="Música">'+
+    (comTrilha ? '<button class="g-musica-btn" id="gMusicaBtn" aria-label="Música">'+
       '<div class="barras"><i></i><i></i><i></i></div></button>'+
-    '<div class="g-musica-dica" id="gMusicaDica">toque pra ouvir com música</div>';
+    '<div class="g-musica-dica" id="gMusicaDica">toque pra ouvir a música</div>' : '');
   if(fotos[0]) h+='<div class="g-poster-foto'+(t?' tocavel':'')+'" id="perfilAbrir">'+
     '<img src="'+fotos[0].src+'" alt="">'+(t?'<span class="g-hero-ping"></span>':'')+'</div>';
   else h+='<div class="g-poster-foto"><img src="'+MASCOTE+'" alt="" style="object-fit:contain;padding:22%"></div>';
@@ -4487,7 +4524,7 @@ function montarCorpo(g){
     ((g.cidade && g.cidade.trim())?'<div class="g-place">'+IC.pin+esc(g.cidade)+'</div>':'')+
     (t?'<div class="g-hero-dica">toque na foto pra ver o perfil do casal</div>':'')+
   '</div>';
-  h+='<audio id="gMusicaTema" loop preload="auto" src="/musica-tema.mp3"></audio>';
+  if(comTrilha) h+='<audio id="gMusicaTema" loop preload="auto" src="/musica-tema.mp3"></audio>';
   h+='</div>';
 
   if(t){
