@@ -422,14 +422,20 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .ex .tx p{font-size:.76rem;color:var(--muted);margin-top:.12rem;line-height:1.35;}
 .ex .tgl{width:40px;height:23px;border-radius:100px;background:var(--line);position:relative;flex-shrink:0;transition:background .2s;}
 .ex.on .tgl{background:var(--rose);}
-.mus-prev{display:flex;align-items:center;gap:.7rem;margin-top:1rem;padding:.9rem 1rem;border-radius:var(--r-md);
-  background:var(--cream-2);border:1px solid var(--line);}
-.mus-prev-btn{width:42px;height:42px;border-radius:50%;background:var(--rose);flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(227,43,109,.35);}
-.mus-prev-btn svg{width:16px;height:16px;fill:#fff;}
-.mus-prev-tx{flex:1;min-width:0;}
-.mus-prev-tx b{display:block;font-size:.86rem;font-weight:800;}
-.mus-prev-tx span{font-size:.76rem;color:var(--muted);}
+.mus-cover{position:relative;width:100%;max-width:280px;aspect-ratio:1/1;margin:0 auto;border-radius:var(--r-lg);
+  overflow:hidden;background:#1A0810;box-shadow:0 20px 44px rgba(0,0,0,.35);}
+.mus-cover img{width:100%;height:100%;object-fit:cover;display:block;}
+.mus-cover-blank{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;
+  background:linear-gradient(160deg,#3A1424,#1A0810);}
+.mus-cover-grad{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top,rgba(10,4,7,.9) 0%,rgba(10,4,7,.2) 48%,transparent 68%);}
+.mus-cover-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:60px;height:60px;
+  border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(6px);border:2px solid rgba(255,255,255,.55);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.35);}
+.mus-cover-play svg{width:24px;height:24px;fill:#fff;margin-left:3px;}
+.mus-cover-tx{position:absolute;left:0;right:0;bottom:0;padding:1rem;}
+.mus-cover-tx b{display:block;font-family:'Fraunces';color:#fff;font-size:1rem;}
+.mus-cover-tx span{font-size:.76rem;color:#E3C3D1;}
 .ex .tgl::after{content:"";position:absolute;top:2.5px;left:2.5px;width:18px;height:18px;border-radius:50%;
   background:#fff;transition:left .2s var(--ease);}
 .ex.on .tgl::after{left:19px;}
@@ -629,6 +635,10 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .is-foto-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
 .is-foto-cap{font-family:'Fraunces';font-style:italic;text-align:center;margin-top:.9rem;color:#fff;font-size:1rem;}
 .is-foto-dt{font-size:.74rem;text-align:center;color:#C6A9B6;margin-top:.2rem;}
+.is-medidor-heart{position:relative;width:min(170px,44vw);aspect-ratio:1;margin:0 auto;}
+.is-medidor-heart img{width:100%;height:100%;object-fit:contain;display:block;
+  filter:drop-shadow(0 0 40px rgba(255,60,120,.65)) drop-shadow(0 18px 34px rgba(0,0,0,.6));
+  animation:mdbeat 1.6s ease-in-out infinite;}
 .wordwave span{display:inline-block;opacity:0;animation:wwIn .6s var(--ease) forwards;}
 @keyframes wwIn{from{opacity:0;transform:translateY(22px) rotate(5deg);}to{opacity:1;transform:none;}}
 .intro-dots{position:absolute;bottom:2.2rem;left:50%;transform:translateX(-50%);display:flex;gap:.4rem;}
@@ -3302,14 +3312,19 @@ function htmlPasso(k){
 
   case 'trilha': {
     var on=W.trilhaOn!==false;
+    var capaFoto=(W.fotos||[]).filter(Boolean)[0];
     return guia("Essa aqui é especial: uma trilha exclusiva feita pra acompanhar a retrospectiva inteira.")+
       '<div class="wz-t">Trilha sonora</div>'+
       '<div class="wz-s">Toca baixinho, em loop, do início ao fim da apresentação. Dá pra desativar se preferir sem música.</div>'+
-      '<button class="ex'+(on?' on':'')+'" id="trilhaTgl">'+
-        '<span class="ic">🎵</span><span class="tx"><h4>Essa é a nossa história</h4>'+
-        '<p>Trilha exclusiva do Capivarinha Love</p></span><span class="tgl"></span></button>'+
-      '<div class="mus-prev"><button class="mus-prev-btn" id="musPrevBtn">'+IC.play+'</button>'+
-        '<div class="mus-prev-tx"><b>Ouvir um trecho</b><span>antes de decidir</span></div></div>'+
+      '<div class="mus-cover">'+
+        (capaFoto ? '<img src="'+capaFoto.src+'" alt="">' : '<div class="mus-cover-blank">🎵</div>')+
+        '<div class="mus-cover-grad"></div>'+
+        '<button class="mus-cover-play" id="musPrevBtn">'+IC.play+'</button>'+
+        '<div class="mus-cover-tx"><b>Essa é a nossa história</b><span>Trilha exclusiva do Capivarinha Love</span></div>'+
+      '</div>'+
+      '<button class="ex'+(on?' on':'')+'" id="trilhaTgl" style="margin-top:1rem">'+
+        '<span class="ic">🎵</span><span class="tx"><h4>Incluir a trilha no presente</h4>'+
+        '<p>Você pode desativar se preferir sem música</p></span><span class="tgl"></span></button>'+
       '<audio id="musAudioPrev" src="/musica-tema.mp3" preload="none"></audio>';
   }
 
@@ -3532,8 +3547,10 @@ function ligarPasso(k){
     var pb=el('musPrevBtn'), pau=el('musAudioPrev'), pTocando=false;
     if(pb) pb.onclick=function(){
       pTocando=!pTocando;
-      if(pTocando){ pau.play().catch(function(){ pTocando=false; }); pb.innerHTML=IC.pause; }
-      else{ pau.pause(); pb.innerHTML=IC.play; }
+      if(pTocando){
+        pb.innerHTML=IC.pause;
+        pau.play().catch(function(){ pTocando=false; pb.innerHTML=IC.play; toast('Não consegui tocar a prévia agora.'); });
+      } else{ pau.pause(); pb.innerHTML=IC.play; }
     };
     if(pau) pau.onended=function(){ pTocando=false; if(pb) pb.innerHTML=IC.play; };
   }
@@ -4032,11 +4049,14 @@ function montarPortao(g){
       '<button class="gate-btn" id="gateBtn">Abrir meu presente</button>'+
     '</div></div>';
   faisca(el('sparks'), 26);
+  prepararTrilha(g);
   var abrindo=false;
   function abrir(){
     if(abrindo) return; abrindo=true;
     el('env').classList.add('open');
     confetes(60);
+    var au=prepararTrilha(g);
+    if(au){ au.volume=0.32; au.play().catch(function(){}); }
     setTimeout(function(){
       el('gate').classList.add('hide');
       setTimeout(function(){ montarIntro(g); },820);
@@ -4184,6 +4204,35 @@ function montarIntro(g){
       (f.legenda?'<div class="is-foto-cap">'+esc(f.legenda)+'</div>':'')+
       (f.data?'<div class="is-foto-dt">'+fmtData(f.data)+'</div>':''));
   });
+
+  var j=g.jogos||{};
+  if(j.medidor){
+    mdMascaras();
+    slides.push('<div class="is-eb">E se a gente for medir</div>'+
+      '<div class="is-medidor-heart"><img src="'+MD_IMG.coracao+'" alt="">'+
+        '<span class="md-shine md-mask-coracao"></span></div>'+
+      '<div class="is-sub">Maior que o sol, maior que tudo o que existe.</div>');
+  }
+  if(j.roleta && (g.roletaOpcoes||[]).filter(function(o){return o.trim();}).length){
+    var opRol=g.roletaOpcoes.filter(function(o){return o.trim();});
+    var escolha=opRol[Math.floor(Math.random()*opRol.length)];
+    slides.push('<div class="is-eb">Fizemos um sorteio pra vocês</div>'+
+      '<div class="is-names">'+esc(escolha)+'</div>'+
+      '<div class="is-sub">A roleta escolheu — sem choro, sem trapaça.</div>');
+  }
+  if(j.palavra && g.palavraSecreta){
+    slides.push('<div class="is-eb">Uma pergunta pra você</div>'+
+      '<div class="is-txt wordwave">'+ondaTexto(g.palavraPergunta||'O que eu mais amo em você?')+'</div>');
+    slides.push('<div class="is-eb">A resposta de '+n1+' é</div>'+
+      '<div class="is-names">'+esc(g.palavraSecreta)+'</div>');
+  }
+  if(g.carta && g.carta.trim()){
+    var trechoCarta=g.carta.trim().slice(0,90);
+    slides.push('<div class="is-eb">E tem uma carta esperando</div>'+
+      '<div class="is-txt" style="font-style:italic;font-size:clamp(1.05rem,4.4vw,1.4rem)">"'+esc(trechoCarta)+
+        (g.carta.trim().length>90?'…':'')+'"</div>'+
+      '<div class="is-sub">O resto '+n1+' guardou pra quando '+n2+' quiser ler com calma.</div>');
+  }
 
   slides.push('<div class="is-eb">Então é isso</div>'+
     '<div class="is-txt wordwave">'+ondaTexto('Aproveita.')+'</div>'+
@@ -4524,7 +4573,6 @@ function montarCorpo(g){
     ((g.cidade && g.cidade.trim())?'<div class="g-place">'+IC.pin+esc(g.cidade)+'</div>':'')+
     (t?'<div class="g-hero-dica">toque na foto pra ver o perfil do casal</div>':'')+
   '</div>';
-  if(comTrilha) h+='<audio id="gMusicaTema" loop preload="auto" src="/musica-tema.mp3"></audio>';
   h+='</div>';
 
   if(t){
@@ -4657,7 +4705,7 @@ function montarCorpo(g){
 
   if(r.contador && t) ligarContador(g);
   coracoesFlutuantes(el('heroSparks'), 10);
-  ligarMusicaTema();
+  ligarMusicaTema(g);
   if(t && el('perfilAbrir')){
     var pm=el('perfilModal');
     el('perfilAbrir').onclick=function(){ pm.classList.add('on'); };
@@ -4711,24 +4759,38 @@ function ligarContador(g){
 
 /* player */
 var _audio=null;
-function pararAudio(){ if(_audio){ try{_audio.pause();}catch(e){} _audio=null; } }
-/* trilha sonora de fundo — toca baixinho em loop; começa muda (o navegador exige isso)
-   e o toque no botão libera o som de verdade. Falta só subir o arquivo /musica-tema.mp3
-   na raiz do site, ao lado do index.html, pra tocar de verdade. */
-function ligarMusicaTema(){
-  var au=el('gMusicaTema'), btn=el('gMusicaBtn'), dica=el('gMusicaDica');
-  if(!au || !btn) return;
-  au.volume=0.32;
-  au.muted=true;
-  au.play().catch(function(){});
-  var tocando=false;
+var _trilha=null;
+function pararAudio(){
+  if(_audio){ try{_audio.pause();}catch(e){} _audio=null; }
+  if(_trilha){ try{_trilha.pause();}catch(e){} _trilha=null; }
+}
+/* trilha sonora de fundo — um único objeto de áudio, criado assim que o presente abre,
+   e mantido tocando enquanto a pessoa passa do portão pra intro e pro corpo da página.
+   O play() de verdade só acontece no toque do envelope (gesto real do usuário — é o
+   que o navegador exige). Falta subir o arquivo /musica-tema.mp3 na raiz do site,
+   ao lado do index.html, pra tocar de verdade. */
+function prepararTrilha(g){
+  var r=RECURSOS[g.produto]||RECURSOS.completo;
+  if(!(r.trilha && g.trilhaOn!==false)) return null;
+  if(!_trilha){
+    _trilha=new Audio('/musica-tema.mp3');
+    _trilha.loop=true; _trilha.preload='auto'; _trilha.volume=0.32;
+  }
+  return _trilha;
+}
+function ligarMusicaTema(g){
+  var btn=el('gMusicaBtn'), dica=el('gMusicaDica');
+  if(!btn) return;
+  var au=prepararTrilha(g);
+  if(!au) return;
+  function sync(){ btn.classList.toggle('tocando', !au.paused); }
   btn.onclick=function(){
-    tocando=!tocando;
-    au.muted=!tocando;
-    if(tocando) au.play().catch(function(){});
-    btn.classList.toggle('tocando', tocando);
+    if(au.paused){ au.volume=0.32; au.play().catch(function(){}); }
+    else{ au.pause(); }
+    sync();
   };
-  if(dica) dica.classList.add('on');
+  if(dica && au.paused) dica.classList.add('on');
+  sync();
 }
 function ligarPlayer(){
   var a=el('mpAudio'); if(!a) return; _audio=a;
