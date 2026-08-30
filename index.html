@@ -9,6 +9,23 @@
   gtag('js', new Date());
   gtag('config', 'G-564D0HDRMK');
 </script>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '2102013347063288');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=2102013347063288&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#E32B6D">
@@ -1765,6 +1782,9 @@ function toast(msg){
 function gaEvento(nome, params){
   try{ if(typeof gtag==='function') gtag('event', nome, params||{}); }catch(e){}
 }
+function fbEvento(nome, params){
+  try{ if(typeof fbq==='function') fbq('track', nome, params||{}); }catch(e){}
+}
 function gaPasso(){
   var ps=passos(); var k=ps[wStep];
   gaEvento('passo_wizard', {passo:k, indice:wStep+1, total_passos:ps.length, produto:W.produto||'(nenhum)'});
@@ -1773,10 +1793,12 @@ function gaCompraUnica(id, g){
   var feitas=jget('cl_ga_compras',{});
   if(feitas[id]) return;
   feitas[id]=1; jset('cl_ga_compras',feitas);
+  var valor=precoDe(g.produto,g.duracao);
   gaEvento('purchase',{
-    transaction_id:id, value:precoDe(g.produto,g.duracao), currency:'BRL',
+    transaction_id:id, value:valor, currency:'BRL',
     produto:g.produto, duracao:g.duracao
   });
+  fbEvento('Purchase',{value:valor, currency:'BRL', content_name:g.produto, content_type:'product'});
 }
 function copiar(txt,msg){
   var done=function(){ toast(msg||"Copiado!"); };
@@ -3440,6 +3462,7 @@ function ligarPasso(k){
     on('[data-pcta]','onclick',function(e){
       W.produto=e.dataset.pcta;
       gaEvento('selecionar_produto',{produto:W.produto});
+      fbEvento('ViewContent',{content_name:W.produto, content_type:'product'});
       proximoPasso();
     });
   }
@@ -3703,6 +3726,7 @@ function voltarPasso(){
 /* ---------- finalizar: gera uma cobrança Pix dinâmica na Efí ---------- */
 function finalizar(){
   gaEvento('begin_checkout',{produto:W.produto, duracao:W.duracao, valor:precoDe(W.produto,W.duracao)});
+  fbEvento('InitiateCheckout',{value:precoDe(W.produto,W.duracao), currency:'BRL', content_name:W.produto, content_type:'product'});
   var btn=el('wzNext');
   if(btn){ btn.disabled=true; btn.textContent='Gerando o Pix...'; }
   var boxErro=el('pagErro');
