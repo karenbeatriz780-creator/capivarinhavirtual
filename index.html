@@ -88,15 +88,6 @@ a{color:inherit;text-decoration:none;}
 .btn svg{width:18px;height:18px;flex-shrink:0;}
 
 /* ============ ANNOUNCEMENT + HEADER ============ */
-.announce{
-  background:linear-gradient(90deg,#E32B6D,#F0417E,#E32B6D);
-  background-size:200% 100%;animation:slidebg 12s linear infinite;
-  color:#fff;text-align:center;padding:.8rem var(--pad);font-size:.86rem;line-height:1.45;font-weight:500;
-  display:flex;align-items:center;justify-content:center;gap:.5rem;
-}
-@keyframes slidebg{to{background-position:200% 0;}}
-.announce b{font-weight:800;}
-.announce svg{width:15px;height:15px;fill:#fff;flex-shrink:0;}
 header.site{
   position:sticky;top:0;z-index:60;background:#FFFCFD;
   border-bottom:1px solid var(--line);
@@ -702,6 +693,37 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .g-hero-dica{font-size:.68rem;color:#C6A9B6;margin-top:.7rem;opacity:.8;}
 
 /* trilha sonora de fundo */
+/* ===================== PAINEL ADMINISTRATIVO ===================== */
+.pnl{min-height:100vh;background:#0F0710;color:#F3E7EC;padding:1.4rem var(--pad) 3rem;}
+.pnl-lock{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1rem;padding:2rem var(--pad);text-align:center;}
+.pnl-lock img{width:64px;height:64px;object-fit:contain;}
+.pnl-lock h1{font-family:'Fraunces';font-size:1.3rem;color:#fff;}
+.pnl-lock input{width:100%;max-width:280px;padding:.85rem 1rem;border-radius:12px;border:1.5px solid #3A2430;
+  background:#1A0F16;color:#fff;font-size:.95rem;text-align:center;}
+.pnl-lock button{width:100%;max-width:280px;padding:.85rem 1rem;border-radius:12px;background:var(--rose);
+  color:#fff;font-weight:800;border:0;}
+.pnl-lock .err{color:#FF8FA3;font-size:.82rem;min-height:1.2em;}
+.pnl-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.3rem;flex-wrap:wrap;gap:.6rem;}
+.pnl-h h1{font-family:'Fraunces';font-size:1.3rem;color:#fff;}
+.pnl-sair{font-size:.78rem;color:#C6A9B6;background:none;border:1px solid #3A2430;border-radius:100px;
+  padding:.4rem .9rem;}
+.pnl-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin-bottom:1.6rem;}
+.pnl-card{background:#1A0F16;border:1px solid #2E1C25;border-radius:14px;padding:1rem;}
+.pnl-card b{display:block;font-family:'Fraunces';font-size:1.5rem;color:#fff;}
+.pnl-card span{font-size:.72rem;color:#B999A8;}
+.pnl-nota{background:#1A0F16;border:1px dashed #3A2430;border-radius:12px;padding:.9rem 1rem;
+  font-size:.78rem;color:#B999A8;margin-bottom:1.4rem;line-height:1.5;}
+.pnl-lista{display:flex;flex-direction:column;gap:.5rem;}
+.pnl-row{display:flex;align-items:center;justify-content:space-between;gap:.7rem;
+  background:#1A0F16;border:1px solid #2E1C25;border-radius:12px;padding:.75rem .9rem;}
+.pnl-row .nm{font-size:.86rem;font-weight:700;color:#fff;}
+.pnl-row .meta{font-size:.72rem;color:#B999A8;margin-top:.1rem;}
+.pnl-row .vl{font-family:'Fraunces';font-size:.98rem;color:var(--gold);white-space:nowrap;}
+.pnl-row .selo{font-size:.62rem;font-weight:800;padding:.15rem .5rem;border-radius:100px;margin-left:.4rem;}
+.pnl-row .selo.pago{background:rgba(80,200,150,.18);color:#6FE0AB;}
+.pnl-row .selo.pend{background:rgba(255,180,90,.18);color:#FFC97A;}
+
 .g-musica-btn{position:absolute;top:1rem;right:1rem;z-index:3;width:44px;height:44px;border-radius:50%;
   background:rgba(20,8,13,.55);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.22);
   display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(0,0,0,.4);
@@ -2277,6 +2299,7 @@ function navegar(){
   if(r.nome==='criar'){ telaWizard(r.arg); return; }
   if(r.nome==='meus'){ telaMeus(); return; }
   if(r.nome==='avaliar' && r.arg){ telaAvaliar(r.arg); return; }
+  if(r.nome==='painel-capivarinha'){ telaPainel(); return; }
   telaHome();
 }
 window.addEventListener('hashchange', navegar);
@@ -2425,8 +2448,6 @@ function telaHome(){
   }).join('');
 
   el('app').innerHTML =
-  '<div class="announce">'+IC.heart+'<span>Mais de 100 mil pessoas já emocionaram alguém que amam. Crie o seu presente em <b>2 minutos</b>.</span></div>'+
-
   '<header class="site"><div class="shell hd">'+
     '<a class="logo" href="#/"><img src="'+MASCOTE+'" alt=""><span class="wm">Capivarinha <i>Love</i>'+IC.heart+'</span></a>'+
     '<button class="burger" id="burger" aria-label="Abrir menu" aria-expanded="false">'+
@@ -2472,8 +2493,6 @@ function telaHome(){
       '<p>Toque em cada aba pra ver como cada parte do presente aparece no celular de quem você ama.</p></div>'+
     '<div class="tabs" id="tabs">'+
       '<button class="tab on" data-t="retro">'+IC.heartO+'Retrospectiva</button>'+
-      '<button class="tab" data-t="album">'+IC.gift+'Álbum do casal</button>'+
-      '<button class="tab" data-t="jogos">🎲 Jogos</button>'+
       '<button class="tab" data-t="carta">'+IC.mail+'Cartas e mensagens</button>'+
     '</div>'+
     '<div class="phone-stage"><div class="phone"><div class="phone-scr" id="phoneScr"></div></div></div>'+
@@ -2578,67 +2597,10 @@ function previewFake(tipo){
   var s=el('phoneScr'); if(!s) return;
   var css='position:absolute;inset:0;background:#120A0F;color:#fff;font-family:Inter,sans-serif;overflow:hidden;';
   if(tipo==='retro'){
-    s.innerHTML='<div style="'+css+'display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.2rem">'+
-      '<div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:#FF9EC2;font-weight:800;margin-bottom:.6rem">Nossa história</div>'+
-      '<div id="pvN" style="font-family:Fraunces,serif;font-size:3.1rem;font-weight:600;line-height:1;background:linear-gradient(180deg,#fff,#FFB3CF);-webkit-background-clip:text;background-clip:text;color:transparent">0</div>'+
-      '<div style="font-size:.78rem;color:#D9BEC9;margin-top:.5rem;font-weight:600">dias juntos</div>'+
-      '<div style="font-family:\'Grand Hotel\',cursive;font-size:1.5rem;color:#FF9EC2;margin-top:1.1rem">Ana &amp; Lucas</div>'+
-      '<div style="font-size:.68rem;color:#9C8590;margin-top:.4rem">e a contagem não para 💗</div>'+
-      '<div style="position:absolute;inset:0;pointer-events:none" id="pvH"></div></div>';
-    var alvo=1247,n=0,e2=el('pvN');
-    _pvT.push(setInterval(function(){ n+=Math.max(1,Math.round((alvo-n)/9)); if(n>=alvo){n=alvo;} if(e2) e2.textContent=nnum(n); },42));
-    var h=el('pvH');
-    _pvT.push(setInterval(function(){
-      if(!h) return;
-      var d=document.createElement('div');
-      d.style.cssText='position:absolute;left:'+(8+Math.random()*84)+'%;bottom:-6%;width:'+(9+Math.random()*8)+'px;opacity:.75;animation:fall '+(3+Math.random()*2)+'s linear forwards';
-      d.style.animationName='spk'; d.innerHTML='<svg viewBox="0 0 24 24" style="fill:#FF7FAB"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.2 2.3 4 6.4 4c2.1 0 3.7 1.2 5.6 3.6C13.9 5.2 15.5 4 17.6 4 21.7 4 23.6 8.2 22 11.7 19.5 16.4 12 21 12 21z"/></svg>';
-      h.appendChild(d); setTimeout(function(){ d.remove(); },5200);
-    },520));
-  } else if(tipo==='album'){
-    var fotos=['#5A2740','#2C3E50','#6B4226','#3D2B4F'];
-    var caps=[['Ago 2022','O primeiro encontro'],['Dez 2022','Nosso réveillon'],['Mai 2023','A viagem'],['Fev 2024','O pedido']];
-    s.innerHTML='<div style="'+css+'">'+
-      '<div style="position:absolute;top:0;left:0;right:0;display:flex;gap:3px;padding:.7rem .6rem;z-index:4" id="pvBars">'+
-        fotos.map(function(){ return '<div style="flex:1;height:2.5px;background:rgba(255,255,255,.28);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:0;background:#fff"></i></div>'; }).join('')+'</div>'+
-      fotos.map(function(c,i){ return '<div class="pvS" data-i="'+i+'" style="position:absolute;inset:0;opacity:'+(i?0:1)+';transition:opacity .5s;background:linear-gradient(160deg,'+c+',#160B12)">'+
-        '<div style="position:absolute;left:0;right:0;bottom:0;padding:3rem 1rem 1.5rem;background:linear-gradient(0deg,rgba(0,0,0,.9),transparent)">'+
-        '<span style="display:inline-block;font-size:.55rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:#E32B6D;padding:.25rem .55rem;border-radius:100px">'+caps[i][0]+'</span>'+
-        '<div style="font-family:Fraunces,serif;font-size:1.02rem;font-weight:600;margin-top:.55rem">'+caps[i][1]+'</div></div></div>'; }).join('')+
-      '</div>';
-    var idx=0;
-    var bars=s.querySelectorAll('#pvBars i');
-    function passo(){
-      s.querySelectorAll('.pvS').forEach(function(x,i){ x.style.opacity = (i===idx)?1:0; });
-      bars.forEach(function(b,i){ b.style.transition='none'; b.style.width = i<idx?'100%':'0'; });
-      var b=bars[idx];
-      if(b){ setTimeout(function(){ b.style.transition='width 2.4s linear'; b.style.width='100%'; },30); }
-      idx=(idx+1)%fotos.length;
-    }
-    passo(); _pvT.push(setInterval(passo,2500));
-  } else if(tipo==='jogos'){
-    var opcoes=['Cinema','Jantar fora','Praia','Sorvete','Dia de preguiça','Viagem surpresa'];
-    s.innerHTML='<div style="'+css+'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.1rem;text-align:center">'+
-      '<div style="font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:#FF9EC2;font-weight:800;margin-bottom:.9rem">Roleta do encontro</div>'+
-      '<div style="position:relative;width:150px;height:150px">'+
-        '<div id="pvWheel" style="width:100%;height:100%;border-radius:50%;overflow:hidden;box-shadow:0 0 0 5px #E8B44A,0 10px 26px rgba(0,0,0,.5);transition:transform 3.2s cubic-bezier(.2,.85,.2,1)">'+
-          '<svg viewBox="0 0 100 100" style="width:100%;height:100%;display:block">'+
-            opcoes.map(function(o,i){
-              var a0=i*60-90, a1=(i+1)*60-90, r=48;
-              var x0=50+r*Math.cos(a0*Math.PI/180), y0=50+r*Math.sin(a0*Math.PI/180);
-              var x1=50+r*Math.cos(a1*Math.PI/180), y1=50+r*Math.sin(a1*Math.PI/180);
-              return '<path d="M50,50 L'+x0+','+y0+' A'+r+','+r+' 0 0,1 '+x1+','+y1+' Z" fill="'+(i%2?'#6E1030':'#E32B6D')+'"/>';
-            }).join('')+
-          '</svg></div>'+
-        '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF6DA,#E8B44A 62%,#B8860B);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.4)">'+
-          '<svg viewBox="0 0 24 24" style="width:14px;fill:#B5124E"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.2 2.3 4 6.4 4c2.1 0 3.7 1.2 5.6 3.6C13.9 5.2 15.5 4 17.6 4 21.7 4 23.6 8.2 22 11.7 19.5 16.4 12 21 12 21z"/></svg></div>'+
-        '<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:11px solid #E8B44A"></div>'+
-      '</div>'+
-      '<div style="font-size:.72rem;color:#D9BEC9;margin-top:1.1rem">+ caça-palavras, quebra-cabeça, quiz e medidor de amor</div>'+
-    '</div>';
-    var w=el('pvWheel'), voltas=0;
-    function girar(){ voltas+=1; if(w) w.style.transform='rotate('+(voltas*720+Math.floor(Math.random()*300))+'deg)'; }
-    girar(); _pvT.push(setInterval(girar,3300));
+    s.innerHTML='<video class="pv-video" autoplay loop muted playsinline preload="auto" '+
+      'poster="/exemplo-retrospectiva-poster.jpg" '+
+      'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">'+
+      '<source src="/exemplo-retrospectiva.mp4" type="video/mp4"></video>';
   } else {
     s.innerHTML='<div style="'+css+'display:flex;align-items:center;justify-content:center;padding:1.1rem">'+
       '<div style="background:linear-gradient(170deg,#FFFCF8,#FDF2E9);border-radius:14px;padding:1.3rem 1.1rem;color:#3B2C31;width:100%;position:relative;overflow:hidden;box-shadow:0 16px 34px rgba(0,0,0,.4)">'+
@@ -3387,6 +3349,12 @@ function htmlPasso(k){
       '<div id="checkoutForm">'+
       '<div class="demo-note info">'+IC.shield+
         '<div><b>Pix gerado na hora, aqui mesmo.</b> Assim que cair o pagamento, seu link é liberado sozinho.</div></div>'+
+      '<button type="button" class="cupom-toggle" id="cupomToggle">Tem um cupom?</button>'+
+      '<div class="cupom-box" id="cupomBox" style="display:none">'+
+        '<input class="inp" id="cupomInp" placeholder="Código do cupom" maxlength="14" autocapitalize="characters">'+
+        '<button class="cupom-ap" id="cupomAp">Aplicar</button>'+
+      '</div>'+
+      '<div id="cupomMsg" class="cupom-msg"></div>'+
       '<div id="pagErro" style="display:none" class="demo-note"></div>'+
       '</div>'+
       '<div id="pixArea" style="display:none"></div>';
@@ -3905,6 +3873,80 @@ function telaSucesso(id){
 }
 
 /* ---------- meus presentes ---------- */
+/* =========================================================
+   PAINEL ADMINISTRATIVO — rota secreta, sem link em lugar nenhum
+   ========================================================= */
+function telaPainel(){
+  var app=el('app');
+  var chave=Store.get('cl_admin_key');
+  if(!chave){ desenharTravaPainel(); return; }
+  app.innerHTML='<div class="pnl" id="pnlScope"><div class="pnl-h"><h1>Painel · Capivarinha Love</h1>'+
+    '<button class="pnl-sair" id="pnlSair">Sair</button></div>'+
+    '<div id="pnlBody">Carregando…</div></div>';
+  el('pnlSair').onclick=function(){ Store.del('cl_admin_key'); ir('painel-capivarinha'); location.reload(); };
+  carregarPainel(chave);
+}
+function desenharTravaPainel(){
+  var app=el('app');
+  app.innerHTML='<div class="pnl-lock"><img src="'+MASCOTE+'" alt="">'+
+    '<h1>Área restrita</h1>'+
+    '<input type="password" id="pnlSenha" placeholder="Senha">'+
+    '<button id="pnlEntrar">Entrar</button>'+
+    '<div class="err" id="pnlErr"></div></div>';
+  function tentar(){
+    var v=el('pnlSenha').value.trim();
+    if(!v) return;
+    Store.set('cl_admin_key', v);
+    carregarPainel(v, function(falhou){
+      if(falhou){ Store.del('cl_admin_key'); el('pnlErr').textContent='Senha incorreta.'; }
+      else{ ir('painel-capivarinha'); navegar(); }
+    });
+  }
+  el('pnlEntrar').onclick=tentar;
+  el('pnlSenha').onkeydown=function(e){ if(e.key==='Enter') tentar(); };
+}
+function carregarPainel(chave, cb){
+  fetch('/.netlify/functions/admin-pedidos', { headers:{'x-admin-key':chave} })
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
+    .then(function(res){
+      if(!res.ok){ if(cb) cb(true); else { var b=el('pnlBody'); if(b) b.innerHTML='<div class="pnl-nota">'+esc(res.d.erro||'Não consegui carregar.')+'</div>'; } return; }
+      if(cb) cb(false);
+      desenharPainel(res.d.pedidos||[]);
+    })
+    .catch(function(){ if(cb) cb(true); });
+}
+function desenharPainel(pedidos){
+  var body=el('pnlBody'); if(!body) return;
+  var agora=new Date();
+  var inicioDia=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate()).getTime();
+  var inicioMes=new Date(agora.getFullYear(),agora.getMonth(),1).getTime();
+  var pagos=pedidos.filter(function(p){ return p.pago; });
+  var hoje=pagos.filter(function(p){ return (p.criadoEm||0)>=inicioDia; });
+  var mes=pagos.filter(function(p){ return (p.criadoEm||0)>=inicioMes; });
+  function soma(l){ return l.reduce(function(s,p){ return s+(Number(p.valor)||0); },0); }
+  var cards=
+    '<div class="pnl-card"><b>'+pagos.length+'</b><span>pedidos pagos (total)</span></div>'+
+    '<div class="pnl-card"><b>'+pedidos.length+'</b><span>links gerados (com pendentes)</span></div>'+
+    '<div class="pnl-card"><b>R$ '+fmtPreco(soma(hoje))+'</b><span>receita hoje ('+hoje.length+' pedidos)</span></div>'+
+    '<div class="pnl-card"><b>R$ '+fmtPreco(soma(mes))+'</b><span>receita no mês ('+mes.length+' pedidos)</span></div>'+
+    '<div class="pnl-card"><b>R$ '+fmtPreco(soma(pagos))+'</b><span>receita total</span></div>'+
+    '<div class="pnl-card"><b>'+(pagos.length?fmtPreco(soma(pagos)/pagos.length):'—')+'</b><span>ticket médio (R$)</span></div>';
+  var nota='<div class="pnl-nota">Gasto com anúncios (Meta Ads) ainda não está aqui — falta um token de acesso '+
+    'com permissão <b>ads_read</b> e o ID da sua conta de anúncios. Me manda os dois que eu ligo essa parte.</div>';
+  var lista=pedidos.map(function(p){
+    var nome=(p.meuNome||'')+(p.meuNome&&p.parceiroNome?' &amp; ':'')+(p.parceiroNome||'');
+    var dt=p.criadoEm?new Date(p.criadoEm).toLocaleString('pt-BR'):'—';
+    return '<div class="pnl-row"><div><div class="nm">'+(esc(nome)||'(sem nome)')+
+      '<span class="selo '+(p.pago?'pago':'pend')+'">'+(p.pago?'pago':'pendente')+'</span></div>'+
+      '<div class="meta">'+esc(p.produto||'')+' · '+dt+'</div></div>'+
+      '<div class="vl">R$ '+fmtPreco(p.valor||0)+'</div></div>';
+  }).join('') || '<div class="pnl-nota">Nenhum pedido ainda.</div>';
+  body.innerHTML='<div class="pnl-cards">'+cards+'</div>'+nota+'<div class="pnl-lista">'+lista+'</div>';
+}
+
+/* =========================================================
+   TELA — MEUS PRESENTES
+   ========================================================= */
 function telaMeus(){
   var all=presentes();
   var ids=Object.keys(all).filter(function(k){
