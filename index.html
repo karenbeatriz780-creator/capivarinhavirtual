@@ -3877,25 +3877,31 @@ function telaSucesso(id){
    PAINEL ADMINISTRATIVO — rota secreta, sem link em lugar nenhum
    ========================================================= */
 function telaPainel(){
-  var app=el('app');
   var chave=Store.get('cl_admin_key');
-  if(!chave){ desenharTravaPainel(); return; }
+  if(chave){ tentarAcessoPainel(chave); }
+  else{ desenharTravaPainel(); }
+}
+function tentarAcessoPainel(chave){
+  var app=el('app');
   app.innerHTML='<div class="pnl" id="pnlScope"><div class="pnl-h"><h1>Painel · Capivarinha Love</h1>'+
     '<button class="pnl-sair" id="pnlSair">Sair</button></div>'+
     '<div id="pnlBody">Carregando…</div></div>';
-  el('pnlSair').onclick=function(){ Store.del('cl_admin_key'); ir('painel-capivarinha'); location.reload(); };
-  carregarPainel(chave);
+  el('pnlSair').onclick=function(){ Store.del('cl_admin_key'); ir('painel-capivarinha'); navegar(); };
+  carregarPainel(chave, function(falhou){
+    if(falhou){ Store.del('cl_admin_key'); desenharTravaPainel('Senha incorreta.'); }
+  });
 }
-function desenharTravaPainel(){
+function desenharTravaPainel(erroInicial){
   var app=el('app');
   app.innerHTML='<div class="pnl-lock"><img src="'+MASCOTE+'" alt="">'+
     '<h1>Área restrita</h1>'+
     '<input type="password" id="pnlSenha" placeholder="Senha">'+
     '<button id="pnlEntrar">Entrar</button>'+
-    '<div class="err" id="pnlErr"></div></div>';
+    '<div class="err" id="pnlErr">'+esc(erroInicial||'')+'</div></div>';
   function tentar(){
     var v=el('pnlSenha').value.trim();
     if(!v) return;
+    el('pnlErr').textContent='';
     Store.set('cl_admin_key', v);
     carregarPainel(v, function(falhou){
       if(falhou){ Store.del('cl_admin_key'); el('pnlErr').textContent='Senha incorreta.'; }
@@ -3909,7 +3915,7 @@ function carregarPainel(chave, cb){
   fetch('/.netlify/functions/admin-pedidos', { headers:{'x-admin-key':chave} })
     .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
     .then(function(res){
-      if(!res.ok){ if(cb) cb(true); else { var b=el('pnlBody'); if(b) b.innerHTML='<div class="pnl-nota">'+esc(res.d.erro||'Não consegui carregar.')+'</div>'; } return; }
+      if(!res.ok){ if(cb) cb(true); return; }
       if(cb) cb(false);
       desenharPainel(res.d.pedidos||[]);
     })
