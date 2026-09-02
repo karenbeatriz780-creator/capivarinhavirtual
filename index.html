@@ -536,6 +536,14 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .kit-topo svg{width:22px;height:22px;stroke:var(--rose-deep);fill:none;stroke-width:2;flex-shrink:0;margin-top:.1rem;}
 .kit-topo b{display:block;font-size:.95rem;color:var(--rose-deep);}
 .kit-topo span{display:block;font-size:.82rem;color:var(--muted);line-height:1.45;margin-top:.15rem;}
+.kit-brinde{display:flex;gap:.7rem;align-items:flex-start;margin:-.7rem 0 1.5rem;font-size:1.4rem;
+  background:linear-gradient(160deg,#FFFBEE,#FFF3D6);border:1.5px solid #F0D89A;
+  border-radius:var(--r-lg);padding:1.05rem 1.1rem;animation:brindePulso 2.4s ease-in-out infinite;}
+@keyframes brindePulso{0%,100%{box-shadow:0 0 0 0 rgba(232,180,74,.35);}50%{box-shadow:0 0 0 8px rgba(232,180,74,0);}}
+.kit-brinde b{display:block;font-size:.95rem;color:#8A6410;}
+.kit-brinde span{display:block;font-size:.82rem;color:#9C7B34;line-height:1.45;margin-top:.15rem;}
+.ex-card.brinde{border-color:#F0D89A;box-shadow:0 6px 18px rgba(232,180,74,.22);}
+.ex-selo.gratis{background:var(--gold);color:#3A2405;font-weight:800;}
 .mv-previa{border:1.5px solid var(--line);border-radius:var(--r-md);padding:.7rem;
   background:var(--paper);display:flex;justify-content:center;}
 .mv-previa canvas{width:100%;max-width:15rem;height:auto;border-radius:6px;
@@ -1065,11 +1073,11 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .letter::before{content:"";position:absolute;inset:9px;border:1px solid rgba(227,43,109,.18);border-radius:11px;pointer-events:none;}
 .letter-orn{text-align:center;color:var(--rose);margin-bottom:1.2rem;}
 .letter-orn svg{width:34px;height:34px;fill:currentColor;}
-.letter-to{font-family:'Grand Hotel',cursive;font-size:1.75rem;color:var(--rose-deep);text-align:center;margin-bottom:1.3rem;line-height:1.2;padding-right:60px;}
+.letter-to{font-family:'Grand Hotel',cursive;font-size:1.75rem;color:var(--rose-deep);text-align:center;margin-bottom:1.3rem;line-height:1.2;}
 .letter-tx{font-family:'Fraunces';font-size:1.02rem;line-height:1.85;white-space:pre-wrap;text-align:left;min-height:3em;}
 .letter-tx .tw{opacity:0;animation:twIn .5s ease forwards;}
 @keyframes twIn{to{opacity:1;}}
-.letter-sig{margin-top:1.7rem;text-align:right;padding-right:52px;}
+.letter-sig{clear:both;margin-top:1.7rem;text-align:right;padding-right:52px;}
 .letter-sig .lb{font-size:.72rem;color:#9A8A90;letter-spacing:.08em;text-transform:uppercase;font-weight:700;}
 .letter-sig .nm{font-family:'Grand Hotel',cursive;font-size:2rem;color:var(--rose-deep);line-height:1.1;margin-top:.15rem;}
 .letter-shine{position:absolute;inset:0;pointer-events:none;
@@ -1683,7 +1691,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .cab-lb{text-align:center;font-size:.62rem;letter-spacing:.3em;color:#8a5468;padding:.3rem 0 .5rem;}
 
 /* --- CARTA (melhorias) --- */
-.letter-foto{position:absolute;top:14px;right:14px;width:74px;background:#fff;padding:5px 5px 14px;
+.letter-foto{float:right;position:relative;margin:0 -8px 10px 16px;width:74px;background:#fff;padding:5px 5px 14px;
   transform:rotate(5deg);box-shadow:0 8px 18px rgba(0,0,0,.22);z-index:3;}
 .letter-foto img{width:100%;aspect-ratio:.85;object-fit:cover;display:block;}
 .letter-foto .tp{position:absolute;width:34px;height:13px;background:rgba(226,214,190,.85);
@@ -1691,7 +1699,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .letter-foto .tp1{top:-6px;left:-8px;transform:rotate(-38deg);}
 .letter-foto .tp2{bottom:2px;right:-10px;transform:rotate(-38deg);}
 .letter-local{font-family:'Fraunces';font-style:italic;color:#8a7a6a;font-size:.78rem;
-  line-height:1.5;margin-bottom:1.3rem;padding-right:92px;}
+  line-height:1.5;margin-bottom:1.3rem;}
 .letter-risco{width:120px;height:1px;background:#b9a894;margin:.5rem 0 0 auto;}
 .letter-lacre{position:absolute;bottom:16px;right:18px;width:38px;height:38px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#C0392B,#8B1A12);display:flex;align-items:center;
@@ -2805,8 +2813,8 @@ function passos(){
   var r=RECURSOS[p]||RECURSOS.completo;
   var s=[];
   s.push('produto','perfil','nomes');
-  if(p==='completo') s.push('data','titulo');
   if(r.fotos) s.push('fotos');
+  if(p==='completo') s.push('data','titulo');
   if(r.carta) s.push('carta');
   if(r.jogos) s.push('jogos');
   if(r.trilha) s.push('trilha');
@@ -3327,10 +3335,10 @@ function htmlPasso(k){
   }
 
   case 'data':
-    return guia("Desde quando vocês são inseparáveis? Eu uso essa data pra contar cada segundo de vocês.")+
+    return guia("Desde quando vocês são inseparáveis? Eu uso essa data pra contar cada segundo de vocês. Não lembra a certinha? Pode pular.")+
       '<div class="wz-t">A data que começou tudo</div>'+
-      '<div class="wz-s">Pode ser o primeiro encontro, o pedido, o casamento — o que fizer mais sentido.</div>'+
-      '<div class="dt"><label>Data</label><input type="date" id="fData" value="'+esc(W.dataEspecial)+'"></div>'+
+      '<div class="wz-s">Pode ser o primeiro encontro, o pedido, o casamento — o que fizer mais sentido. Não sabe a data exata? Deixe em branco, sem problema.</div>'+
+      '<div class="dt"><label>Data (opcional)</label><input type="date" id="fData" value="'+esc(W.dataEspecial)+'"></div>'+
       '<div class="dt"><label>Horário (opcional)</label><input type="time" id="fHora" value="'+esc(W.horaEspecial)+'"></div>'+
       '<div class="field" style="margin-top:1rem"><label>Cidade (opcional)</label>'+
         '<input class="inp" id="fCidade" value="'+esc(W.cidade)+'" placeholder="Ex: Manaus, AM">'+
@@ -3448,6 +3456,10 @@ function htmlPasso(k){
     return guia("Última etapa! O código Pix aparece aqui mesmo, sem sair da página.")+
       '<div class="wz-t">Finalizar</div>'+
       '<div class="sum">'+linhas+'</div>'+
+      '<div class="kit-brinde" style="margin:1rem 0">🎁'+
+        '<div><b>E ainda leva um brinde</b>'+
+        '<span>Ao finalizar, você escolhe uma arte pra imprimir — moldura, cartinha ou QR temático — '+
+        'e leva de graça (valor de '+precoBR(PRECO_CARTA)+').</span></div></div>'+
       '<div id="checkoutForm">'+
       '<div class="demo-note info">'+IC.shield+
         '<div><b>Pix gerado na hora, aqui mesmo.</b> Assim que cair o pagamento, seu link é liberado sozinho.</div></div>'+
@@ -3607,8 +3619,15 @@ function ligarPasso(k){
     el('fileIn').onchange=function(ev){
       var files=Array.prototype.slice.call(ev.target.files); ev.target.value='';
       if(!files.length) return;
+      var eraVazio=!W.fotos.filter(Boolean).length;
       var max=(RECURSOS[W.produto]||RECURSOS.completo).fotos;
       toast('Preparando as fotos...');
+      function celebrarPrimeira(){
+        if(!eraVazio || !W.fotos.filter(Boolean).length) return;
+        var r=RECURSOS[W.produto]||RECURSOS.completo;
+        toast(r.timeline ? '🎉 Essa foto já vai aparecer na sua linha do tempo e no álbum do presente!'
+                          : '🎉 Essa foto já faz parte do seu presente!');
+      }
       if(multi){
         var livres=[];
         for(var i=0;i<max;i++) if(!W.fotos[i]) livres.push(i);
@@ -3621,6 +3640,7 @@ function ligarPasso(k){
           .then(function(res){
             res.forEach(function(par,i){ var src=par[0], dt=par[1]; if(src) W.fotos[livres[i]]={src:src,legenda:'',data:dt||''}; });
             redesenharSemPular();
+            celebrarPrimeira();
           });
       } else {
         var ant=W.fotos[alvo];
@@ -3628,6 +3648,7 @@ function ligarPasso(k){
           var src=res[0], dt=res[1];
           W.fotos[alvo]={src:src, legenda:(ant&&ant.legenda)||'', data:(ant&&ant.data)||dt||''};
           redesenharSemPular();
+          celebrarPrimeira();
         }).catch(function(){ toast('Não consegui ler essa imagem. Tente outra.'); });
       }
     };
@@ -3758,7 +3779,6 @@ function validar(k){
     if(!W.anonimo && !W.meuNome.trim()) return erro('Campo obrigatório', 'fNome');
     if(!W.parceiroNome.trim()) return erro('Campo obrigatório', 'fPar');
   }
-  if(k==='data' && !W.dataEspecial) return erro('Campo obrigatório', 'fData');
   if(k==='fotos' && !W.fotos.filter(Boolean).length) return erro('Envie pelo menos uma foto.');
   if(k==='carta' && W.carta.trim().length<10) return erro('Campo obrigatório — escreva a carta ou toque em “Gerar cartas”.', 'fCarta');
   if(k==='jogos'){
@@ -5780,6 +5800,28 @@ function extraPago(giftId, tipo, variante){
   var e = pegarPresente(extraId(giftId, tipo, variante));
   return !!(e && e.pago);
 }
+/* brinde real: quem finaliza a compra escolhe UM item do kit de impressão sem pagar.
+   É um produto de verdade (mesma arte que é vendida), liberado de graça uma única vez. */
+function brindeUsado(giftId){ return jget('cl_brinde_'+giftId, null); }
+function brindeDisponivel(g){
+  if(!g || !g.pago) return false;
+  if(['completo','carta','convite'].indexOf(g.produto)===-1) return false;
+  return !brindeUsado(g.id);
+}
+function resgatarBrinde(g, tipo, item){
+  if(!brindeDisponivel(g)) return false;
+  jset('cl_brinde_'+g.id, {tipo:tipo, variante:item.id, em:Date.now()});
+  salvarPresente({
+    id: extraId(g.id, tipo, item.id),
+    produto: (tipo==='tema' ? 'extra_tema' : tipo==='carta' ? 'extra_carta' : 'extra_moldura'),
+    meuNome: g.meuNome||'', refPresente: g.id,
+    extraTipo: tipo, extraVariante: item.id,
+    pago:true, brinde:true, criadoEm: Date.now(),
+    pagamento:{provedor:'brinde', status:'CONCLUIDA', valor:0}
+  });
+  gaEvento('resgatou_brinde', {tipo:tipo, variante:item.id});
+  return true;
+}
 /* fotos + legendas que a pessoa monta DEPOIS de pagar a moldura */
 function molduraDados(giftId, itemId){ return jget('cl_mold_'+giftId+'_'+itemId, []); }
 function salvarMolduraDados(giftId, itemId, arr){ jset('cl_mold_'+giftId+'_'+itemId, arr); }
@@ -5792,6 +5834,9 @@ function htmlKitImpressao(){
     '<div class="kit-topo">'+IC.gift+
       '<div><b>Leve o presente pro mundo real</b>'+
       '<span>Artes prontas pra imprimir, todas com o QR do seu presente.</span></div></div>'+
+    '<div class="kit-brinde" id="kitBrinde" style="display:none">🎁 '+
+      '<div><b>Você ganhou um item de brinde!</b>'+
+      '<span>Escolha qualquer arte abaixo e resgate sem pagar nada. Vale por um item.</span></div></div>'+
     '<div class="ex-sec"><div class="ex-sec-h"><h3>Moldura com fotos</h3>'+
       '<span class="ex-preco-tag">'+precoBR(PRECO_MOLDURA)+'</span></div>'+
       '<p>Depois de liberar, você escolhe as fotos e escreve a legenda de cada uma.</p>'+
@@ -5807,28 +5852,44 @@ function htmlKitImpressao(){
   '</section>';
 }
 function ligarKitImpressao(g){
-  MOLDURAS.forEach(function(m){ montarCard(g,'moldura',m, el('gMolduras')); });
-  CARTINHAS.forEach(function(c){ montarCard(g,'carta',  c, el('gCartas')); });
-  TEMAS_QR.forEach(function(t){ montarCard(g,'tema',   t, el('gTemas')); });
+  var mold=el('gMolduras'), cart=el('gCartas'), tem=el('gTemas');
+  if(mold) mold.innerHTML=''; if(cart) cart.innerHTML=''; if(tem) tem.innerHTML='';
+  var faixa=el('kitBrinde');
+  if(faixa) faixa.style.display = brindeDisponivel(g) ? '' : 'none';
+  MOLDURAS.forEach(function(m){ montarCard(g,'moldura',m, mold); });
+  CARTINHAS.forEach(function(c){ montarCard(g,'carta',  c, cart); });
+  TEMAS_QR.forEach(function(t){ montarCard(g,'tema',   t, tem); });
 }
 
 function montarCard(g, tipo, item, container){
   if(!container) return;
   var pago = extraPago(g.id, tipo, item.id);
+  var deBrinde = !pago && brindeDisponivel(g);
   var precisaMontar = (tipo==='moldura' && pago && molduraDados(g.id,item.id).length < item.fotos);
   var card = document.createElement('div');
-  card.className = 'ex-card' + (pago ? ' comprado' : '');
+  card.className = 'ex-card' + (pago ? ' comprado' : '') + (deBrinde ? ' brinde' : '');
   card.innerHTML =
     '<div class="ex-card-art"><canvas></canvas>'+
-      (pago ? '<span class="ex-selo">✓ seu</span>' : '<span class="ex-selo previa">exemplo</span>')+
+      (pago ? '<span class="ex-selo">✓ seu</span>'
+            : (deBrinde ? '<span class="ex-selo gratis">grátis</span>' : '<span class="ex-selo previa">exemplo</span>'))+
     '</div>'+
     '<div class="ex-card-nome">'+esc(item.nome)+'</div>'+
     (pago
       ? '<button class="btn btn-primary ex-btn">'+(precisaMontar?'Montar':'Baixar')+'</button>'
-      : '<button class="btn btn-ghost ex-btn">'+precoBR(precoDo(tipo))+'</button>');
+      : (deBrinde
+          ? '<button class="btn btn-primary ex-btn">Resgatar grátis</button>'
+          : '<button class="btn btn-ghost ex-btn">'+precoBR(precoDo(tipo))+'</button>'));
   container.appendChild(card);
   pintarArte(card.querySelector('canvas'), g, tipo, item, {previa:!pago, escala:0.3});
   card.querySelector('.ex-btn').onclick = function(){
+    if(!pago && deBrinde){
+      if(resgatarBrinde(g, tipo, item)){
+        confetes(50);
+        toast('Brinde resgatado! Ele já é seu.');
+        ligarKitImpressao(g);
+      }
+      return;
+    }
     if(!pago){ iniciarPixExtra(g, tipo, item); return; }
     if(tipo==='moldura') escolherFotosMoldura(g, item);
     else baixarArte(g, tipo, item);
