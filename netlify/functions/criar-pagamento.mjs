@@ -6,11 +6,15 @@ const PACOTES = {
   completo:  { nome: 'Retrospectiva Completa', preco: 21, preco48: 9.99 },
   carta:     { nome: 'Carta Virtual',   preco: 6, preco48: 3.99 },
   convite:   { nome: 'Convite Criativo', preco: 14, preco48: 10 },
+  musica:    { nome: 'Música Personalizada', preco: 9.99, preco48: 9.99 },
   extra:         { nome: 'Lembrancinhas',  preco: 4 },
   extra_tema:    { nome: 'QR temático',    preco: 2.99 },
   extra_carta:   { nome: 'Cartinha',       preco: 3.99 },
   extra_moldura: { nome: 'Moldura',        preco: 3.99 }
 };
+// Produtos que aceitam a música personalizada como adicional pago.
+const PRODUTOS_COM_ADDON_MUSICA = ['completo', 'carta'];
+const PRECO_ADDON_MUSICA = 7;
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -42,13 +46,15 @@ export default async (req) => {
 
     const pacote = PACOTES[presente.produto];
     const duracao = presente.duracao === 'h48' ? 'h48' : 'vitalicio';
-    const precoFinal = (duracao === 'h48' && pacote.preco48 != null) ? pacote.preco48 : pacote.preco;
+    const temAddonMusica = !!presente.musicaOn && PRODUTOS_COM_ADDON_MUSICA.indexOf(presente.produto) !== -1;
+    const precoBase = (duracao === 'h48' && pacote.preco48 != null) ? pacote.preco48 : pacote.preco;
+    const precoFinal = precoBase + (temAddonMusica ? PRECO_ADDON_MUSICA : 0);
     const txid = criarTxid(presente.id);
     const criadoEm = Date.now();
     const salvo = Object.assign({}, presente, {
       pago: false,
       criadoEm,
-      pagamento: { provedor: 'efi', txid, status: 'ATIVA', valor: precoFinal, duracao }
+      pagamento: { provedor: 'efi', txid, status: 'ATIVA', valor: precoFinal, duracao, addonMusica: temAddonMusica }
     });
 
     try {
@@ -56,16 +62,18 @@ export default async (req) => {
       await getStore('efi-txid').setJSON(txid, { giftId: presente.id, produto: presente.produto, valor: precoFinal, duracao, criadoEm });
 
       const token = await obterToken();
+      const nomeCobranca = pacote.nome + (temAddonMusica ? ' + Música' : '');
       const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
         method: 'PUT', token,
         body: {
           calendario: { expiracao: 7200 },
           valor: { original: Number(precoFinal).toFixed(2) },
           chave: chavePix,
-          solicitacaoPagador: (pacote.nome + ' - Capivarinha Love').slice(0, 140),
+          solicitacaoPagador: (nomeCobranca + ' - Capivarinha Love').slice(0, 140),
           infoAdicionais: [
             { nome: 'Pedido', valor: String(presente.id).slice(0, 50) },
-            { nome: 'Produto', valor: String(presente.produto).slice(0, 50) }
+            { nome: 'Produto', valor: String(presente.produto).slice(0, 50) },
+            { nome: 'Música personalizada', valor: temAddonMusica ? 'Sim' : 'Não' }
           ]
         }
       });
