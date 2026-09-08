@@ -5,14 +5,15 @@ function json(obj, status = 200) {
   });
 }
 
-// Tags de estilo em inglês — a Suno responde melhor a descrições de estilo em inglês,
-// mesmo gerando a letra em português.
+// Tags de estilo em inglês — a Suno responde melhor a descrições de estilo em inglês.
+// "portuguese lyrics" fica aqui (metadado de estilo), nunca dentro do prompt —
+// senão a Suno canta a instrução ao pé da letra.
 const ESTILOS = {
-  romantica: 'romantic ballad, acoustic guitar and piano, warm and tender, brazilian',
-  pop:       'emotional pop, soft synths, gentle beat, brazilian pop',
-  sertanejo: 'sertanejo, viola caipira, brazilian country ballad, romantic',
-  acustico:  'brazilian MPB, acoustic guitar, intimate vocals',
-  festa:     'upbeat, celebratory, danceable, joyful, brazilian pop'
+  romantica: 'romantic ballad, acoustic guitar and piano, warm and tender, brazilian, portuguese lyrics',
+  sertanejo: 'sertanejo, viola caipira, brazilian country ballad, romantic, portuguese lyrics',
+  pop:       'emotional pop, soft synths, gentle beat, brazilian pop, portuguese lyrics',
+  acustico:  'brazilian MPB, acoustic guitar, intimate vocals, portuguese lyrics',
+  festa:     'upbeat, celebratory, danceable, joyful, brazilian pop, portuguese lyrics'
 };
 
 export default async (req) => {
@@ -25,8 +26,6 @@ export default async (req) => {
 
     const estilo = String((body && body.estilo) || '').trim();
     const texto = String((body && body.texto) || '').trim();
-    const meuNome = String((body && body.meuNome) || '').trim();
-    const parceiroNome = String((body && body.parceiroNome) || '').trim();
     if (!estilo) return json({ erro: 'Escolhe um estilo primeiro.' }, 400);
     if (!texto) return json({ erro: 'Conta um pouco da história de vocês.' }, 400);
 
@@ -36,10 +35,11 @@ export default async (req) => {
     }
 
     const tagsEstilo = ESTILOS[estilo] || ESTILOS.romantica;
-    const nomes = [meuNome, parceiroNome].filter(Boolean).join(' e ');
-    const prompt = ('Uma música romântica em português, com letra emocionante, sobre a história de '
-      + (nomes || 'um casal') + ': ' + texto).slice(0, 2900);
-    const titulo = ('Nossa música' + (nomes ? ' - ' + nomes : '')).slice(0, 80);
+    // Só o que a pessoa escreveu — nada colado antes ou depois. No modo "custom" da Suno,
+    // o campo prompt vira letra/conteúdo real, então qualquer frase de instrução aqui
+    // (tipo "em português" ou nomes que a gente colasse) corre o risco de ser cantada.
+    const prompt = texto.slice(0, 2900);
+    const titulo = 'Nossa música';
 
     let resp;
     try {
