@@ -68,7 +68,9 @@ export default async (req) => {
       return json({ erro: 'Não consegui começar a geração da música agora.' }, 502);
     }
 
-    const taskId = data.task_id || data.id;
+    // A Unifically embrulha o corpo real da resposta em "data": { success, code, data: {...} }
+    const conteudo = (data && data.data) || data;
+    const taskId = conteudo.task_id || conteudo.id;
     if (!taskId) {
       console.error('Unifically sem task_id:', JSON.stringify(data));
       return json({ erro: 'O serviço de música não retornou um identificador de tarefa.' }, 502);

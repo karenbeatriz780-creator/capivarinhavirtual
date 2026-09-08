@@ -48,17 +48,21 @@ export default async (req) => {
       return json({ erro: 'Não consegui checar o andamento agora.' }, 502);
     }
 
-    const status = (data.status || '').toLowerCase();
+    // Mesmo embrulho da criação: { success, code, data: {...conteúdo real...} }
+    const conteudo = (data && data.data) || data;
+    console.log('Unifically status bruto:', JSON.stringify(conteudo));
+
+    const status = (conteudo.status || '').toLowerCase();
     if (status === 'failed' || status === 'error') {
-      console.error('Unifically tarefa falhou:', JSON.stringify(data));
+      console.error('Unifically tarefa falhou:', JSON.stringify(conteudo));
       return json({ pronto: false, falhou: true, erro: 'A geração falhou. Tenta de novo.' });
     }
 
-    const audioUrl = acharUrlAudio(data);
+    const audioUrl = acharUrlAudio(conteudo);
     if (audioUrl) return json({ pronto: true, url: audioUrl });
 
-    // Ainda processando — loga a resposta crua só na primeira vez que isso acontecer
-    // seria útil, mas por simplicidade deixamos o front seguir tentando.
+    // Ainda processando — a linha de log acima mostra o formato exato,
+    // útil se precisar ajustar o que acharUrlAudio procura.
     return json({ pronto: false });
 
   } catch (e) {
