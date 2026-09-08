@@ -375,8 +375,27 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .chip.on svg{stroke:#fff;}
 .chip.on .lb{color:#fff;}
 .chip small{display:block;font-size:.66rem;color:var(--muted);margin-top:.15rem;font-weight:500;}
+.chip-fogo{position:absolute;top:-7px;right:-5px;font-size:.85rem;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25));}
+.chip{position:relative;}
 .chip.on small{color:rgba(255,255,255,.8);}
 .musica-pronta{background:var(--tint);border:1px solid var(--rose-soft);border-radius:var(--r-md);padding:1rem;}
+.cross-sell{display:flex;gap:.7rem;align-items:flex-start;margin:1rem 0;
+  background:var(--tint);border:1px solid var(--rose-soft);border-radius:var(--r-lg);padding:1rem 1.1rem;
+  font-size:1.3rem;}
+.cross-sell b{display:block;font-size:.92rem;color:var(--plum);}
+.cross-sell span{display:block;font-size:.8rem;color:var(--muted);line-height:1.5;margin-top:.2rem;}
+.musica-compondo{display:flex;align-items:center;gap:.9rem;background:var(--tint);border:1px solid var(--rose-soft);
+  border-radius:var(--r-md);padding:1rem 1.1rem;}
+.mc-nota{width:44px;height:44px;border-radius:50%;background:var(--rose);display:flex;align-items:center;
+  justify-content:center;font-size:1.3rem;flex-shrink:0;animation:mcPulso 1.6s ease-in-out infinite;}
+@keyframes mcPulso{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(227,43,109,.4);}
+  50%{transform:scale(1.08);box-shadow:0 0 0 8px rgba(227,43,109,0);}}
+.mc-tx{flex:1;min-width:0;}
+.mc-tx b{display:block;font-size:.88rem;color:var(--plum);}
+.mc-tx span{display:block;font-size:.76rem;color:var(--muted);margin-top:.1rem;}
+.mc-bar{height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:.55rem;}
+.mc-bar i{display:block;height:100%;width:40%;background:var(--rose);border-radius:4px;animation:mcSlide 1.4s ease-in-out infinite;}
+@keyframes mcSlide{0%{margin-left:-40%;}100%{margin-left:100%;}}
 
 .sug-h{display:flex;align-items:center;justify-content:space-between;margin:1.2rem 0 .7rem;}
 .sug-h .lb{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);}
@@ -1847,6 +1866,11 @@ function precoTotal(W){
 function htmlMusicaPlayer(url){
   return '<div class="musica-pronta"><audio controls src="'+esc(url)+'" style="width:100%"></audio>'+
     '<div class="hint" style="margin-top:.5rem">Gostou? Ela já fica salva — é só continuar. Se quiser, gere outra prévia.</div></div>';
+}
+function htmlMusicaCompondo(){
+  return '<div class="musica-compondo"><div class="mc-nota">🎵</div>'+
+    '<div class="mc-tx"><b>Compondo sua música...</b><span>Isso leva até 1 minuto e meio</span>'+
+    '<div class="mc-bar"><i></i></div></div></div>';
 }
 
 /* ---------- armazenamento com fallback ---------- */
@@ -3459,11 +3483,11 @@ function htmlPasso(k){
     var obrigatoria = W.produto==='musica';
     var ligada = obrigatoria || !!W.musicaOn;
     var estilos=[
-      ['romantica','Romântica','violão e piano'],
-      ['pop','Pop emotivo','synths e batida suave'],
-      ['sertanejo','Sertanejo','viola e clima raiz'],
-      ['acustico','MPB acústica','voz e violão'],
-      ['festa','Animada','pra comemorar junto']
+      ['romantica','Romântica','violão e piano',true],
+      ['sertanejo','Sertanejo','viola e clima raiz',true],
+      ['pop','Pop emotivo','synths e batida suave',false],
+      ['acustico','MPB acústica','voz e violão',false],
+      ['festa','Animada','pra comemorar junto',false]
     ];
     return guia(obrigatoria
         ? "Vamos criar a canção de vocês? Me conta um pouco da história e eu componho."
@@ -3478,6 +3502,7 @@ function htmlPasso(k){
         '<div class="field"><label>Estilo da música</label>'+
         '<div class="chips" id="musicaEstilos">'+estilos.map(function(e){
           return '<button type="button" class="chip'+(W.musicaEstilo===e[0]?' on':'')+'" data-estilo="'+e[0]+'">'+
+            (e[3]?'<span class="chip-fogo">🔥</span>':'')+
             '<span class="lb">'+e[1]+'</span><small>'+e[2]+'</small></button>';
         }).join('')+'</div></div>'+
         '<div class="field" style="margin-top:1rem"><label>Conte a história de vocês</label>'+
@@ -3549,6 +3574,10 @@ function htmlPasso(k){
         '<div><b>E ainda leva um brinde</b>'+
         '<span>Ao finalizar, você escolhe uma arte pra imprimir — moldura, cartinha ou QR temático — '+
         'e leva de graça (valor de '+precoBR(PRECO_CARTA)+').</span></div></div>'+
+      (W.produto==='musica' ? '<div class="cross-sell">💝<div><b>Quer um presente completo também?</b>'+
+        '<span>Além da música, dá pra criar um site inteiro com fotos e memórias — a Retrospectiva Completa '+
+        '(R$'+fmtPreco(PACOTES.completo.preco)+') ou a Carta Virtual (R$'+fmtPreco(PACOTES.carta.preco)+'). '+
+        'Sem pressa — pode criar essa música agora e o resto quando quiser.</span></div></div>' : '')+
       '<div id="checkoutForm">'+
       '<div class="demo-note info">'+IC.shield+
         '<div><b>Pix gerado na hora, aqui mesmo.</b> Assim que cair o pagamento, seu link é liberado sozinho.</div></div>'+
@@ -3778,22 +3807,22 @@ function ligarPasso(k){
     if(gerarBtn) gerarBtn.onclick=function(){
       if(!W.musicaEstilo){ toast('Escolhe um estilo primeiro.'); return; }
       if(!W.musicaTexto.trim()){ toast('Conta um pouco da história de vocês.'); return; }
+      var resultado=el('musicaResultado');
       gerarBtn.disabled=true; gerarBtn.textContent='Começando a compor...';
+      if(resultado) resultado.innerHTML=htmlMusicaCompondo();
       fetch('/.netlify/functions/gerar-musica', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          estilo: W.musicaEstilo, texto: W.musicaTexto,
-          meuNome: W.meuNome||'', parceiroNome: W.parceiroNome||''
-        })
+        body: JSON.stringify({ estilo: W.musicaEstilo, texto: W.musicaTexto })
       })
       .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
       .then(function(res){
         if(!res.ok || !res.d || !res.d.taskId){
           gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+          if(resultado) resultado.innerHTML='';
           toast((res.d && res.d.erro) || 'Não consegui gerar a música agora. Tenta de novo em instantes.');
           return;
         }
-        gerarBtn.textContent='Compondo... (pode levar até um minuto e meio)';
+        gerarBtn.textContent='Compondo...';
         var tentativas=0, MAX_TENTATIVAS=34; // ~34 x 3s ≈ 1min42
         (function checar(){
           fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(res.d.taskId))
@@ -3802,17 +3831,19 @@ function ligarPasso(k){
               if(res2.d && res2.d.pronto && res2.d.url){
                 W.musicaPreviewUrl=res2.d.url; W.musicaPreviewId=res.d.taskId;
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar outra prévia';
-                var alvo=el('musicaResultado'); if(alvo) alvo.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl);
+                if(resultado) resultado.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl);
                 return;
               }
               if(res2.d && res2.d.falhou){
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+                if(resultado) resultado.innerHTML='';
                 toast(res2.d.erro || 'A geração falhou. Tenta de novo.');
                 return;
               }
               tentativas++;
               if(tentativas>=MAX_TENTATIVAS){
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+                if(resultado) resultado.innerHTML='';
                 toast('Tá demorando mais que o normal. Tenta de novo em instantes.');
                 return;
               }
@@ -3822,6 +3853,7 @@ function ligarPasso(k){
               tentativas++;
               if(tentativas>=MAX_TENTATIVAS){
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+                if(resultado) resultado.innerHTML='';
                 toast('Sem conexão com o servidor de música agora.');
                 return;
               }
