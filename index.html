@@ -379,11 +379,48 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .chip{position:relative;}
 .chip.on small{color:rgba(255,255,255,.8);}
 .musica-pronta{background:var(--tint);border:1px solid var(--rose-soft);border-radius:var(--r-md);padding:1rem;}
+.musica-versao{background:#fff;border:1.5px solid var(--line);border-radius:var(--r-md);padding:.85rem;margin-bottom:.7rem;}
+.musica-versao.escolhida{border-color:#1F9D5C;box-shadow:0 0 0 1px #1F9D5C inset;}
+.mv-topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;}
+.mv-topo b{font-size:.85rem;color:var(--plum);}
+.mv-selo{font-size:.65rem;font-weight:800;padding:.15rem .5rem;border-radius:100px;background:#E3F6EC;color:#1F9D5C;}
+.sug-musica{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.7rem;}
+.sug-lbl{width:100%;font-size:.74rem;color:var(--muted);font-weight:700;margin-bottom:.1rem;}
+.sug-chip{font-size:.74rem;padding:.4rem .75rem;border-radius:100px;border:1px solid var(--line);
+  background:#fff;color:var(--ink);}
+.sug-chip:active{background:var(--rose-soft);border-color:var(--rose-1);}
 .cross-sell{display:flex;gap:.7rem;align-items:flex-start;margin:1rem 0;
   background:var(--tint);border:1px solid var(--rose-soft);border-radius:var(--r-lg);padding:1rem 1.1rem;
   font-size:1.3rem;}
 .cross-sell b{display:block;font-size:.92rem;color:var(--plum);}
 .cross-sell span{display:block;font-size:.8rem;color:var(--muted);line-height:1.5;margin-top:.2rem;}
+
+/* entrega dedicada da música avulsa */
+.musica-entrega{min-height:100vh;background:radial-gradient(120% 90% at 50% 0%,#2A1620,#0A0508 72%);
+  color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:3rem 1.5rem 3.5rem;text-align:center;gap:.4rem;}
+.me-capa{position:relative;width:min(220px,60vw);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#4a2a3c,#170b12 75%);
+  box-shadow:0 0 0 1.5px rgba(232,180,74,.4),0 0 70px rgba(232,180,74,.25),0 30px 60px rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;margin-bottom:1.6rem;
+  animation:meFloat 5s ease-in-out infinite;}
+@keyframes meFloat{0%,100%{transform:translateY(0) rotate(-1deg);}50%{transform:translateY(-10px) rotate(1deg);}}
+.me-nota{font-size:3rem;opacity:.9;}
+.me-eq{position:absolute;bottom:22%;display:flex;align-items:flex-end;gap:4px;height:20px;}
+.me-eq i{display:block;width:4px;border-radius:3px;background:var(--gold);animation:meEq 1.1s ease-in-out infinite;}
+.me-eq i:nth-child(1){height:8px;animation-delay:0s;} .me-eq i:nth-child(2){height:16px;animation-delay:.1s;}
+.me-eq i:nth-child(3){height:20px;animation-delay:.2s;} .me-eq i:nth-child(4){height:13px;animation-delay:.3s;}
+.me-eq i:nth-child(5){height:9px;animation-delay:.4s;}
+@keyframes meEq{0%,100%{transform:scaleY(.4);}50%{transform:scaleY(1);}}
+.me-tit{font-family:'Fraunces';font-size:1.4rem;font-weight:600;}
+.me-sub{font-size:.85rem;color:#C6A9B6;margin-bottom:1.6rem;}
+.me-play{width:74px;height:74px;border-radius:50%;background:var(--rose);border:0;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(227,43,109,.4);
+  margin-bottom:1.8rem;}
+.me-play svg{width:28px;height:28px;fill:#fff;margin-left:3px;}
+.me-play.tocando svg{margin-left:0;}
+.me-acoes{display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center;}
+.me-vazio{max-width:22rem;color:#C6A9B6;font-size:.88rem;line-height:1.6;margin-top:1rem;}
 .musica-compondo{display:flex;align-items:center;gap:.9rem;background:var(--tint);border:1px solid var(--rose-soft);
   border-radius:var(--r-md);padding:1rem 1.1rem;}
 .mc-nota{width:44px;height:44px;border-radius:50%;background:var(--rose);display:flex;align-items:center;
@@ -394,8 +431,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mc-tx b{display:block;font-size:.88rem;color:var(--plum);}
 .mc-tx span{display:block;font-size:.76rem;color:var(--muted);margin-top:.1rem;}
 .mc-bar{height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:.55rem;}
-.mc-bar i{display:block;height:100%;width:40%;background:var(--rose);border-radius:4px;animation:mcSlide 1.4s ease-in-out infinite;}
-@keyframes mcSlide{0%{margin-left:-40%;}100%{margin-left:100%;}}
+.mc-bar i{display:block;height:100%;width:0%;background:var(--rose);border-radius:4px;transition:width .3s ease;}
 
 .sug-h{display:flex;align-items:center;justify-content:space-between;margin:1.2rem 0 .7rem;}
 .sug-h .lb{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);}
@@ -784,6 +820,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   border:1px solid var(--line);background:var(--paper);color:var(--muted);}
 .pnl-linkbar button{flex-shrink:0;font-size:.72rem;font-weight:800;padding:.4rem .7rem;border-radius:8px;
   border:0;background:var(--rose-soft);color:var(--rose-deep);}
+.pnl-musica{margin-top:.5rem;font-size:.78rem;color:var(--muted);}
 .pnl-liberar{display:flex;align-items:center;gap:.4rem;margin-top:.5rem;padding-top:.5rem;border-top:1px dashed var(--line);}
 .pnl-liberar span{font-size:.72rem;color:var(--muted);flex-shrink:0;}
 .pnl-liberar input{width:3.4rem;font-size:.78rem;padding:.35rem .4rem;border-radius:8px;
@@ -1863,16 +1900,71 @@ function temAddonMusica(W){
 function precoTotal(W){
   return precoDe(W.produto, W.duracao) + (temAddonMusica(W) ? PRECO_MUSICA_ADDON : 0);
 }
-function htmlMusicaPlayer(url){
-  return '<div class="musica-pronta"><audio controls src="'+esc(url)+'" style="width:100%"></audio>'+
-    '<div class="hint" style="margin-top:.5rem">Gostou? Ela já fica salva — é só continuar. Se quiser, gere outra prévia.</div></div>';
+function htmlMusicaPlayer(url, url2){
+  function card(u, label){
+    if(!u) return '';
+    var ativo=(W.musicaPreviewUrl===u);
+    return '<div class="musica-versao'+(ativo?' escolhida':'')+'">'+
+      '<div class="mv-topo"><b>'+label+'</b>'+(ativo?'<span class="mv-selo">✓ escolhida</span>':'')+'</div>'+
+      '<audio class="mv-audio" controls src="'+esc(u)+'" style="width:100%"></audio>'+
+      '<div class="hint" style="margin-top:.4rem">🔒 Prévia limitada a 60 segundos — a versão completa libera após o pagamento.</div>'+
+      (ativo?'':'<button type="button" class="btn btn-ghost btn-block mv-escolher" data-versao="'+esc(u)+'" style="margin-top:.5rem">Escolher esta versão</button>')+
+    '</div>';
+  }
+  return '<div class="musica-pronta">'+card(url,'Versão 1')+card(url2,'Versão 2')+
+    '<div class="hint" style="margin-top:.6rem;text-align:center">Gostou de alguma? É só continuar. Se quiser, gere outra prévia.</div></div>';
+}
+function ligarPreviasLimitadas(){
+  document.querySelectorAll('.mv-audio').forEach(function(a){
+    if(a._limitada) return; a._limitada=true;
+    a.addEventListener('timeupdate',function(){
+      if(a.currentTime>=60){ a.pause(); a.currentTime=60; }
+    });
+  });
+  document.querySelectorAll('.mv-escolher').forEach(function(b){
+    b.onclick=function(){
+      W.musicaPreviewUrl=b.dataset.versao;
+      var alvo=el('musicaResultado');
+      if(alvo){ alvo.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2); ligarPreviasLimitadas(); }
+    };
+  });
+}
+function htmlBotaoWhatsMusica(taskId){
+  if(!taskId) return '';
+  var msg='Olá! Quero receber a prévia da minha música. ID do pedido: '+taskId;
+  var link='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent(msg);
+  return '<a class="btn btn-ghost btn-block" href="'+link+'" target="_blank" rel="noopener" style="margin-top:.7rem">'+
+    '💬 Não quer esperar? Receba no WhatsApp</a>';
 }
 function htmlMusicaCompondo(){
   return '<div class="musica-compondo"><div class="mc-nota">🎵</div>'+
-    '<div class="mc-tx"><b>Compondo sua música...</b><span>Isso leva até 1 minuto e meio</span>'+
-    '<div class="mc-bar"><i></i></div></div></div>';
+    '<div class="mc-tx"><b>Compondo sua música... <span id="mcPct">0%</span></b><span>Isso leva até 1 minuto e meio</span>'+
+    '<div class="mc-bar"><i id="mcBarFill" style="width:0%"></i></div>'+
+    '<div id="mcWhats"></div>'+
+    '</div></div>';
 }
-
+var _mcTimer=null;
+function iniciarProgressoFake(){
+  var t0=Date.now();
+  clearInterval(_mcTimer);
+  _mcTimer=setInterval(function(){
+    var pctEl=el('mcPct'), barEl=el('mcBarFill');
+    if(!pctEl || !barEl){ clearInterval(_mcTimer); return; }
+    var passado=Date.now()-t0;
+    // sobe rápido no início, desacelera bem perto de 92% e fica ali esperando o resultado de verdade
+    var pct=Math.min(92, Math.round(92*(1-Math.exp(-passado/28000))));
+    pctEl.textContent=pct+'%';
+    barEl.style.width=pct+'%';
+  },300);
+}
+function pararProgressoFake(chegouA100){
+  clearInterval(_mcTimer);
+  if(chegouA100){
+    var pctEl=el('mcPct'), barEl=el('mcBarFill');
+    if(pctEl) pctEl.textContent='100%';
+    if(barEl) barEl.style.width='100%';
+  }
+}
 /* ---------- armazenamento com fallback ---------- */
 var MEM = {};
 var Store = {
@@ -2816,7 +2908,9 @@ function novoEstado(prod){
     id:uid(), produto:prod||null, perfil:null, meuNome:'', parceiroNome:'',
     dataEspecial:'', horaEspecial:'', cidade:'', titulo:'', carta:'',
     fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:true,
-    musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewId:null,
+    musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null,
+    musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'',
+    musicaClima:'', musicaFrase:'', musicaVoz:'masculina', musicaCapa:null, musicaWhatsapp:'',
     duracao:'vitalicio',
     jogos:{roleta:false, palavra:false, caca:false, quebra:false, quiz:false, medidor:false},
     roletaOpcoes:['Cinema','Jantar fora','Praia','Dia de preguiça','Sorvete','Viagem surpresa'],
@@ -2882,7 +2976,7 @@ function passos(){
   var p=W.produto;
   if(!p) return ['produto'];
   if(p==='convite') return ['produto','tema','aniversariante','quando','local','whatsapp','presentes','vitrine','duracao','checkout'];
-  if(p==='musica') return ['produto','perfil','nomes','musicaIA','checkout'];
+  if(p==='musica') return ['produto','musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal','checkout'];
   var r=RECURSOS[p]||RECURSOS.completo;
   var s=[];
   s.push('produto','perfil','nomes');
@@ -2891,7 +2985,10 @@ function passos(){
   if(r.carta) s.push('carta');
   if(r.jogos) s.push('jogos');
   if(r.trilha) s.push('trilha');
-  if(r.musicaIA) s.push('musicaIA');
+  if(r.musicaIA){
+    s.push('musicaEscolha');
+    if(W.musicaPersonalizar) s.push('musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal');
+  }
   s.push('vitrine','duracao','checkout');
   return s;
 }
@@ -3479,40 +3576,114 @@ function htmlPasso(k){
         '<div style="font-size:.78rem;color:var(--muted)">'+esc(W.musica.artista)+'</div></div>'+
         '<button class="row-x" id="musX">×</button></div></div>':'');
 
-  case 'musicaIA': {
-    var obrigatoria = W.produto==='musica';
-    var ligada = obrigatoria || !!W.musicaOn;
-    var estilos=[
-      ['romantica','Romântica','violão e piano',true],
-      ['sertanejo','Sertanejo','viola e clima raiz',true],
-      ['pop','Pop emotivo','synths e batida suave',false],
-      ['acustico','MPB acústica','voz e violão',false],
-      ['festa','Animada','pra comemorar junto',false]
+  case 'musicaEscolha': {
+    return guia("Quer deixar essa retrospectiva ainda mais especial? Você pode personalizar a trilha sonora.")+
+      '<div class="wz-t">Trilha sonora</div>'+
+      '<div class="wz-s">Escolha entre a música exclusiva do Capivarinha Love (grátis) ou compor uma só sua.</div>'+
+      '<button type="button" class="ex'+(W.musicaPersonalizar===false?' on':'')+'" data-escolha="gratis">'+
+        '<span class="ic">🎵</span><span class="tx"><h4>Usar "Essa é a nossa história"</h4>'+
+        '<p>Grátis, já incluída no seu pacote</p></span></button>'+
+      '<button type="button" class="ex'+(W.musicaPersonalizar===true?' on':'')+'" data-escolha="personalizar" style="margin-top:.6rem">'+
+        '<span class="ic">✨</span><span class="tx"><h4>Compor a nossa própria música</h4>'+
+        '<p>+R$ '+fmtPreco(PRECO_MUSICA_ADDON)+' — você escolhe tudo, com prévia antes de decidir</p></span></button>';
+  }
+
+  case 'musicaPara': {
+    var relacoes=[
+      ['namorada','💗 Namorada'],['namorado','❤️ Namorado'],
+      ['esposa','💍 Esposa'],['marido','💍 Marido'],
+      ['mae','👩 Mãe'],['pai','👨 Pai'],
+      ['irma','👭 Irmã'],['irmao','👬 Irmão'],
+      ['amiga','🤝 Amiga'],['amigo','🤝 Amigo'],
+      ['ninguem','🎵 Não é pra ninguém em especial']
     ];
-    return guia(obrigatoria
-        ? "Vamos criar a canção de vocês? Me conta um pouco da história e eu componho."
-        : "Que tal levar uma música exclusiva junto? Ela conta um pouco da história de vocês, cantada.")+
-      '<div class="wz-t">'+(obrigatoria?'Sua música personalizada':'Adicionar música personalizada')+'</div>'+
-      '<div class="wz-s">Escolha o estilo, conte a história em poucas linhas, e gere uma prévia antes de decidir.</div>'+
-      (obrigatoria ? '' :
-        '<button class="ex'+(ligada?' on':'')+'" id="musicaTgl" style="margin-bottom:1rem">'+
-          '<span class="ic">🎵</span><span class="tx"><h4>Adicionar música personalizada</h4>'+
-          '<p>+R$ '+fmtPreco(PRECO_MUSICA_ADDON)+' — canção única, com prévia antes de decidir</p></span><span class="tgl"></span></button>')+
-      '<div id="musicaBox" style="'+(ligada?'':'display:none')+'">'+
-        '<div class="field"><label>Estilo da música</label>'+
-        '<div class="chips" id="musicaEstilos">'+estilos.map(function(e){
-          return '<button type="button" class="chip'+(W.musicaEstilo===e[0]?' on':'')+'" data-estilo="'+e[0]+'">'+
-            (e[3]?'<span class="chip-fogo">🔥</span>':'')+
-            '<span class="lb">'+e[1]+'</span><small>'+e[2]+'</small></button>';
-        }).join('')+'</div></div>'+
-        '<div class="field" style="margin-top:1rem"><label>Conte a história de vocês</label>'+
-        '<textarea class="inp" id="musicaTexto" rows="4" placeholder="Ex: nos conhecemos numa viagem em 2021, ele mora longe mas a gente nunca deixou de se falar...">'+esc(W.musicaTexto)+'</textarea>'+
-        '<div class="hint">Alguns detalhes reais — lugares, apelidos, uma piada interna — deixam a letra mais especial.</div></div>'+
-        '<button class="btn btn-primary btn-block" id="musicaGerar" style="margin-top:1rem">'+
-          (W.musicaPreviewUrl ? 'Gerar outra prévia' : 'Gerar prévia da música')+'</button>'+
-        '<div id="musicaResultado" style="margin-top:1rem">'+
-          (W.musicaPreviewUrl ? htmlMusicaPlayer(W.musicaPreviewUrl) : '')+
-        '</div>'+
+    return guia("Pra quem é essa música? Isso me ajuda a dar o tom certo na letra.")+
+      '<div class="wz-t">Quem vai receber</div>'+
+      '<div class="chips" id="musicaParaChips">'+relacoes.map(function(r){
+        return '<button type="button" class="chip'+(W.musicaPara===r[0]?' on':'')+'" data-para="'+r[0]+'"><span class="lb">'+r[1]+'</span></button>';
+      }).join('')+'</div>'+
+      (W.musicaPara && W.musicaPara!=='ninguem'
+        ? '<div class="field" style="margin-top:1rem"><label>Nome de quem vai receber (opcional)</label>'+
+          '<input class="inp" id="musicaParaNome" value="'+esc(W.musicaParaNome)+'" placeholder="Como essa pessoa gosta de ser chamada"></div>'
+        : '');
+  }
+
+  case 'musicaOcasiao': {
+    var ocasioes=['Aniversário','Casamento','Dia dos Namorados','Dia das Mães','Dia dos Pais',
+      'Declaração de amor','Pedido de namoro','Formatura','Chá revelação','Surpresa','Outro momento'];
+    return guia("Qual é a ocasião? Isso deixa a música na medida certa.")+
+      '<div class="wz-t">Qual a ocasião</div>'+
+      '<div class="chips" id="musicaOcasiaoChips">'+ocasioes.map(function(o){
+        return '<button type="button" class="chip'+(W.musicaOcasiao===o?' on':'')+'" data-ocasiao="'+esc(o)+'"><span class="lb">'+o+'</span></button>';
+      }).join('')+'</div>';
+  }
+
+  case 'musicaHistoria': {
+    return guia("Agora me conta a história de vocês. Pode escrever ou falar, o que for mais fácil.")+
+      '<div class="wz-t">Conte a história</div>'+
+      '<div class="wz-s">Como se conheceram, o que você mais ama, um momento marcante — detalhes reais deixam a letra melhor.</div>'+
+      '<button type="button" class="btn btn-ghost btn-block" id="musicaDitar" style="margin-bottom:.9rem">🎙️ Ditar por voz</button>'+
+      '<textarea class="inp" id="musicaTexto" rows="5" placeholder="Ex: nos conhecemos numa viagem em 2021, ele mora longe mas a gente nunca deixou de se falar...">'+esc(W.musicaTexto)+'</textarea>'+
+      '<div class="sug-musica"><span class="sug-lbl">Sem ideia? Toque pra começar:</span>'+
+        ['Como vocês se conheceram','O que eu mais amo em você','Um apelido só nosso','Um momento que nunca esqueço'].map(function(s){
+          return '<button type="button" class="sug-chip" data-sug="'+esc(s)+'">'+esc(s)+'</button>';
+        }).join('')+
+      '</div>';
+  }
+
+  case 'musicaGenero': {
+    var generos=[
+      ['romantica','Romântica','violão e piano'],['sertanejo','Sertanejo','viola e clima raiz'],
+      ['pop','Pop','moderno e dançante'],['rock','Rock','guitarras marcantes'],
+      ['mpb','MPB / Bossa Nova','clássico e intimista'],['gospel','Gospel','fé e inspiração'],
+      ['samba','Samba / Pagode','descontraído e alegre'],['forro','Forró','ritmo nordestino'],
+      ['funk','Funk','batida forte'],['eletronica','Eletrônica','synths modernos'],
+      ['reggae','Reggae','vibe relaxada'],['jazz','Jazz / Blues','sofisticado']
+    ];
+    return guia("Qual estilo combina mais com vocês?")+
+      '<div class="wz-t">Gênero musical</div>'+
+      '<div class="chips" id="musicaGeneroChips">'+generos.map(function(g){
+        return '<button type="button" class="chip'+(W.musicaEstilo===g[0]?' on':'')+'" data-genero="'+g[0]+'">'+
+          '<span class="lb">'+g[1]+'</span><small>'+g[2]+'</small></button>';
+      }).join('')+'</div>';
+  }
+
+  case 'musicaClima': {
+    var climas=[
+      ['alegre','Alegre','ritmo contagiante'],['emocionante','Emocionante','faz chorar de emoção'],
+      ['calma','Calma','suave e acolhedora'],['nostalgica','Nostálgica','recordações e saudade'],
+      ['festiva','Festiva','clima de celebração'],['energetica','Energética','vibe cheia de ritmo'],
+      ['divertida','Divertida','leve e bem-humorada'],['romantica','Romântica','declaração amorosa']
+    ];
+    return guia("E o clima? Como você quer que ela faça vocês se sentirem?")+
+      '<div class="wz-t">Clima da música</div>'+
+      '<div class="chips" id="musicaClimaChips">'+climas.map(function(c){
+        return '<button type="button" class="chip'+(W.musicaClima===c[0]?' on':'')+'" data-clima="'+c[0]+'">'+
+          '<span class="lb">'+c[1]+'</span><small>'+c[2]+'</small></button>';
+      }).join('')+'</div>';
+  }
+
+  case 'musicaFinal': {
+    return guia("Últimos detalhes, e sua música fica pronta pra gerar.")+
+      '<div class="wz-t">Últimos ajustes</div>'+
+      '<div class="field"><label>Nomes que devem aparecer na música (opcional)</label>'+
+        '<input class="inp" id="musicaNomesLetra" value="'+esc(W.musicaParaNome)+'" placeholder="Ex: João e Maria"></div>'+
+      '<div class="field" style="margin-top:1rem"><label>Frase especial pra incluir (opcional)</label>'+
+        '<input class="inp" id="musicaFrase" value="'+esc(W.musicaFrase)+'" placeholder="Ex: te amo mais que ontem"></div>'+
+      '<div class="field" style="margin-top:1rem"><label>Tipo de voz</label>'+
+        '<div class="chips" style="grid-template-columns:repeat(3,1fr)">'+
+          ['masculina','feminina','dueto'].map(function(v){
+            var lb={masculina:'Masculina',feminina:'Feminina',dueto:'Dueto'}[v];
+            return '<button type="button" class="chip'+(W.musicaVoz===v?' on':'')+'" data-voz="'+v+'"><span class="lb">'+lb+'</span></button>';
+          }).join('')+
+        '</div></div>'+
+      '<div class="field" style="margin-top:1rem"><label>Seu WhatsApp (opcional)</label>'+
+        '<input class="inp" id="musicaWhatsapp" value="'+esc(W.musicaWhatsapp)+'" placeholder="(00) 00000-0000" inputmode="tel">'+
+        '<div class="hint">Se a composição demorar, você pode pedir a prévia direto no nosso WhatsApp.</div></div>'+
+      '<button class="btn btn-primary btn-block" id="musicaGerar" style="margin-top:1.2rem">'+
+        (W.musicaPreviewUrl ? 'Gerar outra prévia' : 'Gerar prévia da música')+'</button>'+
+      '<div id="musicaResultado" style="margin-top:1rem">'+
+        (W.musicaPreviewUrl ? htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2) : '')+
       '</div>';
   }
 
@@ -3792,49 +3963,131 @@ function ligarPasso(k){
     };
     if(pau) pau.onended=function(){ pTocando=false; if(pb) pb.innerHTML=IC.play; };
   }
-  if(k==='musicaIA'){
-    var mTgl=el('musicaTgl');
-    if(mTgl) mTgl.onclick=function(){ W.musicaOn=!W.musicaOn; redesenharSemPular(); };
-    on('[data-estilo]','onclick',function(e){
-      W.musicaEstilo=e.dataset.estilo;
-      var pai=el('musicaEstilos');
-      if(pai) pai.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('on'); });
-      e.classList.add('on');
+  if(k==='musicaEscolha'){
+    on('[data-escolha]','onclick',function(e){
+      var val=e.dataset.escolha;
+      W.musicaPersonalizar=(val==='personalizar');
+      W.musicaOn=W.musicaPersonalizar;
+      redesenharSemPular();
+      setTimeout(function(){ proximoPasso(); },300);
     });
+  }
+  if(k==='musicaPara'){
+    on('[data-para]','onclick',function(e){
+      W.musicaPara=e.dataset.para;
+      redesenharSemPular();
+      if(W.musicaPara==='ninguem') setTimeout(function(){ proximoPasso(); },300);
+    });
+    var nomeInp=el('musicaParaNome');
+    if(nomeInp) nomeInp.oninput=function(ev){ W.musicaParaNome=ev.target.value; };
+  }
+  if(k==='musicaOcasiao'){
+    on('[data-ocasiao]','onclick',function(e){
+      W.musicaOcasiao=e.dataset.ocasiao;
+      redesenharSemPular();
+      setTimeout(function(){ proximoPasso(); },300);
+    });
+  }
+  if(k==='musicaHistoria'){
     var txtM=el('musicaTexto');
     if(txtM) txtM.oninput=function(ev){ W.musicaTexto=ev.target.value; };
+    on('[data-sug]','onclick',function(e){
+      if(!txtM) return;
+      var atual=txtM.value.trim();
+      txtM.value = atual ? (atual+'\n'+e.dataset.sug+': ') : (e.dataset.sug+': ');
+      W.musicaTexto=txtM.value;
+      txtM.focus();
+    });
+    var ditarBtn=el('musicaDitar');
+    if(ditarBtn){
+      var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(!SR){ ditarBtn.style.display='none'; }
+      else{
+        var rec=new SR(); rec.lang='pt-BR'; rec.interimResults=false; rec.continuous=false;
+        var gravando=false;
+        ditarBtn.onclick=function(){
+          if(gravando){ try{ rec.stop(); }catch(e){} return; }
+          try{ rec.start(); gravando=true; ditarBtn.textContent='🔴 Ouvindo... toque pra parar'; }
+          catch(e){ toast('Não consegui acessar o microfone.'); }
+        };
+        rec.onresult=function(ev){
+          var texto=ev.results[0][0].transcript;
+          if(txtM){ txtM.value=(txtM.value.trim()?txtM.value.trim()+' ':'')+texto; W.musicaTexto=txtM.value; }
+        };
+        rec.onend=function(){ gravando=false; ditarBtn.textContent='🎙️ Ditar por voz'; };
+        rec.onerror=function(){ gravando=false; ditarBtn.textContent='🎙️ Ditar por voz'; toast('Não consegui ouvir. Tenta de novo ou digite.'); };
+      }
+    }
+  }
+  if(k==='musicaGenero'){
+    on('[data-genero]','onclick',function(e){
+      W.musicaEstilo=e.dataset.genero;
+      redesenharSemPular();
+      setTimeout(function(){ proximoPasso(); },300);
+    });
+  }
+  if(k==='musicaClima'){
+    on('[data-clima]','onclick',function(e){
+      W.musicaClima=e.dataset.clima;
+      redesenharSemPular();
+      setTimeout(function(){ proximoPasso(); },300);
+    });
+  }
+  if(k==='musicaFinal'){
+    var nomesLetraInp=el('musicaNomesLetra');
+    if(nomesLetraInp) nomesLetraInp.oninput=function(ev){ W.musicaParaNome=ev.target.value; };
+    var fraseInp=el('musicaFrase');
+    if(fraseInp) fraseInp.oninput=function(ev){ W.musicaFrase=ev.target.value; };
+    var whatsInp=el('musicaWhatsapp');
+    if(whatsInp) whatsInp.oninput=function(ev){ W.musicaWhatsapp=ev.target.value; };
+    on('[data-voz]','onclick',function(e){
+      W.musicaVoz=e.dataset.voz;
+      document.querySelectorAll('[data-voz]').forEach(function(c){ c.classList.remove('on'); });
+      e.classList.add('on');
+    });
+    ligarPreviasLimitadas();
     var gerarBtn=el('musicaGerar');
     if(gerarBtn) gerarBtn.onclick=function(){
-      if(!W.musicaEstilo){ toast('Escolhe um estilo primeiro.'); return; }
-      if(!W.musicaTexto.trim()){ toast('Conta um pouco da história de vocês.'); return; }
+      if(!W.musicaEstilo || !W.musicaTexto.trim()){ toast('Volta e completa as etapas anteriores.'); return; }
       var resultado=el('musicaResultado');
       gerarBtn.disabled=true; gerarBtn.textContent='Começando a compor...';
       if(resultado) resultado.innerHTML=htmlMusicaCompondo();
+      iniciarProgressoFake();
       fetch('/.netlify/functions/gerar-musica', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ estilo: W.musicaEstilo, texto: W.musicaTexto })
+        body: JSON.stringify({
+          estilo: W.musicaEstilo, texto: W.musicaTexto, clima: W.musicaClima,
+          relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
+          nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz
+        })
       })
       .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
       .then(function(res){
         if(!res.ok || !res.d || !res.d.taskId){
+          pararProgressoFake(false);
           gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
           if(resultado) resultado.innerHTML='';
           toast((res.d && res.d.erro) || 'Não consegui gerar a música agora. Tenta de novo em instantes.');
           return;
         }
         gerarBtn.textContent='Compondo...';
+        var whatsAlvo=el('mcWhats'); if(whatsAlvo) whatsAlvo.innerHTML=htmlBotaoWhatsMusica(res.d.taskId);
         var tentativas=0, MAX_TENTATIVAS=34; // ~34 x 3s ≈ 1min42
         (function checar(){
           fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(res.d.taskId))
             .then(function(r2){ return r2.json().then(function(d2){ return {ok:r2.ok, d:d2}; }); })
             .then(function(res2){
               if(res2.d && res2.d.pronto && res2.d.url){
-                W.musicaPreviewUrl=res2.d.url; W.musicaPreviewId=res.d.taskId;
+                W.musicaPreviewUrl=res2.d.url; W.musicaPreviewUrl2=res2.d.url2||null; W.musicaPreviewId=res.d.taskId;
+                pararProgressoFake(true);
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar outra prévia';
-                if(resultado) resultado.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl);
+                setTimeout(function(){
+                  if(resultado){ resultado.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2); ligarPreviasLimitadas(); }
+                },350);
                 return;
               }
               if(res2.d && res2.d.falhou){
+                pararProgressoFake(false);
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
                 if(resultado) resultado.innerHTML='';
                 toast(res2.d.erro || 'A geração falhou. Tenta de novo.');
@@ -3842,6 +4095,7 @@ function ligarPasso(k){
               }
               tentativas++;
               if(tentativas>=MAX_TENTATIVAS){
+                pararProgressoFake(false);
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
                 if(resultado) resultado.innerHTML='';
                 toast('Tá demorando mais que o normal. Tenta de novo em instantes.');
@@ -3852,6 +4106,7 @@ function ligarPasso(k){
             .catch(function(){
               tentativas++;
               if(tentativas>=MAX_TENTATIVAS){
+                pararProgressoFake(false);
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
                 if(resultado) resultado.innerHTML='';
                 toast('Sem conexão com o servidor de música agora.');
@@ -3974,8 +4229,13 @@ function validar(k){
   }
   if(k==='fotos' && !W.fotos.filter(Boolean).length) return erro('Envie pelo menos uma foto.');
   if(k==='carta' && W.carta.trim().length<10) return erro('Campo obrigatório — escreva a carta ou toque em “Gerar cartas”.', 'fCarta');
-  if(k==='musicaIA' && (W.produto==='musica' || W.musicaOn) && !W.musicaPreviewUrl)
-    return erro('Gere a prévia da música antes de continuar.');
+  if(k==='musicaEscolha' && W.musicaPersonalizar===null) return erro('Escolhe uma opção pra continuar.');
+  if(k==='musicaPara' && !W.musicaPara) return erro('Escolhe pra quem é a música.');
+  if(k==='musicaOcasiao' && !W.musicaOcasiao) return erro('Escolhe a ocasião.');
+  if(k==='musicaHistoria' && !W.musicaTexto.trim()) return erro('Conta um pouco da história.', 'musicaTexto');
+  if(k==='musicaGenero' && !W.musicaEstilo) return erro('Escolhe um estilo.');
+  if(k==='musicaClima' && !W.musicaClima) return erro('Escolhe o clima da música.');
+  if(k==='musicaFinal' && !W.musicaPreviewUrl) return erro('Gere a prévia da música antes de continuar.');
   if(k==='jogos'){
     if(W.jogos.palavra && !W.palavraSecreta.trim()) return erro('Defina a palavra secreta.','pwA');
     if(W.jogos.roleta && W.roletaOpcoes.filter(function(o){return o.trim();}).length<2) return erro('A roleta precisa de pelo menos 2 opções.');
@@ -4399,7 +4659,11 @@ function desenharPainel(pedidos, visitas){
       '<div class="meta">'+esc(nomeProd[p.produto]||p.produto||'')+' · '+dt+'</div></div>'+
       '<div class="vl">R$ '+fmtPreco(p.valor||0)+'</div></div>'+
       '<div class="pnl-linkbar"><input readonly value="'+esc(link)+'" onclick="this.select()">'+
-      '<button data-copiar-link="'+esc(link)+'">Copiar</button></div>'+liberar+'</div>';
+      '<button data-copiar-link="'+esc(link)+'">Copiar</button></div>'+
+      (p.musicaOn && p.musicaPreviewUrl
+        ? '<div class="pnl-musica">🎵 <audio controls src="'+esc(p.musicaPreviewUrl)+'" style="width:100%;margin-top:.4rem"></audio></div>'
+        : '')+
+      liberar+'</div>';
   }).join('') || '<div class="pnl-nota">Nenhum pedido ainda.</div>';
 
   body.innerHTML=
@@ -4574,6 +4838,7 @@ function abrirPresenteChecado(g){
   document.body.style.overflow='hidden';
   aoSair(function(){ document.body.style.overflow=''; pararAudio(); });
   if(g.produto==='convite'){ montarConvite(g); return; }
+  if(g.produto==='musica'){ montarMusicaEntrega(g); return; }
   montarPortao(g);
 }
 function telaPresenteNaoEncontrado(){
@@ -4899,6 +5164,38 @@ function ilustracaoTema(tema){
     '<path d="M104 68q-10-14-24-2q12 10 24 2z" fill="#fff"/>'+
   '</svg>';
 }
+/* =========================================================
+   ENTREGA — Música Personalizada (produto avulso, sem nomes/casal)
+   ========================================================= */
+function montarMusicaEntrega(g){
+  document.body.style.overflow='auto';
+  var url=g.musicaPreviewUrl;
+  el('app').innerHTML=
+    '<div class="musica-entrega">'+
+      '<div class="me-capa"><div class="me-nota">🎵</div>'+
+        '<div class="me-eq"><i></i><i></i><i></i><i></i><i></i></div></div>'+
+      '<div class="me-tit">Sua música personalizada</div>'+
+      '<div class="me-sub">Feita especialmente pra esse momento.</div>'+
+      (url ?
+        '<button class="me-play" id="mePlay">'+IC.play+'</button>'+
+        '<audio id="meAudio" src="'+esc(url)+'" preload="auto"></audio>'+
+        '<div class="me-acoes">'+
+          '<a class="share-b" href="'+esc(url)+'" download="minha-musica.mp3">'+IC.download+'Baixar</a>'+
+          '<a class="share-b" href="https://wa.me/?text='+encodeURIComponent('Ouve a música que eu fiz pra você: '+location.href)+'" target="_blank" rel="noopener">'+IC.wpp+'WhatsApp</a>'+
+        '</div>'
+        : '<div class="me-vazio">Essa música ainda não foi gerada. Se você é quem criou esse presente, volta em "Meus presentes" e gera a prévia antes de enviar o link.</div>'
+      )+
+    '</div>';
+  if(!url) return;
+  var audio=el('meAudio'), btn=el('mePlay'), tocando=false;
+  btn.onclick=function(){
+    tocando=!tocando;
+    if(tocando){ audio.play().catch(function(){ tocando=false; }); btn.innerHTML=IC.pause; btn.classList.add('tocando'); }
+    else{ audio.pause(); btn.innerHTML=IC.play; btn.classList.remove('tocando'); }
+  };
+  audio.onended=function(){ tocando=false; btn.innerHTML=IC.play; btn.classList.remove('tocando'); };
+}
+
 function montarConvite(g){
   var tema=g.tema||'aranha';
   var idadeTxt = g.idade ? (g.idade+' aninhos') : '';
@@ -5125,7 +5422,7 @@ function montarCorpo(g){
   var h='<div class="g-body">';
 
   /* capa */
-  var comTrilha = !!(r.trilha && g.trilhaOn!==false);
+  var comTrilha = !!((r.trilha && g.trilhaOn!==false) || (g.musicaOn && g.musicaPreviewUrl));
   h+='<div class="g-hero g-hero-poster"><div class="sparks" id="heroSparks"></div>'+
     (comTrilha ? '<button class="g-musica-btn" id="gMusicaBtn" aria-label="Música">'+
       '<div class="barras"><i></i><i></i><i></i></div></button>'+
@@ -5335,13 +5632,15 @@ function pararAudio(){
 /* trilha sonora de fundo — um único objeto de áudio, criado assim que o presente abre,
    e mantido tocando enquanto a pessoa passa do portão pra intro e pro corpo da página.
    O play() de verdade só acontece no toque do envelope (gesto real do usuário — é o
-   que o navegador exige). Falta subir o arquivo /musica-tema.mp3 na raiz do site,
-   ao lado do index.html, pra tocar de verdade. */
+   que o navegador exige). Se a pessoa comprou a música personalizada (addon), ela
+   substitui inteiramente a trilha fixa — não tocam as duas. */
 function prepararTrilha(g){
   var r=RECURSOS[g.produto]||RECURSOS.completo;
-  if(!(r.trilha && g.trilhaOn!==false)) return null;
+  var personalizada = !!(g.musicaOn && g.musicaPreviewUrl);
+  var fixa = !!(r.trilha && g.trilhaOn!==false);
+  if(!personalizada && !fixa) return null;
   if(!_trilha){
-    _trilha=new Audio('/musica-tema.mp3');
+    _trilha=new Audio(personalizada ? g.musicaPreviewUrl : '/musica-tema.mp3');
     _trilha.loop=true; _trilha.preload='auto'; _trilha.volume=0.32;
   }
   return _trilha;
