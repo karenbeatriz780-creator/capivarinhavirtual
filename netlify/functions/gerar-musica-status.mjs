@@ -7,6 +7,8 @@ function json(obj, status = 200) {
 
 function acharUrlAudio(data) {
   const tentativas = [
+    () => data.audio_url1,
+    () => data.audio_url2,
     () => data.output && data.output.audio_url,
     () => data.output && data.output.url,
     () => data.output && Array.isArray(data.output) && data.output[0] && data.output[0].audio_url,
