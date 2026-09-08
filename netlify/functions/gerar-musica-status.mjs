@@ -61,7 +61,13 @@ export default async (req) => {
     }
 
     const audioUrl = acharUrlAudio(conteudo);
-    if (audioUrl) return json({ pronto: true, url: audioUrl });
+    if (audioUrl) {
+      return json({
+        pronto: true,
+        url: audioUrl,
+        url2: conteudo.audio_url2 || null
+      });
+    }
 
     // Ainda processando — a linha de log acima mostra o formato exato,
     // útil se precisar ajustar o que acharUrlAudio procura.
