@@ -3778,7 +3778,7 @@ function ligarPasso(k){
     if(gerarBtn) gerarBtn.onclick=function(){
       if(!W.musicaEstilo){ toast('Escolhe um estilo primeiro.'); return; }
       if(!W.musicaTexto.trim()){ toast('Conta um pouco da história de vocês.'); return; }
-      gerarBtn.disabled=true; gerarBtn.textContent='Compondo... (pode levar um minutinho)';
+      gerarBtn.disabled=true; gerarBtn.textContent='Começando a compor...';
       fetch('/.netlify/functions/gerar-musica', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -3788,13 +3788,46 @@ function ligarPasso(k){
       })
       .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
       .then(function(res){
-        gerarBtn.disabled=false; gerarBtn.textContent='Gerar outra prévia';
-        if(!res.ok || !res.d || !res.d.url){
+        if(!res.ok || !res.d || !res.d.taskId){
+          gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
           toast((res.d && res.d.erro) || 'Não consegui gerar a música agora. Tenta de novo em instantes.');
           return;
         }
-        W.musicaPreviewUrl=res.d.url; W.musicaPreviewId=res.d.id||null;
-        var alvo=el('musicaResultado'); if(alvo) alvo.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl);
+        gerarBtn.textContent='Compondo... (pode levar até um minuto e meio)';
+        var tentativas=0, MAX_TENTATIVAS=34; // ~34 x 3s ≈ 1min42
+        (function checar(){
+          fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(res.d.taskId))
+            .then(function(r2){ return r2.json().then(function(d2){ return {ok:r2.ok, d:d2}; }); })
+            .then(function(res2){
+              if(res2.d && res2.d.pronto && res2.d.url){
+                W.musicaPreviewUrl=res2.d.url; W.musicaPreviewId=res.d.taskId;
+                gerarBtn.disabled=false; gerarBtn.textContent='Gerar outra prévia';
+                var alvo=el('musicaResultado'); if(alvo) alvo.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl);
+                return;
+              }
+              if(res2.d && res2.d.falhou){
+                gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+                toast(res2.d.erro || 'A geração falhou. Tenta de novo.');
+                return;
+              }
+              tentativas++;
+              if(tentativas>=MAX_TENTATIVAS){
+                gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+                toast('Tá demorando mais que o normal. Tenta de novo em instantes.');
+                return;
+              }
+              setTimeout(checar,3000);
+            })
+            .catch(function(){
+              tentativas++;
+              if(tentativas>=MAX_TENTATIVAS){
+                gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+                toast('Sem conexão com o servidor de música agora.');
+                return;
+              }
+              setTimeout(checar,3000);
+            });
+        })();
       })
       .catch(function(){
         gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
