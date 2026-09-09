@@ -1,3 +1,5 @@
+import { getStore } from '@netlify/blobs';
+
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
@@ -158,6 +160,28 @@ export default async (req) => {
     if (!taskId) {
       console.error('Unifically sem task_id:', JSON.stringify(data));
       return json({ erro: 'O serviço de música não retornou um identificador de tarefa.' }, 502);
+    }
+
+    // Registra TODA geração — mesmo que a pessoa nunca chegue a pagar.
+    // É o que garante que a música apareça no painel de qualquer jeito.
+    try {
+      await getStore('musicas').setJSON(taskId, {
+        taskId: taskId,
+        criadoEm: Date.now(),
+        estilo: estilo,
+        clima: clima,
+        relacao: relacao,
+        ocasiao: ocasiao,
+        nomes: nomesLetra,
+        historia: texto.slice(0, 400),
+        whatsapp: String((body && body.whatsapp) || '').trim(),
+        pago: false,
+        url: null,
+        url2: null
+      });
+    } catch (e) {
+      // se o registro falhar, a música ainda deve ser gerada normalmente
+      console.error('Falha ao registrar música:', e && e.message);
     }
 
     return json({ ok: true, taskId: taskId });

@@ -1,3 +1,5 @@
+import { getStore } from '@netlify/blobs';
+
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
@@ -69,6 +71,22 @@ export default async (req) => {
         letra = String(letra).replace(/\[[^\]]*\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
         if (!letra) letra = null;
       }
+      // Guarda as URLs no registro — assim a música fica no painel
+      // mesmo que a pessoa feche a página e nunca pague.
+      try {
+        const store = getStore('musicas');
+        const reg = await store.get(taskId, { type: 'json' });
+        if (reg && !reg.url) {
+          reg.url = audioUrl;
+          reg.url2 = conteudo.audio_url2 || null;
+          reg.letra = letra || null;
+          reg.prontoEm = Date.now();
+          await store.setJSON(taskId, reg);
+        }
+      } catch (e) {
+        console.error('Falha ao atualizar registro da música:', e && e.message);
+      }
+
       return json({
         pronto: true,
         url: audioUrl,
