@@ -918,6 +918,14 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pnl-linkbar button{flex-shrink:0;font-size:.72rem;font-weight:800;padding:.4rem .7rem;border-radius:8px;
   border:0;background:var(--rose-soft);color:var(--rose-deep);}
 .pnl-musica{margin-top:.5rem;font-size:.78rem;color:var(--muted);}
+.pnl-mv{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  padding:.65rem .75rem;margin-top:.5rem;}
+.pnl-mv-tit{font-size:.76rem;font-weight:800;color:var(--plum);}
+.pnl-mv-acoes{display:flex;gap:.4rem;flex-wrap:wrap;}
+.pnl-mv-btn{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-weight:800;
+  padding:.4rem .7rem;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--plum);}
+.pnl-mv-btn svg{width:13px;height:13px;fill:currentColor;}
+.pnl-mv-btn.zap{background:#E3F6EC;border-color:#B8E6CC;color:#1F9D5C;}
 .pnl-whats{margin-top:.5rem;}
 .pnl-whats a{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;font-weight:700;
   color:#1F9D5C;background:#E3F6EC;padding:.35rem .7rem;border-radius:100px;}
@@ -4868,6 +4876,23 @@ function pnlBarras(dados, opts){
 }
 var PNL_FUNIL_ORDEM=['produto','perfil','nomes','data','titulo','fotos','carta','jogos','trilha','vitrine','duracao','checkout'];
 var _pnlCache={pedidos:[],visitas:[]}, _pnlOcultarDev=true, _pnlChave=null;
+/* uma versão da música no painel, com player + baixar + enviar no WhatsApp do cliente */
+function pnlVersaoMusica(p, url, rotulo){
+  var nome=(p.meuNome||'cliente').split(' ')[0];
+  var arquivo=('musica-'+nome+'-'+rotulo).toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.mp3';
+  var zap=String(p.whatsapp||'').replace(/\D/g,'');
+  var msgZap='Oi! Aqui está a sua música do Capivarinha Love 🎵 '+url;
+  return '<div class="pnl-mv"><div class="pnl-mv-tit">🎵 '+esc(rotulo)+'</div>'+
+    '<audio controls src="'+esc(url)+'" style="width:100%;margin:.3rem 0"></audio>'+
+    '<div class="pnl-mv-acoes">'+
+      '<a class="pnl-mv-btn" href="'+esc(url)+'" download="'+esc(arquivo)+'" target="_blank" rel="noopener">'+IC.download+' Baixar</a>'+
+      '<button type="button" class="pnl-mv-btn" data-copiar-musica="'+esc(url)+'">Copiar link</button>'+
+      (zap ? '<a class="pnl-mv-btn zap" href="https://wa.me/55'+esc(zap)+'?text='+encodeURIComponent(msgZap)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar</a>' : '')+
+    '</div></div>';
+}
+
 function desenharPainel(pedidos, visitas){
   var body=el('pnlBody'); if(!body) return;
   _pnlCache.pedidos=pedidos; _pnlCache.visitas=visitas;
@@ -4971,8 +4996,9 @@ function desenharPainel(pedidos, visitas){
         ? '<div class="pnl-whats"><a href="https://wa.me/55'+esc(String(p.whatsapp).replace(/\D/g,''))+'" target="_blank" rel="noopener">'+IC.wpp+' '+esc(p.whatsapp)+'</a></div>'
         : '')+
       (p.musicaPreviewUrl
-        ? '<div class="pnl-musica">🎵 Versão 1<audio controls src="'+esc(p.musicaPreviewUrl)+'" style="width:100%;margin-top:.3rem"></audio>'+
-          (p.musicaPreviewUrl2 ? 'Versão 2<audio controls src="'+esc(p.musicaPreviewUrl2)+'" style="width:100%;margin-top:.3rem"></audio>' : '')+
+        ? '<div class="pnl-musica">'+
+            pnlVersaoMusica(p, p.musicaPreviewUrl, 'Versão 1')+
+            (p.musicaPreviewUrl2 ? pnlVersaoMusica(p, p.musicaPreviewUrl2, 'Versão 2') : '')+
           '</div>'
         : '')+
       liberar+'</div>';
@@ -4995,6 +5021,9 @@ function desenharPainel(pedidos, visitas){
 
   body.querySelectorAll('[data-copiar-link]').forEach(function(btn){
     btn.onclick=function(){ copiar(btn.dataset.copiarLink, 'Link copiado!'); };
+  });
+  body.querySelectorAll('[data-copiar-musica]').forEach(function(btn){
+    btn.onclick=function(){ copiar(btn.dataset.copiarMusica, 'Link da música copiado!'); };
   });
   body.querySelectorAll('[data-marcar-pago]').forEach(function(btn){
     btn.onclick=function(){
