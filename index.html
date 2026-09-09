@@ -918,6 +918,8 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pnl-linkbar button{flex-shrink:0;font-size:.72rem;font-weight:800;padding:.4rem .7rem;border-radius:8px;
   border:0;background:var(--rose-soft);color:var(--rose-deep);}
 .pnl-musica{margin-top:.5rem;font-size:.78rem;color:var(--muted);}
+.pnl-hist{font-size:.76rem;color:var(--muted);background:var(--paper);border-radius:10px;
+  padding:.55rem .7rem;margin-top:.5rem;line-height:1.5;font-style:italic;}
 .pnl-mv{background:var(--paper);border:1px solid var(--line);border-radius:12px;
   padding:.65rem .75rem;margin-top:.5rem;}
 .pnl-mv-tit{font-size:.76rem;font-weight:800;color:var(--plum);}
@@ -4223,7 +4225,8 @@ function ligarPasso(k){
         body: JSON.stringify({
           estilo: W.musicaEstilo, texto: W.musicaTexto, clima: W.musicaClima,
           relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
-          nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz
+          nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz,
+          whatsapp: W.musicaWhatsapp||''
         })
       })
       .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
@@ -4711,16 +4714,9 @@ function telaSucessoMusica(id, g){
         '<button class="btn btn-primary" id="lkCopy" style="padding:.75rem 1.2rem">Copiar</button></div>'+
       '<div class="hint" style="text-align:center;margin-top:.5rem">Esse link abre a página da música, pra quem você quiser mandar.</div>'+
       '<a class="btn btn-ghost btn-block" href="#/meus" style="margin-top:1.2rem">Ver minhas músicas</a>'+
-      '<div class="promo-ns" id="promoNs"><button class="promo-ns-x" id="promoNsX" aria-label="Fechar">&times;</button>'+
-        '<span class="promo-ns-tag">Publicidade</span>'+
-        '<a href="https://nsmusic.nsnexus.com.br" target="_blank" rel="noopener" id="promoNsA">'+
-          '<img src="/nsmusic-promo.jpg" alt="NS Music"></a></div>'+
     '</div>';
   var cp=el('lkCopy');
   if(cp) cp.onclick=function(){ copiar(link,'Link copiado!'); };
-  var pnX=el('promoNsX'), pnA=el('promoNsA');
-  if(pnX) pnX.onclick=function(){ var b=el('promoNs'); if(b) b.remove(); };
-  if(pnA) pnA.onclick=function(){ gaEvento('clique_promo_nsmusic',{origem:'sucesso_musica'}); };
 }
 
 function telaSucesso(id){
@@ -4749,10 +4745,6 @@ function telaSucesso(id){
       '</div>'+
       '<a class="btn btn-primary btn-block btn-lg" href="#/p/'+id+'" style="margin-top:1.6rem">Abrir o presente'+IC.arrow+'</a>'+
       '<a class="btn btn-ghost btn-block" href="#/meus" style="margin-top:.7rem">Ver meus presentes</a>'+
-      '<div class="promo-ns" id="promoNs"><button class="promo-ns-x" id="promoNsX" aria-label="Fechar">&times;</button>'+
-        '<span class="promo-ns-tag">Publicidade</span>'+
-        '<a href="https://nsmusic.nsnexus.com.br" target="_blank" rel="noopener" id="promoNsA">'+
-          '<img src="/nsmusic-promo.jpg" alt="NS Music — crie sua música personalizada"></a></div>'+
       htmlKitImpressao()+
     '</div></div>';
   var svg='';
@@ -4772,9 +4764,6 @@ function telaSucesso(id){
     toast('QR Code baixado.');
   };
   ligarKitImpressao(g);
-  var pnX=el('promoNsX'), pnA=el('promoNsA');
-  if(pnX) pnX.onclick=function(){ var b=el('promoNs'); if(b) b.remove(); };
-  if(pnA) pnA.onclick=function(){ gaEvento('clique_promo_nsmusic',{origem:'sucesso'}); };
 }
 
 /* ---------- meus presentes ---------- */
@@ -4839,12 +4828,14 @@ function carregarPainel(chave, cb){
   var hdr={ headers:{'x-admin-key':chave} };
   Promise.all([
     fetch('/.netlify/functions/admin-pedidos', hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); }),
-    fetch('/.netlify/functions/admin-funil', hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
+    fetch('/.netlify/functions/admin-funil', hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); }),
+    fetch('/.netlify/functions/admin-musicas', hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
+      .catch(function(){ return {ok:false, d:{}}; })
   ]).then(function(res){
-    var pRes=res[0], fRes=res[1];
+    var pRes=res[0], fRes=res[1], mRes=res[2];
     if(!pRes.ok){ if(cb) cb(true); return; }
     if(cb) cb(false);
-    desenharPainel(pRes.d.pedidos||[], (fRes.ok && fRes.d.visitas) || []);
+    desenharPainel(pRes.d.pedidos||[], (fRes.ok && fRes.d.visitas) || [], (mRes.ok && mRes.d.musicas) || []);
   }).catch(function(){ if(cb) cb(true); });
 }
 var PASSO_NOME={
@@ -4875,7 +4866,12 @@ function pnlBarras(dados, opts){
     barras+labels+'</svg></div>';
 }
 var PNL_FUNIL_ORDEM=['produto','perfil','nomes','data','titulo','fotos','carta','jogos','trilha','vitrine','duracao','checkout'];
-var _pnlCache={pedidos:[],visitas:[]}, _pnlOcultarDev=true, _pnlChave=null;
+var RELACAO_NOME={
+  namorada:'Pra namorada', namorado:'Pra namorado', esposa:'Pra esposa', marido:'Pra marido',
+  mae:'Pra mãe', pai:'Pra pai', irma:'Pra irmã', irmao:'Pra irmão',
+  amiga:'Pra amiga', amigo:'Pra amigo', filho:'Pra filho(a)', ninguem:'Sem dedicatória'
+};
+var _pnlCache={pedidos:[],visitas:[],musicas:[]}, _pnlOcultarDev=true, _pnlChave=null;
 /* uma versão da música no painel, com player + baixar + enviar no WhatsApp do cliente */
 function pnlVersaoMusica(p, url, rotulo){
   var nome=(p.meuNome||'cliente').split(' ')[0];
@@ -4893,9 +4889,10 @@ function pnlVersaoMusica(p, url, rotulo){
     '</div></div>';
 }
 
-function desenharPainel(pedidos, visitas){
+function desenharPainel(pedidos, visitas, musicas){
   var body=el('pnlBody'); if(!body) return;
-  _pnlCache.pedidos=pedidos; _pnlCache.visitas=visitas;
+  musicas=musicas||_pnlCache.musicas||[];
+  _pnlCache.pedidos=pedidos; _pnlCache.visitas=visitas; _pnlCache.musicas=musicas;
   var agora=new Date();
   var inicioDia=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate()).getTime();
   var inicioMes=new Date(agora.getFullYear(),agora.getMonth(),1).getTime();
@@ -5004,6 +5001,29 @@ function desenharPainel(pedidos, visitas){
       liberar+'</div>';
   }).join('') || '<div class="pnl-nota">Nenhum pedido ainda.</div>';
 
+  /* todas as músicas geradas, independente de pagamento */
+  var idsComPedido={};
+  pedidos.forEach(function(p){ if(p.musicaPreviewUrl) idsComPedido[p.musicaPreviewUrl]=p; });
+  var musicasHtml=musicas.map(function(m){
+    var dt=m.criadoEm?new Date(m.criadoEm).toLocaleString('pt-BR'):'—';
+    var pedidoLigado=m.url && idsComPedido[m.url];
+    var virouPedido=!!pedidoLigado;
+    var quem=m.nomes || (RELACAO_NOME[m.relacao]||'') || '(sem nome)';
+    var zap=String(m.whatsapp||'').replace(/\D/g,'');
+    var fake={ meuNome:(m.nomes||'cliente'), whatsapp:m.whatsapp };
+    return '<div class="pnl-row-wrap"><div class="pnl-row"><div>'+
+      '<div class="nm">'+esc(quem)+
+        '<span class="selo '+(virouPedido?'pago':'pend')+'">'+(virouPedido?'virou pedido':'só gerou')+'</span></div>'+
+      '<div class="meta">'+esc([m.estilo,m.clima,m.ocasiao].filter(Boolean).join(' · '))+' · '+dt+'</div>'+
+      '</div></div>'+
+      (m.historia?'<div class="pnl-hist">'+esc(m.historia)+'</div>':'')+
+      (zap ? '<div class="pnl-whats"><a href="https://wa.me/55'+esc(zap)+'" target="_blank" rel="noopener">'+IC.wpp+' '+esc(m.whatsapp)+'</a></div>' : '')+
+      (m.url
+        ? pnlVersaoMusica(fake, m.url, 'Versão 1')+(m.url2?pnlVersaoMusica(fake, m.url2, 'Versão 2'):'')
+        : '<div class="pnl-nota" style="margin-top:.5rem">Ainda processando ou não concluiu.</div>')+
+    '</div>';
+  }).join('') || '<div class="pnl-nota">Nenhuma música gerada ainda.</div>';
+
   body.innerHTML=
     '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
     '<div class="pnl-sec"><h2>Vendas por dia</h2>'+
@@ -5017,6 +5037,9 @@ function desenharPainel(pedidos, visitas){
       '<label class="pnl-check"><input type="checkbox" id="pnlOcultarDev" '+(_pnlOcultarDev?'checked':'')+'> '+
       'Esconder meus próprios testes</label>'+
       '<div class="pnl-lista" style="margin-top:.6rem">'+visitasHtml+'</div></div>'+
+    '<div class="pnl-sec"><h2>Todas as músicas geradas</h2>'+
+      '<div class="sub">Toda música que passou pelo gerador — paga ou não.</div>'+
+      musicasHtml+'</div>'+
     '<div class="pnl-sec"><h2>Todos os pedidos</h2><div class="pnl-lista">'+listaHtml+'</div></div>';
 
   body.querySelectorAll('[data-copiar-link]').forEach(function(btn){
