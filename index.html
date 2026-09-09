@@ -1831,7 +1831,21 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mk-carr .mk-pol{margin:0;}
 .mk-roleta-sm{width:44px;height:44px;position:absolute;bottom:6px;right:6px;box-shadow:0 0 0 2px #E8B44A;}
 .mk-roleta-sm .mk-hub{width:12px;height:12px;}
-@media(max-width:640px){ .planb{min-height:380px;padding:1.6rem 1.2rem 1.4rem;} }
+/* no celular: dois pacotes lado a lado, pra todos ficarem visíveis sem rolar muito */
+@media(max-width:640px){
+  .plans{grid-template-columns:1fr 1fr;gap:.7rem;}
+  .planb{min-height:0;padding:1.5rem .85rem 1rem;border-radius:22px;}
+  .pb-rib{font-size:.55rem;letter-spacing:.05em;padding:.35rem .6rem;top:.6rem;}
+  .pb-t{font-size:1.02rem;margin-top:1.5rem;line-height:1.15;}
+  .pb-pr{font-size:.78rem;margin-top:.35rem;}
+  .pb-cta{padding:.65rem .8rem;font-size:.82rem;margin-top:.8rem;justify-content:center;width:100%;}
+  .pb-cta span{font-size:.9rem;}
+  .pb-mock{min-height:104px;margin-top:.9rem;transform:scale(.72);transform-origin:bottom center;}
+  .pb-list{margin-top:.8rem;gap:.3rem;}
+  .pb-list li{font-size:.67rem;line-height:1.3;}
+  .pb-list svg{width:12px;height:12px;}
+  .pick-rica{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+}
 
 /* brilho passando nos mockups dos pacotes */
 .pb-mock{position:relative;}
@@ -1991,9 +2005,9 @@ var CONFIG = {
 
 var PACOTES = {
   completo:  {nome:"Retrospectiva Completa", preco:21, preco48:9.99,
-              desc:"Tudo liberado: fotos, linha do tempo, stories, carta, contador ao vivo e todos os jogos.", icone:"💝", destaque:true},
+              desc:"Tudo liberado: fotos, linha do tempo, stories, carta, contador ao vivo e todos os jogos.", icone:"💝", destaque:true, ribbon:"⭐ Mais completo"},
   carta:     {nome:"Carta Virtual", preco:6, preco48:3.99,
-              desc:"A carta com foto colada, abertura de envelope, lacre e assinatura de quem enviou.", icone:"💌", destaque:true},
+              desc:"A carta com foto colada, abertura de envelope, lacre e assinatura de quem enviou.", icone:"💌"},
   convite:   {nome:"Convite Criativo", preco:14, preco48:10,
               desc:"Convite de aniversário animado, com tema à escolha, presença confirmada no seu WhatsApp e lista de presentes.", icone:"🎉"},
   musica:    {nome:"Música Personalizada", preco:9.99, preco48:9.99,
@@ -2837,7 +2851,7 @@ function itensDoPacote(k){
 
 function telaHome(){
   var media=mediaNota(), total=todasAvaliacoes().length;
-  var planos = ['musica','completo','carta','convite'].map(function(k){
+  var planos = ['completo','musica','carta','convite'].map(function(k){
     var p=PACOTES[k], r=RECURSOS[k];
     var itens=itensDoPacote(k);
     var offs=[];
@@ -3592,7 +3606,7 @@ function htmlPasso(k){
   switch(k){
 
   case 'produto': {
-    var lista=['musica','completo','carta','convite'].map(function(k){
+    var lista=['completo','musica','carta','convite'].map(function(k){
       var p=PACOTES[k], r=RECURSOS[k];
       var itens=itensDoPacote(k);
       return '<article class="planb pb-'+k+'">'+
