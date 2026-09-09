@@ -534,6 +534,11 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mc-whats-box{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.12);}
 .mc-whats-box b{display:block;font-size:.85rem;color:#fff;}
 .mc-whats-box span{display:block;font-size:.76rem;color:#C6A9B6;margin:.2rem 0 .8rem;line-height:1.5;}
+.musica-demorou{background:linear-gradient(165deg,#2A1620,#140A11);border-radius:var(--r-lg);
+  padding:1.6rem 1.2rem 1.3rem;text-align:center;color:#fff;font-size:2rem;
+  box-shadow:0 16px 40px rgba(20,10,17,.35);}
+.musica-demorou b{display:block;font-family:'Fraunces';font-size:1.05rem;font-weight:600;margin-top:.5rem;}
+.musica-demorou span{display:block;font-size:.8rem;color:#C6A9B6;line-height:1.55;margin:.4rem 0 1rem;}
 .mc-whats-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;
   background:#25D366;color:#fff;font-weight:800;font-size:.88rem;
   padding:.85rem 1rem;border-radius:100px;box-shadow:0 8px 22px rgba(37,211,102,.3);}
@@ -1844,8 +1849,48 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   .pb-list{margin-top:.8rem;gap:.3rem;}
   .pb-list li{font-size:.67rem;line-height:1.3;}
   .pb-list svg{width:12px;height:12px;}
-  .pick-rica{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
 }
+
+/* cards de escolha de produto no wizard — empilhados, altura igual, compactos */
+.pcards{display:flex;flex-direction:column;gap:.75rem;}
+.pcard{position:relative;display:block;width:100%;text-align:left;border:0;
+  border-radius:20px;padding:1.1rem 1rem .9rem;overflow:hidden;
+  box-shadow:0 6px 20px rgba(30,20,24,.09);transition:transform .16s var(--ease);}
+.pcard:active{transform:scale(.985);}
+.pcard-rib{position:absolute;top:.7rem;right:.7rem;font-size:.58rem;font-weight:800;
+  letter-spacing:.05em;background:rgba(0,0,0,.5);color:#fff;padding:.25rem .55rem;
+  border-radius:100px;white-space:nowrap;z-index:3;}
+.pcard-in{display:flex;align-items:center;gap:.6rem;}
+.pcard-tx{flex:1;min-width:0;}
+.pcard-tx h3{font-family:'Fraunces';font-size:1.12rem;font-weight:700;line-height:1.15;
+  letter-spacing:-.01em;padding-right:5.5rem;}
+.pcard-pr{font-size:.78rem;font-weight:700;opacity:.75;margin-top:.2rem;}
+.pcard-tx ul{list-style:none;margin:.55rem 0 0;display:flex;flex-direction:column;gap:.22rem;}
+.pcard-tx li{display:flex;align-items:flex-start;gap:.35rem;font-size:.71rem;
+  line-height:1.35;opacity:.9;}
+.pcard-tx li svg{width:11px;height:11px;flex-shrink:0;margin-top:.15rem;}
+.pcard-mock{width:88px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transform:scale(.58);transform-origin:center;}
+.pcard-cta{display:flex;align-items:center;justify-content:center;gap:.4rem;
+  margin-top:.85rem;padding:.7rem;border-radius:100px;font-size:.88rem;font-weight:700;}
+.pcard-cta svg{width:15px;height:15px;}
+/* cores por produto, herdadas dos cards da home */
+.pcard.pb-completo{background:#D8E9BC;color:#1E3A20;}
+.pcard.pb-completo .pcard-cta{background:#1E3A20;color:#fff;}
+.pcard.pb-completo svg{stroke:#1E3A20;}
+.pcard.pb-completo .pcard-cta svg{stroke:#fff;}
+.pcard.pb-musica{background:#BFE1F0;color:#0F3A4D;}
+.pcard.pb-musica .pcard-cta{background:#0F3A4D;color:#fff;}
+.pcard.pb-musica svg{stroke:#0F3A4D;}
+.pcard.pb-musica .pcard-cta svg{stroke:#fff;}
+.pcard.pb-carta{background:#F6D9E4;color:#6E1030;}
+.pcard.pb-carta .pcard-cta{background:#6E1030;color:#fff;}
+.pcard.pb-carta svg{stroke:#6E1030;}
+.pcard.pb-carta .pcard-cta svg{stroke:#fff;}
+.pcard.pb-convite{background:#FDE49A;color:#5A3B0A;}
+.pcard.pb-convite .pcard-cta{background:#5A3B0A;color:#fff;}
+.pcard.pb-convite svg{stroke:#5A3B0A;}
+.pcard.pb-convite .pcard-cta svg{stroke:#fff;}
 
 /* brilho passando nos mockups dos pacotes */
 .pb-mock{position:relative;}
@@ -2067,6 +2112,16 @@ function ligarPreviasLimitadas(){
     };
   });
 }
+function htmlMusicaDemorou(taskId){
+  var msg='Olá! Minha música está demorando pra ficar pronta. ID do pedido: '+taskId;
+  var link='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent(msg);
+  return '<div class="musica-demorou">⏳'+
+    '<b>Sua música ainda está sendo produzida</b>'+
+    '<span>Às vezes o estúdio fica cheio e leva mais tempo. Ela não foi perdida — '+
+    'a gente te manda assim que ficar pronta.</span>'+
+    '<a class="mc-whats-btn" href="'+link+'" target="_blank" rel="noopener">'+IC.wpp+' Receber no meu WhatsApp</a>'+
+  '</div>';
+}
 function htmlBotaoWhatsMusica(taskId){
   if(!taskId) return '';
   var msg='Olá! Quero receber a prévia da minha música. ID do pedido: '+taskId;
@@ -2106,7 +2161,7 @@ function iniciarProgressoFake(){
     if(!pctEl || !barEl){ clearInterval(_mcTimer); return; }
     var passado=Date.now()-t0;
     // sobe rápido no início, desacelera bem perto de 92% e fica ali esperando o resultado de verdade
-    var pct=Math.min(92, Math.round(92*(1-Math.exp(-passado/28000))));
+    var pct=Math.min(92, Math.round(92*(1-Math.exp(-passado/55000))));
     pctEl.textContent=pct+'%';
     barEl.style.width=pct+'%';
     if(faseEl){
@@ -3442,7 +3497,7 @@ function pedirWhatsapp(aoConfirmar){
   box.className='upsell-fundo'; box.id='zapFundo';
   box.innerHTML='<div class="upsell-card zap-card">'+
     '<div class="upsell-top">💬<h3>Qual o seu WhatsApp?</h3>'+
-    '<p>Sua música leva até 1 minuto e meio pra ficar pronta. Se você não quiser esperar aqui, '+
+    '<p>Sua música leva entre 1 e 3 minutos pra ficar pronta. Se você não quiser esperar aqui, '+
     'a gente te manda a prévia por lá.</p></div>'+
     '<input class="inp" id="zapInp" placeholder="(00) 00000-0000" inputmode="tel" autocomplete="tel">'+
     '<div class="zap-err" id="zapErr"></div>'+
@@ -3491,7 +3546,7 @@ function dispararGeracao(gerarBtn){
         }
         gerarBtn.textContent='Compondo...';
         var whatsAlvo=el('mcWhats'); if(whatsAlvo) whatsAlvo.innerHTML=htmlBotaoWhatsMusica(res.d.taskId);
-        var tentativas=0, MAX_TENTATIVAS=34; // ~34 x 3s ≈ 1min42
+        var tentativas=0, MAX_TENTATIVAS=200; // ~200 x 3s = 10 minutos
         (function checar(){
           fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(res.d.taskId))
             .then(function(r2){ return r2.json().then(function(d2){ return {ok:r2.ok, d:d2}; }); })
@@ -3517,8 +3572,7 @@ function dispararGeracao(gerarBtn){
               if(tentativas>=MAX_TENTATIVAS){
                 pararProgressoFake(false);
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
-                if(resultado) resultado.innerHTML='';
-                toast('Tá demorando mais que o normal. Tenta de novo em instantes.');
+                if(resultado) resultado.innerHTML=htmlMusicaDemorou(res.d.taskId);
                 return;
               }
               setTimeout(checar,3000);
@@ -3550,10 +3604,11 @@ function desenharPasso(opts){
   var ps=passos();
   if(wStep>=ps.length) wStep=ps.length-1;
   var k=ps[wStep];
-  el('wzCount').textContent=(wStep+1)+'/'+ps.length;
+  el('wzCount').textContent = ps.length>1 ? ((wStep+1)+'/'+ps.length) : '';
   el('wzFill').style.width=((wStep+1)/ps.length*100)+'%';
   el('wzBody').innerHTML=htmlPasso(k);
   el('wzNext').textContent = (k==='checkout') ? 'Pagar e gerar o link' : 'Continuar';
+  el('wzNext').style.display = (k==='produto') ? 'none' : '';
   var sk=el('wzSkip'); sk.style.display='none';
   if(k==='jogos'){ sk.style.display=''; sk.textContent='Pular os jogos'; sk.onclick=function(){ proximoPasso(true); }; }
   if(k==='musica'){ sk.style.display=''; sk.textContent='Seguir sem música'; sk.onclick=function(){ proximoPasso(true); }; }
@@ -3607,23 +3662,25 @@ function htmlPasso(k){
 
   case 'produto': {
     var lista=['completo','musica','carta','convite'].map(function(k){
-      var p=PACOTES[k], r=RECURSOS[k];
-      var itens=itensDoPacote(k);
-      return '<article class="planb pb-'+k+'">'+
-        (p.destaque?'<span class="pb-rib">'+(p.ribbon||'★ Mais popular')+'</span>':'')+
-        '<div class="pb-top">'+
-          '<h3 class="pb-t">'+p.nome+'.</h3>'+
-          '<div class="pb-pr">a partir de R$ '+fmtPreco(p.preco48)+'</div>'+
-          '<button class="pb-cta" data-pcta="'+k+'">Criar agora <span>↗</span></button>'+
+      var p=PACOTES[k];
+      var itens=itensDoPacote(k).slice(0,3);
+      return '<button type="button" class="pcard pb-'+k+'" data-pcta="'+k+'">'+
+        (p.destaque?'<span class="pcard-rib">'+(p.ribbon||'★ Mais popular')+'</span>':'')+
+        '<div class="pcard-in">'+
+          '<div class="pcard-tx">'+
+            '<h3>'+p.nome+'</h3>'+
+            '<div class="pcard-pr">a partir de R$ '+fmtPreco(p.preco48)+'</div>'+
+            '<ul>'+ itens.map(function(i){ return '<li>'+IC.check+'<span>'+i+'</span></li>'; }).join('') +'</ul>'+
+          '</div>'+
+          '<div class="pcard-mock">'+mockPacote(k)+'</div>'+
         '</div>'+
-        '<div class="pb-mock">'+mockPacote(k)+'</div>'+
-        '<ul class="pb-list">'+ itens.map(function(i){ return '<li>'+IC.check+'<span>'+i+'</span></li>'; }).join('') +'</ul>'+
-      '</article>';
+        '<span class="pcard-cta">Criar agora'+IC.arrow+'</span>'+
+      '</button>';
     }).join('');
     return guia("Oi! Eu sou a Capivarinha. Me conta: que tipo de presente você quer criar hoje?")+
       '<div class="wz-t">O que você quer criar?</div>'+
-      '<div class="wz-s">Monte tudo com calma e veja como vai ficar antes de decidir. Você só escolhe o valor no final.</div>'+
-      '<div class="pick pick-rica">'+lista+'</div>';
+      '<div class="wz-s">Monte tudo com calma e veja como vai ficar antes de decidir.</div>'+
+      '<div class="pcards">'+lista+'</div>';
   }
 
   case 'tema': {
