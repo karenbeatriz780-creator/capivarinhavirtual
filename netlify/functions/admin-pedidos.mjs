@@ -37,7 +37,9 @@ export default async (req) => {
         meuNome: g.meuNome || '',
         parceiroNome: g.parceiroNome || '',
         musicaOn: !!g.musicaOn,
-        musicaPreviewUrl: g.musicaPreviewUrl || null
+        musicaPreviewUrl: g.musicaPreviewUrl || null,
+        musicaPreviewUrl2: g.musicaPreviewUrl2 || null,
+        whatsapp: g.musicaWhatsapp || ''
       });
     }
 
