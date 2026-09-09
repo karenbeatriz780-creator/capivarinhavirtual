@@ -404,6 +404,45 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .card2.on .c2-sub{opacity:.85;}
 .inp.erro{border-color:var(--rose)!important;}
 
+/* modal de pacotes (upsell antes do pagamento) */
+.upsell-fundo{position:fixed;inset:0;z-index:90;background:rgba(20,10,17,.62);
+  backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;
+  padding:1rem;animation:upFundo .25s ease both;overflow-y:auto;}
+@keyframes upFundo{from{opacity:0;}to{opacity:1;}}
+.upsell-card{background:var(--white);border-radius:22px;padding:1.5rem 1.15rem 1.15rem;
+  width:100%;max-width:26rem;margin:auto 0;animation:upSobe .32s var(--ease) both;
+  box-shadow:0 -10px 50px rgba(0,0,0,.3);}
+@keyframes upSobe{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:none;}}
+.upsell-top{text-align:center;margin-bottom:1.1rem;font-size:1.5rem;}
+.upsell-top h3{font-family:'Fraunces';font-size:1.25rem;color:var(--plum);margin-top:.2rem;}
+.upsell-top p{font-size:.82rem;color:var(--muted);line-height:1.55;margin-top:.35rem;}
+.upsell-op{position:relative;display:flex;align-items:center;gap:.8rem;width:100%;text-align:left;
+  background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:.95rem 1rem;margin-bottom:.6rem;
+  transition:all .18s;}
+.upsell-op:active{transform:scale(.985);}
+.upsell-op.atual{background:var(--paper);border-style:dashed;opacity:.85;}
+.upsell-op.destaque{border-color:var(--rose);box-shadow:0 8px 24px rgba(227,43,109,.16);}
+.uo-tag{position:absolute;top:-9px;right:12px;font-size:.58rem;font-weight:800;letter-spacing:.06em;
+  background:var(--rose);color:#fff;padding:.2rem .55rem;border-radius:100px;}
+.uo-tx{flex:1;min-width:0;}
+.uo-tx b{display:block;font-size:.92rem;color:var(--plum);line-height:1.3;}
+.uo-tx span{display:block;font-size:.76rem;color:var(--muted);line-height:1.45;margin-top:.2rem;}
+.uo-pr{flex-shrink:0;text-align:right;font-family:'Fraunces';font-size:1.05rem;color:var(--plum);}
+.uo-pr em{display:block;font-family:inherit;font-style:normal;font-size:.63rem;font-weight:800;
+  color:#1F9D5C;background:#E3F6EC;padding:.15rem .45rem;border-radius:100px;margin-top:.25rem;}
+.upsell-op.destaque .uo-pr{color:var(--rose-deep);}
+.upsell-nao{display:block;width:100%;text-align:center;font-size:.83rem;color:var(--muted);
+  padding:.9rem;margin-top:.2rem;}
+.mh-contador{font-size:.76rem;font-weight:700;margin-top:.4rem;}
+.mh-contador.falta{color:var(--rose-deep);}
+.mh-contador.ok{color:#1F9D5C;}
+.mv-aviso{font-size:.78rem;color:var(--muted);background:#fff;border:1px dashed var(--rose-soft);
+  border-radius:10px;padding:.6rem .75rem;margin-bottom:.7rem;line-height:1.5;}
+.mv-letra{margin-top:.5rem;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:.75rem .9rem;}
+.mv-letra summary{font-size:.82rem;font-weight:800;color:var(--rose-deep);cursor:pointer;}
+.mv-letra pre{white-space:pre-wrap;font-family:'Fraunces',serif;font-size:.86rem;line-height:1.8;
+  color:var(--ink);margin:.7rem 0 0;}
+
 /* tela de sucesso da música avulsa */
 .ms-hero{background:linear-gradient(165deg,#2A1620,#140A11);border-radius:var(--r-lg);
   padding:2rem 1.3rem 1.6rem;text-align:center;color:#fff;box-shadow:0 16px 40px rgba(20,10,17,.35);}
@@ -879,6 +918,10 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pnl-linkbar button{flex-shrink:0;font-size:.72rem;font-weight:800;padding:.4rem .7rem;border-radius:8px;
   border:0;background:var(--rose-soft);color:var(--rose-deep);}
 .pnl-musica{margin-top:.5rem;font-size:.78rem;color:var(--muted);}
+.pnl-whats{margin-top:.5rem;}
+.pnl-whats a{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;font-weight:700;
+  color:#1F9D5C;background:#E3F6EC;padding:.35rem .7rem;border-radius:100px;}
+.pnl-whats svg{width:14px;height:14px;fill:#1F9D5C;}
 .pnl-liberar{display:flex;align-items:center;gap:.4rem;margin-top:.5rem;padding-top:.5rem;border-top:1px dashed var(--line);}
 .pnl-liberar span{font-size:.72rem;color:var(--muted);flex-shrink:0;}
 .pnl-liberar input{width:3.4rem;font-size:.78rem;padding:.35rem .4rem;border-radius:8px;
@@ -1958,19 +2001,23 @@ function temAddonMusica(W){
 function precoTotal(W){
   return precoDe(W.produto, W.duracao) + (temAddonMusica(W) ? PRECO_MUSICA_ADDON : 0);
 }
-function htmlMusicaPlayer(url, url2){
+function htmlMusicaPlayer(url, url2, letra){
   function card(u, label){
     if(!u) return '';
     var ativo=(W.musicaPreviewUrl===u);
     return '<div class="musica-versao'+(ativo?' escolhida':'')+'">'+
-      '<div class="mv-topo"><b>'+label+'</b>'+(ativo?'<span class="mv-selo">✓ escolhida</span>':'')+'</div>'+
+      '<div class="mv-topo"><b>'+label+'</b>'+(ativo?'<span class="mv-selo">✓ vai no presente</span>':'')+'</div>'+
       '<audio class="mv-audio" controls src="'+esc(u)+'" style="width:100%"></audio>'+
-      '<div class="hint" style="margin-top:.4rem">🔒 Prévia limitada a 60 segundos — a versão completa libera após o pagamento.</div>'+
-      (ativo?'':'<button type="button" class="btn btn-ghost btn-block mv-escolher" data-versao="'+esc(u)+'" style="margin-top:.5rem">Escolher esta versão</button>')+
+      '<div class="hint" style="margin-top:.4rem">🔒 Prévia de 60 segundos — a completa libera depois do pagamento.</div>'+
+      (ativo?'':'<button type="button" class="btn btn-ghost btn-block mv-escolher" data-versao="'+esc(u)+'" style="margin-top:.5rem">Usar esta no presente</button>')+
     '</div>';
   }
-  return '<div class="musica-pronta">'+card(url,'Versão 1')+card(url2,'Versão 2')+
-    '<div class="hint" style="margin-top:.6rem;text-align:center">Gostou de alguma? É só continuar. Se quiser, gere outra prévia.</div></div>';
+  var htmlLetra = letra
+    ? '<details class="mv-letra"><summary>📝 Ver a letra</summary><pre>'+esc(letra)+'</pre></details>'
+    : '';
+  return '<div class="musica-pronta">'+
+    '<div class="mv-aviso">Você recebeu <b>duas versões</b> — as duas ficam liberadas pra baixar depois do pagamento.</div>'+
+    card(url,'Versão 1')+card(url2,'Versão 2')+htmlLetra+'</div>';
 }
 function ligarPreviasLimitadas(){
   document.querySelectorAll('.mv-audio').forEach(function(a){
@@ -1983,7 +2030,7 @@ function ligarPreviasLimitadas(){
     b.onclick=function(){
       W.musicaPreviewUrl=b.dataset.versao;
       var alvo=el('musicaResultado');
-      if(alvo){ alvo.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2); ligarPreviasLimitadas(); }
+      if(alvo){ alvo.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2, W.musicaLetra); ligarPreviasLimitadas(); }
     };
   });
 }
@@ -2990,7 +3037,7 @@ function novoEstado(prod){
     id:uid(), produto:prod||null, perfil:null, meuNome:'', parceiroNome:'',
     dataEspecial:'', horaEspecial:'', cidade:'', titulo:'', carta:'',
     fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:true,
-    musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null,
+    musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null, musicaLetra:null,
     musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'',
     musicaClima:'', musicaFrase:'', musicaVoz:'masculina', musicaCapa:null, musicaWhatsapp:'',
     duracao:'vitalicio',
@@ -3714,10 +3761,12 @@ function htmlPasso(k){
       '<div class="wz-s">Quanto mais real e específico, melhor fica a letra.</div>'+
       '<button type="button" class="btn btn-ghost btn-block" id="musicaDitar" style="margin-bottom:.9rem">🎙️ Ditar por voz</button>'+
       '<textarea class="inp" id="musicaTexto" rows="6" placeholder="Ex: nos conhecemos numa viagem em 2021, ele mora longe mas a gente nunca deixou de se falar...">'+esc(W.musicaTexto)+'</textarea>'+
+      '<div class="mh-contador" id="mhContador"></div>'+
       '<div class="sug-musica"><span class="sug-lbl">💡 Vale a pena contar:</span>'+
         '<ul class="sug-lista">'+
-          ['Onde e como vocês se conheceram',
-           'O que você mais admira nessa pessoa',
+          ['Onde e como vocês se conheceram, e quando foi',
+           'O que essa pessoa significa pra você',
+           'O que você mais admira nela',
            'Um apelido ou piada que só vocês entendem',
            'Um momento que você nunca vai esquecer'].map(function(s){
             return '<li>'+esc(s)+'</li>';
@@ -3776,10 +3825,13 @@ function htmlPasso(k){
             return '<button type="button" class="chip'+(W.musicaVoz===v?' on':'')+'" data-voz="'+v+'"><span class="lb">'+lb+'</span></button>';
           }).join('')+
         '</div></div>'+
+      '<div class="field" style="margin-top:1rem"><label>Seu WhatsApp</label>'+
+        '<input class="inp" id="musicaWhatsapp" value="'+esc(W.musicaWhatsapp)+'" placeholder="(00) 00000-0000" inputmode="tel">'+
+        '<div class="hint">Se a composição demorar, a gente te manda a prévia por lá.</div></div>'+
       '<button class="btn btn-primary btn-block" id="musicaGerar" style="margin-top:1.2rem">'+
         (W.musicaPreviewUrl ? 'Gerar outra prévia' : 'Gerar prévia da música')+'</button>'+
       '<div id="musicaResultado" style="margin-top:1rem">'+
-        (W.musicaPreviewUrl ? htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2) : '')+
+        (W.musicaPreviewUrl ? htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2, W.musicaLetra) : '')+
       '</div>';
   }
 
@@ -4093,7 +4145,14 @@ function ligarPasso(k){
   }
   if(k==='musicaHistoria'){
     var txtM=el('musicaTexto');
-    if(txtM) txtM.oninput=function(ev){ W.musicaTexto=ev.target.value; };
+    function attContador(){
+      var c=el('mhContador'); if(!c) return;
+      var n=(W.musicaTexto||'').trim().length;
+      if(n>=50){ c.className='mh-contador ok'; c.textContent='✓ '+n+' caracteres'; }
+      else{ c.className='mh-contador falta'; c.textContent='Mínimo de 50 caracteres (faltam '+(50-n)+')'; }
+    }
+    if(txtM) txtM.oninput=function(ev){ W.musicaTexto=ev.target.value; attContador(); };
+    attContador();
     var ditarBtn=el('musicaDitar');
     if(ditarBtn){
       var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -4136,6 +4195,8 @@ function ligarPasso(k){
     if(fraseInp) fraseInp.oninput=function(ev){ W.musicaFrase=ev.target.value; };
     var whatsInp=el('musicaWhatsapp');
     if(whatsInp) whatsInp.oninput=function(ev){ W.musicaWhatsapp=ev.target.value; };
+    var whatsInp=el('musicaWhatsapp');
+    if(whatsInp) whatsInp.oninput=function(ev){ W.musicaWhatsapp=ev.target.value; };
     on('[data-voz]','onclick',function(e){
       W.musicaVoz=e.dataset.voz;
       document.querySelectorAll('[data-voz]').forEach(function(c){ c.classList.remove('on'); });
@@ -4175,10 +4236,11 @@ function ligarPasso(k){
             .then(function(res2){
               if(res2.d && res2.d.pronto && res2.d.url){
                 W.musicaPreviewUrl=res2.d.url; W.musicaPreviewUrl2=res2.d.url2||null; W.musicaPreviewId=res.d.taskId;
+                W.musicaLetra=res2.d.letra||null;
                 pararProgressoFake(true);
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar outra prévia';
                 setTimeout(function(){
-                  if(resultado){ resultado.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2); ligarPreviasLimitadas(); }
+                  if(resultado){ resultado.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2, W.musicaLetra); ligarPreviasLimitadas(); }
                 },350);
                 return;
               }
@@ -4328,7 +4390,7 @@ function validar(k){
   if(k==='musicaEscolha' && W.musicaPersonalizar===null) return erro('Escolhe uma opção pra continuar.');
   if(k==='musicaPara' && !W.musicaPara) return erro('Escolhe pra quem é a música.');
   if(k==='musicaOcasiao' && !W.musicaOcasiao) return erro('Escolhe a ocasião.');
-  if(k==='musicaHistoria' && !W.musicaTexto.trim()) return erro('Conta um pouco da história.', 'musicaTexto');
+  if(k==='musicaHistoria' && W.musicaTexto.trim().length<50) return erro('Conta um pouco mais — pelo menos 50 caracteres pra letra ficar boa.', 'musicaTexto');
   if(k==='musicaGenero' && !W.musicaEstilo) return erro('Escolhe um estilo.');
   if(k==='musicaClima' && !W.musicaClima) return erro('Escolhe o clima da música.');
   if(k==='musicaFinal' && !W.musicaPreviewUrl) return erro('Gere a prévia da música antes de continuar.');
@@ -4371,6 +4433,106 @@ function voltarPasso(){
 }
 
 /* ---------- finalizar: gera uma cobrança Pix dinâmica na Efí ---------- */
+/* =========================================================
+   MODAL DE PACOTES — oferece o upgrade antes de pagar
+   ========================================================= */
+var _upsellVisto=false;
+function combosDisponiveis(){
+  var atualProd=W.produto, temMusica=!!W.musicaOn, combos=[];
+  var vit=(W.duracao!=='h48');
+  function preco(prod, comMusica){
+    var p=PACOTES[prod]; if(!p) return 0;
+    var base=(W.duracao==='h48' && p.preco48!=null) ? p.preco48 : p.preco;
+    if(prod==='musica') return base;
+    return base + (comMusica?PRECO_MUSICA_ADDON:0);
+  }
+  function separado(prod, comMusica){
+    var p=PACOTES[prod]; if(!p) return 0;
+    var base=(W.duracao==='h48' && p.preco48!=null) ? p.preco48 : p.preco;
+    return base + (comMusica?PACOTES.musica.preco:0);
+  }
+  function add(prod, comMusica, titulo, desc, destaque){
+    var pr=preco(prod, comMusica), sep=separado(prod, comMusica);
+    var economia=Math.max(0, sep-pr);
+    var pct=sep>0 ? Math.round(100*economia/sep) : 0;
+    combos.push({produto:prod, musica:comMusica, titulo:titulo, desc:desc,
+      preco:pr, economia:economia, pct:pct, destaque:!!destaque});
+  }
+  // só oferece o que é MAIOR que o pedido atual — nunca sugere baixar
+  if(atualProd==='musica'){
+    add('carta', true, 'Música + Carta Virtual',
+      'A carta com envelope, foto colada e sua assinatura — mais a música.', false);
+    add('completo', true, 'Música + Retrospectiva Completa',
+      'Uma página só de vocês: fotos, linha do tempo, contador ao vivo, jogos e a carta. Com a música tocando de fundo.', true);
+  } else if(atualProd==='carta'){
+    if(!temMusica) add('carta', true, 'Carta + Música Personalizada',
+      'A mesma carta, mais uma música só de vocês.', false);
+    add('completo', temMusica, 'Retrospectiva Completa'+(temMusica?' + Música':''),
+      'Tudo da carta, mais fotos, linha do tempo, contador ao vivo e os jogos do casal.', true);
+  } else if(atualProd==='completo' && !temMusica){
+    add('completo', true, 'Retrospectiva + Música Personalizada',
+      'Tudo que você já montou, com uma música exclusiva tocando de fundo.', true);
+  }
+  return combos;
+}
+function abrirUpsell(aoFechar){
+  var combos=combosDisponiveis();
+  if(!combos.length || _upsellVisto){ aoFechar(); return; }
+  _upsellVisto=true;
+  var atual=precoTotal(W);
+  var box=document.createElement('div');
+  box.className='upsell-fundo'; box.id='upsellFundo';
+  box.innerHTML='<div class="upsell-card">'+
+    '<div class="upsell-top">✨<h3>Que tal levar mais?</h3>'+
+    '<p>Adicionando agora, no mesmo pagamento, sai mais barato que comprar separado depois.</p></div>'+
+    '<button type="button" class="upsell-op atual"><div class="uo-tx"><b>'+esc(PACOTES[W.produto].nome)+
+      (W.musicaOn?' + Música':'')+'</b><span>O que você montou</span></div>'+
+      '<div class="uo-pr">R$ '+fmtPreco(atual)+'</div></button>'+
+    combos.map(function(c,i){
+      return '<button type="button" class="upsell-op'+(c.destaque?' destaque':'')+'" data-combo="'+i+'">'+
+        (c.destaque?'<span class="uo-tag">MAIS COMPLETO</span>':'')+
+        '<div class="uo-tx"><b>'+esc(c.titulo)+'</b><span>'+esc(c.desc)+'</span></div>'+
+        '<div class="uo-pr">R$ '+fmtPreco(c.preco)+
+          (c.pct>0?'<em>economize '+c.pct+'%</em>':'')+'</div></button>';
+    }).join('')+
+    '<button type="button" class="upsell-nao" id="upsellNao">Agora não, obrigado</button>'+
+  '</div>';
+  document.body.appendChild(box);
+  gaEvento('viu_upsell',{produto:W.produto});
+  function fechar(){ box.remove(); }
+  el('upsellNao').onclick=function(){ gaEvento('recusou_upsell',{}); fechar(); aoFechar(); };
+  box.querySelectorAll('[data-combo]').forEach(function(b){
+    b.onclick=function(){
+      var c=combos[parseInt(b.dataset.combo,10)];
+      gaEvento('aceitou_upsell',{de:W.produto, para:c.produto, com_musica:c.musica});
+      W.produto=c.produto;
+      if(c.musica){ W.musicaOn=true; W.musicaPersonalizar=true; }
+      fechar();
+      var falta=primeiroPassoIncompleto();
+      if(falta>=0){ wStep=falta; desenharPasso(); toast('Só faltam alguns detalhes desse pacote.'); }
+      else{ desenharPasso(); }
+    };
+  });
+}
+/* acha o primeiro passo do novo pacote que ainda não tem dado preenchido */
+function primeiroPassoIncompleto(){
+  var ps=passos();
+  for(var i=0;i<ps.length;i++){
+    var k=ps[i];
+    if(k==='perfil' && !W.perfil) return i;
+    if(k==='nomes' && !W.parceiroNome.trim()) return i;
+    if(k==='fotos' && !W.fotos.filter(Boolean).length) return i;
+    if(k==='carta' && W.carta.trim().length<10) return i;
+    if(k==='musicaPara' && !W.musicaPara) return i;
+    if(k==='musicaOcasiao' && !W.musicaOcasiao) return i;
+    if(k==='musicaHistoria' && W.musicaTexto.trim().length<50) return i;
+    if(k==='musicaGenero' && !W.musicaEstilo) return i;
+    if(k==='musicaClima' && !W.musicaClima) return i;
+    if(k==='musicaFinal' && !W.musicaPreviewUrl) return i;
+  }
+  return -1;
+}
+
 function finalizar(){
   var wIn=el('fWhatsapp');
   if(wIn) W.musicaWhatsapp=wIn.value;
@@ -4380,6 +4542,9 @@ function finalizar(){
     if(wIn){ wIn.focus(); wIn.classList.add('erro'); }
     return;
   }
+  abrirUpsell(function(){ finalizarDeVerdade(); });
+}
+function finalizarDeVerdade(){
   gaEvento('begin_checkout',{produto:W.produto, duracao:W.duracao, valor:precoTotal(W)});
   fbEvento('InitiateCheckout',{value:precoTotal(W), currency:'BRL', content_name:W.produto, content_type:'product'});
   var btn=el('wzNext');
@@ -4802,8 +4967,13 @@ function desenharPainel(pedidos, visitas){
       '<div class="vl">R$ '+fmtPreco(p.valor||0)+'</div></div>'+
       '<div class="pnl-linkbar"><input readonly value="'+esc(link)+'" onclick="this.select()">'+
       '<button data-copiar-link="'+esc(link)+'">Copiar</button></div>'+
-      (p.musicaOn && p.musicaPreviewUrl
-        ? '<div class="pnl-musica">🎵 <audio controls src="'+esc(p.musicaPreviewUrl)+'" style="width:100%;margin-top:.4rem"></audio></div>'
+      (p.whatsapp
+        ? '<div class="pnl-whats"><a href="https://wa.me/55'+esc(String(p.whatsapp).replace(/\D/g,''))+'" target="_blank" rel="noopener">'+IC.wpp+' '+esc(p.whatsapp)+'</a></div>'
+        : '')+
+      (p.musicaPreviewUrl
+        ? '<div class="pnl-musica">🎵 Versão 1<audio controls src="'+esc(p.musicaPreviewUrl)+'" style="width:100%;margin-top:.3rem"></audio>'+
+          (p.musicaPreviewUrl2 ? 'Versão 2<audio controls src="'+esc(p.musicaPreviewUrl2)+'" style="width:100%;margin-top:.3rem"></audio>' : '')+
+          '</div>'
         : '')+
       liberar+'</div>';
   }).join('') || '<div class="pnl-nota">Nenhum pedido ainda.</div>';
