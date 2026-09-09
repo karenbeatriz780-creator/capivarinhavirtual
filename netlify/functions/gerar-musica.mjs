@@ -38,42 +38,24 @@ const CLIMAS = {
 };
 const VOZES = { masculina:'male vocals', feminina:'female vocals', dueto:'male and female duet vocals' };
 
-// Cada nicho tem seu jeito de falar. Isso é o que faz uma música pra mãe não
-// soar como declaração de namorado — e a de amigo não virar canção de amor.
-const NICHOS = {
-  namorada: { tratamento:'a namorada de quem está enviando',
-    tom:'apaixonado e carinhoso, com declaração de amor romântico',
-    evitar:'evite soar como amizade ou como relação familiar' },
-  namorado: { tratamento:'o namorado de quem está enviando',
-    tom:'apaixonado e carinhoso, com declaração de amor romântico',
-    evitar:'evite soar como amizade ou como relação familiar' },
-  esposa: { tratamento:'a esposa de quem está enviando',
-    tom:'amor maduro, de parceria construída e vida compartilhada',
-    evitar:'evite tom de paquera ou de começo de namoro' },
-  marido: { tratamento:'o marido de quem está enviando',
-    tom:'amor maduro, de parceria construída e vida compartilhada',
-    evitar:'evite tom de paquera ou de começo de namoro' },
-  mae: { tratamento:'a mãe de quem está enviando',
-    tom:'gratidão, colo, cuidado recebido a vida inteira, admiração profunda',
-    evitar:'NUNCA use linguagem romântica ou de casal — é amor de filho para mãe' },
-  pai: { tratamento:'o pai de quem está enviando',
-    tom:'gratidão, exemplo, orgulho, força e proteção recebidas',
-    evitar:'NUNCA use linguagem romântica ou de casal — é amor de filho para pai' },
-  irma: { tratamento:'a irmã de quem está enviando',
-    tom:'cumplicidade de quem cresceu junto, brigas e reconciliações, parceria de vida',
-    evitar:'NUNCA use linguagem romântica — é amor entre irmãos' },
-  irmao: { tratamento:'o irmão de quem está enviando',
-    tom:'cumplicidade de quem cresceu junto, brigas e reconciliações, parceria de vida',
-    evitar:'NUNCA use linguagem romântica — é amor entre irmãos' },
-  amiga: { tratamento:'a melhor amiga de quem está enviando',
-    tom:'amizade verdadeira, lealdade, estar junto nos perrengues e nas festas',
-    evitar:'NUNCA use linguagem romântica ou de paixão — é amizade' },
-  amigo: { tratamento:'o melhor amigo de quem está enviando',
-    tom:'amizade verdadeira, lealdade, estar junto nos perrengues e nas festas',
-    evitar:'NUNCA use linguagem romântica ou de paixão — é amizade' },
-  filho: { tratamento:'o filho ou filha de quem está enviando',
-    tom:'amor de pai/mãe, orgulho de ver crescer, desejo de proteger',
-    evitar:'NUNCA use linguagem romântica — é amor de pai/mãe para filho' }
+// Relação e ocasião viram tag de estilo — orientam o clima da música
+// sem virar texto cantado.
+const RELACOES_TAG = {
+  namorada:'romantic love song for a girlfriend', namorado:'romantic love song for a boyfriend',
+  esposa:'love song for a wife, mature devoted love', marido:'love song for a husband, mature devoted love',
+  mae:'heartfelt tribute to a mother, gratitude, not romantic',
+  pai:'heartfelt tribute to a father, gratitude, not romantic',
+  irma:'song about sibling bond, not romantic', irmao:'song about sibling bond, not romantic',
+  amiga:'song about friendship, not romantic', amigo:'song about friendship, not romantic',
+  filho:'song from a parent to their child, not romantic'
+};
+const OCASIOES_TAG = {
+  'Aniversário':'birthday celebration', 'Aniversário de casamento':'wedding anniversary',
+  'Dia dos Namorados':'valentines day', 'Dia das Mães':'mothers day',
+  'Dia dos Pais':'fathers day', 'Declaração de amor':'love confession',
+  'Pedido de namoro':'asking someone out', 'Aniversário de namoro':'dating anniversary',
+  'Formatura':'graduation celebration', 'Chá revelação':'gender reveal celebration',
+  'Surpresa':'surprise gift', 'Homenagem':'heartfelt tribute'
 };
 
 export default async (req) => {
@@ -101,31 +83,37 @@ export default async (req) => {
       return json({ erro: 'A geração de música ainda está sendo configurada. Volta em breve!' }, 503);
     }
 
-    // TAGS = só estilo musical. Gênero primeiro e repetido no fim pra reforçar.
+    // TAGS = estilo musical + contexto. Gênero primeiro e repetido no fim pra reforçar.
+    // Relação e ocasião entram aqui (e não na letra) pra guiar o clima sem serem cantadas.
     const gen = GENEROS[estilo] || GENEROS.romantica;
     const tagsPartes = [gen, 'sung in portuguese', 'brazilian'];
     if (CLIMAS[clima]) tagsPartes.push(CLIMAS[clima]);
+    if (RELACOES_TAG[relacao]) tagsPartes.push(RELACOES_TAG[relacao]);
+    if (OCASIOES_TAG[ocasiao]) tagsPartes.push(OCASIOES_TAG[ocasiao]);
     if (VOZES[voz]) tagsPartes.push(VOZES[voz]);
     tagsPartes.push(gen.split(',')[0]); // reforço final do gênero
     const tagsEstilo = tagsPartes.join(', ');
 
-    // PROMPT = o briefing da letra. A Suno escreve a letra a partir daqui,
-    // então quanto mais específico e ciente do nicho, melhor o resultado.
-    const nicho = NICHOS[relacao] || null;
-    var partes = [];
-    partes.push('Componha a letra de uma música original em português do Brasil.');
-    if (nicho) {
-      partes.push('A música é dedicada para ' + nicho.tratamento + '.');
-      partes.push('Tom: ' + nicho.tom + '.');
-      partes.push('IMPORTANTE: ' + nicho.evitar + '.');
+    // PROMPT = no modo custom, isto vira a LETRA cantada. Então só entra
+    // conteúdo de verdade (a história, nomes, frase) — nunca instrução,
+    // senão a Suno canta a instrução ao pé da letra.
+    // As marcações [Verse]/[Chorus] são estruturais e não são cantadas.
+    var linhas = [];
+    linhas.push('[Portuguese lyrics]');
+    linhas.push('');
+    linhas.push('[Verse 1]');
+    linhas.push(texto);
+    if (nomesLetra) {
+      linhas.push('');
+      linhas.push('[Chorus]');
+      linhas.push(nomesLetra);
     }
-    if (ocasiao) partes.push('Ocasião: ' + ocasiao.toLowerCase() + '. A letra deve fazer referência a esse momento.');
-    partes.push('Baseie a letra nesta história real, usando os detalhes concretos que aparecem nela (lugares, datas, apelidos, situações): ' + texto);
-    if (nomesLetra) partes.push('Cite estes nomes ao longo da letra: ' + nomesLetra + '.');
-    if (frase) partes.push('Inclua esta frase exata em algum ponto da letra: "' + frase + '".');
-    partes.push('Estrutura: dois versos, um refrão forte e memorável que se repete, e uma ponte.');
-    partes.push('Use linguagem natural e brasileira, com imagens concretas em vez de clichês genéricos.');
-    const prompt = partes.join(' ').slice(0, 2900);
+    if (frase) {
+      linhas.push('');
+      linhas.push('[Bridge]');
+      linhas.push(frase);
+    }
+    const prompt = linhas.join('\n').slice(0, 2900);
 
     let resp;
     try {
@@ -136,8 +124,7 @@ export default async (req) => {
           model: 'suno-ai/music',
           input: {
             mv: 'chirp-bluejay',
-            custom: false,
-            gpt_description_prompt: prompt,
+            custom: true,
             prompt: prompt,
             tags: tagsEstilo,
             title: 'Nossa música'
