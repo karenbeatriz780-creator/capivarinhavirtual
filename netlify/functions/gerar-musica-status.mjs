@@ -62,10 +62,18 @@ export default async (req) => {
 
     const audioUrl = acharUrlAudio(conteudo);
     if (audioUrl) {
+      // Se a Suno devolver a letra, limpa as marcações de estrutura ([Verse], [Chorus],
+      // [Refrão]...) — elas são instrução pro modelo, não fazem parte da letra pra ler.
+      let letra = conteudo.lyric || conteudo.lyrics || conteudo.prompt || null;
+      if (letra) {
+        letra = String(letra).replace(/\[[^\]]*\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+        if (!letra) letra = null;
+      }
       return json({
         pronto: true,
         url: audioUrl,
-        url2: conteudo.audio_url2 || null
+        url2: conteudo.audio_url2 || null,
+        letra: letra
       });
     }
 
