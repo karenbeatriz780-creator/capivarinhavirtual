@@ -1863,20 +1863,17 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pcard-in{display:flex;align-items:center;gap:.6rem;}
 .pcard-tx{flex:1;min-width:0;}
 .pcard-tx h3{font-family:'Fraunces';font-size:1.1rem;font-weight:700;line-height:1.15;
-  letter-spacing:-.01em;padding-right:6.2rem;}
+  letter-spacing:-.01em;padding-right:5.8rem;}
+.pcard.pb-completo .pcard-tx h3{padding-right:6.8rem;}
 .pcard-pr{font-size:.78rem;font-weight:700;opacity:.75;margin-top:.2rem;}
-.pcard-tudo{display:inline-block;font-size:.63rem;font-weight:800;letter-spacing:.02em;
-  background:rgba(0,0,0,.13);padding:.2rem .5rem;border-radius:100px;margin-top:.4rem;}
 .pcard-tx ul{list-style:none;margin:.55rem 0 0;display:flex;flex-direction:column;gap:.22rem;}
 .pcard-tx li{display:flex;align-items:flex-start;gap:.35rem;font-size:.71rem;
   line-height:1.35;opacity:.9;}
 .pcard-tx li svg{width:11px;height:11px;flex-shrink:0;margin-top:.15rem;}
-.pcard-mock{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:.35rem;
-  transform-origin:center;}
-/* um celular só: cabe folgado */
-.pcard-mock{width:80px;transform:scale(.62);}
-/* a Retrospectiva mostra dois aparelhos — precisa de mais largura e escala menor */
-.pcard.pb-completo .pcard-mock{width:112px;transform:scale(.5);}
+.pcard-mock{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:.3rem;
+  width:80px;transform:scale(.62);transform-origin:center;}
+/* a Retrospectiva mostra dois aparelhos: mesma escala dos outros, só mais largura */
+.pcard.pb-completo .pcard-mock{width:132px;}
 .pcard-cta{display:flex;align-items:center;justify-content:center;gap:.4rem;
   margin-top:.85rem;padding:.7rem;border-radius:100px;font-size:.88rem;font-weight:700;}
 .pcard-cta svg{width:15px;height:15px;}
@@ -2896,7 +2893,7 @@ function itensDoPacote(k){
   }
   if(r.contador) itens.push('Até '+r.fotos+' fotos, linha do tempo e álbum em stories');
   if(r.contador) itens.push('Contador ao vivo dos dias juntos + jogos do casal');
-  if(r.contador) itens.push('A Carta Virtual completa, já inclusa');
+  if(r.contador) itens.push('Carta Virtual e trilha sonora');
   if(r.contador) itens.push('Perfil do casal ao tocar na foto de capa');
   if(r.fotos>1) itens.push('Até '+r.fotos+' fotos com data e legenda');
   if(r.timeline) itens.push('Nossa Jornada: fotos penduradas em ordem de data');
@@ -3678,7 +3675,6 @@ function htmlPasso(k){
           '<div class="pcard-tx">'+
             '<h3>'+p.nome+'</h3>'+
             '<div class="pcard-pr">a partir de R$ '+fmtPreco(p.preco48)+'</div>'+
-            (k==='completo'?'<span class="pcard-tudo">Contém a carta + tudo do site</span>':'')+
             '<ul>'+ itens.map(function(i){ return '<li>'+IC.check+'<span>'+i+'</span></li>'; }).join('') +'</ul>'+
           '</div>'+
           '<div class="pcard-mock">'+mockPacote(k)+'</div>'+
