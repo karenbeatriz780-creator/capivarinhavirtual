@@ -384,11 +384,40 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mv-topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;}
 .mv-topo b{font-size:.85rem;color:var(--plum);}
 .mv-selo{font-size:.65rem;font-weight:800;padding:.15rem .5rem;border-radius:100px;background:#E3F6EC;color:#1F9D5C;}
-.sug-musica{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.7rem;}
-.sug-lbl{width:100%;font-size:.74rem;color:var(--muted);font-weight:700;margin-bottom:.1rem;}
-.sug-chip{font-size:.74rem;padding:.4rem .75rem;border-radius:100px;border:1px solid var(--line);
-  background:#fff;color:var(--ink);}
-.sug-chip:active{background:var(--rose-soft);border-color:var(--rose-1);}
+.sug-musica{margin-top:.9rem;background:var(--tint);border:1px solid var(--rose-soft);
+  border-radius:var(--r-md);padding:.85rem 1rem;}
+.sug-lbl{display:block;font-size:.78rem;color:var(--rose-deep);font-weight:800;margin-bottom:.4rem;}
+.sug-lista{margin:0;padding-left:1.1rem;}
+.sug-lista li{font-size:.79rem;color:var(--muted);line-height:1.65;}
+
+/* cards em 2 colunas — usados nas etapas da música */
+.cards2{display:grid;grid-template-columns:repeat(2,1fr);gap:.65rem;}
+.card2{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;
+  background:#fff;border:1.5px solid var(--line);border-radius:var(--r-md);
+  padding:1.15rem .6rem;text-align:center;transition:all .18s;min-height:6.2rem;}
+.card2:active{transform:scale(.97);}
+.card2.on{background:var(--rose);border-color:var(--rose);box-shadow:0 6px 18px rgba(227,43,109,.28);}
+.c2-ic{font-size:1.7rem;line-height:1;margin-bottom:.25rem;}
+.c2-lb{font-size:.84rem;font-weight:700;color:var(--plum);line-height:1.25;}
+.c2-sub{font-size:.68rem;color:var(--muted);line-height:1.3;margin-top:.1rem;}
+.card2.on .c2-lb, .card2.on .c2-sub{color:#fff;}
+.card2.on .c2-sub{opacity:.85;}
+.inp.erro{border-color:var(--rose)!important;}
+
+/* tela de sucesso da música avulsa */
+.ms-hero{background:linear-gradient(165deg,#2A1620,#140A11);border-radius:var(--r-lg);
+  padding:2rem 1.3rem 1.6rem;text-align:center;color:#fff;box-shadow:0 16px 40px rgba(20,10,17,.35);}
+.ms-capa{display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem;}
+.ms-disco{width:110px;height:110px;border-radius:50%;font-size:2.4rem;
+  background:radial-gradient(circle at 35% 30%,#5a2f44,#170b12 72%);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 2px rgba(232,180,74,.4),0 0 60px rgba(232,180,74,.25);
+  animation:msFlut 5s ease-in-out infinite;}
+@keyframes msFlut{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+.ms-tit{font-family:'Fraunces';font-size:1.35rem;font-weight:600;line-height:1.25;}
+.ms-sub{font-size:.83rem;color:#C6A9B6;margin-top:.3rem;margin-bottom:1.2rem;}
+.ms-audio{width:100%;}
+
 .cross-sell{display:flex;gap:.7rem;align-items:flex-start;margin:1rem 0;
   background:var(--tint);border:1px solid var(--rose-soft);border-radius:var(--r-lg);padding:1rem 1.1rem;
   font-size:1.3rem;}
@@ -421,17 +450,46 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .me-play.tocando svg{margin-left:0;}
 .me-acoes{display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center;}
 .me-vazio{max-width:22rem;color:#C6A9B6;font-size:.88rem;line-height:1.6;margin-top:1rem;}
-.musica-compondo{display:flex;align-items:center;gap:.9rem;background:var(--tint);border:1px solid var(--rose-soft);
-  border-radius:var(--r-md);padding:1rem 1.1rem;}
-.mc-nota{width:44px;height:44px;border-radius:50%;background:var(--rose);display:flex;align-items:center;
-  justify-content:center;font-size:1.3rem;flex-shrink:0;animation:mcPulso 1.6s ease-in-out infinite;}
-@keyframes mcPulso{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(227,43,109,.4);}
-  50%{transform:scale(1.08);box-shadow:0 0 0 8px rgba(227,43,109,0);}}
-.mc-tx{flex:1;min-width:0;}
-.mc-tx b{display:block;font-size:.88rem;color:var(--plum);}
-.mc-tx span{display:block;font-size:.76rem;color:var(--muted);margin-top:.1rem;}
-.mc-bar{height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:.55rem;}
-.mc-bar i{display:block;height:100%;width:0%;background:var(--rose);border-radius:4px;transition:width .3s ease;}
+/* tela premium de composição da música */
+.mc-premium{background:linear-gradient(165deg,#2A1620,#140A11);border-radius:var(--r-lg);
+  padding:2rem 1.3rem 1.5rem;text-align:center;color:#fff;
+  box-shadow:0 16px 40px rgba(20,10,17,.35);}
+.mc-palco{position:relative;display:flex;align-items:center;justify-content:center;
+  height:120px;margin-bottom:1.2rem;}
+.mc-disco{width:96px;height:96px;border-radius:50%;
+  background:conic-gradient(from 0deg,#3a1f2e,#5a2f44,#3a1f2e,#5a2f44,#3a1f2e);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 2px rgba(232,180,74,.35),0 0 44px rgba(232,180,74,.25);
+  animation:mcGira 3.5s linear infinite;}
+@keyframes mcGira{to{transform:rotate(360deg);}}
+.mc-disco-in{width:38px;height:38px;border-radius:50%;background:var(--rose);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  animation:mcGiraInv 3.5s linear infinite;}
+@keyframes mcGiraInv{to{transform:rotate(-360deg);}}
+.mc-notas{position:absolute;inset:0;pointer-events:none;}
+.mc-notas i{position:absolute;left:50%;bottom:18%;font-size:1.1rem;color:var(--gold);
+  opacity:0;font-style:normal;animation:mcSobe 3s ease-out infinite;}
+.mc-notas i:nth-child(1){animation-delay:0s;margin-left:-34px;}
+.mc-notas i:nth-child(2){animation-delay:.7s;margin-left:12px;}
+.mc-notas i:nth-child(3){animation-delay:1.4s;margin-left:-12px;}
+.mc-notas i:nth-child(4){animation-delay:2.1s;margin-left:32px;}
+@keyframes mcSobe{
+  0%{opacity:0;transform:translateY(0) scale(.7);}
+  20%{opacity:.95;}
+  100%{opacity:0;transform:translateY(-72px) scale(1.15) rotate(14deg);}}
+.mc-tit{font-family:'Fraunces';font-size:1.22rem;font-weight:600;}
+.mc-fase{font-size:.83rem;color:#FFC0D6;margin:.35rem 0 1.1rem;min-height:1.2em;}
+.mc-bar{height:6px;border-radius:6px;background:rgba(255,255,255,.14);overflow:hidden;}
+.mc-bar i{display:block;height:100%;width:0%;border-radius:6px;
+  background:linear-gradient(90deg,var(--rose),var(--gold));transition:width .3s ease;}
+.mc-pct{font-family:'Fraunces';font-size:.95rem;color:var(--gold);margin-top:.5rem;}
+.mc-whats-box{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.12);}
+.mc-whats-box b{display:block;font-size:.85rem;color:#fff;}
+.mc-whats-box span{display:block;font-size:.76rem;color:#C6A9B6;margin:.2rem 0 .8rem;line-height:1.5;}
+.mc-whats-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;
+  background:#25D366;color:#fff;font-weight:800;font-size:.88rem;
+  padding:.85rem 1rem;border-radius:100px;box-shadow:0 8px 22px rgba(37,211,102,.3);}
+.mc-whats-btn svg{width:18px;height:18px;fill:#fff;}
 
 .sug-h{display:flex;align-items:center;justify-content:space-between;margin:1.2rem 0 .7rem;}
 .sug-h .lb{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);}
@@ -1933,28 +1991,52 @@ function htmlBotaoWhatsMusica(taskId){
   if(!taskId) return '';
   var msg='Olá! Quero receber a prévia da minha música. ID do pedido: '+taskId;
   var link='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent(msg);
-  return '<a class="btn btn-ghost btn-block" href="'+link+'" target="_blank" rel="noopener" style="margin-top:.7rem">'+
-    '💬 Não quer esperar? Receba no WhatsApp</a>';
+  return '<div class="mc-whats-box">'+
+    '<b>💡 Não precisa ficar esperando aqui</b>'+
+    '<span>A gente te manda a prévia assim que ficar pronta.</span>'+
+    '<a class="mc-whats-btn" href="'+link+'" target="_blank" rel="noopener">'+IC.wpp+' Receber no meu WhatsApp</a>'+
+  '</div>';
 }
 function htmlMusicaCompondo(){
-  return '<div class="musica-compondo"><div class="mc-nota">🎵</div>'+
-    '<div class="mc-tx"><b>Compondo sua música... <span id="mcPct">0%</span></b><span>Isso leva até 1 minuto e meio</span>'+
+  return '<div class="mc-premium">'+
+    '<div class="mc-palco">'+
+      '<div class="mc-disco"><div class="mc-disco-in">🎵</div></div>'+
+      '<div class="mc-notas"><i>♪</i><i>♫</i><i>♪</i><i>♬</i></div>'+
+    '</div>'+
+    '<div class="mc-tit">Produzindo sua música</div>'+
+    '<div class="mc-fase" id="mcFase">Escrevendo a letra...</div>'+
     '<div class="mc-bar"><i id="mcBarFill" style="width:0%"></i></div>'+
+    '<div class="mc-pct" id="mcPct">0%</div>'+
     '<div id="mcWhats"></div>'+
-    '</div></div>';
+  '</div>';
 }
 var _mcTimer=null;
 function iniciarProgressoFake(){
   var t0=Date.now();
+  var fases=[
+    [0,'Escrevendo a letra...'],
+    [22,'Compondo a melodia...'],
+    [45,'Gravando os vocais...'],
+    [68,'Ajustando afinação e mixagem...'],
+    [85,'Finalizando os últimos detalhes...']
+  ];
   clearInterval(_mcTimer);
   _mcTimer=setInterval(function(){
-    var pctEl=el('mcPct'), barEl=el('mcBarFill');
+    var pctEl=el('mcPct'), barEl=el('mcBarFill'), faseEl=el('mcFase');
     if(!pctEl || !barEl){ clearInterval(_mcTimer); return; }
     var passado=Date.now()-t0;
     // sobe rápido no início, desacelera bem perto de 92% e fica ali esperando o resultado de verdade
     var pct=Math.min(92, Math.round(92*(1-Math.exp(-passado/28000))));
     pctEl.textContent=pct+'%';
     barEl.style.width=pct+'%';
+    if(faseEl){
+      for(var i=fases.length-1;i>=0;i--){
+        if(pct>=fases[i][0]){ 
+          if(faseEl.textContent!==fases[i][1]) faseEl.textContent=fases[i][1];
+          break;
+        }
+      }
+    }
   },300);
 }
 function pararProgressoFake(chegouA100){
@@ -3590,76 +3672,93 @@ function htmlPasso(k){
 
   case 'musicaPara': {
     var relacoes=[
-      ['namorada','💗 Namorada'],['namorado','❤️ Namorado'],
-      ['esposa','💍 Esposa'],['marido','💍 Marido'],
-      ['mae','👩 Mãe'],['pai','👨 Pai'],
-      ['irma','👭 Irmã'],['irmao','👬 Irmão'],
-      ['amiga','🤝 Amiga'],['amigo','🤝 Amigo'],
-      ['ninguem','🎵 Não é pra ninguém em especial']
+      ['namorada','💗','Namorada'],['namorado','❤️','Namorado'],
+      ['esposa','💍','Esposa'],['marido','🤵','Marido'],
+      ['mae','👩','Mãe'],['pai','👨','Pai'],
+      ['irma','👭','Irmã'],['irmao','👬','Irmão'],
+      ['amiga','💛','Amiga'],['amigo','🤝','Amigo'],
+      ['filho','🧒','Filho(a)'],['ninguem','🎵','Não é pra ninguém']
     ];
     return guia("Pra quem é essa música? Isso me ajuda a dar o tom certo na letra.")+
       '<div class="wz-t">Quem vai receber</div>'+
-      '<div class="chips" id="musicaParaChips">'+relacoes.map(function(r){
-        return '<button type="button" class="chip'+(W.musicaPara===r[0]?' on':'')+'" data-para="'+r[0]+'"><span class="lb">'+r[1]+'</span></button>';
+      '<div class="cards2" id="musicaParaChips">'+relacoes.map(function(r){
+        return '<button type="button" class="card2'+(W.musicaPara===r[0]?' on':'')+'" data-para="'+r[0]+'">'+
+          '<span class="c2-ic">'+r[1]+'</span><span class="c2-lb">'+r[2]+'</span></button>';
       }).join('')+'</div>'+
       (W.musicaPara && W.musicaPara!=='ninguem'
-        ? '<div class="field" style="margin-top:1rem"><label>Nome de quem vai receber (opcional)</label>'+
+        ? '<div class="field" style="margin-top:1.2rem"><label>Nome de quem vai receber (opcional)</label>'+
           '<input class="inp" id="musicaParaNome" value="'+esc(W.musicaParaNome)+'" placeholder="Como essa pessoa gosta de ser chamada"></div>'
         : '');
   }
 
   case 'musicaOcasiao': {
-    var ocasioes=['Aniversário','Casamento','Dia dos Namorados','Dia das Mães','Dia dos Pais',
-      'Declaração de amor','Pedido de namoro','Formatura','Chá revelação','Surpresa','Outro momento'];
+    var ocasioes=[
+      ['Aniversário','🎂'],['Aniversário de casamento','💎'],
+      ['Dia dos Namorados','💝'],['Dia das Mães','🌷'],
+      ['Dia dos Pais','👔'],['Declaração de amor','💌'],
+      ['Pedido de namoro','💍'],['Aniversário de namoro','💞'],
+      ['Formatura','🎓'],['Chá revelação','👶'],
+      ['Surpresa','🎁'],['Homenagem','🌟']
+    ];
     return guia("Qual é a ocasião? Isso deixa a música na medida certa.")+
       '<div class="wz-t">Qual a ocasião</div>'+
-      '<div class="chips" id="musicaOcasiaoChips">'+ocasioes.map(function(o){
-        return '<button type="button" class="chip'+(W.musicaOcasiao===o?' on':'')+'" data-ocasiao="'+esc(o)+'"><span class="lb">'+o+'</span></button>';
+      '<div class="cards2" id="musicaOcasiaoChips">'+ocasioes.map(function(o){
+        return '<button type="button" class="card2'+(W.musicaOcasiao===o[0]?' on':'')+'" data-ocasiao="'+esc(o[0])+'">'+
+          '<span class="c2-ic">'+o[1]+'</span><span class="c2-lb">'+o[0]+'</span></button>';
       }).join('')+'</div>';
   }
 
   case 'musicaHistoria': {
     return guia("Agora me conta a história de vocês. Pode escrever ou falar, o que for mais fácil.")+
       '<div class="wz-t">Conte a história</div>'+
-      '<div class="wz-s">Como se conheceram, o que você mais ama, um momento marcante — detalhes reais deixam a letra melhor.</div>'+
+      '<div class="wz-s">Quanto mais real e específico, melhor fica a letra.</div>'+
       '<button type="button" class="btn btn-ghost btn-block" id="musicaDitar" style="margin-bottom:.9rem">🎙️ Ditar por voz</button>'+
-      '<textarea class="inp" id="musicaTexto" rows="5" placeholder="Ex: nos conhecemos numa viagem em 2021, ele mora longe mas a gente nunca deixou de se falar...">'+esc(W.musicaTexto)+'</textarea>'+
-      '<div class="sug-musica"><span class="sug-lbl">Sem ideia? Toque pra começar:</span>'+
-        ['Como vocês se conheceram','O que eu mais amo em você','Um apelido só nosso','Um momento que nunca esqueço'].map(function(s){
-          return '<button type="button" class="sug-chip" data-sug="'+esc(s)+'">'+esc(s)+'</button>';
-        }).join('')+
-      '</div>';
+      '<textarea class="inp" id="musicaTexto" rows="6" placeholder="Ex: nos conhecemos numa viagem em 2021, ele mora longe mas a gente nunca deixou de se falar...">'+esc(W.musicaTexto)+'</textarea>'+
+      '<div class="sug-musica"><span class="sug-lbl">💡 Vale a pena contar:</span>'+
+        '<ul class="sug-lista">'+
+          ['Onde e como vocês se conheceram',
+           'O que você mais admira nessa pessoa',
+           'Um apelido ou piada que só vocês entendem',
+           'Um momento que você nunca vai esquecer'].map(function(s){
+            return '<li>'+esc(s)+'</li>';
+          }).join('')+
+        '</ul></div>';
   }
 
   case 'musicaGenero': {
     var generos=[
-      ['romantica','Romântica','violão e piano'],['sertanejo','Sertanejo','viola e clima raiz'],
-      ['pop','Pop','moderno e dançante'],['rock','Rock','guitarras marcantes'],
-      ['mpb','MPB / Bossa Nova','clássico e intimista'],['gospel','Gospel','fé e inspiração'],
-      ['samba','Samba / Pagode','descontraído e alegre'],['forro','Forró','ritmo nordestino'],
-      ['funk','Funk','batida forte'],['eletronica','Eletrônica','synths modernos'],
-      ['reggae','Reggae','vibe relaxada'],['jazz','Jazz / Blues','sofisticado']
+      ['romantica','💗','Romântica','violão e piano'],['sertanejo','🤠','Sertanejo','viola e clima raiz'],
+      ['pop','⚡','Pop','moderno e dançante'],['rock','🎸','Rock','guitarras marcantes'],
+      ['mpb','☕','MPB','clássico e intimista'],['bossa','🌊','Bossa Nova','suave e elegante'],
+      ['gospel','⛪','Gospel','fé e inspiração'],['samba','🥁','Samba','ginga brasileira'],
+      ['pagode','🪘','Pagode','descontraído e alegre'],['forro','🪗','Forró','ritmo nordestino'],
+      ['piseiro','🎹','Piseiro','nordestino dançante'],['funk','🔊','Funk','batida forte'],
+      ['trap','🎤','Trap / Rap','batidas urbanas'],['eletronica','🎛️','Eletrônica','synths modernos'],
+      ['reggae','🌴','Reggae','vibe relaxada'],['jazz','🎷','Jazz','sofisticado e swing'],
+      ['blues','🎺','Blues','melancólico e cru'],['axe','🌞','Axé','festa e verão'],
+      ['lofi','🎧','Lo-Fi','suave e tranquila'],['infantil','🧸','Infantil','leve e divertida']
     ];
     return guia("Qual estilo combina mais com vocês?")+
       '<div class="wz-t">Gênero musical</div>'+
-      '<div class="chips" id="musicaGeneroChips">'+generos.map(function(g){
-        return '<button type="button" class="chip'+(W.musicaEstilo===g[0]?' on':'')+'" data-genero="'+g[0]+'">'+
-          '<span class="lb">'+g[1]+'</span><small>'+g[2]+'</small></button>';
+      '<div class="cards2" id="musicaGeneroChips">'+generos.map(function(g){
+        return '<button type="button" class="card2'+(W.musicaEstilo===g[0]?' on':'')+'" data-genero="'+g[0]+'">'+
+          '<span class="c2-ic">'+g[1]+'</span><span class="c2-lb">'+g[2]+'</span><small class="c2-sub">'+g[3]+'</small></button>';
       }).join('')+'</div>';
   }
 
   case 'musicaClima': {
     var climas=[
-      ['alegre','Alegre','ritmo contagiante'],['emocionante','Emocionante','faz chorar de emoção'],
-      ['calma','Calma','suave e acolhedora'],['nostalgica','Nostálgica','recordações e saudade'],
-      ['festiva','Festiva','clima de celebração'],['energetica','Energética','vibe cheia de ritmo'],
-      ['divertida','Divertida','leve e bem-humorada'],['romantica','Romântica','declaração amorosa']
+      ['alegre','☀️','Alegre','ritmo contagiante'],['emocionante','🥺','Emocionante','faz chorar'],
+      ['romantica','💗','Romântica','declaração amorosa'],['calma','🍃','Calma','suave e acolhedora'],
+      ['nostalgica','🍂','Nostálgica','recordações e saudade'],['festiva','🎉','Festiva','clima de celebração'],
+      ['energetica','🔥','Energética','cheia de ritmo'],['divertida','😄','Divertida','leve e bem-humorada'],
+      ['inspiradora','✨','Inspiradora','superação e motivação'],['melancolica','🕊️','Melancólica','saudade e homenagem']
     ];
     return guia("E o clima? Como você quer que ela faça vocês se sentirem?")+
       '<div class="wz-t">Clima da música</div>'+
-      '<div class="chips" id="musicaClimaChips">'+climas.map(function(c){
-        return '<button type="button" class="chip'+(W.musicaClima===c[0]?' on':'')+'" data-clima="'+c[0]+'">'+
-          '<span class="lb">'+c[1]+'</span><small>'+c[2]+'</small></button>';
+      '<div class="cards2" id="musicaClimaChips">'+climas.map(function(c){
+        return '<button type="button" class="card2'+(W.musicaClima===c[0]?' on':'')+'" data-clima="'+c[0]+'">'+
+          '<span class="c2-ic">'+c[1]+'</span><span class="c2-lb">'+c[2]+'</span><small class="c2-sub">'+c[3]+'</small></button>';
       }).join('')+'</div>';
   }
 
@@ -3677,9 +3776,6 @@ function htmlPasso(k){
             return '<button type="button" class="chip'+(W.musicaVoz===v?' on':'')+'" data-voz="'+v+'"><span class="lb">'+lb+'</span></button>';
           }).join('')+
         '</div></div>'+
-      '<div class="field" style="margin-top:1rem"><label>Seu WhatsApp (opcional)</label>'+
-        '<input class="inp" id="musicaWhatsapp" value="'+esc(W.musicaWhatsapp)+'" placeholder="(00) 00000-0000" inputmode="tel">'+
-        '<div class="hint">Se a composição demorar, você pode pedir a prévia direto no nosso WhatsApp.</div></div>'+
       '<button class="btn btn-primary btn-block" id="musicaGerar" style="margin-top:1.2rem">'+
         (W.musicaPreviewUrl ? 'Gerar outra prévia' : 'Gerar prévia da música')+'</button>'+
       '<div id="musicaResultado" style="margin-top:1rem">'+
@@ -3750,6 +3846,9 @@ function htmlPasso(k){
         '(R$'+fmtPreco(PACOTES.completo.preco)+') ou a Carta Virtual (R$'+fmtPreco(PACOTES.carta.preco)+'). '+
         'Sem pressa — pode criar essa música agora e o resto quando quiser.</span></div></div>' : '')+
       '<div id="checkoutForm">'+
+      '<div class="field"><label>Seu WhatsApp</label>'+
+        '<input class="inp" id="fWhatsapp" value="'+esc(W.musicaWhatsapp)+'" placeholder="(00) 00000-0000" inputmode="tel">'+
+        '<div class="hint">Pra você receber seu pedido e falar com a gente se precisar.</div></div>'+
       '<div class="demo-note info">'+IC.shield+
         '<div><b>Pix gerado na hora, aqui mesmo.</b> Assim que cair o pagamento, seu link é liberado sozinho.</div></div>'+
       '<button type="button" class="cupom-toggle" id="cupomToggle">Tem um cupom?</button>'+
@@ -3868,6 +3967,10 @@ function ligarPasso(k){
   if(k==='duracao'){
     on('[data-dur]','onclick',function(e){ W.duracao=e.dataset.dur; redesenharSemPular(); });
     var vt=el('verTudo'); if(vt) vt.onclick=abrirPreviaCompleta;
+  }
+  if(k==='checkout'){
+    var wIn=el('fWhatsapp');
+    if(wIn) wIn.oninput=function(ev){ W.musicaWhatsapp=ev.target.value; };
   }
   if(k==='perfil'){
     on('[data-v]','onclick',function(e){
@@ -3991,13 +4094,6 @@ function ligarPasso(k){
   if(k==='musicaHistoria'){
     var txtM=el('musicaTexto');
     if(txtM) txtM.oninput=function(ev){ W.musicaTexto=ev.target.value; };
-    on('[data-sug]','onclick',function(e){
-      if(!txtM) return;
-      var atual=txtM.value.trim();
-      txtM.value = atual ? (atual+'\n'+e.dataset.sug+': ') : (e.dataset.sug+': ');
-      W.musicaTexto=txtM.value;
-      txtM.focus();
-    });
     var ditarBtn=el('musicaDitar');
     if(ditarBtn){
       var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -4276,6 +4372,14 @@ function voltarPasso(){
 
 /* ---------- finalizar: gera uma cobrança Pix dinâmica na Efí ---------- */
 function finalizar(){
+  var wIn=el('fWhatsapp');
+  if(wIn) W.musicaWhatsapp=wIn.value;
+  var soDigitos=(W.musicaWhatsapp||'').replace(/\D/g,'');
+  if(soDigitos.length<10){
+    toast('Coloca seu WhatsApp com DDD pra continuar.');
+    if(wIn){ wIn.focus(); wIn.classList.add('erro'); }
+    return;
+  }
   gaEvento('begin_checkout',{produto:W.produto, duracao:W.duracao, valor:precoTotal(W)});
   fbEvento('InitiateCheckout',{value:precoTotal(W), currency:'BRL', content_name:W.produto, content_type:'product'});
   var btn=el('wzNext');
@@ -4409,9 +4513,47 @@ function telaConfirmandoDemorado(id){
     '</div>';
 }
 
+/* tela de sucesso dedicada da música avulsa — sem QR, foco em ouvir/baixar/enviar */
+function telaSucessoMusica(id, g){
+  var link=linkPresente(id);
+  var url=g.musicaPreviewUrl;
+  var titulo=g.musicaParaNome ? ('Melodia para '+g.musicaParaNome) : 'Sua música personalizada';
+  var msg='Fiz uma música pra você 🎵 '+link;
+  el('app').innerHTML=
+    '<div class="wz-top"><a class="wz-back" href="#/">'+IC.back+'</a>'+
+      '<div class="wz-track"><div class="wz-fill" style="width:100%"></div></div>'+
+      '<span class="wz-count">Pronto!</span></div>'+
+    '<div class="wz-wrap">'+
+      '<div class="ms-hero">'+
+        '<div class="ms-capa"><div class="ms-disco">🎵</div></div>'+
+        '<div class="ms-tit">'+esc(titulo)+'</div>'+
+        '<div class="ms-sub">Sua música completa está liberada</div>'+
+        (url ? '<audio class="ms-audio" controls src="'+esc(url)+'"></audio>' : '')+
+      '</div>'+
+      (url
+        ? '<a class="btn btn-primary btn-block btn-lg" href="'+esc(url)+'" download="minha-musica.mp3" style="margin-top:1.3rem">'+IC.download+' Baixar em MP3</a>'
+        : '')+
+      '<a class="btn btn-ghost btn-block" href="https://wa.me/?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener" style="margin-top:.7rem">'+IC.wpp+' Enviar no WhatsApp</a>'+
+      '<div class="link-box" style="margin-top:1.1rem"><input id="lkTxt" readonly value="'+esc(link)+'">'+
+        '<button class="btn btn-primary" id="lkCopy" style="padding:.75rem 1.2rem">Copiar</button></div>'+
+      '<div class="hint" style="text-align:center;margin-top:.5rem">Esse link abre a página da música, pra quem você quiser mandar.</div>'+
+      '<a class="btn btn-ghost btn-block" href="#/meus" style="margin-top:1.2rem">Ver minhas músicas</a>'+
+      '<div class="promo-ns" id="promoNs"><button class="promo-ns-x" id="promoNsX" aria-label="Fechar">&times;</button>'+
+        '<span class="promo-ns-tag">Publicidade</span>'+
+        '<a href="https://nsmusic.nsnexus.com.br" target="_blank" rel="noopener" id="promoNsA">'+
+          '<img src="/nsmusic-promo.jpg" alt="NS Music"></a></div>'+
+    '</div>';
+  var cp=el('lkCopy');
+  if(cp) cp.onclick=function(){ copiar(link,'Link copiado!'); };
+  var pnX=el('promoNsX'), pnA=el('promoNsA');
+  if(pnX) pnX.onclick=function(){ var b=el('promoNs'); if(b) b.remove(); };
+  if(pnA) pnA.onclick=function(){ gaEvento('clique_promo_nsmusic',{origem:'sucesso_musica'}); };
+}
+
 function telaSucesso(id){
   var g=pegarPresente(id); if(!g){ ir(''); return; }
   gaCompraUnica(id, g);
+  if(g.produto==='musica'){ telaSucessoMusica(id, g); return; }
   var link=linkPresente(id);
   var msg='Oi '+(g.parceiroNome||'')+'! Fiz um presente pra você 💗 '+link;
   el('app').innerHTML=
