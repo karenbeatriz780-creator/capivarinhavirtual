@@ -433,6 +433,15 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .upsell-op.destaque .uo-pr{color:var(--rose-deep);}
 .upsell-nao{display:block;width:100%;text-align:center;font-size:.83rem;color:var(--muted);
   padding:.9rem;margin-top:.2rem;}
+.zap-card .inp{text-align:center;font-size:1.05rem;letter-spacing:.02em;}
+.zap-err{font-size:.78rem;color:var(--rose-deep);font-weight:700;min-height:1.2em;margin-top:.4rem;text-align:center;}
+.zap-ok{display:flex;align-items:center;gap:.6rem;background:#E3F6EC;border:1px solid #B8E6CC;
+  border-radius:12px;padding:.75rem .9rem;margin-bottom:1rem;}
+.zap-ok svg{width:20px;height:20px;fill:#1F9D5C;flex-shrink:0;}
+.zap-ok b{display:block;font-size:.8rem;color:#1F9D5C;}
+.zap-ok span{display:block;font-size:.85rem;color:var(--plum);font-weight:700;}
+.zap-ok div{flex:1;min-width:0;}
+.zap-trocar{font-size:.74rem;font-weight:700;color:var(--muted);text-decoration:underline;flex-shrink:0;}
 .mh-contador{font-size:.76rem;font-weight:700;margin-top:.4rem;}
 .mh-contador.falta{color:var(--rose-deep);}
 .mh-contador.ok{color:#1F9D5C;}
@@ -3410,6 +3419,115 @@ function abrirPreviaEtapa(tipo){
   };
 }
 
+/* dispara a geração de verdade (já com o WhatsApp em mãos) */
+/* pede o WhatsApp antes de gerar — obrigatório, e só uma vez */
+function pedirWhatsapp(aoConfirmar){
+  var ja=(W.musicaWhatsapp||'').replace(/\D/g,'');
+  if(ja.length>=10){ aoConfirmar(); return; }
+  var box=document.createElement('div');
+  box.className='upsell-fundo'; box.id='zapFundo';
+  box.innerHTML='<div class="upsell-card zap-card">'+
+    '<div class="upsell-top">💬<h3>Qual o seu WhatsApp?</h3>'+
+    '<p>Sua música leva até 1 minuto e meio pra ficar pronta. Se você não quiser esperar aqui, '+
+    'a gente te manda a prévia por lá.</p></div>'+
+    '<input class="inp" id="zapInp" placeholder="(00) 00000-0000" inputmode="tel" autocomplete="tel">'+
+    '<div class="zap-err" id="zapErr"></div>'+
+    '<button type="button" class="btn btn-primary btn-block" id="zapOk" style="margin-top:.8rem">Continuar e gerar</button>'+
+  '</div>';
+  document.body.appendChild(box);
+  var inp=el('zapInp');
+  setTimeout(function(){ if(inp) inp.focus(); },250);
+  function confirmar(){
+    var v=(inp.value||'').replace(/\D/g,'');
+    if(v.length<10){
+      el('zapErr').textContent='Coloca o número com DDD, por favor.';
+      inp.classList.add('erro'); return;
+    }
+    W.musicaWhatsapp=inp.value.trim();
+    box.remove();
+    aoConfirmar();
+  }
+  el('zapOk').onclick=confirmar;
+  inp.onkeydown=function(e){ if(e.key==='Enter') confirmar(); };
+  inp.oninput=function(){ inp.classList.remove('erro'); el('zapErr').textContent=''; };
+}
+
+function dispararGeracao(gerarBtn){
+  var resultado=el('musicaResultado');
+  gerarBtn.disabled=true; gerarBtn.textContent='Começando a compor...';
+  if(resultado) resultado.innerHTML=htmlMusicaCompondo();
+  iniciarProgressoFake();
+  fetch('/.netlify/functions/gerar-musica', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+          estilo: W.musicaEstilo, texto: W.musicaTexto, clima: W.musicaClima,
+          relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
+          nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz,
+          whatsapp: W.musicaWhatsapp||''
+        })
+      })
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
+      .then(function(res){
+        if(!res.ok || !res.d || !res.d.taskId){
+          pararProgressoFake(false);
+          gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+          if(resultado) resultado.innerHTML='';
+          toast((res.d && res.d.erro) || 'Não consegui gerar a música agora. Tenta de novo em instantes.');
+          return;
+        }
+        gerarBtn.textContent='Compondo...';
+        var whatsAlvo=el('mcWhats'); if(whatsAlvo) whatsAlvo.innerHTML=htmlBotaoWhatsMusica(res.d.taskId);
+        var tentativas=0, MAX_TENTATIVAS=34; // ~34 x 3s ≈ 1min42
+        (function checar(){
+          fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(res.d.taskId))
+            .then(function(r2){ return r2.json().then(function(d2){ return {ok:r2.ok, d:d2}; }); })
+            .then(function(res2){
+              if(res2.d && res2.d.pronto && res2.d.url){
+                W.musicaPreviewUrl=res2.d.url; W.musicaPreviewUrl2=res2.d.url2||null; W.musicaPreviewId=res.d.taskId;
+                W.musicaLetra=res2.d.letra||null;
+                pararProgressoFake(true);
+                gerarBtn.disabled=false; gerarBtn.textContent='Gerar outra prévia';
+                setTimeout(function(){
+                  if(resultado){ resultado.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2, W.musicaLetra); ligarPreviasLimitadas(); }
+                },350);
+                return;
+              }
+              if(res2.d && res2.d.falhou){
+                pararProgressoFake(false);
+                gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+                if(resultado) resultado.innerHTML='';
+                toast(res2.d.erro || 'A geração falhou. Tenta de novo.');
+                return;
+              }
+              tentativas++;
+              if(tentativas>=MAX_TENTATIVAS){
+                pararProgressoFake(false);
+                gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+                if(resultado) resultado.innerHTML='';
+                toast('Tá demorando mais que o normal. Tenta de novo em instantes.');
+                return;
+              }
+              setTimeout(checar,3000);
+            })
+            .catch(function(){
+              tentativas++;
+              if(tentativas>=MAX_TENTATIVAS){
+                pararProgressoFake(false);
+                gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+                if(resultado) resultado.innerHTML='';
+                toast('Sem conexão com o servidor de música agora.');
+                return;
+              }
+              setTimeout(checar,3000);
+            });
+        })();
+      })
+      .catch(function(){
+        gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+        toast('Sem conexão com o servidor de música agora.');
+      });
+}
+
 function desenharPasso(opts){
   opts=opts||{};
   var preservarScroll=!!opts.preservarScroll;
@@ -3835,9 +3953,6 @@ function htmlPasso(k){
             return '<button type="button" class="chip'+(W.musicaVoz===v?' on':'')+'" data-voz="'+v+'"><span class="lb">'+lb+'</span></button>';
           }).join('')+
         '</div></div>'+
-      '<div class="field" style="margin-top:1rem"><label>Seu WhatsApp</label>'+
-        '<input class="inp" id="musicaWhatsapp" value="'+esc(W.musicaWhatsapp)+'" placeholder="(00) 00000-0000" inputmode="tel">'+
-        '<div class="hint">Se a composição demorar, a gente te manda a prévia por lá.</div></div>'+
       '<button class="btn btn-primary btn-block" id="musicaGerar" style="margin-top:1.2rem">'+
         (W.musicaPreviewUrl ? 'Gerar outra prévia' : 'Gerar prévia da música')+'</button>'+
       '<div id="musicaResultado" style="margin-top:1rem">'+
@@ -3908,9 +4023,12 @@ function htmlPasso(k){
         '(R$'+fmtPreco(PACOTES.completo.preco)+') ou a Carta Virtual (R$'+fmtPreco(PACOTES.carta.preco)+'). '+
         'Sem pressa — pode criar essa música agora e o resto quando quiser.</span></div></div>' : '')+
       '<div id="checkoutForm">'+
-      '<div class="field"><label>Seu WhatsApp</label>'+
-        '<input class="inp" id="fWhatsapp" value="'+esc(W.musicaWhatsapp)+'" placeholder="(00) 00000-0000" inputmode="tel">'+
-        '<div class="hint">Pra você receber seu pedido e falar com a gente se precisar.</div></div>'+
+      ((W.musicaWhatsapp||'').replace(/\D/g,'').length>=10
+        ? '<div class="zap-ok">'+IC.wpp+'<div><b>WhatsApp confirmado</b><span>'+esc(W.musicaWhatsapp)+'</span></div>'+
+          '<button type="button" class="zap-trocar" id="zapTrocar">trocar</button></div>'
+        : '<div class="field"><label>Seu WhatsApp</label>'+
+          '<input class="inp" id="fWhatsapp" value="" placeholder="(00) 00000-0000" inputmode="tel">'+
+          '<div class="hint">Pra você receber seu pedido e falar com a gente se precisar.</div></div>')+
       '<div class="demo-note info">'+IC.shield+
         '<div><b>Pix gerado na hora, aqui mesmo.</b> Assim que cair o pagamento, seu link é liberado sozinho.</div></div>'+
       '<button type="button" class="cupom-toggle" id="cupomToggle">Tem um cupom?</button>'+
@@ -4033,6 +4151,8 @@ function ligarPasso(k){
   if(k==='checkout'){
     var wIn=el('fWhatsapp');
     if(wIn) wIn.oninput=function(ev){ W.musicaWhatsapp=ev.target.value; };
+    var zt=el('zapTrocar');
+    if(zt) zt.onclick=function(){ W.musicaWhatsapp=''; redesenharSemPular(); };
   }
   if(k==='perfil'){
     on('[data-v]','onclick',function(e){
@@ -4203,10 +4323,6 @@ function ligarPasso(k){
     if(nomesLetraInp) nomesLetraInp.oninput=function(ev){ W.musicaParaNome=ev.target.value; };
     var fraseInp=el('musicaFrase');
     if(fraseInp) fraseInp.oninput=function(ev){ W.musicaFrase=ev.target.value; };
-    var whatsInp=el('musicaWhatsapp');
-    if(whatsInp) whatsInp.oninput=function(ev){ W.musicaWhatsapp=ev.target.value; };
-    var whatsInp=el('musicaWhatsapp');
-    if(whatsInp) whatsInp.oninput=function(ev){ W.musicaWhatsapp=ev.target.value; };
     on('[data-voz]','onclick',function(e){
       W.musicaVoz=e.dataset.voz;
       document.querySelectorAll('[data-voz]').forEach(function(c){ c.classList.remove('on'); });
@@ -4216,79 +4332,7 @@ function ligarPasso(k){
     var gerarBtn=el('musicaGerar');
     if(gerarBtn) gerarBtn.onclick=function(){
       if(!W.musicaEstilo || !W.musicaTexto.trim()){ toast('Volta e completa as etapas anteriores.'); return; }
-      var resultado=el('musicaResultado');
-      gerarBtn.disabled=true; gerarBtn.textContent='Começando a compor...';
-      if(resultado) resultado.innerHTML=htmlMusicaCompondo();
-      iniciarProgressoFake();
-      fetch('/.netlify/functions/gerar-musica', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          estilo: W.musicaEstilo, texto: W.musicaTexto, clima: W.musicaClima,
-          relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
-          nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz,
-          whatsapp: W.musicaWhatsapp||''
-        })
-      })
-      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
-      .then(function(res){
-        if(!res.ok || !res.d || !res.d.taskId){
-          pararProgressoFake(false);
-          gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
-          if(resultado) resultado.innerHTML='';
-          toast((res.d && res.d.erro) || 'Não consegui gerar a música agora. Tenta de novo em instantes.');
-          return;
-        }
-        gerarBtn.textContent='Compondo...';
-        var whatsAlvo=el('mcWhats'); if(whatsAlvo) whatsAlvo.innerHTML=htmlBotaoWhatsMusica(res.d.taskId);
-        var tentativas=0, MAX_TENTATIVAS=34; // ~34 x 3s ≈ 1min42
-        (function checar(){
-          fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(res.d.taskId))
-            .then(function(r2){ return r2.json().then(function(d2){ return {ok:r2.ok, d:d2}; }); })
-            .then(function(res2){
-              if(res2.d && res2.d.pronto && res2.d.url){
-                W.musicaPreviewUrl=res2.d.url; W.musicaPreviewUrl2=res2.d.url2||null; W.musicaPreviewId=res.d.taskId;
-                W.musicaLetra=res2.d.letra||null;
-                pararProgressoFake(true);
-                gerarBtn.disabled=false; gerarBtn.textContent='Gerar outra prévia';
-                setTimeout(function(){
-                  if(resultado){ resultado.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2, W.musicaLetra); ligarPreviasLimitadas(); }
-                },350);
-                return;
-              }
-              if(res2.d && res2.d.falhou){
-                pararProgressoFake(false);
-                gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
-                if(resultado) resultado.innerHTML='';
-                toast(res2.d.erro || 'A geração falhou. Tenta de novo.');
-                return;
-              }
-              tentativas++;
-              if(tentativas>=MAX_TENTATIVAS){
-                pararProgressoFake(false);
-                gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
-                if(resultado) resultado.innerHTML='';
-                toast('Tá demorando mais que o normal. Tenta de novo em instantes.');
-                return;
-              }
-              setTimeout(checar,3000);
-            })
-            .catch(function(){
-              tentativas++;
-              if(tentativas>=MAX_TENTATIVAS){
-                pararProgressoFake(false);
-                gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
-                if(resultado) resultado.innerHTML='';
-                toast('Sem conexão com o servidor de música agora.');
-                return;
-              }
-              setTimeout(checar,3000);
-            });
-        })();
-      })
-      .catch(function(){
-        gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
-        toast('Sem conexão com o servidor de música agora.');
-      });
+      pedirWhatsapp(function(){ dispararGeracao(gerarBtn); });
     };
   }
   if(k==='jogos'){
