@@ -40,6 +40,22 @@ const VOZES = { masculina:'male vocals', feminina:'female vocals', dueto:'male a
 
 // Relação e ocasião viram tag de estilo — orientam o clima da música
 // sem virar texto cantado.
+// Como tratar cada nicho dentro do briefing da letra
+const NICHO_TEXTO = {
+  namorada:'a namorada', namorado:'o namorado', esposa:'a esposa', marido:'o marido',
+  mae:'a mãe', pai:'o pai', irma:'a irmã', irmao:'o irmão',
+  amiga:'a melhor amiga', amigo:'o melhor amigo', filho:'o filho ou filha'
+};
+// O que a letra NUNCA pode fazer em cada nicho — evita constrangimento
+const NICHO_EVITAR = {
+  mae:'A letra é de filho para mãe: nunca use linguagem romântica ou de casal.',
+  pai:'A letra é de filho para pai: nunca use linguagem romântica ou de casal.',
+  irma:'A letra é entre irmãos: nunca use linguagem romântica.',
+  irmao:'A letra é entre irmãos: nunca use linguagem romântica.',
+  amiga:'A letra é sobre amizade: nunca use linguagem romântica ou de paixão.',
+  amigo:'A letra é sobre amizade: nunca use linguagem romântica ou de paixão.',
+  filho:'A letra é de pai/mãe para filho: nunca use linguagem romântica.'
+};
 const RELACOES_TAG = {
   namorada:'romantic love song for a girlfriend', namorado:'romantic love song for a boyfriend',
   esposa:'love song for a wife, mature devoted love', marido:'love song for a husband, mature devoted love',
@@ -94,26 +110,19 @@ export default async (req) => {
     tagsPartes.push(gen.split(',')[0]); // reforço final do gênero
     const tagsEstilo = tagsPartes.join(', ');
 
-    // PROMPT = no modo custom, isto vira a LETRA cantada. Então só entra
-    // conteúdo de verdade (a história, nomes, frase) — nunca instrução,
-    // senão a Suno canta a instrução ao pé da letra.
-    // As marcações [Verse]/[Chorus] são estruturais e não são cantadas.
-    var linhas = [];
-    linhas.push('[Portuguese lyrics]');
-    linhas.push('');
-    linhas.push('[Verse 1]');
-    linhas.push(texto);
-    if (nomesLetra) {
-      linhas.push('');
-      linhas.push('[Chorus]');
-      linhas.push(nomesLetra);
-    }
-    if (frase) {
-      linhas.push('');
-      linhas.push('[Bridge]');
-      linhas.push(frase);
-    }
-    const prompt = linhas.join('\n').slice(0, 2900);
+    // BRIEFING: a Suno compõe a letra a partir daqui (não é cantado literalmente).
+    // Por isso as palavras-chave da pessoa viram matéria-prima, não a letra pronta.
+    var b = [];
+    b.push('Componha uma música original em português do Brasil');
+    if (NICHO_TEXTO[relacao]) b.push('dedicada para ' + NICHO_TEXTO[relacao]);
+    if (ocasiao) b.push('para a ocasião de ' + ocasiao.toLowerCase());
+    b.push('. Use estes detalhes reais da história como base da letra: ' + texto);
+    if (nomesLetra) b.push(' Cite na letra os nomes: ' + nomesLetra + '.');
+    if (frase) b.push(' Inclua a frase: "' + frase + '".');
+    b.push(' A música deve ter dois versos, um refrão marcante que se repete, e uma ponte.');
+    b.push(' Use imagens concretas da história, evite frases genéricas.');
+    if (NICHO_EVITAR[relacao]) b.push(' ' + NICHO_EVITAR[relacao]);
+    const prompt = b.join('').slice(0, 2900);
 
     let resp;
     try {
@@ -124,8 +133,8 @@ export default async (req) => {
           model: 'suno-ai/music',
           input: {
             mv: 'chirp-bluejay',
-            custom: true,
-            prompt: prompt,
+            custom: false,
+            gpt_description_prompt: prompt,
             tags: tagsEstilo,
             title: 'Nossa música'
           }
