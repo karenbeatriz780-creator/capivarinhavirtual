@@ -599,6 +599,23 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .ex .tx p{font-size:.76rem;color:var(--muted);margin-top:.12rem;line-height:1.35;}
 .ex .tgl{width:40px;height:23px;border-radius:100px;background:var(--line);position:relative;flex-shrink:0;transition:background .2s;}
 .ex.on .tgl{background:var(--rose);}
+/* lista de trilhas gratuitas */
+.trilhas{display:flex;flex-direction:column;gap:.55rem;}
+.trk{display:flex;align-items:center;gap:.75rem;background:#fff;border:1.5px solid var(--line);
+  border-radius:14px;padding:.7rem .85rem;transition:all .16s;}
+.trk.on{border-color:var(--rose);background:var(--tint);box-shadow:0 4px 14px rgba(227,43,109,.13);}
+.trk-play{width:38px;height:38px;border-radius:50%;background:var(--rose);border:0;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;}
+.trk-play svg{width:15px;height:15px;fill:#fff;margin-left:2px;}
+.trk-tx{flex:1;min-width:0;}
+.trk-tx b{display:block;font-size:.87rem;color:var(--plum);line-height:1.25;}
+.trk-tx span{display:block;font-size:.73rem;color:var(--muted);margin-top:.1rem;}
+.trk-check{flex-shrink:0;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;}
+.trk-check svg{width:12px;height:12px;stroke:#fff;opacity:0;}
+.trk.on .trk-check{background:var(--rose);border-color:var(--rose);}
+.trk.on .trk-check svg{opacity:1;}
+
 .mus-cover{position:relative;width:100%;max-width:280px;aspect-ratio:1/1;margin:0 auto;border-radius:var(--r-lg);
   overflow:hidden;background:#1A0810;box-shadow:0 20px 44px rgba(0,0,0,.35);}
 .mus-cover img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -2053,7 +2070,7 @@ var CONFIG = {
 
 var PACOTES = {
   completo:  {nome:"Retrospectiva Completa", preco:21, preco48:9.99,
-              desc:"Tudo liberado: fotos, linha do tempo, stories, carta, contador ao vivo e todos os jogos.", icone:"💝", destaque:true, ribbon:"⭐ Mais completo"},
+              desc:"Tudo liberado: fotos, linha do tempo, stories, carta, contador ao vivo e todos os jogos.", icone:"💝", destaque:true, ribbon:"🔥 Mais pedido"},
   carta:     {nome:"Carta Virtual", preco:6, preco48:3.99,
               desc:"A carta com foto colada, abertura de envelope, lacre e assinatura de quem enviou.", icone:"💌"},
   convite:   {nome:"Convite Criativo", preco:14, preco48:10,
@@ -2062,11 +2079,24 @@ var PACOTES = {
               desc:"Uma canção única, feita por IA, inspirada na história de vocês.", icone:"🎵", destaque:true, ribbon:"🔥 Mais pedida"}
 };
 var RECURSOS = {
-  completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1, musicaIA:1},
-  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:1},
+  completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1, musicaIA:0},
+  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0},
   convite:   {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0},
   musica:    {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0}
 };
+/* Trilhas gratuitas — pra trocar um título é só editar aqui,
+   sem precisar mexer nos arquivos de áudio. */
+var TRILHAS = [
+  {id:'tema',  titulo:'Essa é a nossa história', sub:'Trilha exclusiva do Capivarinha Love', arquivo:'/musica-tema.mp3'},
+  {id:'t1',    titulo:'Trilha 2',                sub:'1min45',  arquivo:'/trilha-1.mp3'},
+  {id:'t2',    titulo:'Trilha 3',                sub:'2min06',  arquivo:'/trilha-2.mp3'},
+  {id:'t3',    titulo:'Trilha 4',                sub:'2min16',  arquivo:'/trilha-3.mp3'},
+  {id:'t4',    titulo:'Trilha 5',                sub:'2min43',  arquivo:'/trilha-4.mp3'}
+];
+function trilhaPorId(id){
+  for(var i=0;i<TRILHAS.length;i++) if(TRILHAS[i].id===id) return TRILHAS[i];
+  return TRILHAS[0];
+}
 var DURACOES = {
   vitalicio: {nome:'Pra sempre', desc:'O link fica no ar pra sempre. Dá pra revisitar quando quiser.', horas:null},
   h48:       {nome:'48 horas',   desc:'O link some do ar 48 horas depois. Ideal pra surpresa de última hora.', horas:48}
@@ -2911,7 +2941,7 @@ function itensDoPacote(k){
 
 function telaHome(){
   var media=mediaNota(), total=todasAvaliacoes().length;
-  var planos = ['completo','musica','carta','convite'].map(function(k){
+  var planos = ['completo','carta','convite'].map(function(k){
     var p=PACOTES[k], r=RECURSOS[k];
     var itens=itensDoPacote(k);
     var offs=[];
@@ -3129,7 +3159,7 @@ function novoEstado(prod){
   return {
     id:uid(), produto:prod||null, perfil:null, meuNome:'', parceiroNome:'',
     dataEspecial:'', horaEspecial:'', cidade:'', titulo:'', carta:'',
-    fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:true,
+    fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:true, trilhaId:'tema',
     musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null, musicaLetra:null,
     musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'',
     musicaClima:'', musicaFrase:'', musicaVoz:'masculina', musicaCapa:null, musicaWhatsapp:'',
@@ -3198,7 +3228,6 @@ function passos(){
   var p=W.produto;
   if(!p) return ['produto'];
   if(p==='convite') return ['produto','tema','aniversariante','quando','local','whatsapp','presentes','vitrine','duracao','checkout'];
-  if(p==='musica') return ['produto','musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal','checkout'];
   var r=RECURSOS[p]||RECURSOS.completo;
   var s=[];
   s.push('produto','perfil','nomes');
@@ -3666,7 +3695,7 @@ function htmlPasso(k){
   switch(k){
 
   case 'produto': {
-    var lista=['completo','musica','carta','convite'].map(function(k){
+    var lista=['completo','carta','convite'].map(function(k){
       var p=PACOTES[k];
       var itens=itensDoPacote(k).slice(0,3);
       return '<button type="button" class="pcard pb-'+k+'" data-pcta="'+k+'">'+
@@ -4039,19 +4068,21 @@ function htmlPasso(k){
   case 'trilha': {
     var on=W.trilhaOn!==false;
     var capaFoto=(W.fotos||[]).filter(Boolean)[0];
-    return guia("Essa aqui é especial: uma trilha exclusiva feita pra acompanhar a retrospectiva inteira.")+
+    var escolhida=W.trilhaId||TRILHAS[0].id;
+    return guia("Escolhe a trilha que mais combina com o presente de vocês. Todas são gratuitas.")+
       '<div class="wz-t">Trilha sonora</div>'+
-      '<div class="wz-s">Toca baixinho, em loop, do início ao fim da apresentação. Dá pra desativar se preferir sem música.</div>'+
-      '<div class="mus-cover">'+
-        (capaFoto ? '<img src="'+capaFoto.src+'" alt="">' : '<div class="mus-cover-blank">🎵</div>')+
-        '<div class="mus-cover-grad"></div>'+
-        '<button class="mus-cover-play" id="musPrevBtn">'+IC.play+'</button>'+
-        '<div class="mus-cover-tx"><b>Essa é a nossa história</b><span>Trilha exclusiva do Capivarinha Love</span></div>'+
-      '</div>'+
+      '<div class="wz-s">Toca baixinho, em loop, do início ao fim da apresentação. Toque no play pra ouvir antes de escolher.</div>'+
+      '<div class="trilhas">'+TRILHAS.map(function(t){
+        return '<div class="trk'+(escolhida===t.id?' on':'')+'" data-trk="'+t.id+'">'+
+          '<button type="button" class="trk-play" data-trkplay="'+t.id+'">'+IC.play+'</button>'+
+          '<div class="trk-tx"><b>'+esc(t.titulo)+'</b><span>'+esc(t.sub)+'</span></div>'+
+          '<span class="trk-check">'+IC.check+'</span>'+
+          '<audio id="aud-'+t.id+'" src="'+t.arquivo+'" preload="none"></audio>'+
+        '</div>';
+      }).join('')+'</div>'+
       '<button class="ex'+(on?' on':'')+'" id="trilhaTgl" style="margin-top:1rem">'+
         '<span class="ic">🎵</span><span class="tx"><h4>Incluir a trilha no presente</h4>'+
-        '<p>Você pode desativar se preferir sem música</p></span><span class="tgl"></span></button>'+
-      '<audio id="musAudioPrev" src="/musica-tema.mp3" preload="none"></audio>';
+        '<p>Você pode desativar se preferir sem música</p></span><span class="tgl"></span></button>';
   }
 
   case 'jogos': {
@@ -4314,15 +4345,31 @@ function ligarPasso(k){
   if(k==='trilha'){
     var tglBtn=el('trilhaTgl');
     if(tglBtn) tglBtn.onclick=function(){ W.trilhaOn=!W.trilhaOn; tglBtn.classList.toggle('on',W.trilhaOn); };
-    var pb=el('musPrevBtn'), pau=el('musAudioPrev'), pTocando=false;
-    if(pb) pb.onclick=function(){
-      pTocando=!pTocando;
-      if(pTocando){
-        pb.innerHTML=IC.pause;
-        pau.play().catch(function(){ pTocando=false; pb.innerHTML=IC.play; toast('Não consegui tocar a prévia agora.'); });
-      } else{ pau.pause(); pb.innerHTML=IC.play; }
-    };
-    if(pau) pau.onended=function(){ pTocando=false; if(pb) pb.innerHTML=IC.play; };
+    var tocandoId=null;
+    function pararTodas(){
+      TRILHAS.forEach(function(t){
+        var a=el('aud-'+t.id); if(a){ a.pause(); a.currentTime=0; }
+        var b=document.querySelector('[data-trkplay="'+t.id+'"]');
+        if(b) b.innerHTML=IC.play;
+      });
+      tocandoId=null;
+    }
+    on('[data-trkplay]','onclick',function(e,ev){
+      ev.stopPropagation();
+      var id=e.dataset.trkplay, a=el('aud-'+id);
+      if(tocandoId===id){ pararTodas(); return; }
+      pararTodas();
+      tocandoId=id; e.innerHTML=IC.pause;
+      a.play().catch(function(){ pararTodas(); toast('Não consegui tocar agora.'); });
+      a.onended=function(){ pararTodas(); };
+    });
+    on('[data-trk]','onclick',function(e){
+      W.trilhaId=e.dataset.trk;
+      document.querySelectorAll('[data-trk]').forEach(function(c){ c.classList.remove('on'); });
+      e.classList.add('on');
+      if(!W.trilhaOn){ W.trilhaOn=true; var t=el('trilhaTgl'); if(t) t.classList.add('on'); }
+    });
+    aoSair(pararTodas);
   }
   if(k==='musicaEscolha'){
     on('[data-escolha]','onclick',function(e){
@@ -4569,40 +4616,22 @@ function voltarPasso(){
    ========================================================= */
 var _upsellVisto=false;
 function combosDisponiveis(){
-  var atualProd=W.produto, temMusica=!!W.musicaOn, combos=[];
-  var vit=(W.duracao!=='h48');
-  function preco(prod, comMusica){
+  var combos=[];
+  function preco(prod){
     var p=PACOTES[prod]; if(!p) return 0;
-    var base=(W.duracao==='h48' && p.preco48!=null) ? p.preco48 : p.preco;
-    if(prod==='musica') return base;
-    return base + (comMusica?PRECO_MUSICA_ADDON:0);
+    return (W.duracao==='h48' && p.preco48!=null) ? p.preco48 : p.preco;
   }
-  function separado(prod, comMusica){
-    var p=PACOTES[prod]; if(!p) return 0;
-    var base=(W.duracao==='h48' && p.preco48!=null) ? p.preco48 : p.preco;
-    return base + (comMusica?PACOTES.musica.preco:0);
-  }
-  function add(prod, comMusica, titulo, desc, destaque){
-    var pr=preco(prod, comMusica), sep=separado(prod, comMusica);
-    var economia=Math.max(0, sep-pr);
-    var pct=sep>0 ? Math.round(100*economia/sep) : 0;
-    combos.push({produto:prod, musica:comMusica, titulo:titulo, desc:desc,
-      preco:pr, economia:economia, pct:pct, destaque:!!destaque});
-  }
-  // só oferece o que é MAIOR que o pedido atual — nunca sugere baixar
-  if(atualProd==='musica'){
-    add('carta', true, 'Música + Carta Virtual',
-      'A carta com envelope, foto colada e sua assinatura — mais a música.', false);
-    add('completo', true, 'Música + Retrospectiva Completa',
-      'Uma página só de vocês: fotos, linha do tempo, contador ao vivo, jogos e a carta. Com a música tocando de fundo.', true);
-  } else if(atualProd==='carta'){
-    if(!temMusica) add('carta', true, 'Carta + Música Personalizada',
-      'A mesma carta, mais uma música só de vocês.', false);
-    add('completo', temMusica, 'Retrospectiva Completa'+(temMusica?' + Música':''),
-      'Tudo da carta, mais fotos, linha do tempo, contador ao vivo e os jogos do casal.', true);
-  } else if(atualProd==='completo' && !temMusica){
-    add('completo', true, 'Retrospectiva + Música Personalizada',
-      'Tudo que você já montou, com uma música exclusiva tocando de fundo.', true);
+  // só oferece upgrade pra quem está na Carta — a Retrospectiva já inclui a carta
+  if(W.produto==='carta'){
+    var prCompleto=preco('completo'), prCarta=preco('carta');
+    combos.push({
+      produto:'completo',
+      titulo:'Retrospectiva Completa',
+      desc:'A mesma carta que você montou, mais álbum de fotos, linha do tempo, contador ao vivo dos dias juntos e os jogos do casal.',
+      preco:prCompleto,
+      extra:Math.max(0, prCompleto-prCarta),
+      destaque:true
+    });
   }
   return combos;
 }
@@ -4614,30 +4643,30 @@ function abrirUpsell(aoFechar){
   var box=document.createElement('div');
   box.className='upsell-fundo'; box.id='upsellFundo';
   box.innerHTML='<div class="upsell-card">'+
-    '<div class="upsell-top">✨<h3>Que tal levar mais?</h3>'+
-    '<p>Adicionando agora, no mesmo pagamento, sai mais barato que comprar separado depois.</p></div>'+
-    '<button type="button" class="upsell-op atual"><div class="uo-tx"><b>'+esc(PACOTES[W.produto].nome)+
-      (W.musicaOn?' + Música':'')+'</b><span>O que você montou</span></div>'+
-      '<div class="uo-pr">R$ '+fmtPreco(atual)+'</div></button>'+
+    '<div class="upsell-top">✨<h3>Leve o presente completo</h3>'+
+    '<p>Por pouquinho a mais, o presente dela fica muito maior.</p></div>'+
     combos.map(function(c,i){
-      return '<button type="button" class="upsell-op'+(c.destaque?' destaque':'')+'" data-combo="'+i+'">'+
-        (c.destaque?'<span class="uo-tag">MAIS COMPLETO</span>':'')+
+      return '<button type="button" class="upsell-op destaque" data-combo="'+i+'">'+
+        '<span class="uo-tag">MAIS PEDIDO</span>'+
         '<div class="uo-tx"><b>'+esc(c.titulo)+'</b><span>'+esc(c.desc)+'</span></div>'+
         '<div class="uo-pr">R$ '+fmtPreco(c.preco)+
-          (c.pct>0?'<em>economize '+c.pct+'%</em>':'')+'</div></button>';
+          (c.extra>0?'<em>só R$ '+fmtPreco(c.extra)+' a mais</em>':'')+'</div></button>';
     }).join('')+
+    '<button type="button" class="upsell-op atual"><div class="uo-tx"><b>Seguir com '+esc(PACOTES[W.produto].nome)+'</b>'+
+      '<span>O que você montou</span></div>'+
+      '<div class="uo-pr">R$ '+fmtPreco(atual)+'</div></button>'+
     '<button type="button" class="upsell-nao" id="upsellNao">Agora não, obrigado</button>'+
   '</div>';
   document.body.appendChild(box);
   gaEvento('viu_upsell',{produto:W.produto});
   function fechar(){ box.remove(); }
   el('upsellNao').onclick=function(){ gaEvento('recusou_upsell',{}); fechar(); aoFechar(); };
+  box.querySelector('.upsell-op.atual').onclick=function(){ fechar(); aoFechar(); };
   box.querySelectorAll('[data-combo]').forEach(function(b){
     b.onclick=function(){
       var c=combos[parseInt(b.dataset.combo,10)];
-      gaEvento('aceitou_upsell',{de:W.produto, para:c.produto, com_musica:c.musica});
+      gaEvento('aceitou_upsell',{de:W.produto, para:c.produto});
       W.produto=c.produto;
-      if(c.musica){ W.musicaOn=true; W.musicaPersonalizar=true; }
       fechar();
       var falta=primeiroPassoIncompleto();
       if(falta>=0){ wStep=falta; desenharPasso(); toast('Só faltam alguns detalhes desse pacote.'); }
@@ -4654,12 +4683,6 @@ function primeiroPassoIncompleto(){
     if(k==='nomes' && !W.parceiroNome.trim()) return i;
     if(k==='fotos' && !W.fotos.filter(Boolean).length) return i;
     if(k==='carta' && W.carta.trim().length<10) return i;
-    if(k==='musicaPara' && !W.musicaPara) return i;
-    if(k==='musicaOcasiao' && !W.musicaOcasiao) return i;
-    if(k==='musicaHistoria' && W.musicaTexto.trim().length<50) return i;
-    if(k==='musicaGenero' && !W.musicaEstilo) return i;
-    if(k==='musicaClima' && !W.musicaClima) return i;
-    if(k==='musicaFinal' && !W.musicaPreviewUrl) return i;
   }
   return -1;
 }
@@ -6124,7 +6147,8 @@ function prepararTrilha(g){
   var fixa = !!(r.trilha && g.trilhaOn!==false);
   if(!personalizada && !fixa) return null;
   if(!_trilha){
-    _trilha=new Audio(personalizada ? g.musicaPreviewUrl : '/musica-tema.mp3');
+    var fonte = personalizada ? g.musicaPreviewUrl : trilhaPorId(g.trilhaId).arquivo;
+    _trilha=new Audio(fonte);
     _trilha.loop=true; _trilha.preload='auto'; _trilha.volume=0.32;
   }
   return _trilha;
