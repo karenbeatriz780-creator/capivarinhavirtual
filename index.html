@@ -157,7 +157,37 @@ h1.hero-t .script{color:var(--rose);font-size:1.02em;line-height:1.25;padding-ri
 .hart.h1{top:6%;right:4%;width:30px;animation:float 5s ease-in-out infinite .3s;}
 .hart.h2{bottom:16%;left:2%;width:22px;animation:float 6.5s ease-in-out infinite .9s;}
 .hart.h3{top:44%;right:-1%;width:16px;animation:float 4.4s ease-in-out infinite 1.4s;}
-@media(max-width:860px){.hero-art{order:-1;}.hero-art>img{width:min(70%,280px);}}
+@media(max-width:860px){.hero-art{order:-1;}.hero-art>img{width:min(52%,200px);}}
+@media(max-width:600px){
+  .hero-sub{margin:1rem 0 1.2rem;font-size:.95rem;line-height:1.55;}
+  .hero-cta{gap:.6rem;}
+  .hero-cta .btn{flex:1 1 100%;}
+}
+
+/* botão premium da música — gradiente escuro com equalizador vivo */
+.btn-musica{position:relative;overflow:hidden;
+  background:linear-gradient(120deg,#2A1620,#4A2340 55%,#2A1620);
+  background-size:200% 100%;color:#fff;
+  box-shadow:0 10px 28px rgba(42,22,32,.32);
+  animation:btnMusGrad 7s ease-in-out infinite;}
+@keyframes btnMusGrad{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+.btn-musica::after{content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);
+  animation:btnMusBrilho 4.5s ease-in-out infinite;}
+@keyframes btnMusBrilho{0%{left:-60%;}55%,100%{left:130%;}}
+.cta-eq{display:inline-flex;align-items:flex-end;gap:2px;height:14px;margin-right:.15rem;}
+.cta-eq i{display:block;width:2.5px;border-radius:3px;background:var(--gold);
+  animation:ctaEq 1s ease-in-out infinite;}
+.cta-eq i:nth-child(1){height:6px;animation-delay:0s;}
+.cta-eq i:nth-child(2){height:12px;animation-delay:.14s;}
+.cta-eq i:nth-child(3){height:8px;animation-delay:.28s;}
+.cta-eq i:nth-child(4){height:13px;animation-delay:.42s;}
+@keyframes ctaEq{0%,100%{transform:scaleY(.35);}50%{transform:scaleY(1);}}
+/* brilho suave no botão principal */
+.cta-brilho{position:relative;overflow:hidden;}
+.cta-brilho::after{content:'';position:absolute;top:0;left:-60%;width:42%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.3),transparent);
+  animation:btnMusBrilho 5.5s ease-in-out infinite 1.2s;}
 
 /* trust row */
 .trust{display:grid;grid-template-columns:repeat(3,1fr);background:#fff;border:1px solid var(--line);
@@ -430,6 +460,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .uo-pr{flex-shrink:0;text-align:right;font-family:'Fraunces';font-size:1.05rem;color:var(--plum);}
 .uo-pr em{display:block;font-family:inherit;font-style:normal;font-size:.63rem;font-weight:800;
   color:#1F9D5C;background:#E3F6EC;padding:.15rem .45rem;border-radius:100px;margin-top:.25rem;}
+.uo-pr em s{opacity:.6;font-weight:600;margin-left:.15rem;}
 .upsell-op.destaque .uo-pr{color:var(--rose-deep);}
 .upsell-nao{display:block;width:100%;text-align:center;font-size:.83rem;color:var(--muted);
   padding:.9rem;margin-top:.2rem;}
@@ -615,6 +646,25 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .trk-check svg{width:12px;height:12px;stroke:#fff;opacity:0;}
 .trk.on .trk-check{background:var(--rose);border-color:var(--rose);}
 .trk.on .trk-check svg{opacity:1;}
+/* card premium da música personalizada */
+.trk-premium{margin-top:.8rem;border-radius:16px;padding:1rem;
+  background:linear-gradient(160deg,#2A1620,#140A11);color:#fff;
+  box-shadow:0 10px 28px rgba(20,10,17,.28);}
+.trk-premium.on{background:linear-gradient(160deg,#1E4B36,#0C2A1E);}
+.trkp-topo{display:flex;gap:.7rem;align-items:flex-start;}
+.trkp-ic{font-size:1.4rem;flex-shrink:0;}
+.trkp-tx b{display:block;font-size:.92rem;}
+.trkp-tx span{display:block;font-size:.77rem;color:#C6A9B6;line-height:1.45;margin-top:.15rem;}
+.trk-premium.on .trkp-tx span{color:#A8D5BE;}
+.trkp-pr{margin:.75rem 0 .7rem;font-size:1.05rem;}
+.trkp-pr s{color:#9C8590;font-size:.82rem;margin-right:.25rem;}
+.trkp-pr b{font-family:'Fraunces';color:var(--gold);font-size:1.2rem;}
+.trkp-pr em{display:inline-block;font-style:normal;font-size:.63rem;font-weight:800;
+  background:var(--gold);color:#3A2405;padding:.15rem .5rem;border-radius:100px;margin-left:.4rem;
+  vertical-align:middle;}
+.trkp-btn{width:100%;padding:.8rem;border-radius:100px;border:0;font-size:.87rem;font-weight:800;
+  background:var(--rose);color:#fff;}
+.trk-premium.on .trkp-btn{background:rgba(255,255,255,.15);color:#fff;}
 
 .mus-cover{position:relative;width:100%;max-width:280px;aspect-ratio:1/1;margin:0 auto;border-radius:var(--r-lg);
   overflow:hidden;background:#1A0810;box-shadow:0 20px 44px rgba(0,0,0,.35);}
@@ -1855,17 +1905,8 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mk-roleta-sm .mk-hub{width:12px;height:12px;}
 /* no celular: dois pacotes lado a lado, pra todos ficarem visíveis sem rolar muito */
 @media(max-width:640px){
-  .plans{grid-template-columns:1fr 1fr;gap:.7rem;}
-  .planb{min-height:0;padding:1.5rem .85rem 1rem;border-radius:22px;}
-  .pb-rib{font-size:.55rem;letter-spacing:.05em;padding:.35rem .6rem;top:.6rem;}
-  .pb-t{font-size:1.02rem;margin-top:1.5rem;line-height:1.15;}
-  .pb-pr{font-size:.78rem;margin-top:.35rem;}
-  .pb-cta{padding:.65rem .8rem;font-size:.82rem;margin-top:.8rem;justify-content:center;width:100%;}
-  .pb-cta span{font-size:.9rem;}
-  .pb-mock{min-height:104px;margin-top:.9rem;transform:scale(.72);transform-origin:bottom center;}
-  .pb-list{margin-top:.8rem;gap:.3rem;}
-  .pb-list li{font-size:.67rem;line-height:1.3;}
-  .pb-list svg{width:12px;height:12px;}
+  .plans{grid-template-columns:1fr;gap:1rem;}
+  .planb{min-height:0;padding:1.7rem 1.2rem 1.4rem;}
 }
 
 /* cards de escolha de produto no wizard — empilhados, altura igual, compactos */
@@ -2079,8 +2120,8 @@ var PACOTES = {
               desc:"Uma canção única, feita por IA, inspirada na história de vocês.", icone:"🎵", destaque:true, ribbon:"🔥 Mais pedida"}
 };
 var RECURSOS = {
-  completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1, musicaIA:0},
-  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0},
+  completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1, musicaIA:1},
+  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:1, musicaIA:1},
   convite:   {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0},
   musica:    {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0}
 };
@@ -2093,6 +2134,26 @@ var TRILHAS = [
   {id:'t3',    titulo:'Trilha 4',                sub:'2min16',  arquivo:'/trilha-3.mp3'},
   {id:'t4',    titulo:'Trilha 5',                sub:'2min43',  arquivo:'/trilha-4.mp3'}
 ];
+/* card premium da música personalizada, dentro da lista de trilhas */
+function htmlCardMusicaPremium(){
+  var ligada=!!W.musicaOn;
+  var avulsa=PACOTES.musica ? PACOTES.musica.preco : 9.99;
+  var economia=Math.max(0, avulsa-PRECO_MUSICA_ADDON);
+  var pct=avulsa>0 ? Math.round(100*economia/avulsa) : 0;
+  return '<div class="trk-premium'+(ligada?' on':'')+'" id="trkPremium">'+
+    '<div class="trkp-topo">'+
+      '<span class="trkp-ic">'+(ligada?'🎵':'🔒')+'</span>'+
+      '<div class="trkp-tx"><b>Uma música só de vocês</b>'+
+      '<span>Feita do zero a partir da história de vocês, com a letra citando os nomes.</span></div>'+
+    '</div>'+
+    '<div class="trkp-pr">'+
+      '<div><s>R$ '+fmtPreco(avulsa)+'</s> <b>R$ '+fmtPreco(PRECO_MUSICA_ADDON)+'</b>'+
+      (pct>0?'<em>'+pct+'% off levando junto</em>':'')+'</div>'+
+    '</div>'+
+    '<button type="button" class="trkp-btn" id="trkPremiumBtn">'+
+      (ligada?'✓ Música adicionada — tocar em vez da trilha':'Adicionar música personalizada')+'</button>'+
+  '</div>';
+}
 function trilhaPorId(id){
   for(var i=0;i<TRILHAS.length;i++) if(TRILHAS[i].id===id) return TRILHAS[i];
   return TRILHAS[0];
@@ -2109,7 +2170,14 @@ function precoDe(produto, duracao){
 function temAddonMusica(W){
   return !!(RECURSOS[W.produto] && RECURSOS[W.produto].musicaIA && W.musicaOn);
 }
+/* Preço do combo quando a pessoa começou pela MÚSICA e adicionou um presente.
+   Nesse caminho a música mantém os R$9,99 e o presente entra com desconto,
+   sempre vitalício. Tem que bater com criar-pagamento.mjs. */
+var COMBO_DA_MUSICA = { carta: 3.99, completo: 9.99 };
 function precoTotal(W){
+  if(W.comboDaMusica && COMBO_DA_MUSICA[W.produto]!=null){
+    return PACOTES.musica.preco + COMBO_DA_MUSICA[W.produto];
+  }
   return precoDe(W.produto, W.duracao) + (temAddonMusica(W) ? PRECO_MUSICA_ADDON : 0);
 }
 function htmlMusicaPlayer(url, url2, letra){
@@ -2994,7 +3062,10 @@ function telaHome(){
       '</h1>'+
       '<p class="hero-sub">Fotos, memórias e música personalizada viram um presente que emociona de verdade.</p>'+
       '<div class="hero-cta">'+
-        '<a class="btn btn-primary btn-lg" href="#/criar">Criar presente agora'+IC.arrow+'</a>'+
+        '<a class="btn btn-primary btn-lg cta-brilho" href="#/criar">Criar presente'+IC.arrow+'</a>'+
+        '<a class="btn btn-musica btn-lg" href="#/criar/musica">'+
+          '<span class="cta-eq"><i></i><i></i><i></i><i></i></span>'+
+          'Criar música personalizada</a>'+
         '<a class="btn btn-ghost btn-lg" href="#/meus">Ver meus presentes'+IC.down+'</a>'+
       '</div>'+
     '</div>'+
@@ -3160,7 +3231,7 @@ function novoEstado(prod){
     id:uid(), produto:prod||null, perfil:null, meuNome:'', parceiroNome:'',
     dataEspecial:'', horaEspecial:'', cidade:'', titulo:'', carta:'',
     fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:true, trilhaId:'tema',
-    musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null, musicaLetra:null,
+    comboDaMusica:false, musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null, musicaLetra:null,
     musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'',
     musicaClima:'', musicaFrase:'', musicaVoz:'masculina', musicaCapa:null, musicaWhatsapp:'',
     duracao:'vitalicio',
@@ -3228,6 +3299,7 @@ function passos(){
   var p=W.produto;
   if(!p) return ['produto'];
   if(p==='convite') return ['produto','tema','aniversariante','quando','local','whatsapp','presentes','vitrine','duracao','checkout'];
+  if(p==='musica') return ['musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal','checkout'];
   var r=RECURSOS[p]||RECURSOS.completo;
   var s=[];
   s.push('produto','perfil','nomes');
@@ -3236,6 +3308,7 @@ function passos(){
   if(r.carta) s.push('carta');
   if(r.jogos) s.push('jogos');
   if(r.trilha) s.push('trilha');
+  if(r.musicaIA && W.musicaOn) s.push('musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal');
   if(r.musicaIA){
     s.push('musicaEscolha');
     if(W.musicaPersonalizar) s.push('musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal');
@@ -4080,6 +4153,7 @@ function htmlPasso(k){
           '<audio id="aud-'+t.id+'" src="'+t.arquivo+'" preload="none"></audio>'+
         '</div>';
       }).join('')+'</div>'+
+      (RECURSOS[W.produto] && RECURSOS[W.produto].musicaIA ? htmlCardMusicaPremium() : '')+
       '<button class="ex'+(on?' on':'')+'" id="trilhaTgl" style="margin-top:1rem">'+
         '<span class="ic">🎵</span><span class="tx"><h4>Incluir a trilha no presente</h4>'+
         '<p>Você pode desativar se preferir sem música</p></span><span class="tgl"></span></button>';
@@ -4369,6 +4443,20 @@ function ligarPasso(k){
       e.classList.add('on');
       if(!W.trilhaOn){ W.trilhaOn=true; var t=el('trilhaTgl'); if(t) t.classList.add('on'); }
     });
+    var pBtn=el('trkPremiumBtn');
+    if(pBtn) pBtn.onclick=function(){
+      if(W.musicaOn){
+        W.musicaOn=false; W.musicaPersonalizar=false;
+        gaEvento('removeu_musica_addon',{produto:W.produto});
+        redesenharSemPular();
+        return;
+      }
+      W.musicaOn=true; W.musicaPersonalizar=true;
+      gaEvento('adicionou_musica_addon',{produto:W.produto, valor:PRECO_MUSICA_ADDON});
+      pararTodas();
+      toast('Boa! Agora é só montar a música de vocês.');
+      setTimeout(function(){ proximoPasso(); },500);
+    };
     aoSair(pararTodas);
   }
   if(k==='musicaEscolha'){
@@ -4621,7 +4709,7 @@ function combosDisponiveis(){
     var p=PACOTES[prod]; if(!p) return 0;
     return (W.duracao==='h48' && p.preco48!=null) ? p.preco48 : p.preco;
   }
-  // só oferece upgrade pra quem está na Carta — a Retrospectiva já inclui a carta
+  // quem está na Carta: oferece a Retrospectiva (que já inclui a carta)
   if(W.produto==='carta'){
     var prCompleto=preco('completo'), prCarta=preco('carta');
     combos.push({
@@ -4630,6 +4718,28 @@ function combosDisponiveis(){
       desc:'A mesma carta que você montou, mais álbum de fotos, linha do tempo, contador ao vivo dos dias juntos e os jogos do casal.',
       preco:prCompleto,
       extra:Math.max(0, prCompleto-prCarta),
+      destaque:true
+    });
+  }
+  // quem está só na Música: o presente entra com desconto e VITALÍCIO
+  if(W.produto==='musica'){
+    var prMus=PACOTES.musica.preco;
+    combos.push({
+      produto:'carta', comboMusica:true,
+      titulo:'Música + Carta Virtual',
+      desc:'Sua música mais uma carta com envelope, foto colada e sua assinatura. O link fica no ar pra sempre.',
+      preco:prMus+COMBO_DA_MUSICA.carta,
+      extra:COMBO_DA_MUSICA.carta,
+      de:PACOTES.carta.preco,
+      destaque:false
+    });
+    combos.push({
+      produto:'completo', comboMusica:true,
+      titulo:'Música + Retrospectiva Completa',
+      desc:'Sua música tocando numa página só de vocês: fotos, linha do tempo, contador ao vivo, jogos e a carta. Pra sempre no ar.',
+      preco:prMus+COMBO_DA_MUSICA.completo,
+      extra:COMBO_DA_MUSICA.completo,
+      de:PACOTES.completo.preco,
       destaque:true
     });
   }
@@ -4650,7 +4760,9 @@ function abrirUpsell(aoFechar){
         '<span class="uo-tag">MAIS PEDIDO</span>'+
         '<div class="uo-tx"><b>'+esc(c.titulo)+'</b><span>'+esc(c.desc)+'</span></div>'+
         '<div class="uo-pr">R$ '+fmtPreco(c.preco)+
-          (c.extra>0?'<em>só R$ '+fmtPreco(c.extra)+' a mais</em>':'')+'</div></button>';
+          (c.de && c.de>c.extra
+            ? '<em>+ R$ '+fmtPreco(c.extra)+' <s>R$ '+fmtPreco(c.de)+'</s></em>'
+            : (c.extra>0?'<em>só R$ '+fmtPreco(c.extra)+' a mais</em>':''))+'</div></button>';
     }).join('')+
     '<button type="button" class="upsell-op atual"><div class="uo-tx"><b>Seguir com '+esc(PACOTES[W.produto].nome)+'</b>'+
       '<span>O que você montou</span></div>'+
@@ -4667,6 +4779,10 @@ function abrirUpsell(aoFechar){
       var c=combos[parseInt(b.dataset.combo,10)];
       gaEvento('aceitou_upsell',{de:W.produto, para:c.produto});
       W.produto=c.produto;
+      if(c.comboMusica){
+        W.comboDaMusica=true; W.musicaOn=true; W.musicaPersonalizar=true;
+        W.duracao='vitalicio';
+      }
       fechar();
       var falta=primeiroPassoIncompleto();
       if(falta>=0){ wStep=falta; desenharPasso(); toast('Só faltam alguns detalhes desse pacote.'); }
@@ -4683,6 +4799,12 @@ function primeiroPassoIncompleto(){
     if(k==='nomes' && !W.parceiroNome.trim()) return i;
     if(k==='fotos' && !W.fotos.filter(Boolean).length) return i;
     if(k==='carta' && W.carta.trim().length<10) return i;
+    if(k==='musicaPara' && !W.musicaPara) return i;
+    if(k==='musicaOcasiao' && !W.musicaOcasiao) return i;
+    if(k==='musicaHistoria' && W.musicaTexto.trim().length<50) return i;
+    if(k==='musicaGenero' && !W.musicaEstilo) return i;
+    if(k==='musicaClima' && !W.musicaClima) return i;
+    if(k==='musicaFinal' && !W.musicaPreviewUrl) return i;
   }
   return -1;
 }
