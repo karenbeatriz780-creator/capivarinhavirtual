@@ -15,6 +15,9 @@ const PACOTES = {
 // Produtos que aceitam a música personalizada como adicional pago.
 const PRODUTOS_COM_ADDON_MUSICA = ['completo', 'carta'];
 const PRECO_ADDON_MUSICA = 7;
+// Combo iniciado pela Música: ela mantém os R$9,99 e o presente entra
+// com desconto, sempre vitalício. Tem que bater com precoTotal() no index.html.
+const COMBO_DA_MUSICA = { carta: 3.99, completo: 9.99 };
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -47,8 +50,11 @@ export default async (req) => {
     const pacote = PACOTES[presente.produto];
     const duracao = presente.duracao === 'h48' ? 'h48' : 'vitalicio';
     const temAddonMusica = !!presente.musicaOn && PRODUTOS_COM_ADDON_MUSICA.indexOf(presente.produto) !== -1;
+    const comboDaMusica = !!presente.comboDaMusica && COMBO_DA_MUSICA[presente.produto] != null;
     const precoBase = (duracao === 'h48' && pacote.preco48 != null) ? pacote.preco48 : pacote.preco;
-    const precoFinal = precoBase + (temAddonMusica ? PRECO_ADDON_MUSICA : 0);
+    const precoFinal = comboDaMusica
+      ? (PACOTES.musica.preco + COMBO_DA_MUSICA[presente.produto])
+      : (precoBase + (temAddonMusica ? PRECO_ADDON_MUSICA : 0));
     const txid = criarTxid(presente.id);
     const criadoEm = Date.now();
     const salvo = Object.assign({}, presente, {
