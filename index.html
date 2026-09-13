@@ -635,6 +635,8 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .trk{display:flex;align-items:center;gap:.75rem;background:#fff;border:1.5px solid var(--line);
   border-radius:14px;padding:.7rem .85rem;transition:all .16s;}
 .trk.on{border-color:var(--rose);background:var(--tint);box-shadow:0 4px 14px rgba(227,43,109,.13);}
+.trk-mudo{width:38px;height:38px;border-radius:50%;background:var(--line);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;}
 .trk-play{width:38px;height:38px;border-radius:50%;background:var(--rose);border:0;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;}
 .trk-play svg{width:15px;height:15px;fill:#fff;margin-left:2px;}
@@ -999,6 +1001,13 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pnl-linkbar button{flex-shrink:0;font-size:.72rem;font-weight:800;padding:.4rem .7rem;border-radius:8px;
   border:0;background:var(--rose-soft);color:var(--rose-deep);}
 .pnl-musica{margin-top:.5rem;font-size:.78rem;color:var(--muted);}
+.pnl-abas{display:flex;gap:.35rem;margin-bottom:1.2rem;overflow-x:auto;padding-bottom:.2rem;}
+.pnl-aba{flex-shrink:0;font-size:.78rem;font-weight:800;padding:.55rem .9rem;border-radius:100px;
+  border:1px solid var(--line);background:#fff;color:var(--muted);}
+.pnl-aba.on{background:var(--rose);border-color:var(--rose);color:#fff;}
+.pnl-cancelar{width:100%;margin-top:.5rem;padding:.5rem;border-radius:8px;border:1px solid #F5C6CB;
+  background:#FDF1F2;color:#B02A37;font-size:.74rem;font-weight:800;}
+.selo.canc{background:#F1F1F1;color:#777;}
 .pnl-hist{font-size:.76rem;color:var(--muted);background:var(--paper);border-radius:10px;
   padding:.55rem .7rem;margin-top:.5rem;line-height:1.5;font-style:italic;}
 .pnl-mv{background:var(--paper);border:1px solid var(--line);border-radius:12px;
@@ -1977,6 +1986,14 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   color:var(--rose-deep);padding:.7rem;text-decoration:underline;text-underline-offset:3px;}
 .link-amostra.dentro{background:var(--tint);border:1px solid var(--rose-soft);border-radius:12px;
   text-decoration:none;margin-bottom:1rem;}
+.brinde-musica{margin-top:1.2rem;border-radius:16px;padding:1.1rem;
+  background:linear-gradient(160deg,#FFFBEE,#FFF3D6);border:1.5px solid #F0D89A;}
+.bm-top{display:flex;gap:.7rem;align-items:flex-start;font-size:1.4rem;}
+.bm-top b{display:block;font-size:.94rem;color:#8A6410;}
+.bm-top span{display:block;font-size:.79rem;color:#9C7B34;line-height:1.5;margin-top:.2rem;}
+.bm-btn{display:flex;align-items:center;justify-content:center;gap:.4rem;margin-top:.9rem;
+  padding:.8rem;border-radius:100px;background:#8A6410;color:#fff;font-weight:800;font-size:.87rem;}
+.bm-btn svg{width:15px;height:15px;}
 .amostra-nota{font-size:.75rem;color:var(--muted);text-align:center;line-height:1.5;margin-top:.3rem;}
 
 .pcard-cta{display:flex;align-items:center;justify-content:center;gap:.4rem;
@@ -2157,18 +2174,18 @@ var CONFIG = {
 };
 
 var PACOTES = {
-  completo:  {nome:"Retrospectiva Completa", preco:24.99, preco48:9.99,
+  completo:  {nome:"Retrospectiva Completa", preco:19, preco48:9.99,
               desc:"Tudo liberado: fotos, linha do tempo, stories, carta, contador ao vivo e todos os jogos.", icone:"💝", destaque:true, ribbon:"🔥 Mais pedido"},
-  carta:     {nome:"Carta Virtual", preco:7.99, preco48:7.99,
+  carta:     {nome:"Carta Virtual", preco:7.99, preco48:4.99,
               desc:"A carta com foto colada, abertura de envelope, lacre e assinatura de quem enviou.", icone:"💌"},
   convite:   {nome:"Convite Criativo", preco:14, preco48:10,
               desc:"Convite de aniversário animado, com tema à escolha, presença confirmada no seu WhatsApp e lista de presentes.", icone:"🎉"},
-  musica:    {nome:"Música Personalizada", preco:14.99, preco48:14.99,
+  musica:    {nome:"Música Personalizada", preco:9.99, preco48:9.99,
               desc:"Duas versões da sua música, e ainda vem com a Carta Virtual inclusa.", icone:"🎵", destaque:true, ribbon:"🔥 Mais pedida"}
 };
 var RECURSOS = {
-  completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1, musicaIA:1},
-  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:1, musicaIA:1},
+  completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1, musicaIA:0},
+  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:1, musicaIA:0},
   convite:   {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0},
   musica:    {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0}
 };
@@ -3345,7 +3362,7 @@ function novoEstado(prod){
   return {
     id:uid(), produto:prod||null, perfil:null, meuNome:'', parceiroNome:'',
     dataEspecial:'', horaEspecial:'', cidade:'', titulo:'', carta:'',
-    fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:true, trilhaId:'tema',
+    fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:false, trilhaId:null,
     duracao:'vitalicio',
     comboDaMusica:false, musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null, musicaLetra:null,
     musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'',
@@ -3429,7 +3446,7 @@ function passos(){
     if(W.musicaPersonalizar) s.push('musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal');
   }
   s.push('vitrine');
-  if(p==='completo') s.push('duracao');
+  if(p==='completo'||p==='carta') s.push('duracao');
   s.push('checkout');
   return s;
 }
@@ -4268,7 +4285,13 @@ function htmlPasso(k){
     return guia("Escolhe a trilha que mais combina com o presente de vocês. Todas são gratuitas.")+
       '<div class="wz-t">Trilha sonora</div>'+
       '<div class="wz-s">Toca baixinho, em loop, do início ao fim da apresentação. Toque no play pra ouvir antes de escolher.</div>'+
-      '<div class="trilhas">'+TRILHAS.map(function(t){
+      '<div class="trilhas">'+
+      '<div class="trk'+(!W.trilhaId?' on':'')+'" data-trk="">'+
+        '<span class="trk-mudo">🔇</span>'+
+        '<div class="trk-tx"><b>Sem música</b><span>O presente abre em silêncio</span></div>'+
+        '<span class="trk-check">'+IC.check+'</span>'+
+      '</div>'+
+      TRILHAS.map(function(t){
         return '<div class="trk'+(escolhida===t.id?' on':'')+'" data-trk="'+t.id+'">'+
           '<button type="button" class="trk-play" data-trkplay="'+t.id+'">'+IC.play+'</button>'+
           '<div class="trk-tx"><b>'+esc(t.titulo)+'</b><span>'+esc(t.sub)+'</span></div>'+
@@ -4276,10 +4299,7 @@ function htmlPasso(k){
           '<audio id="aud-'+t.id+'" src="'+t.arquivo+'" preload="none"></audio>'+
         '</div>';
       }).join('')+'</div>'+
-      (RECURSOS[W.produto] && RECURSOS[W.produto].musicaIA ? htmlCardMusicaPremium() : '')+
-      '<button class="ex'+(on?' on':'')+'" id="trilhaTgl" style="margin-top:1rem">'+
-        '<span class="ic">🎵</span><span class="tx"><h4>Incluir a trilha no presente</h4>'+
-        '<p>Você pode desativar se preferir sem música</p></span><span class="tgl"></span></button>';
+      '';
   }
 
   case 'jogos': {
@@ -4541,8 +4561,6 @@ function ligarPasso(k){
     var mx=el('musX'); if(mx) mx.onclick=function(){ W.musica=null; redesenharSemPular(); };
   }
   if(k==='trilha'){
-    var tglBtn=el('trilhaTgl');
-    if(tglBtn) tglBtn.onclick=function(){ W.trilhaOn=!W.trilhaOn; tglBtn.classList.toggle('on',W.trilhaOn); };
     var tocandoId=null;
     function pararTodas(){
       TRILHAS.forEach(function(t){
@@ -4562,10 +4580,11 @@ function ligarPasso(k){
       a.onended=function(){ pararTodas(); };
     });
     on('[data-trk]','onclick',function(e){
-      W.trilhaId=e.dataset.trk;
+      pararTodas();
+      W.trilhaId=e.dataset.trk||null;
+      W.trilhaOn=!!W.trilhaId;
       document.querySelectorAll('[data-trk]').forEach(function(c){ c.classList.remove('on'); });
       e.classList.add('on');
-      if(!W.trilhaOn){ W.trilhaOn=true; var t=el('trilhaTgl'); if(t) t.classList.add('on'); }
     });
     var pBtn=el('trkPremiumBtn');
     if(pBtn) pBtn.onclick=function(){
@@ -5135,6 +5154,11 @@ function telaSucesso(id){
       '</div>'+
       '<a class="btn btn-primary btn-block btn-lg" href="#/p/'+id+'" style="margin-top:1.6rem">Abrir o presente'+IC.arrow+'</a>'+
       '<a class="btn btn-ghost btn-block" href="#/meus" style="margin-top:.7rem">Ver meus presentes</a>'+
+      (g.produto==='completo' && g.duracao!=='h48'
+        ? '<div class="brinde-musica"><div class="bm-top">🎁<div><b>Você ganhou 2 músicas personalizadas</b>'+
+          '<span>Feitas com a história de vocês. Elas entram na abertura do presente.</span></div></div>'+
+          '<a class="bm-btn" href="#/criar/musica">Criar minhas músicas grátis'+IC.arrow+'</a></div>'
+        : '')+
       htmlKitImpressao()+
     '</div></div>';
   var svg='';
@@ -5261,6 +5285,7 @@ var RELACAO_NOME={
   mae:'Pra mãe', pai:'Pra pai', irma:'Pra irmã', irmao:'Pra irmão',
   amiga:'Pra amiga', amigo:'Pra amigo', filho:'Pra filho(a)', ninguem:'Sem dedicatória'
 };
+var _pnlAba='pagos';
 var _pnlCache={pedidos:[],visitas:[],musicas:[]}, _pnlOcultarDev=true, _pnlChave=null;
 /* uma versão da música no painel, com player + baixar + enviar no WhatsApp do cliente */
 function pnlVersaoMusica(p, url, rotulo){
@@ -5360,7 +5385,7 @@ function desenharPainel(pedidos, visitas, musicas){
   }).join('') || '<div class="pnl-nota">Ninguém passou pelo wizard ainda.</div>';
 
   /* pedidos, com link, copiar e liberação manual pra quem ficou pendente por engano */
-  var listaHtml=pedidos.map(function(p){
+  function montarLinhaPedido(p){
     var nome=(p.meuNome||'')+(p.meuNome&&p.parceiroNome?' &amp; ':'')+(p.parceiroNome||'');
     var dt=p.criadoEm?new Date(p.criadoEm).toLocaleString('pt-BR'):'—';
     var link=location.origin+'/#/p/'+p.id;
@@ -5374,7 +5399,8 @@ function desenharPainel(pedidos, visitas, musicas){
         '</div>';
     }
     return '<div class="pnl-row-wrap"><div class="pnl-row"><div><div class="nm">'+(esc(nome)||'(sem nome)')+
-      '<span class="selo '+(p.pago?'pago':'pend')+'">'+(p.pago?'pago':'pendente')+'</span></div>'+
+      '<span class="selo '+(p.cancelado?'canc':(p.pago?'pago':'pend'))+'">'+
+        (p.cancelado?'cancelado':(p.pago?'pago':'pendente'))+'</span></div>'+
       '<div class="meta">'+esc(nomeProd[p.produto]||p.produto||'')+' · '+dt+'</div></div>'+
       '<div class="vl">R$ '+fmtPreco(p.valor||0)+'</div></div>'+
       '<div class="pnl-linkbar"><input readonly value="'+esc(link)+'" onclick="this.select()">'+
@@ -5388,8 +5414,12 @@ function desenharPainel(pedidos, visitas, musicas){
             (p.musicaPreviewUrl2 ? pnlVersaoMusica(p, p.musicaPreviewUrl2, 'Versão 2') : '')+
           '</div>'
         : '')+
-      liberar+'</div>';
-  }).join('') || '<div class="pnl-nota">Nenhum pedido ainda.</div>';
+      liberar+
+      (p.pago && !p.cancelado
+        ? '<button type="button" class="pnl-cancelar" data-cancelar="'+esc(p.id)+'">Cancelar pedido</button>'
+        : '')+
+      '</div>';
+  }
 
   /* todas as músicas geradas, independente de pagamento */
   var idsComPedido={};
@@ -5414,26 +5444,72 @@ function desenharPainel(pedidos, visitas, musicas){
     '</div>';
   }).join('') || '<div class="pnl-nota">Nenhuma música gerada ainda.</div>';
 
+  var pagosHtml=pedidos.filter(function(p){ return p.pago && !p.cancelado; })
+    .map(montarLinhaPedido).join('') || '<div class="pnl-nota">Nenhum pedido pago ainda.</div>';
+  var geradosHtml=pedidos.filter(function(p){ return !p.pago || p.cancelado; })
+    .map(montarLinhaPedido).join('') || '<div class="pnl-nota">Nenhum pedido pendente.</div>';
+
   body.innerHTML=
-    '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
-    '<div class="pnl-sec"><h2>Vendas por dia</h2>'+
-      (diasGrafico.length ? pnlBarras(diasGrafico,{cor:'var(--rose)'}) : '')+
-      '<div class="pnl-nota" style="margin:.6rem 0">Últimos '+diasOrd.length+' dias com venda.</div>'+diasHtml+'</div>'+
-    '<div class="pnl-sec"><h2>Por produto</h2>'+prodHtml+'</div>'+
-    '<div class="pnl-sec"><h2>Onde as pessoas desistem</h2>'+
-      '<div class="sub">Quantos visitantes (sem contar seus próprios testes) chegaram em cada etapa do wizard.</div>'+
-      pnlBarras(funilDados,{cor:'var(--gold-deep)'})+'</div>'+
-    '<div class="pnl-sec"><h2>Até onde eles foram</h2>'+
-      '<label class="pnl-check"><input type="checkbox" id="pnlOcultarDev" '+(_pnlOcultarDev?'checked':'')+'> '+
-      'Esconder meus próprios testes</label>'+
-      '<div class="pnl-lista" style="margin-top:.6rem">'+visitasHtml+'</div></div>'+
-    '<div class="pnl-sec"><h2>Todas as músicas geradas</h2>'+
-      '<div class="sub">Toda música que passou pelo gerador — paga ou não.</div>'+
-      musicasHtml+'</div>'+
-    '<div class="pnl-sec"><h2>Todos os pedidos</h2><div class="pnl-lista">'+listaHtml+'</div></div>';
+    '<div class="pnl-abas" id="pnlAbas">'+
+      '<button type="button" class="pnl-aba'+(_pnlAba==='pagos'?' on':'')+'" data-aba="pagos">💰 Pagos</button>'+
+      '<button type="button" class="pnl-aba'+(_pnlAba==='gerados'?' on':'')+'" data-aba="gerados">📋 Gerados</button>'+
+      '<button type="button" class="pnl-aba'+(_pnlAba==='musicas'?' on':'')+'" data-aba="musicas">🎵 Músicas</button>'+
+      '<button type="button" class="pnl-aba'+(_pnlAba==='dados'?' on':'')+'" data-aba="dados">📊 Dados</button>'+
+    '</div>'+
+    (_pnlAba==='pagos'
+      ? '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
+        '<div class="pnl-sec"><h2>Pedidos pagos</h2><div class="sub">Mais recentes primeiro.</div>'+
+        '<div class="pnl-lista">'+pagosHtml+'</div></div>'
+      : '')+
+    (_pnlAba==='gerados'
+      ? '<div class="pnl-sec"><h2>Gerados sem pagar</h2>'+
+        '<div class="sub">Quem montou o presente mas não finalizou. Use o WhatsApp pra recuperar.</div>'+
+        '<div class="pnl-lista">'+geradosHtml+'</div></div>'
+      : '')+
+    (_pnlAba==='musicas'
+      ? '<div class="pnl-sec"><h2>Todas as músicas geradas</h2>'+
+        '<div class="sub">Toda música que passou pelo gerador — paga ou não.</div>'+
+        musicasHtml+'</div>'
+      : '')+
+    (_pnlAba==='dados'
+      ? '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
+        '<div class="pnl-sec"><h2>Vendas por dia</h2>'+
+          (diasGrafico.length ? pnlBarras(diasGrafico,{cor:'var(--rose)'}) : '')+
+          '<div class="pnl-nota" style="margin:.6rem 0">Últimos '+diasOrd.length+' dias com venda.</div>'+diasHtml+'</div>'+
+        '<div class="pnl-sec"><h2>Por produto</h2>'+prodHtml+'</div>'+
+        '<div class="pnl-sec"><h2>Onde as pessoas desistem</h2>'+
+          '<div class="sub">Quantos visitantes (sem contar seus próprios testes) chegaram em cada etapa.</div>'+
+          pnlBarras(funilDados,{cor:'var(--gold-deep)'})+'</div>'+
+        '<div class="pnl-sec"><h2>Até onde eles foram</h2>'+
+          '<label class="pnl-check"><input type="checkbox" id="pnlOcultarDev" '+(_pnlOcultarDev?'checked':'')+'> '+
+          'Esconder meus próprios testes</label>'+
+          '<div class="pnl-lista" style="margin-top:.6rem">'+visitasHtml+'</div></div>'
+      : '');
+
+  body.querySelectorAll('[data-aba]').forEach(function(b){
+    b.onclick=function(){ _pnlAba=b.dataset.aba; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); };
+  });
 
   body.querySelectorAll('[data-copiar-link]').forEach(function(btn){
     btn.onclick=function(){ copiar(btn.dataset.copiarLink, 'Link copiado!'); };
+  });
+  body.querySelectorAll('[data-cancelar]').forEach(function(btn){
+    btn.onclick=function(){
+      if(!confirm('Cancelar este pedido? O cliente perde o acesso ao presente na hora.')) return;
+      btn.disabled=true; btn.textContent='Cancelando...';
+      fetch('/.netlify/functions/admin-cancelar',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},
+        body:JSON.stringify({id:btn.dataset.cancelar})
+      })
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+      .then(function(res){
+        if(!res.ok){ toast((res.d&&res.d.erro)||'Não consegui cancelar.'); btn.disabled=false; btn.textContent='Cancelar pedido'; return; }
+        toast('Pedido cancelado.');
+        tentarAcessoPainel(_pnlChave);
+      })
+      .catch(function(){ toast('Sem conexão.'); btn.disabled=false; btn.textContent='Cancelar pedido'; });
+    };
   });
   body.querySelectorAll('[data-copiar-musica]').forEach(function(btn){
     btn.onclick=function(){ copiar(btn.dataset.copiarMusica, 'Link da música copiado!'); };
