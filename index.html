@@ -1621,6 +1621,8 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pk-benef{display:flex;align-items:flex-start;gap:.4rem;margin-top:.7rem;padding-top:.7rem;
   border-top:1px dashed var(--line);font-size:.75rem;color:var(--rose-deep);font-weight:600;text-align:left;}
 .pk-benef svg{width:13px;height:13px;flex:none;margin-top:.15rem;stroke:var(--rose);}
+.up-nota.destaque{background:linear-gradient(160deg,#FFFBEE,#FFF3D6);border-color:#F0D89A;font-size:1.3rem;}
+.up-nota.destaque b{color:#8A6410;}
 .up-nota{display:flex;gap:.7rem;align-items:flex-start;margin-top:1rem;padding:.9rem 1rem;
   background:var(--rose-soft);border-radius:16px;font-size:.8rem;line-height:1.55;color:var(--rose-deep);}
 .up-nota svg{width:16px;height:16px;flex:none;fill:var(--rose);margin-top:.15rem;}
@@ -1932,8 +1934,49 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   width:80px;transform:scale(.62);transform-origin:center;}
 /* a Retrospectiva mostra dois aparelhos: mesma escala dos outros, só mais largura */
 .pcard.pb-completo .pcard-mock{width:132px;}
+/* botões do card de produto */
+.pcard-acoes{display:flex;gap:.5rem;margin-top:.85rem;}
+.pcard-amostra{display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  padding:.7rem 1rem;border-radius:100px;font-size:.82rem;font-weight:700;
+  background:rgba(255,255,255,.55);border:1.5px solid rgba(0,0,0,.12);}
+
+/* vitrine de amostras */
+.amostra-card{position:relative;max-height:88vh;overflow-y:auto;}
+.amostra-x{position:absolute;top:.8rem;right:.9rem;width:30px;height:30px;border-radius:50%;
+  background:var(--line);color:var(--plum);font-size:1.2rem;line-height:1;border:0;z-index:3;}
+.alb{display:flex;align-items:center;gap:.8rem;background:#fff;border:1.5px solid var(--line);
+  border-radius:16px;padding:.7rem;margin-bottom:.7rem;transition:all .2s;}
+.alb.on{border-color:var(--rose);box-shadow:0 8px 24px rgba(227,43,109,.16);}
+.alb-capa{position:relative;width:62px;height:62px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  box-shadow:0 6px 16px rgba(0,0,0,.22);}
+.alb-disco{width:34px;height:34px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.35),rgba(0,0,0,.4) 70%);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;}
+.alb.on .alb-disco{animation:albGira 3s linear infinite;}
+@keyframes albGira{to{transform:rotate(360deg);}}
+.alb-ondas{position:absolute;bottom:5px;display:flex;align-items:flex-end;gap:1.5px;height:12px;opacity:0;
+  transition:opacity .3s;}
+.alb.on .alb-ondas{opacity:.9;}
+.alb-ondas i{display:block;width:2px;border-radius:2px;background:#fff;height:4px;
+  animation:albOnda .9s ease-in-out infinite;}
+.alb-ondas i:nth-child(2){animation-delay:.1s;} .alb-ondas i:nth-child(3){animation-delay:.2s;}
+.alb-ondas i:nth-child(4){animation-delay:.3s;} .alb-ondas i:nth-child(5){animation-delay:.4s;}
+.alb-ondas i:nth-child(6){animation-delay:.5s;} .alb-ondas i:nth-child(7){animation-delay:.6s;}
+@keyframes albOnda{0%,100%{height:4px;}50%{height:12px;}}
+.alb-info{flex:1;min-width:0;}
+.alb-info b{display:block;font-family:'Fraunces';font-size:.95rem;color:var(--plum);line-height:1.2;}
+.alb-info span{display:block;font-size:.73rem;color:var(--muted);margin-top:.1rem;}
+.alb-barra{height:3px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:.5rem;}
+.alb-barra i{display:block;height:100%;width:0%;background:var(--rose);transition:width .2s linear;}
+.alb-play{width:42px;height:42px;border-radius:50%;background:var(--rose);border:0;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(227,43,109,.3);}
+.alb-play svg{width:15px;height:15px;fill:#fff;margin-left:2px;}
+.alb-play.tocando svg{margin-left:0;}
+.amostra-nota{font-size:.75rem;color:var(--muted);text-align:center;line-height:1.5;margin-top:.3rem;}
+
 .pcard-cta{display:flex;align-items:center;justify-content:center;gap:.4rem;
-  margin-top:.85rem;padding:.7rem;border-radius:100px;font-size:.88rem;font-weight:700;}
+  flex:1;padding:.7rem;border-radius:100px;font-size:.88rem;font-weight:700;}
 .pcard-cta svg{width:15px;height:15px;}
 /* cores por produto, herdadas dos cards da home */
 .pcard.pb-completo{background:#D8E9BC;color:#1E3A20;}
@@ -2110,14 +2153,14 @@ var CONFIG = {
 };
 
 var PACOTES = {
-  completo:  {nome:"Retrospectiva Completa", preco:21, preco48:9.99,
+  completo:  {nome:"Retrospectiva Completa", preco:24.99, preco48:9.99,
               desc:"Tudo liberado: fotos, linha do tempo, stories, carta, contador ao vivo e todos os jogos.", icone:"💝", destaque:true, ribbon:"🔥 Mais pedido"},
-  carta:     {nome:"Carta Virtual", preco:6, preco48:3.99,
+  carta:     {nome:"Carta Virtual", preco:7.99, preco48:7.99,
               desc:"A carta com foto colada, abertura de envelope, lacre e assinatura de quem enviou.", icone:"💌"},
   convite:   {nome:"Convite Criativo", preco:14, preco48:10,
               desc:"Convite de aniversário animado, com tema à escolha, presença confirmada no seu WhatsApp e lista de presentes.", icone:"🎉"},
-  musica:    {nome:"Música Personalizada", preco:9.99, preco48:9.99,
-              desc:"Uma canção única, feita por IA, inspirada na história de vocês.", icone:"🎵", destaque:true, ribbon:"🔥 Mais pedida"}
+  musica:    {nome:"Música Personalizada", preco:14.99, preco48:14.99,
+              desc:"Duas versões da sua música, e ainda vem com a Carta Virtual inclusa.", icone:"🎵", destaque:true, ribbon:"🔥 Mais pedida"}
 };
 var RECURSOS = {
   completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1, musicaIA:1},
@@ -2135,6 +2178,71 @@ var TRILHAS = [
   {id:'t4',    titulo:'Trilha 5',                sub:'2min43',  arquivo:'/trilha-4.mp3'}
 ];
 /* card premium da música personalizada, dentro da lista de trilhas */
+/* amostras de música — vitrine premium */
+var AMOSTRAS = [
+  {id:'a1', titulo:'Do Nosso Jeito',      sub:'Romântica · violão e piano',   arquivo:'/amostra-1.mp3', grad:'linear-gradient(150deg,#E32B6D,#8A1246)'},
+  {id:'a2', titulo:'Meu Porto Seguro',    sub:'Sertanejo · viola e sanfona',  arquivo:'/amostra-2.mp3', grad:'linear-gradient(150deg,#E8B44A,#8A5A0B)'},
+  {id:'a3', titulo:'Enquanto Houver Nós', sub:'MPB · voz e violão',           arquivo:'/amostra-3.mp3', grad:'linear-gradient(150deg,#4A6FA5,#1B2F52)'}
+];
+function abrirAmostras(){
+  var box=document.createElement('div');
+  box.className='upsell-fundo'; box.id='amostraFundo';
+  box.innerHTML='<div class="upsell-card amostra-card">'+
+    '<button type="button" class="amostra-x" id="amostraX" aria-label="Fechar">&times;</button>'+
+    '<div class="upsell-top">🎧<h3>Ouça alguns exemplos</h3>'+
+    '<p>Músicas reais feitas aqui. A sua vai ser única, com a história de vocês.</p></div>'+
+    AMOSTRAS.map(function(a){
+      return '<div class="alb" data-alb="'+a.id+'">'+
+        '<div class="alb-capa" style="background:'+a.grad+'">'+
+          '<div class="alb-disco"><span>♪</span></div>'+
+          '<div class="alb-ondas"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>'+
+        '</div>'+
+        '<div class="alb-info">'+
+          '<b>'+esc(a.titulo)+'</b><span>'+esc(a.sub)+'</span>'+
+          '<div class="alb-barra"><i id="bar-'+a.id+'"></i></div>'+
+        '</div>'+
+        '<button type="button" class="alb-play" data-albplay="'+a.id+'">'+IC.play+'</button>'+
+        '<audio id="amp-'+a.id+'" src="'+a.arquivo+'" preload="none"></audio>'+
+      '</div>';
+    }).join('')+
+    '<div class="amostra-nota">Estas são prévias de 60 segundos. A sua vem completa e em duas versões.</div>'+
+    '<a class="btn btn-primary btn-block" href="#/criar/musica" id="amostraCriar" style="margin-top:.9rem">Criar a minha agora'+IC.arrow+'</a>'+
+  '</div>';
+  document.body.appendChild(box);
+  gaEvento('viu_amostras_musica',{});
+  var tocando=null;
+  function pararTodas(){
+    AMOSTRAS.forEach(function(a){
+      var au=el('amp-'+a.id); if(au){ au.pause(); au.currentTime=0; }
+      var b=document.querySelector('[data-albplay="'+a.id+'"]');
+      if(b){ b.innerHTML=IC.play; b.classList.remove('tocando'); }
+      var bar=el('bar-'+a.id); if(bar) bar.style.width='0%';
+      var card=document.querySelector('[data-alb="'+a.id+'"]');
+      if(card) card.classList.remove('on');
+    });
+    tocando=null;
+  }
+  function fechar(){ pararTodas(); box.remove(); }
+  el('amostraX').onclick=fechar;
+  el('amostraCriar').onclick=fechar;
+  box.onclick=function(e){ if(e.target===box) fechar(); };
+  box.querySelectorAll('[data-albplay]').forEach(function(b){
+    b.onclick=function(){
+      var id=b.dataset.albplay, au=el('amp-'+id);
+      if(tocando===id){ pararTodas(); return; }
+      pararTodas();
+      tocando=id; b.innerHTML=IC.pause; b.classList.add('tocando');
+      var card=document.querySelector('[data-alb="'+id+'"]');
+      if(card) card.classList.add('on');
+      au.play().catch(function(){ pararTodas(); toast('Não consegui tocar agora.'); });
+      au.ontimeupdate=function(){
+        var bar=el('bar-'+id);
+        if(bar && au.duration) bar.style.width=(au.currentTime/au.duration*100)+'%';
+      };
+      au.onended=function(){ pararTodas(); };
+    };
+  });
+}
 function htmlCardMusicaPremium(){
   var ligada=!!W.musicaOn;
   var avulsa=PACOTES.musica ? PACOTES.musica.preco : 9.99;
@@ -2160,9 +2268,10 @@ function trilhaPorId(id){
 }
 var DURACOES = {
   vitalicio: {nome:'Pra sempre', desc:'O link fica no ar pra sempre. Dá pra revisitar quando quiser.', horas:null},
-  h48:       {nome:'48 horas',   desc:'O link some do ar 48 horas depois. Ideal pra surpresa de última hora.', horas:48}
+  h48:       {nome:HORAS_TEMP+' horas', desc:'O link some do ar '+HORAS_TEMP+' horas depois. Ideal pra surpresa de última hora.', horas:HORAS_TEMP}
 };
-var PRECO_MUSICA_ADDON = 7;
+var PRECO_MUSICA_ADDON = 14.99;
+var HORAS_TEMP = 6; // duração do presente temporário
 function precoDe(produto, duracao){
   var p=PACOTES[produto]; if(!p) return 0;
   return duracao==='h48' ? p.preco48 : p.preco;
@@ -2173,7 +2282,7 @@ function temAddonMusica(W){
 /* Preço do combo quando a pessoa começou pela MÚSICA e adicionou um presente.
    Nesse caminho a música mantém os R$9,99 e o presente entra com desconto,
    sempre vitalício. Tem que bater com criar-pagamento.mjs. */
-var COMBO_DA_MUSICA = { carta: 3.99, completo: 9.99 };
+var COMBO_DA_MUSICA = { carta: 7.99, completo: 24.99 };
 function precoTotal(W){
   if(W.comboDaMusica && COMBO_DA_MUSICA[W.produto]!=null){
     return PACOTES.musica.preco + COMBO_DA_MUSICA[W.produto];
@@ -3231,10 +3340,10 @@ function novoEstado(prod){
     id:uid(), produto:prod||null, perfil:null, meuNome:'', parceiroNome:'',
     dataEspecial:'', horaEspecial:'', cidade:'', titulo:'', carta:'',
     fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:true, trilhaId:'tema',
+    duracao:'vitalicio',
     comboDaMusica:false, musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null, musicaLetra:null,
     musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'',
     musicaClima:'', musicaFrase:'', musicaVoz:'masculina', musicaCapa:null, musicaWhatsapp:'',
-    duracao:'vitalicio',
     jogos:{roleta:false, palavra:false, caca:false, quebra:false, quiz:false, medidor:false},
     roletaOpcoes:['Cinema','Jantar fora','Praia','Dia de preguiça','Sorvete','Viagem surpresa'],
     palavraSecreta:'', palavraPergunta:'O que eu mais amo em você?',
@@ -3313,7 +3422,9 @@ function passos(){
     s.push('musicaEscolha');
     if(W.musicaPersonalizar) s.push('musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal');
   }
-  s.push('vitrine','duracao','checkout');
+  s.push('vitrine');
+  if(p==='completo') s.push('duracao');
+  s.push('checkout');
   return s;
 }
 
@@ -3781,7 +3892,10 @@ function htmlPasso(k){
           '</div>'+
           '<div class="pcard-mock">'+mockPacote(k)+'</div>'+
         '</div>'+
-        '<span class="pcard-cta">Criar agora'+IC.arrow+'</span>'+
+        '<span class="pcard-acoes">'+
+          '<span class="pcard-cta">Criar agora'+IC.arrow+'</span>'+
+          (k==='musica'?'<span class="pcard-amostra" data-amostra="1">Ver amostra</span>':'')+
+        '</span>'+
       '</button>';
     }).join('');
     return guia("Oi! Eu sou a Capivarinha. Me conta: que tipo de presente você quer criar hoje?")+
@@ -3899,20 +4013,22 @@ function htmlPasso(k){
         '<div class="pp">R$ '+fmtPreco(vit)+'</div>'+
         '<p>O link nunca sai do ar. Ela vai poder voltar e rever esse presente daqui a meses, daqui a anos.</p>'+
         '<div class="pk-benef">'+IC.check+'<span>Vira uma lembrança guardada, não só uma surpresa do dia</span></div>'+
+        '<div class="pk-benef">'+IC.check+'<span><b>2 músicas personalizadas de brinde</b> — feitas com a história de vocês</span></div>'+
       '</button>'+
       '<button class="pk pk-dur '+(W.duracao==='h48'?'on':'')+'" data-dur="h48">'+
-        '<h3>48 horas</h3>'+
+        '<h3>'+HORAS_TEMP+' horas</h3>'+
         '<div class="pp">R$ '+fmtPreco(h48)+'</div>'+
-        '<p>O link sai do ar depois de 48 horas. Serve pra surpresa de última hora, mas depois se perde.</p>'+
+        '<p>O link sai do ar depois de '+HORAS_TEMP+' horas. Serve pra surpresa de última hora, mas depois se perde.</p>'+
       '</button>';
     return guia("Ficou lindo! Agora só falta escolher por quanto tempo esse presente vai ficar de pé.")+
       '<div class="wz-t">Por quanto tempo?</div>'+
       '<div class="wz-s">Pagamento único por Pix, sem assinatura, sem renovação.</div>'+
       '<button class="prev-full" id="verTudo">'+IC.eye+'Ver o presente inteiro, do jeito que vai chegar</button>'+
       '<div class="pick">'+op+'</div>'+
-      (W.duracao==='h48' ? '<div class="up-nota">'+IC.heart+
-        '<div><b>Por mais R$ '+fmtPreco(dif)+', ela guarda pra sempre.</b><br>'+
-        'A maioria escolhe o "pra sempre" — o presente deixa de ser só do dia e vira uma lembrança que ela pode rever quando quiser.</div></div>' : '');
+      (W.duracao==='h48' ? '<div class="up-nota destaque">🎁'+
+        '<div><b>Por mais R$ '+fmtPreco(dif)+' você ganha 2 músicas personalizadas.</b><br>'+
+        'Músicas feitas com a história de vocês, que dá pra baixar e guardar. '+
+        'E o presente nunca sai do ar — em vez de sumir em '+HORAS_TEMP+' horas.</div></div>' : '');
   }
 
   case 'perfil': {
@@ -4290,7 +4406,8 @@ function ligarPasso(k){
   function on(sel,ev,fn){ b.querySelectorAll(sel).forEach(function(e){ e[ev]=fn.bind(null,e); }); }
 
   if(k==='produto'){
-    on('[data-pcta]','onclick',function(e){
+    on('[data-pcta]','onclick',function(e,ev){
+      if(ev.target.closest('[data-amostra]')){ ev.preventDefault(); abrirAmostras(); return; }
       W.produto=e.dataset.pcta;
       gaEvento('selecionar_produto',{produto:W.produto});
       fbEvento('ViewContent',{content_name:W.produto, content_type:'product'});
