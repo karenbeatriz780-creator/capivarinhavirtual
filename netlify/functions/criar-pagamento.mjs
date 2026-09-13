@@ -3,10 +3,10 @@ import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 
 const PACOTES = {
-  completo:  { nome: 'Retrospectiva Completa', preco: 21, preco48: 9.99 },
-  carta:     { nome: 'Carta Virtual',   preco: 6, preco48: 3.99 },
+  completo:  { nome: 'Retrospectiva Completa', preco: 24.99, preco48: 9.99 },
+  carta:     { nome: 'Carta Virtual',   preco: 7.99, preco48: 7.99 },
   convite:   { nome: 'Convite Criativo', preco: 14, preco48: 10 },
-  musica:    { nome: 'Música Personalizada', preco: 9.99, preco48: 9.99 },
+  musica:    { nome: 'Música Personalizada', preco: 14.99, preco48: 14.99 },
   extra:         { nome: 'Lembrancinhas',  preco: 4 },
   extra_tema:    { nome: 'QR temático',    preco: 2.99 },
   extra_carta:   { nome: 'Cartinha',       preco: 3.99 },
@@ -14,10 +14,10 @@ const PACOTES = {
 };
 // Produtos que aceitam a música personalizada como adicional pago.
 const PRODUTOS_COM_ADDON_MUSICA = ['completo', 'carta'];
-const PRECO_ADDON_MUSICA = 7;
+const PRECO_ADDON_MUSICA = 14.99;
 // Combo iniciado pela Música: ela mantém os R$9,99 e o presente entra
 // com desconto, sempre vitalício. Tem que bater com precoTotal() no index.html.
-const COMBO_DA_MUSICA = { carta: 3.99, completo: 9.99 };
+const COMBO_DA_MUSICA = { carta: 7.99, completo: 24.99 };
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
