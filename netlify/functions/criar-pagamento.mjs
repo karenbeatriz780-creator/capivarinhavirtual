@@ -3,10 +3,10 @@ import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 
 const PACOTES = {
-  completo:  { nome: 'Retrospectiva Completa', preco: 24.99, preco48: 9.99 },
-  carta:     { nome: 'Carta Virtual',   preco: 7.99, preco48: 7.99 },
+  completo:  { nome: 'Retrospectiva Completa', preco: 19, preco48: 9.99 },
+  carta:     { nome: 'Carta Virtual',   preco: 7.99, preco48: 4.99 },
   convite:   { nome: 'Convite Criativo', preco: 14, preco48: 10 },
-  musica:    { nome: 'Música Personalizada', preco: 14.99, preco48: 14.99 },
+  musica:    { nome: 'Música Personalizada', preco: 9.99, preco48: 9.99 },
   extra:         { nome: 'Lembrancinhas',  preco: 4 },
   extra_tema:    { nome: 'QR temático',    preco: 2.99 },
   extra_carta:   { nome: 'Cartinha',       preco: 3.99 },
