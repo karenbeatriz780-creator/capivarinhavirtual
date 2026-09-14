@@ -2185,7 +2185,7 @@ var PACOTES = {
 };
 var RECURSOS = {
   completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1, musicaIA:0},
-  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:1, musicaIA:0},
+  carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:1, musicaIA:1},
   convite:   {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0},
   musica:    {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0}
 };
@@ -2273,7 +2273,7 @@ function htmlCardMusicaPremium(){
     '<div class="trkp-topo">'+
       '<span class="trkp-ic">'+(ligada?'🎵':'🔒')+'</span>'+
       '<div class="trkp-tx"><b>Uma música só de vocês</b>'+
-      '<span>Feita do zero a partir da história de vocês, com a letra citando os nomes.</span></div>'+
+      '<span>Feita do zero com a história de vocês. Ela toca na abertura do presente, e você também baixa o MP3.</span></div>'+
     '</div>'+
     '<div class="trkp-pr">'+
       '<div><s>R$ '+fmtPreco(avulsa)+'</s> <b>R$ '+fmtPreco(PRECO_MUSICA_ADDON)+'</b>'+
@@ -2291,7 +2291,7 @@ var DURACOES = {
   vitalicio: {nome:'Pra sempre', desc:'O link fica no ar pra sempre. Dá pra revisitar quando quiser.', horas:null},
   h48:       {nome:HORAS_TEMP+' horas', desc:'O link some do ar '+HORAS_TEMP+' horas depois. Ideal pra surpresa de última hora.', horas:HORAS_TEMP}
 };
-var PRECO_MUSICA_ADDON = 14.99;
+var PRECO_MUSICA_ADDON = 9.99;
 var HORAS_TEMP = 6; // duração do presente temporário
 function precoDe(produto, duracao){
   var p=PACOTES[produto]; if(!p) return 0;
@@ -4299,7 +4299,7 @@ function htmlPasso(k){
           '<audio id="aud-'+t.id+'" src="'+t.arquivo+'" preload="none"></audio>'+
         '</div>';
       }).join('')+'</div>'+
-      '';
+      (RECURSOS[W.produto] && RECURSOS[W.produto].musicaIA ? htmlCardMusicaPremium() : '');
   }
 
   case 'jogos': {
@@ -6252,7 +6252,7 @@ function montarCorpo(g){
   var h='<div class="g-body">';
 
   /* capa */
-  var comTrilha = !!((r.trilha && g.trilhaOn!==false) || (g.musicaOn && g.musicaPreviewUrl));
+  var comTrilha = !!((r.trilha && g.trilhaId) || (g.musicaOn && g.musicaPreviewUrl));
   h+='<div class="g-hero g-hero-poster"><div class="sparks" id="heroSparks"></div>'+
     (comTrilha ? '<button class="g-musica-btn" id="gMusicaBtn" aria-label="Música">'+
       '<div class="barras"><i></i><i></i><i></i></div></button>'+
@@ -6467,7 +6467,7 @@ function pararAudio(){
 function prepararTrilha(g){
   var r=RECURSOS[g.produto]||RECURSOS.completo;
   var personalizada = !!(g.musicaOn && g.musicaPreviewUrl);
-  var fixa = !!(r.trilha && g.trilhaOn!==false);
+  var fixa = !!(r.trilha && g.trilhaId);
   if(!personalizada && !fixa) return null;
   if(!_trilha){
     var fonte = personalizada ? g.musicaPreviewUrl : trilhaPorId(g.trilhaId).arquivo;
