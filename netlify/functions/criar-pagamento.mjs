@@ -14,7 +14,7 @@ const PACOTES = {
 };
 // Produtos que aceitam a música personalizada como adicional pago.
 const PRODUTOS_COM_ADDON_MUSICA = ['completo', 'carta'];
-const PRECO_ADDON_MUSICA = 14.99;
+const PRECO_ADDON_MUSICA = 9.99;
 // Combo iniciado pela Música: ela mantém os R$9,99 e o presente entra
 // com desconto, sempre vitalício. Tem que bater com precoTotal() no index.html.
 const COMBO_DA_MUSICA = { carta: 7.99, completo: 24.99 };
