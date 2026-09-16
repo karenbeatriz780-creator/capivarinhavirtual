@@ -9,27 +9,58 @@ function json(obj, status = 200) {
 
 // Gênero vem SEMPRE primeiro e repetido — é o que mais pesa na fidelidade.
 // Descrições enxutas: tag poluída faz a Suno misturar estilos.
+// Nome do gênero em português — vai no BRIEFING, que é o texto que a Suno
+// realmente lê no modo de composição. É aqui que o estilo é decidido.
+const GENERO_PT = {
+  romantica:'balada romântica, com violão e piano',
+  sertanejo:'sertanejo, com viola caipira e sanfona',
+  pop:'pop moderno, com sintetizadores e batida marcada',
+  rock:'rock, com guitarra distorcida, baixo e bateria',
+  mpb:'MPB, com violão de nylon',
+  bossa:'bossa nova, com violão e suingue suave',
+  gospel:'gospel de adoração, com piano e coral',
+  samba:'samba, com cavaquinho e pandeiro',
+  pagode:'pagode, com cavaquinho e tantã',
+  forro:'forró, com sanfona, zabumba e triângulo',
+  piseiro:'piseiro, com sanfona eletrônica e batida dançante',
+  funk:'funk carioca, com batida 808 pesada',
+  trap:'trap, com 808 e hi-hats rápidos',
+  eletronica:'música eletrônica, com sintetizadores e batida de pista',
+  reggae:'reggae, com guitarra no contratempo e baixo grave',
+  jazz:'jazz, com saxofone e contrabaixo acústico',
+  blues:'blues, com guitarra e gaita',
+  axe:'axé, com percussão de carnaval e metais',
+  lofi:'lo-fi, com batida suave e clima tranquilo',
+  infantil:'música infantil, alegre e simples'
+};
 const GENEROS = {
-  romantica:  'romantic ballad, acoustic guitar, piano, tender',
-  sertanejo:  'sertanejo, viola caipira, brazilian country, sertanejo universitario',
-  pop:        'pop, catchy, modern production',
-  rock:       'rock, electric guitars, drums, driving',
-  mpb:        'MPB, musica popular brasileira, acoustic',
-  bossa:      'bossa nova, nylon guitar, soft swing',
-  gospel:     'gospel, worship, uplifting',
-  samba:      'samba, cavaquinho, pandeiro, brazilian samba',
-  pagode:     'pagode, cavaquinho, tantã, brazilian pagode',
-  forro:      'forró, accordion, zabumba, triangle, northeastern brazilian',
-  piseiro:    'piseiro, electronic accordion, danceable northeastern brazilian',
-  funk:       'brazilian funk, heavy beat, funk carioca',
-  trap:       'trap, hip hop, 808 bass',
-  eletronica: 'EDM, electronic dance, synths',
-  reggae:     'reggae, offbeat guitar, laid back groove',
-  jazz:       'jazz, saxophone, swing, upright bass',
-  blues:      'blues, blues guitar, slow shuffle',
-  axe:        'axé, brazilian carnival, percussion, upbeat',
-  lofi:       'lo-fi, chill, mellow beat',
-  infantil:   "children's song, playful, simple melody"
+  romantica:  'romantic ballad, acoustic guitar, soft piano, strings, tender vocals',
+  sertanejo:  'sertanejo, viola caipira, acoustic guitar, accordion, country ballad',
+  pop:        'pop, synth, punchy drums, catchy hook, radio production',
+  rock:       'rock, distorted electric guitars, live drums, bass, driving riff',
+  mpb:        'MPB, nylon string guitar, subtle percussion, jazzy chords',
+  bossa:      'bossa nova, nylon guitar, brushed drums, soft swing, jazz harmony',
+  gospel:     'gospel, church organ, piano, choir, worship',
+  samba:      'samba, cavaquinho, pandeiro, surdo, tamborim',
+  pagode:     'pagode, cavaquinho, tantã, banjo, repique de mão',
+  forro:      'forró, accordion, zabumba, triangle, northeastern groove',
+  piseiro:    'piseiro, electronic accordion, programmed beat, danceable',
+  funk:       'funk carioca, heavy 808 beat, baile funk percussion, urban',
+  trap:       'trap, 808 bass, hi-hat rolls, dark synth, hip hop beat',
+  eletronica: 'EDM, electronic synths, four on the floor beat, club production',
+  reggae:     'reggae, offbeat guitar skank, dub bass, laid back groove',
+  jazz:       'jazz, saxophone, upright bass, brushed drums, swing',
+  blues:      'blues, electric blues guitar, slow shuffle, harmonica',
+  axe:        'axé, carnival percussion, brass section, upbeat dance',
+  lofi:       'lo-fi, mellow beat, vinyl texture, chill',
+  infantil:   "children's song, playful melody, xylophone, simple bright arrangement"
+};
+const CLIMA_PT = {
+  alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
+  romantica:'romântico e apaixonado', calma:'calmo e suave',
+  nostalgica:'nostálgico, de saudade', festiva:'festivo, de celebração',
+  energetica:'energético e vibrante', divertida:'divertido e bem-humorado',
+  inspiradora:'inspirador, de superação', melancolica:'melancólico'
 };
 const CLIMAS = {
   alegre:'joyful', emocionante:'emotional', romantica:'romantic', calma:'gentle',
@@ -101,27 +132,36 @@ export default async (req) => {
 
     // TAGS = estilo musical + contexto. Gênero primeiro e repetido no fim pra reforçar.
     // Relação e ocasião entram aqui (e não na letra) pra guiar o clima sem serem cantadas.
+    // TAGS = SÓ o que é musical. Relação e ocasião saem daqui (são semânticas,
+    // não sonoras) e ficam só no briefing da letra.
+    // "brazilian" sozinho foi removido: puxava tudo pra samba/bossa.
     const gen = GENEROS[estilo] || GENEROS.romantica;
-    const tagsPartes = [gen, 'sung in portuguese', 'brazilian'];
+    const tagsPartes = [gen, gen.split(',')[0], 'portuguese vocals'];
     if (CLIMAS[clima]) tagsPartes.push(CLIMAS[clima]);
-    if (RELACOES_TAG[relacao]) tagsPartes.push(RELACOES_TAG[relacao]);
-    if (OCASIOES_TAG[ocasiao]) tagsPartes.push(OCASIOES_TAG[ocasiao]);
     if (VOZES[voz]) tagsPartes.push(VOZES[voz]);
-    tagsPartes.push(gen.split(',')[0]); // reforço final do gênero
+    tagsPartes.push(gen.split(',')[0]); // terceiro reforço do gênero
     const tagsEstilo = tagsPartes.join(', ');
 
     // BRIEFING: a Suno compõe a letra a partir daqui (não é cantado literalmente).
     // Por isso as palavras-chave da pessoa viram matéria-prima, não a letra pronta.
     var b = [];
-    b.push('Componha uma música original em português do Brasil');
-    if (NICHO_TEXTO[relacao]) b.push('dedicada para ' + NICHO_TEXTO[relacao]);
-    if (ocasiao) b.push('para a ocasião de ' + ocasiao.toLowerCase());
+    var genPT = GENERO_PT[estilo] || GENERO_PT.romantica;
+    var genNome = genPT.split(',')[0];
+    // O gênero vem PRIMEIRO e é repetido: é o que mais pesa na composição.
+    b.push('Gênero musical: ' + genNome.toUpperCase() + '. ');
+    b.push('Componha uma música de ' + genPT);
+    b.push(', cantada em português do Brasil');
+    if (NICHO_TEXTO[relacao]) b.push(', dedicada para ' + NICHO_TEXTO[relacao]);
+    if (ocasiao) b.push(', para a ocasião de ' + ocasiao.toLowerCase());
     b.push('. Use estes detalhes reais da história como base da letra: ' + texto);
     if (nomesLetra) b.push(' Cite na letra os nomes: ' + nomesLetra + '.');
     if (frase) b.push(' Inclua a frase: "' + frase + '".');
     b.push(' A música deve ter dois versos, um refrão marcante que se repete, e uma ponte.');
     b.push(' Use imagens concretas da história, evite frases genéricas.');
     if (NICHO_EVITAR[relacao]) b.push(' ' + NICHO_EVITAR[relacao]);
+    if (CLIMA_PT[clima]) b.push(' O clima da música deve ser ' + CLIMA_PT[clima] + '.');
+    b.push(' IMPORTANTE: o arranjo e a instrumentação devem ser de ' + genNome +
+           ', e não de outro estilo.');
     const prompt = b.join('').slice(0, 2900);
 
     let resp;
