@@ -1005,6 +1005,11 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pnl-aba{flex-shrink:0;font-size:.78rem;font-weight:800;padding:.55rem .9rem;border-radius:100px;
   border:1px solid var(--line);background:#fff;color:var(--muted);}
 .pnl-aba.on{background:var(--rose);border-color:var(--rose);color:#fff;}
+.pnl-pend{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;
+  background:#FFF8E6;border:1px dashed #F0D89A;border-radius:10px;padding:.6rem .75rem;}
+.pnl-pend span{flex:1;min-width:8rem;font-size:.76rem;color:#9C7B34;}
+.pnl-verificar{flex-shrink:0;font-size:.72rem;font-weight:800;padding:.4rem .75rem;border-radius:8px;
+  border:0;background:#8A6410;color:#fff;}
 .pnl-cancelar{width:100%;margin-top:.5rem;padding:.5rem;border-radius:8px;border:1px solid #F5C6CB;
   background:#FDF1F2;color:#B02A37;font-size:.74rem;font-weight:800;}
 .selo.canc{background:#F1F1F1;color:#777;}
@@ -5440,7 +5445,8 @@ function desenharPainel(pedidos, visitas, musicas){
       (zap ? '<div class="pnl-whats"><a href="https://wa.me/55'+esc(zap)+'" target="_blank" rel="noopener">'+IC.wpp+' '+esc(m.whatsapp)+'</a></div>' : '')+
       (m.url
         ? pnlVersaoMusica(fake, m.url, 'Versão 1')+(m.url2?pnlVersaoMusica(fake, m.url2, 'Versão 2'):'')
-        : '<div class="pnl-nota" style="margin-top:.5rem">Ainda processando ou não concluiu.</div>')+
+        : '<div class="pnl-pend"><span>Ainda processando ou o cliente fechou a página.</span>'+
+          '<button type="button" class="pnl-verificar" data-verificar="'+esc(m.taskId)+'">Verificar agora</button></div>')+
     '</div>';
   }).join('') || '<div class="pnl-nota">Nenhuma música gerada ainda.</div>';
 
@@ -5492,6 +5498,26 @@ function desenharPainel(pedidos, visitas, musicas){
 
   body.querySelectorAll('[data-copiar-link]').forEach(function(btn){
     btn.onclick=function(){ copiar(btn.dataset.copiarLink, 'Link copiado!'); };
+  });
+  body.querySelectorAll('[data-verificar]').forEach(function(btn){
+    btn.onclick=function(){
+      btn.disabled=true; btn.textContent='Consultando...';
+      fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(btn.dataset.verificar))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d && d.pronto && d.url){
+            toast('Pronta! Atualizando...');
+            tentarAcessoPainel(_pnlChave);
+          } else if(d && d.falhou){
+            btn.disabled=false; btn.textContent='Verificar agora';
+            toast('Essa geração falhou na Suno.');
+          } else {
+            btn.disabled=false; btn.textContent='Verificar agora';
+            toast('Ainda está sendo produzida. Tenta daqui a pouco.');
+          }
+        })
+        .catch(function(){ btn.disabled=false; btn.textContent='Verificar agora'; toast('Sem conexão.'); });
+    };
   });
   body.querySelectorAll('[data-cancelar]').forEach(function(btn){
     btn.onclick=function(){
