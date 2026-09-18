@@ -11,39 +11,42 @@ function json(obj, status = 200) {
 // Descrições enxutas: tag poluída faz a Suno misturar estilos.
 // Nome do gênero em português — vai no BRIEFING, que é o texto que a Suno
 // realmente lê no modo de composição. É aqui que o estilo é decidido.
+// IMPORTANTE: descrever pela INSTRUMENTAÇÃO certa. Dizer "viola caipira e
+// sanfona" no sertanejo entrega modão/raiz (Leonardo), não o sertanejo
+// universitário moderno (Zé Neto, Luan Santana) que o cliente espera.
 const GENERO_PT = {
-  romantica:'balada romântica pop, com piano, cordas orquestrais e um violão suave de estúdio (produção pop, não country)',
-  sertanejo:'sertanejo, com viola caipira e sanfona',
-  pop:'pop moderno, com sintetizadores e batida marcada',
-  rock:'rock, com guitarra distorcida, baixo e bateria',
-  mpb:'MPB, com violão de nylon',
-  bossa:'bossa nova, com violão e suingue suave',
-  gospel:'gospel de adoração, com piano e coral',
-  samba:'samba, com cavaquinho e pandeiro',
-  pagode:'pagode, com cavaquinho e tantã',
-  forro:'forró, com sanfona, zabumba e triângulo',
-  piseiro:'piseiro, com sanfona eletrônica e batida dançante',
-  funk:'funk carioca, com batida 808 pesada',
-  trap:'trap, com 808 e hi-hats rápidos',
-  eletronica:'música eletrônica, com sintetizadores e batida de pista',
-  reggae:'reggae, com guitarra no contratempo e baixo grave',
-  jazz:'jazz, com saxofone e contrabaixo acústico',
-  blues:'blues, com guitarra e gaita',
-  axe:'axé, com percussão de carnaval e metais',
-  lofi:'lo-fi, com batida suave e clima tranquilo',
-  infantil:'música infantil, alegre e simples'
+  romantica:'balada romântica pop, com piano, cordas orquestrais e violão suave de estúdio, produção pop moderna',
+  sertanejo:'sertanejo universitário moderno, com violão, guitarra elétrica limpa, baixo, bateria e teclado, produção de estúdio atual e polida, estilo romântico de rádio e arena',
+  pop:'pop moderno, com sintetizadores, baixo marcado e batida eletrônica de rádio',
+  rock:'rock pesado, com guitarra elétrica distorcida, riff marcado, baixo encorpado e bateria forte',
+  mpb:'MPB, com violão de nylon dedilhado, arranjo intimista e percussão discreta',
+  bossa:'bossa nova, com violão de nylon em batida sincopada, vassourinha na bateria e harmonia de jazz',
+  gospel:'gospel de adoração, com piano, órgão, cordas e coral em crescendo',
+  samba:'samba, com cavaquinho, pandeiro, surdo e tamborim',
+  pagode:'pagode, com cavaquinho, tantã, banjo e repique de mão',
+  forro:'forró pé de serra, com sanfona, zabumba e triângulo',
+  piseiro:'piseiro, com sanfona eletrônica, batida programada e groove dançante',
+  funk:'funk carioca, com batida 808 pesada e percussão de baile',
+  trap:'trap, com 808 grave, hi-hats rápidos e sintetizador sombrio',
+  eletronica:'música eletrônica de pista, com sintetizadores, drop e batida four on the floor',
+  reggae:'reggae, com guitarra no contratempo, baixo grave e bateria com groove arrastado',
+  jazz:'jazz, com saxofone, contrabaixo acústico, piano e vassourinha na bateria',
+  blues:'blues, com guitarra elétrica de blues, gaita e levada arrastada',
+  axe:'axé baiano, com percussão de carnaval, metais e guitarra baiana',
+  lofi:'lo-fi, com batida suave, textura de vinil e teclado sonhador',
+  infantil:'música infantil, alegre e simples, com xilofone e melodia cantarolável'
 };
 
 // A Suno tende a "cair" sempre em sertanejo ou samba — são os gêneros mais
 // comuns do Brasil. Pra cada gênero, isso é o que ele NÃO pode soar.
 const GENERO_EVITAR = {
-  romantica:'sertanejo, viola caipira, sanfona, batida de forró ou piseiro',
+  romantica:'sertanejo, modão, viola caipira, sanfona, country ou batida de forró',
   pop:'sertanejo, samba',
   rock:'sertanejo, samba, forró',
   mpb:'sertanejo, pagode',
   bossa:'sertanejo, samba pesado, forró',
   gospel:'sertanejo, samba',
-  sertanejo:'samba, pagode',
+  sertanejo:'sertanejo raiz, modão, música caipira antiga, viola caipira, sanfona, samba',
   samba:'sertanejo',
   pagode:'sertanejo, samba de salão',
   forro:'sertanejo, piseiro eletrônico',
@@ -94,6 +97,20 @@ const CLIMA_PT = {
   nostalgica:'nostálgico, de saudade', festiva:'festivo, de celebração',
   energetica:'energético e vibrante', divertida:'divertido e bem-humorado',
   inspiradora:'inspirador, de superação', melancolica:'melancólico'
+};
+// O clima tem que mudar o ARRANJO, não só a letra. Sem isso, "rock animado"
+// sai com a mesma pegada de "rock melancólico".
+const CLIMA_ARRANJO = {
+  alegre:'andamento acelerado, arranjo cheio e vibrante',
+  emocionante:'começa suave e cresce até um refrão grandioso e emocionado',
+  romantica:'andamento médio, arranjo suave e envolvente',
+  calma:'andamento lento, arranjo enxuto e delicado',
+  nostalgica:'andamento médio, arranjo saudoso, com espaço entre os instrumentos',
+  festiva:'andamento animado, arranjo cheio e comemorativo',
+  energetica:'andamento rápido, execução intensa e crua, instrumentos com força total',
+  divertida:'andamento saltitante, arranjo leve e brincalhão',
+  inspiradora:'crescimento gradual até um final grandioso e triunfante',
+  melancolica:'andamento lento, arranjo contido e sentido'
 };
 const CLIMAS = {
   alegre:'joyful', emocionante:'emotional', romantica:'romantic', calma:'gentle',
@@ -192,7 +209,10 @@ export default async (req) => {
     b.push(' A música deve ter dois versos, um refrão marcante que se repete, e uma ponte.');
     b.push(' Use imagens concretas da história, evite frases genéricas.');
     if (NICHO_EVITAR[relacao]) b.push(' ' + NICHO_EVITAR[relacao]);
-    if (CLIMA_PT[clima]) b.push(' O clima da música deve ser ' + CLIMA_PT[clima] + '.');
+    if (CLIMA_PT[clima]) {
+      b.push(' O clima da música deve ser ' + CLIMA_PT[clima] + '.');
+      if (CLIMA_ARRANJO[clima]) b.push(' O arranjo deve ter ' + CLIMA_ARRANJO[clima] + '.');
+    }
     if (VOZ_PT[voz]) b.push(' ' + VOZ_PT[voz]);
     b.push(' IMPORTANTE: o arranjo e a instrumentação devem ser de ' + genNome +
            ', e não de outro estilo.');
