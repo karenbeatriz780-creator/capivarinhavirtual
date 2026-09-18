@@ -12,7 +12,7 @@ function json(obj, status = 200) {
 // Nome do gênero em português — vai no BRIEFING, que é o texto que a Suno
 // realmente lê no modo de composição. É aqui que o estilo é decidido.
 const GENERO_PT = {
-  romantica:'balada romântica, com violão e piano',
+  romantica:'balada romântica pop, com piano, cordas orquestrais e um violão suave de estúdio (produção pop, não country)',
   sertanejo:'sertanejo, com viola caipira e sanfona',
   pop:'pop moderno, com sintetizadores e batida marcada',
   rock:'rock, com guitarra distorcida, baixo e bateria',
@@ -32,6 +32,39 @@ const GENERO_PT = {
   axe:'axé, com percussão de carnaval e metais',
   lofi:'lo-fi, com batida suave e clima tranquilo',
   infantil:'música infantil, alegre e simples'
+};
+
+// A Suno tende a "cair" sempre em sertanejo ou samba — são os gêneros mais
+// comuns do Brasil. Pra cada gênero, isso é o que ele NÃO pode soar.
+const GENERO_EVITAR = {
+  romantica:'sertanejo, viola caipira, sanfona, batida de forró ou piseiro',
+  pop:'sertanejo, samba',
+  rock:'sertanejo, samba, forró',
+  mpb:'sertanejo, pagode',
+  bossa:'sertanejo, samba pesado, forró',
+  gospel:'sertanejo, samba',
+  sertanejo:'samba, pagode',
+  samba:'sertanejo',
+  pagode:'sertanejo, samba de salão',
+  forro:'sertanejo, piseiro eletrônico',
+  piseiro:'forró tradicional, sertanejo',
+  funk:'sertanejo, trap',
+  trap:'funk carioca, sertanejo',
+  eletronica:'sertanejo, samba',
+  reggae:'sertanejo, samba',
+  jazz:'sertanejo, samba',
+  blues:'sertanejo, samba',
+  axe:'sertanejo',
+  lofi:'sertanejo, samba',
+  infantil:'sertanejo, samba'
+};
+
+// Instrução de voz em português — vai no texto que a Suno lê, não só nas
+// tags, porque tag sozinha vem sendo ignorada no modo de composição.
+const VOZ_PT = {
+  masculina:'A música deve ser cantada inteiramente por uma voz masculina.',
+  feminina:'A música deve ser cantada inteiramente por uma voz feminina.',
+  dueto:'A música deve ser um dueto: uma voz masculina e uma voz feminina cantando junto ou se revezando.'
 };
 const GENEROS = {
   romantica:  'romantic ballad, acoustic guitar, soft piano, strings, tender vocals',
@@ -160,9 +193,20 @@ export default async (req) => {
     b.push(' Use imagens concretas da história, evite frases genéricas.');
     if (NICHO_EVITAR[relacao]) b.push(' ' + NICHO_EVITAR[relacao]);
     if (CLIMA_PT[clima]) b.push(' O clima da música deve ser ' + CLIMA_PT[clima] + '.');
+    if (VOZ_PT[voz]) b.push(' ' + VOZ_PT[voz]);
     b.push(' IMPORTANTE: o arranjo e a instrumentação devem ser de ' + genNome +
            ', e não de outro estilo.');
+    if (GENERO_EVITAR[estilo]) {
+      b.push(' Isso NÃO pode soar como ' + GENERO_EVITAR[estilo] + '.');
+    }
     const prompt = b.join('').slice(0, 2900);
+
+    // Registra exatamente o que vai pra Suno — é o que permite conferir,
+    // quando a música sai fora do estilo, se o erro foi nosso ou dela.
+    console.log('PEDIDO DE MUSICA >> genero=' + estilo + ' | clima=' + clima +
+      ' | voz=' + voz + ' | relacao=' + relacao + ' | ocasiao=' + ocasiao);
+    console.log('TAGS >> ' + tagsEstilo);
+    console.log('BRIEFING >> ' + prompt);
 
     let resp;
     try {
