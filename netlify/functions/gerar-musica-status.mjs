@@ -49,6 +49,23 @@ export default async (req) => {
     const data = await resp.json().catch(() => null);
     if (!resp.ok || !data) {
       console.error('Unifically status:', resp.status, JSON.stringify(data));
+
+      // Mesmo com erro HTTP, a resposta pode trazer o desfecho da tarefa.
+      // Sem isso o site fica perguntando pra sempre uma tarefa que já morreu.
+      const dentro = (data && data.data) || {};
+      const st = String(dentro.status || '').toLowerCase();
+      const msg = String(dentro.message || '');
+      if (st === 'failed' || st === 'error') {
+        const semCredito = /credit/i.test(msg);
+        return json({
+          pronto: false,
+          falhou: true,
+          erro: semCredito
+            ? 'O estúdio está temporariamente indisponível. Tenta de novo em alguns minutos.'
+            : 'A geração falhou. Tenta de novo.',
+          semCredito: semCredito
+        });
+      }
       return json({ erro: 'Não consegui checar o andamento agora.' }, 502);
     }
 
