@@ -2189,7 +2189,7 @@ var PACOTES = {
               desc:"Duas versões da sua música, e ainda vem com a Carta Virtual inclusa.", icone:"🎵", destaque:true, ribbon:"🔥 Mais pedida"}
 };
 var RECURSOS = {
-  completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1, musicaIA:0},
+  completo:  {fotos:10, carta:1, musica:0, contador:1, timeline:1, stories:1, jogos:1, trilha:1, musicaIA:1},
   carta:     {fotos:1,  carta:1, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:1, musicaIA:1},
   convite:   {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0},
   musica:    {fotos:0,  carta:0, musica:0, contador:0, timeline:0, stories:0, jogos:0, trilha:0, musicaIA:0}
@@ -2271,21 +2271,20 @@ function abrirAmostras(){
 }
 function htmlCardMusicaPremium(){
   var ligada=!!W.musicaOn;
-  var avulsa=PACOTES.musica ? PACOTES.musica.preco : 9.99;
-  var economia=Math.max(0, avulsa-PRECO_MUSICA_ADDON);
-  var pct=avulsa>0 ? Math.round(100*economia/avulsa) : 0;
+  var total=precoDe(W.produto, W.duracao||'vitalicio')+PRECO_MUSICA_ADDON;
   return '<div class="trk-premium'+(ligada?' on':'')+'" id="trkPremium">'+
     '<div class="trkp-topo">'+
       '<span class="trkp-ic">'+(ligada?'🎵':'🔒')+'</span>'+
       '<div class="trkp-tx"><b>Uma música só de vocês</b>'+
-      '<span>Feita do zero com a história de vocês. Ela toca na abertura do presente, e você também baixa o MP3.</span></div>'+
+      '<span>Feita do zero com a história que você contar. Ela toca na abertura do presente, '+
+      'e você ainda baixa o MP3 pra guardar. Você ouve a prévia antes de pagar.</span></div>'+
     '</div>'+
     '<div class="trkp-pr">'+
-      '<div><s>R$ '+fmtPreco(avulsa)+'</s> <b>R$ '+fmtPreco(PRECO_MUSICA_ADDON)+'</b>'+
-      (pct>0?'<em>'+pct+'% off levando junto</em>':'')+'</div>'+
+      '<div><b>+ R$ '+fmtPreco(PRECO_MUSICA_ADDON)+'</b>'+
+      '<em>pacote completo por R$ '+fmtPreco(total)+'</em></div>'+
     '</div>'+
     '<button type="button" class="trkp-btn" id="trkPremiumBtn">'+
-      (ligada?'✓ Música adicionada — tocar em vez da trilha':'Adicionar música personalizada')+'</button>'+
+      (ligada?'✓ Música adicionada — vai tocar no presente':'Adicionar música personalizada')+'</button>'+
   '</div>';
 }
 function trilhaPorId(id){
@@ -2296,7 +2295,7 @@ var DURACOES = {
   vitalicio: {nome:'Pra sempre', desc:'O link fica no ar pra sempre. Dá pra revisitar quando quiser.', horas:null},
   h48:       {nome:HORAS_TEMP+' horas', desc:'O link some do ar '+HORAS_TEMP+' horas depois. Ideal pra surpresa de última hora.', horas:HORAS_TEMP}
 };
-var PRECO_MUSICA_ADDON = 9.99;
+var PRECO_MUSICA_ADDON = 10;
 var HORAS_TEMP = 6; // duração do presente temporário
 function precoDe(produto, duracao){
   var p=PACOTES[produto]; if(!p) return 0;
@@ -4041,7 +4040,7 @@ function htmlPasso(k){
         '<div class="pp">R$ '+fmtPreco(vit)+'</div>'+
         '<p>O link nunca sai do ar. Ela vai poder voltar e rever esse presente daqui a meses, daqui a anos.</p>'+
         '<div class="pk-benef">'+IC.check+'<span>Vira uma lembrança guardada, não só uma surpresa do dia</span></div>'+
-        '<div class="pk-benef">'+IC.check+'<span><b>2 músicas personalizadas de brinde</b> — feitas com a história de vocês</span></div>'+
+
       '</button>'+
       '<button class="pk pk-dur '+(W.duracao==='h48'?'on':'')+'" data-dur="h48">'+
         '<h3>'+HORAS_TEMP+' horas</h3>'+
@@ -4053,10 +4052,9 @@ function htmlPasso(k){
       '<div class="wz-s">Pagamento único por Pix, sem assinatura, sem renovação.</div>'+
       '<button class="prev-full" id="verTudo">'+IC.eye+'Ver o presente inteiro, do jeito que vai chegar</button>'+
       '<div class="pick">'+op+'</div>'+
-      (W.duracao==='h48' ? '<div class="up-nota destaque">🎁'+
-        '<div><b>Por mais R$ '+fmtPreco(dif)+' você ganha 2 músicas personalizadas.</b><br>'+
-        'Músicas feitas com a história de vocês, que dá pra baixar e guardar. '+
-        'E o presente nunca sai do ar — em vez de sumir em '+HORAS_TEMP+' horas.</div></div>' : '');
+      (W.duracao==='h48' ? '<div class="up-nota destaque">💝'+
+        '<div><b>Por mais R$ '+fmtPreco(dif)+', ela guarda pra sempre.</b><br>'+
+        'O presente nunca sai do ar — em vez de sumir em '+HORAS_TEMP+' horas.</div></div>' : '');
   }
 
   case 'perfil': {
@@ -5159,11 +5157,7 @@ function telaSucesso(id){
       '</div>'+
       '<a class="btn btn-primary btn-block btn-lg" href="#/p/'+id+'" style="margin-top:1.6rem">Abrir o presente'+IC.arrow+'</a>'+
       '<a class="btn btn-ghost btn-block" href="#/meus" style="margin-top:.7rem">Ver meus presentes</a>'+
-      (g.produto==='completo' && g.duracao!=='h48'
-        ? '<div class="brinde-musica"><div class="bm-top">🎁<div><b>Você ganhou 2 músicas personalizadas</b>'+
-          '<span>Feitas com a história de vocês. Elas entram na abertura do presente.</span></div></div>'+
-          '<a class="bm-btn" href="#/criar/musica">Criar minhas músicas grátis'+IC.arrow+'</a></div>'
-        : '')+
+
       htmlKitImpressao()+
     '</div></div>';
   var svg='';
