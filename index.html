@@ -504,30 +504,79 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .cross-sell span{display:block;font-size:.8rem;color:var(--muted);line-height:1.5;margin-top:.2rem;}
 
 /* entrega dedicada da música avulsa */
-.musica-entrega{min-height:100vh;background:radial-gradient(120% 90% at 50% 0%,#2A1620,#0A0508 72%);
+.musica-entrega{position:relative;min-height:100vh;
+  background:radial-gradient(120% 90% at 50% 0%,#2A1620,#0A0508 72%);
   color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:3rem 1.5rem 3.5rem;text-align:center;gap:.4rem;}
-.me-capa{position:relative;width:min(220px,60vw);aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle at 35% 30%,#4a2a3c,#170b12 75%);
-  box-shadow:0 0 0 1.5px rgba(232,180,74,.4),0 0 70px rgba(232,180,74,.25),0 30px 60px rgba(0,0,0,.5);
-  display:flex;align-items:center;justify-content:center;margin-bottom:1.6rem;
+  padding:2.5rem 1.5rem 3rem;text-align:center;overflow:hidden;}
+.me-brilho{position:absolute;top:-20%;left:50%;transform:translateX(-50%);
+  width:130%;aspect-ratio:1;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(232,180,74,.13),transparent 62%);
+  animation:meBrilho 7s ease-in-out infinite;}
+@keyframes meBrilho{0%,100%{opacity:.55;transform:translateX(-50%) scale(1);}
+  50%{opacity:1;transform:translateX(-50%) scale(1.09);}}
+.me-selo{position:relative;font-size:.72rem;font-weight:800;letter-spacing:.06em;
+  background:rgba(232,180,74,.15);border:1px solid rgba(232,180,74,.35);color:var(--gold);
+  padding:.4rem .9rem;border-radius:100px;margin-bottom:1.8rem;}
+/* disco de vinil */
+.me-vinil{position:relative;width:min(230px,62vw);aspect-ratio:1;border-radius:50%;
+  background:repeating-radial-gradient(circle at 50% 50%,#1b0e16 0 3px,#241320 3px 6px);
+  box-shadow:0 0 0 1.5px rgba(232,180,74,.45),0 0 80px rgba(232,180,74,.22),0 30px 60px rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
   animation:meFloat 5s ease-in-out infinite;}
-@keyframes meFloat{0%,100%{transform:translateY(0) rotate(-1deg);}50%{transform:translateY(-10px) rotate(1deg);}}
-.me-nota{font-size:3rem;opacity:.9;}
-.me-eq{position:absolute;bottom:22%;display:flex;align-items:flex-end;gap:4px;height:20px;}
-.me-eq i{display:block;width:4px;border-radius:3px;background:var(--gold);animation:meEq 1.1s ease-in-out infinite;}
-.me-eq i:nth-child(1){height:8px;animation-delay:0s;} .me-eq i:nth-child(2){height:16px;animation-delay:.1s;}
-.me-eq i:nth-child(3){height:20px;animation-delay:.2s;} .me-eq i:nth-child(4){height:13px;animation-delay:.3s;}
-.me-eq i:nth-child(5){height:9px;animation-delay:.4s;}
-@keyframes meEq{0%,100%{transform:scaleY(.4);}50%{transform:scaleY(1);}}
-.me-tit{font-family:'Fraunces';font-size:1.4rem;font-weight:600;}
-.me-sub{font-size:.85rem;color:#C6A9B6;margin-bottom:1.6rem;}
-.me-play{width:74px;height:74px;border-radius:50%;background:var(--rose);border:0;
-  display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(227,43,109,.4);
-  margin-bottom:1.8rem;}
+.me-vinil.girando{animation:meFloat 5s ease-in-out infinite, meGira 4s linear infinite;}
+@keyframes meFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+@keyframes meGira{to{transform:rotate(360deg);}}
+.me-vinil img{width:62%;height:62%;object-fit:cover;border-radius:50%;
+  box-shadow:0 0 0 3px rgba(232,180,74,.3);}
+.me-nota{font-size:3.4rem;opacity:.92;}
+.me-furo{position:absolute;width:12px;height:12px;border-radius:50%;
+  background:#0A0508;box-shadow:0 0 0 2px rgba(232,180,74,.35);}
+/* equalizador */
+.me-eq{display:flex;align-items:flex-end;gap:4px;height:26px;margin:1.4rem 0 .4rem;opacity:.28;
+  transition:opacity .3s;}
+.me-eq.on{opacity:1;}
+.me-eq i{display:block;width:4px;border-radius:3px;background:var(--gold);height:8px;}
+.me-eq.on i{animation:meEq 1s ease-in-out infinite;}
+.me-eq i:nth-child(1){animation-delay:0s;} .me-eq i:nth-child(2){animation-delay:.1s;}
+.me-eq i:nth-child(3){animation-delay:.2s;} .me-eq i:nth-child(4){animation-delay:.3s;}
+.me-eq i:nth-child(5){animation-delay:.4s;} .me-eq i:nth-child(6){animation-delay:.5s;}
+.me-eq i:nth-child(7){animation-delay:.6s;}
+@keyframes meEq{0%,100%{height:6px;}50%{height:24px;}}
+.me-tit{position:relative;font-family:'Fraunces';font-size:1.55rem;font-weight:600;
+  line-height:1.25;margin-top:.6rem;}
+.me-assina{font-size:.88rem;color:var(--gold);font-style:italic;margin-top:.3rem;}
+.me-play{width:78px;height:78px;border-radius:50%;background:var(--rose);border:0;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 34px rgba(227,43,109,.45);margin:1.8rem 0 1.2rem;
+  animation:mePulso 2.6s ease-in-out infinite;}
+.me-play.tocando{animation:none;}
+@keyframes mePulso{0%,100%{box-shadow:0 10px 34px rgba(227,43,109,.45),0 0 0 0 rgba(227,43,109,.45);}
+  60%{box-shadow:0 10px 34px rgba(227,43,109,.45),0 0 0 22px rgba(227,43,109,0);}}
 .me-play svg{width:28px;height:28px;fill:#fff;margin-left:3px;}
 .me-play.tocando svg{margin-left:0;}
-.me-acoes{display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center;}
+/* progresso */
+.me-barra{width:min(280px,78vw);height:4px;border-radius:4px;background:rgba(255,255,255,.14);
+  overflow:hidden;}
+.me-barra i{display:block;height:100%;width:0%;border-radius:4px;
+  background:linear-gradient(90deg,var(--rose),var(--gold));transition:width .2s linear;}
+.me-tempo{display:flex;justify-content:space-between;width:min(280px,78vw);
+  font-size:.7rem;color:#9C8590;margin-top:.4rem;}
+/* letra */
+.me-letra{width:min(320px,86vw);margin-top:1.4rem;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:.8rem 1rem;text-align:left;}
+.me-letra summary{font-size:.82rem;font-weight:800;color:var(--gold);cursor:pointer;}
+.me-letra pre{white-space:pre-wrap;font-family:'Fraunces',serif;font-size:.86rem;
+  line-height:1.85;color:#EADCE2;margin:.8rem 0 0;}
+/* botões — antes estavam brancos invisíveis */
+.me-acoes{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin-top:1.6rem;}
+.me-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.8rem 1.3rem;
+  border-radius:100px;font-size:.87rem;font-weight:800;
+  background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.22);color:#fff;
+  backdrop-filter:blur(6px);}
+.me-btn svg{width:16px;height:16px;fill:#fff;stroke:#fff;}
+.me-btn.zap{background:#25D366;border-color:#25D366;box-shadow:0 8px 22px rgba(37,211,102,.32);}
+.me-btn.zap svg{fill:#fff;stroke:#fff;}
+.me-rodape{font-size:.72rem;color:#7C6670;margin-top:1.8rem;}
 .me-vazio{max-width:22rem;color:#C6A9B6;font-size:.88rem;line-height:1.6;margin-top:1rem;}
 /* tela premium de composição da música */
 .mc-premium{background:linear-gradient(165deg,#2A1620,#140A11);border-radius:var(--r-lg);
@@ -6020,30 +6069,71 @@ function ilustracaoTema(tema){
 function montarMusicaEntrega(g){
   document.body.style.overflow='auto';
   var url=g.musicaPreviewUrl;
+  var de=(g.meuNome||'').trim();
+  var para=(g.musicaParaNome||g.parceiroNome||'').trim();
+  var titulo = para ? ('Uma música pra '+para) : 'Uma música pra você';
+  var assinatura = de ? ('de '+de) : '';
+  var capaFoto=(g.fotos||[]).filter(Boolean)[0]||g.capa||null;
+  var letra=(g.musicaLetra||'').trim();
+  var msgShare='Fiz uma surpresa pra você 🎵 '+location.href;
+
   el('app').innerHTML=
     '<div class="musica-entrega">'+
-      '<div class="me-capa"><div class="me-nota">🎵</div>'+
-        '<div class="me-eq"><i></i><i></i><i></i><i></i><i></i></div></div>'+
-      '<div class="me-tit">Sua música personalizada</div>'+
-      '<div class="me-sub">Feita especialmente pra esse momento.</div>'+
+      '<div class="me-brilho"></div>'+
+      '<div class="me-selo">🎁 Uma surpresa pra você</div>'+
+      '<div class="me-vinil'+(capaFoto?' com-foto':'')+'" id="meVinil">'+
+        (capaFoto
+          ? '<img src="'+esc(capaFoto)+'" alt="">'
+          : '<div class="me-nota">🎵</div>')+
+        '<div class="me-furo"></div>'+
+      '</div>'+
+      '<div class="me-eq" id="meEq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>'+
+      '<div class="me-tit">'+esc(titulo)+'</div>'+
+      (assinatura ? '<div class="me-assina">'+esc(assinatura)+'</div>' : '')+
       (url ?
         '<button class="me-play" id="mePlay">'+IC.play+'</button>'+
-        '<audio id="meAudio" src="'+esc(url)+'" preload="auto"></audio>'+
+        '<div class="me-barra"><i id="meBarra"></i></div>'+
+        '<div class="me-tempo"><span id="meAtual">0:00</span><span id="meTotal">--:--</span></div>'+
+        '<audio id="meAudio" src="'+esc(url)+'" preload="metadata"></audio>'+
+        (letra ? '<details class="me-letra"><summary>📝 Ver a letra</summary><pre>'+esc(letra)+'</pre></details>' : '')+
         '<div class="me-acoes">'+
-          '<a class="share-b" href="'+esc(url)+'" download="minha-musica.mp3">'+IC.download+'Baixar</a>'+
-          '<a class="share-b" href="https://wa.me/?text='+encodeURIComponent('Ouve a música que eu fiz pra você: '+location.href)+'" target="_blank" rel="noopener">'+IC.wpp+'WhatsApp</a>'+
-        '</div>'
+          '<a class="me-btn" href="'+esc(url)+'" download="musica-'+esc((para||'presente').toLowerCase().replace(/[^a-z0-9]+/gi,'-'))+'.mp3">'+IC.download+'Baixar MP3</a>'+
+          '<a class="me-btn zap" href="https://wa.me/?text='+encodeURIComponent(msgShare)+'" target="_blank" rel="noopener">'+IC.wpp+'Compartilhar</a>'+
+        '</div>'+
+        '<div class="me-rodape">Feito com carinho no Capivarinha Love</div>'
         : '<div class="me-vazio">Essa música ainda não foi gerada. Se você é quem criou esse presente, volta em "Meus presentes" e gera a prévia antes de enviar o link.</div>'
       )+
     '</div>';
   if(!url) return;
-  var audio=el('meAudio'), btn=el('mePlay'), tocando=false;
+
+  var audio=el('meAudio'), btn=el('mePlay'), vinil=el('meVinil'), eq=el('meEq');
+  var tocando=false;
+  function fmtT(s){
+    if(!isFinite(s)) return '--:--';
+    var m=Math.floor(s/60), r=Math.floor(s%60);
+    return m+':'+(r<10?'0':'')+r;
+  }
+  audio.onloadedmetadata=function(){ el('meTotal').textContent=fmtT(audio.duration); };
+  audio.ontimeupdate=function(){
+    el('meAtual').textContent=fmtT(audio.currentTime);
+    var b=el('meBarra');
+    if(b && audio.duration) b.style.width=(audio.currentTime/audio.duration*100)+'%';
+  };
   btn.onclick=function(){
     tocando=!tocando;
-    if(tocando){ audio.play().catch(function(){ tocando=false; }); btn.innerHTML=IC.pause; btn.classList.add('tocando'); }
-    else{ audio.pause(); btn.innerHTML=IC.play; btn.classList.remove('tocando'); }
+    if(tocando){
+      audio.play().catch(function(){ tocando=false; });
+      btn.innerHTML=IC.pause; btn.classList.add('tocando');
+      vinil.classList.add('girando'); eq.classList.add('on');
+    } else {
+      audio.pause(); btn.innerHTML=IC.play; btn.classList.remove('tocando');
+      vinil.classList.remove('girando'); eq.classList.remove('on');
+    }
   };
-  audio.onended=function(){ tocando=false; btn.innerHTML=IC.play; btn.classList.remove('tocando'); };
+  audio.onended=function(){
+    tocando=false; btn.innerHTML=IC.play; btn.classList.remove('tocando');
+    vinil.classList.remove('girando'); eq.classList.remove('on');
+  };
 }
 
 function montarConvite(g){
