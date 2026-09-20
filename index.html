@@ -508,6 +508,23 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   background:radial-gradient(120% 90% at 50% 0%,#2A1620,#0A0508 72%);
   color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:2.5rem 1.5rem 3rem;text-align:center;overflow:hidden;}
+.capa-drop{display:flex;flex-direction:column;align-items:center;gap:.25rem;
+  border:1.5px dashed var(--rose-soft);border-radius:14px;padding:1.3rem 1rem;
+  background:var(--tint);text-align:center;cursor:pointer;}
+.capa-ic{font-size:1.6rem;}
+.capa-drop b{font-size:.88rem;color:var(--plum);}
+.capa-sub{font-size:.75rem;color:var(--muted);line-height:1.4;}
+.capa-previa{display:flex;align-items:center;gap:.8rem;background:#fff;
+  border:1.5px solid var(--rose-soft);border-radius:14px;padding:.7rem;}
+.capa-previa img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;}
+.capa-tx{flex:1;min-width:0;}
+.capa-tx b{display:block;font-size:.85rem;color:var(--plum);}
+.capa-tx span{display:block;font-size:.73rem;color:var(--muted);line-height:1.4;}
+.capa-x{flex-shrink:0;font-size:.74rem;font-weight:800;color:var(--rose-deep);
+  text-decoration:underline;}
+.mv-capa{display:flex;justify-content:center;margin:.5rem 0;}
+.mv-capa img{width:110px;height:110px;border-radius:12px;object-fit:cover;
+  box-shadow:0 8px 22px rgba(0,0,0,.18);}
 .me-brilho{position:absolute;top:-20%;left:50%;transform:translateX(-50%);
   width:130%;aspect-ratio:1;border-radius:50%;pointer-events:none;
   background:radial-gradient(circle,rgba(232,180,74,.13),transparent 62%);
@@ -517,31 +534,44 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .me-selo{position:relative;font-size:.72rem;font-weight:800;letter-spacing:.06em;
   background:rgba(232,180,74,.15);border:1px solid rgba(232,180,74,.35);color:var(--gold);
   padding:.4rem .9rem;border-radius:100px;margin-bottom:1.8rem;}
-/* disco de vinil */
-.me-vinil{position:relative;width:min(230px,62vw);aspect-ratio:1;border-radius:50%;
-  background:repeating-radial-gradient(circle at 50% 50%,#1b0e16 0 3px,#241320 3px 6px);
-  box-shadow:0 0 0 1.5px rgba(232,180,74,.45),0 0 80px rgba(232,180,74,.22),0 30px 60px rgba(0,0,0,.55);
-  display:flex;align-items:center;justify-content:center;overflow:hidden;
-  animation:meFloat 5s ease-in-out infinite;}
-.me-vinil.girando{animation:meFloat 5s ease-in-out infinite, meGira 4s linear infinite;}
-@keyframes meFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
-@keyframes meGira{to{transform:rotate(360deg);}}
-.me-vinil img{width:62%;height:62%;object-fit:cover;border-radius:50%;
-  box-shadow:0 0 0 3px rgba(232,180,74,.3);}
-.me-nota{font-size:3.4rem;opacity:.92;}
-.me-furo{position:absolute;width:12px;height:12px;border-radius:50%;
-  background:#0A0508;box-shadow:0 0 0 2px rgba(232,180,74,.35);}
+/* capa do álbum — quadrada, com play por cima */
+.me-album{position:relative;width:min(272px,72vw);aspect-ratio:1;border-radius:20px;
+  overflow:hidden;margin-bottom:1.8rem;
+  box-shadow:0 0 0 1px rgba(232,180,74,.28),0 26px 60px rgba(0,0,0,.6),
+    0 0 90px rgba(232,180,74,.16);
+  transition:transform .5s var(--ease), box-shadow .5s var(--ease);}
+.me-album.tocando{transform:scale(1.03);
+  box-shadow:0 0 0 1px rgba(232,180,74,.5),0 30px 70px rgba(0,0,0,.65),
+    0 0 120px rgba(232,180,74,.3);}
+.me-capa-img{width:100%;height:100%;object-fit:cover;display:block;}
+.me-capa-vazia{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 35% 28%,#4a2a3c,#150a11 72%);}
+.me-capa-vazia span{font-size:3.6rem;opacity:.85;}
+/* véu escuro embaixo pro play ter contraste em qualquer foto */
+.me-vidro{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,0) 38%,rgba(0,0,0,.55) 100%);}
+.me-play{position:absolute;left:50%;bottom:1.1rem;transform:translateX(-50%);
+  width:62px;height:62px;border-radius:50%;background:var(--rose);border:0;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 28px rgba(227,43,109,.55);
+  animation:mePulso 2.6s ease-in-out infinite;}
+.me-play.tocando{animation:none;background:rgba(255,255,255,.18);
+  backdrop-filter:blur(10px);border:1.5px solid rgba(255,255,255,.4);}
+@keyframes mePulso{0%,100%{box-shadow:0 8px 28px rgba(227,43,109,.55),0 0 0 0 rgba(227,43,109,.5);}
+  60%{box-shadow:0 8px 28px rgba(227,43,109,.55),0 0 0 20px rgba(227,43,109,0);}}
+.me-play svg{width:23px;height:23px;fill:#fff;margin-left:3px;}
+.me-play.tocando svg{margin-left:0;}
 /* equalizador */
-.me-eq{display:flex;align-items:flex-end;gap:4px;height:26px;margin:1.4rem 0 .4rem;opacity:.28;
-  transition:opacity .3s;}
+.me-eq{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:22px;
+  margin:1.4rem 0 1rem;opacity:.25;transition:opacity .3s;}
 .me-eq.on{opacity:1;}
-.me-eq i{display:block;width:4px;border-radius:3px;background:var(--gold);height:8px;}
+.me-eq i{display:block;width:3.5px;border-radius:3px;background:var(--gold);height:7px;}
 .me-eq.on i{animation:meEq 1s ease-in-out infinite;}
 .me-eq i:nth-child(1){animation-delay:0s;} .me-eq i:nth-child(2){animation-delay:.1s;}
 .me-eq i:nth-child(3){animation-delay:.2s;} .me-eq i:nth-child(4){animation-delay:.3s;}
 .me-eq i:nth-child(5){animation-delay:.4s;} .me-eq i:nth-child(6){animation-delay:.5s;}
 .me-eq i:nth-child(7){animation-delay:.6s;}
-@keyframes meEq{0%,100%{height:6px;}50%{height:24px;}}
+@keyframes meEq{0%,100%{height:5px;}50%{height:20px;}}
 .me-tit{position:relative;font-family:'Fraunces';font-size:1.55rem;font-weight:600;
   line-height:1.25;margin-top:.6rem;}
 .me-assina{font-size:.88rem;color:var(--gold);font-style:italic;margin-top:.3rem;}
@@ -555,11 +585,11 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .me-play svg{width:28px;height:28px;fill:#fff;margin-left:3px;}
 .me-play.tocando svg{margin-left:0;}
 /* progresso */
-.me-barra{width:min(280px,78vw);height:4px;border-radius:4px;background:rgba(255,255,255,.14);
-  overflow:hidden;}
+.me-barra{width:min(272px,72vw);height:5px;border-radius:5px;background:rgba(255,255,255,.14);
+  overflow:hidden;cursor:pointer;}
 .me-barra i{display:block;height:100%;width:0%;border-radius:4px;
   background:linear-gradient(90deg,var(--rose),var(--gold));transition:width .2s linear;}
-.me-tempo{display:flex;justify-content:space-between;width:min(280px,78vw);
+.me-tempo{display:flex;justify-content:space-between;width:min(272px,72vw);
   font-size:.7rem;color:#9C8590;margin-top:.4rem;}
 /* letra */
 .me-letra{width:min(320px,86vw);margin-top:1.4rem;background:rgba(255,255,255,.05);
@@ -2369,6 +2399,7 @@ function htmlMusicaPlayer(url, url2, letra){
     var ativo=(W.musicaPreviewUrl===u);
     return '<div class="musica-versao'+(ativo?' escolhida':'')+'">'+
       '<div class="mv-topo"><b>'+label+'</b>'+(ativo?'<span class="mv-selo">✓ vai no presente</span>':'')+'</div>'+
+      (W.musicaCapa ? '<div class="mv-capa"><img src="'+esc(W.musicaCapa)+'" alt=""></div>' : '')+
       '<audio class="mv-audio" controls src="'+esc(u)+'" style="width:100%"></audio>'+
       '<div class="hint" style="margin-top:.4rem">🔒 Prévia de 60 segundos — a completa libera depois do pagamento.</div>'+
       (ativo?'':'<button type="button" class="btn btn-ghost btn-block mv-escolher" data-versao="'+esc(u)+'" style="margin-top:.5rem">Usar esta no presente</button>')+
@@ -4316,6 +4347,18 @@ function htmlPasso(k){
         '<input class="inp" id="musicaNomesLetra" value="'+esc(W.musicaParaNome)+'" placeholder="Ex: João e Maria"></div>'+
       '<div class="field" style="margin-top:1rem"><label>Frase especial pra incluir (opcional)</label>'+
         '<input class="inp" id="musicaFrase" value="'+esc(W.musicaFrase)+'" placeholder="Ex: te amo mais que ontem"></div>'+
+      '<div class="field" style="margin-top:1rem"><label>Capa da música (opcional)</label>'+
+        (W.musicaCapa
+          ? '<div class="capa-previa"><img src="'+esc(W.musicaCapa)+'" alt="">'+
+            '<div class="capa-tx"><b>Capa escolhida</b><span>Ela aparece no disco quando a música tocar</span></div>'+
+            '<button type="button" class="capa-x" id="musicaCapaX">Trocar</button></div>'
+          : '<label class="capa-drop" for="musicaCapaInp">'+
+            '<span class="capa-ic">📷</span>'+
+            '<b>Colocar uma foto de capa</b>'+
+            '<span class="capa-sub">Vira a capa do álbum, com o play por cima</span>'+
+            '</label>')+
+        '<input type="file" id="musicaCapaInp" accept="image/*" style="display:none">'+
+      '</div>'+
       '<div class="field" style="margin-top:1rem"><label>Tipo de voz</label>'+
         '<div class="chips" style="grid-template-columns:repeat(3,1fr)">'+
           ['masculina','feminina','dueto'].map(function(v){
@@ -4730,6 +4773,17 @@ function ligarPasso(k){
     if(nomesLetraInp) nomesLetraInp.oninput=function(ev){ W.musicaParaNome=ev.target.value; };
     var fraseInp=el('musicaFrase');
     if(fraseInp) fraseInp.oninput=function(ev){ W.musicaFrase=ev.target.value; };
+    var capaInp=el('musicaCapaInp');
+    if(capaInp) capaInp.onchange=function(ev){
+      var f=ev.target.files && ev.target.files[0];
+      if(!f) return;
+      comprimir(f, 700, 0.8).then(function(dataUrl){
+        W.musicaCapa=dataUrl;
+        redesenharSemPular();
+      }).catch(function(){ toast('Não consegui ler essa imagem. Tenta outra.'); });
+    };
+    var capaX=el('musicaCapaX');
+    if(capaX) capaX.onclick=function(){ W.musicaCapa=null; redesenharSemPular(); };
     on('[data-voz]','onclick',function(e){
       W.musicaVoz=e.dataset.voz;
       document.querySelectorAll('[data-voz]').forEach(function(c){ c.classList.remove('on'); });
@@ -6073,7 +6127,7 @@ function montarMusicaEntrega(g){
   var para=(g.musicaParaNome||g.parceiroNome||'').trim();
   var titulo = para ? ('Uma música pra '+para) : 'Uma música pra você';
   var assinatura = de ? ('de '+de) : '';
-  var capaFoto=(g.fotos||[]).filter(Boolean)[0]||g.capa||null;
+  var capaFoto=g.musicaCapa||(g.fotos||[]).filter(Boolean)[0]||g.capa||null;
   var letra=(g.musicaLetra||'').trim();
   var msgShare='Fiz uma surpresa pra você 🎵 '+location.href;
 
@@ -6081,18 +6135,18 @@ function montarMusicaEntrega(g){
     '<div class="musica-entrega">'+
       '<div class="me-brilho"></div>'+
       '<div class="me-selo">🎁 Uma surpresa pra você</div>'+
-      '<div class="me-vinil'+(capaFoto?' com-foto':'')+'" id="meVinil">'+
+      '<div class="me-album" id="meAlbum">'+
         (capaFoto
-          ? '<img src="'+esc(capaFoto)+'" alt="">'
-          : '<div class="me-nota">🎵</div>')+
-        '<div class="me-furo"></div>'+
+          ? '<img class="me-capa-img" src="'+esc(capaFoto)+'" alt="">'
+          : '<div class="me-capa-vazia"><span>🎵</span></div>')+
+        '<div class="me-vidro"></div>'+
+        (url ? '<button class="me-play" id="mePlay">'+IC.play+'</button>' : '')+
       '</div>'+
-      '<div class="me-eq" id="meEq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>'+
       '<div class="me-tit">'+esc(titulo)+'</div>'+
       (assinatura ? '<div class="me-assina">'+esc(assinatura)+'</div>' : '')+
       (url ?
-        '<button class="me-play" id="mePlay">'+IC.play+'</button>'+
-        '<div class="me-barra"><i id="meBarra"></i></div>'+
+        '<div class="me-eq" id="meEq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>'+
+        '<div class="me-barra" id="meBarraWrap"><i id="meBarra"></i></div>'+
         '<div class="me-tempo"><span id="meAtual">0:00</span><span id="meTotal">--:--</span></div>'+
         '<audio id="meAudio" src="'+esc(url)+'" preload="metadata"></audio>'+
         (letra ? '<details class="me-letra"><summary>📝 Ver a letra</summary><pre>'+esc(letra)+'</pre></details>' : '')+
@@ -6106,7 +6160,7 @@ function montarMusicaEntrega(g){
     '</div>';
   if(!url) return;
 
-  var audio=el('meAudio'), btn=el('mePlay'), vinil=el('meVinil'), eq=el('meEq');
+  var audio=el('meAudio'), btn=el('mePlay'), album=el('meAlbum'), eq=el('meEq');
   var tocando=false;
   function fmtT(s){
     if(!isFinite(s)) return '--:--';
@@ -6124,15 +6178,21 @@ function montarMusicaEntrega(g){
     if(tocando){
       audio.play().catch(function(){ tocando=false; });
       btn.innerHTML=IC.pause; btn.classList.add('tocando');
-      vinil.classList.add('girando'); eq.classList.add('on');
+      album.classList.add('tocando'); eq.classList.add('on');
     } else {
       audio.pause(); btn.innerHTML=IC.play; btn.classList.remove('tocando');
-      vinil.classList.remove('girando'); eq.classList.remove('on');
+      album.classList.remove('tocando'); eq.classList.remove('on');
     }
   };
   audio.onended=function(){
     tocando=false; btn.innerHTML=IC.play; btn.classList.remove('tocando');
-    vinil.classList.remove('girando'); eq.classList.remove('on');
+    album.classList.remove('tocando'); eq.classList.remove('on');
+  };
+  var barraWrap=el('meBarraWrap');
+  if(barraWrap) barraWrap.onclick=function(ev){
+    if(!audio.duration) return;
+    var r=barraWrap.getBoundingClientRect();
+    audio.currentTime=((ev.clientX-r.left)/r.width)*audio.duration;
   };
 }
 
