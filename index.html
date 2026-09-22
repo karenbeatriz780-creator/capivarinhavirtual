@@ -414,6 +414,15 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mv-topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;}
 .mv-topo b{font-size:.85rem;color:var(--plum);}
 .mv-selo{font-size:.65rem;font-weight:800;padding:.15rem .5rem;border-radius:100px;background:#E3F6EC;color:#1F9D5C;}
+.mh-checklist{margin-top:.7rem;}
+.mhc-tit{font-size:.76rem;font-weight:800;color:var(--plum);margin-bottom:.4rem;}
+.mhc-itens{display:flex;flex-wrap:wrap;gap:.35rem;}
+.mhc{font-size:.71rem;font-weight:700;padding:.28rem .6rem;border-radius:100px;
+  background:var(--paper);color:var(--muted);border:1px solid var(--line);}
+.mhc.ok{background:#E3F6EC;color:#1F9D5C;border-color:#B8E6CC;}
+.sug-exemplo{display:block;width:100%;margin-top:.7rem;padding:.55rem;border-radius:10px;
+  border:1px dashed var(--rose-soft);background:#fff;font-size:.78rem;font-weight:700;
+  color:var(--rose-deep);}
 .sug-musica{margin-top:.9rem;background:var(--tint);border:1px solid var(--rose-soft);
   border-radius:var(--r-md);padding:.85rem 1rem;}
 .sug-lbl{display:block;font-size:.78rem;color:var(--rose-deep);font-weight:800;margin-bottom:.4rem;}
@@ -476,6 +485,17 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mh-contador{font-size:.76rem;font-weight:700;margin-top:.4rem;}
 .mh-contador.falta{color:var(--rose-deep);}
 .mh-contador.ok{color:#1F9D5C;}
+.mp-topo{text-align:center;font-size:1.8rem;margin-bottom:1rem;}
+.mp-topo b{display:block;font-family:'Fraunces';font-size:1.15rem;color:var(--plum);
+  font-weight:600;margin-top:.2rem;}
+.mp-topo span{display:block;font-size:.82rem;color:var(--muted);margin-top:.2rem;line-height:1.5;}
+.mp-oferta{display:flex;align-items:center;gap:.8rem;margin-top:.9rem;
+  background:linear-gradient(160deg,#2A1620,#140A11);border-radius:14px;padding:.95rem 1.05rem;
+  box-shadow:0 10px 26px rgba(20,10,17,.26);}
+.mp-of-tx{flex:1;min-width:0;}
+.mp-of-tx b{display:block;font-size:.9rem;color:#fff;}
+.mp-of-tx span{display:block;font-size:.76rem;color:#C6A9B6;line-height:1.45;margin-top:.15rem;}
+.mp-of-pr{flex-shrink:0;font-family:'Fraunces';font-size:1.3rem;color:var(--gold);}
 .mv-aviso{font-size:.78rem;color:var(--muted);background:#fff;border:1px dashed var(--rose-soft);
   border-radius:10px;padding:.6rem .75rem;margin-bottom:.7rem;line-height:1.5;}
 .mv-letra{margin-top:.5rem;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:.75rem .9rem;}
@@ -641,6 +661,9 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mc-bar i{display:block;height:100%;width:0%;border-radius:6px;
   background:linear-gradient(90deg,var(--rose),var(--gold));transition:width .3s ease;}
 .mc-pct{font-family:'Fraunces';font-size:.95rem;color:var(--gold);margin-top:.5rem;}
+.mc-fica{margin-top:1.2rem;padding-top:1.1rem;border-top:1px solid rgba(255,255,255,.12);
+  font-size:.82rem;color:#C6A9B6;line-height:1.6;}
+.mc-fica b{color:var(--gold);}
 .mc-whats-box{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.12);}
 .mc-whats-box b{display:block;font-size:.85rem;color:#fff;}
 .mc-whats-box span{display:block;font-size:.76rem;color:#C6A9B6;margin:.2rem 0 .8rem;line-height:1.5;}
@@ -737,6 +760,10 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .trkp-tx b{display:block;font-size:.92rem;}
 .trkp-tx span{display:block;font-size:.77rem;color:#C6A9B6;line-height:1.45;margin-top:.15rem;}
 .trk-premium.on .trkp-tx span{color:#A8D5BE;}
+.trkp-bens{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.8rem;}
+.trkp-bens span{font-size:.68rem;font-weight:700;padding:.3rem .6rem;border-radius:100px;
+  background:rgba(255,255,255,.1);color:#EADCE2;}
+.trk-premium.on .trkp-bens span{background:rgba(255,255,255,.14);}
 .trkp-pr{margin:.75rem 0 .7rem;font-size:1.05rem;}
 .trkp-pr s{color:#9C8590;font-size:.82rem;margin-right:.25rem;}
 .trkp-pr b{font-family:'Fraunces';color:var(--gold);font-size:1.2rem;}
@@ -2355,8 +2382,13 @@ function htmlCardMusicaPremium(){
     '<div class="trkp-topo">'+
       '<span class="trkp-ic">'+(ligada?'🎵':'🔒')+'</span>'+
       '<div class="trkp-tx"><b>Uma música só de vocês</b>'+
-      '<span>Feita do zero com a história que você contar. Ela toca na abertura do presente, '+
-      'e você ainda baixa o MP3 pra guardar. Você ouve a prévia antes de pagar.</span></div>'+
+      '<span>Letra e melodia feitas do zero com a história que você contar. '+
+      'Toca na abertura do presente e você baixa o MP3 pra guardar pra sempre.</span></div>'+
+    '</div>'+
+    '<div class="trkp-bens">'+
+      ['🎧 2 versões pra escolher','🔊 Áudio de estúdio','⚡ Fica pronta na hora','👂 Ouve antes de pagar']
+        .map(function(b){ return '<span>'+b+'</span>'; }).join('')+
+    '</div>'+
     '</div>'+
     '<div class="trkp-pr">'+
       '<div><b>+ R$ '+fmtPreco(PRECO_MUSICA_ADDON)+'</b>'+
@@ -2401,22 +2433,31 @@ function htmlMusicaPlayer(url, url2, letra){
       '<div class="mv-topo"><b>'+label+'</b>'+(ativo?'<span class="mv-selo">✓ vai no presente</span>':'')+'</div>'+
       (W.musicaCapa ? '<div class="mv-capa"><img src="'+esc(W.musicaCapa)+'" alt=""></div>' : '')+
       '<audio class="mv-audio" controls src="'+esc(u)+'" style="width:100%"></audio>'+
-      '<div class="hint" style="margin-top:.4rem">🔒 Prévia de 60 segundos — a completa libera depois do pagamento.</div>'+
+      '<div class="hint" style="margin-top:.4rem">🔒 Prévia de 70 segundos — a música completa libera depois do pagamento.</div>'+
       (ativo?'':'<button type="button" class="btn btn-ghost btn-block mv-escolher" data-versao="'+esc(u)+'" style="margin-top:.5rem">Usar esta no presente</button>')+
     '</div>';
   }
   var htmlLetra = letra
     ? '<details class="mv-letra"><summary>📝 Ver a letra</summary><pre>'+esc(letra)+'</pre></details>'
     : '';
+  var avulsa=PACOTES.musica?PACOTES.musica.preco:9.99;
+  var qtd=url2?2:1;
   return '<div class="musica-pronta">'+
-    '<div class="mv-aviso">Você recebeu <b>duas versões</b> — as duas ficam liberadas pra baixar depois do pagamento.</div>'+
-    card(url,'Versão 1')+card(url2,'Versão 2')+htmlLetra+'</div>';
+    '<div class="mp-topo">🎉<b>Sua música ficou pronta</b>'+
+    '<span>'+(qtd>1?'Duas versões diferentes':'Sua versão')+' — ouve e escolhe a que mais emocionar</span></div>'+
+    card(url,'Versão 1')+card(url2,'Versão 2')+htmlLetra+
+    '<div class="mp-oferta">'+
+      '<div class="mp-of-tx"><b>Leve '+(qtd>1?'as 2 versões completas':'a versão completa')+'</b>'+
+      '<span>Sem o corte de 70 segundos, em MP3 pra baixar e guardar pra sempre.</span></div>'+
+      '<div class="mp-of-pr">R$ '+fmtPreco(avulsa)+'</div>'+
+    '</div>'+
+  '</div>';
 }
 function ligarPreviasLimitadas(){
   document.querySelectorAll('.mv-audio').forEach(function(a){
     if(a._limitada) return; a._limitada=true;
     a.addEventListener('timeupdate',function(){
-      if(a.currentTime>=60){ a.pause(); a.currentTime=60; }
+      if(a.currentTime>=70){ a.pause(); a.currentTime=70; }
     });
   });
   document.querySelectorAll('.mv-escolher').forEach(function(b){
@@ -2454,21 +2495,24 @@ function htmlMusicaCompondo(){
       '<div class="mc-notas"><i>♪</i><i>♫</i><i>♪</i><i>♬</i></div>'+
     '</div>'+
     '<div class="mc-tit">Produzindo sua música</div>'+
-    '<div class="mc-fase" id="mcFase">Escrevendo a letra...</div>'+
+    '<div class="mc-fase" id="mcFase">Lendo a história de vocês...</div>'+
     '<div class="mc-bar"><i id="mcBarFill" style="width:0%"></i></div>'+
     '<div class="mc-pct" id="mcPct">0%</div>'+
-    '<div id="mcWhats"></div>'+
+    '<div class="mc-fica">Fica aqui — em instantes você ouve.<br>'+
+    '<b>Você vai receber 2 versões diferentes</b> pra escolher a que mais emocionar.</div>'+
   '</div>';
 }
 var _mcTimer=null;
 function iniciarProgressoFake(){
   var t0=Date.now();
   var fases=[
-    [0,'Escrevendo a letra...'],
-    [22,'Compondo a melodia...'],
-    [45,'Gravando os vocais...'],
-    [68,'Ajustando afinação e mixagem...'],
-    [85,'Finalizando os últimos detalhes...']
+    [0,'Lendo a história de vocês...'],
+    [14,'Escrevendo a letra...'],
+    [30,'Criando o refrão...'],
+    [46,'Compondo a melodia...'],
+    [60,'Gravando os vocais...'],
+    [74,'Mixando os instrumentos...'],
+    [86,'Finalizando as 2 versões...']
   ];
   clearInterval(_mcTimer);
   _mcTimer=setInterval(function(){
@@ -3870,7 +3914,6 @@ function dispararGeracao(gerarBtn){
           return;
         }
         gerarBtn.textContent='Compondo...';
-        var whatsAlvo=el('mcWhats'); if(whatsAlvo) whatsAlvo.innerHTML=htmlBotaoWhatsMusica(res.d.taskId);
         var tentativas=0, MAX_TENTATIVAS=200; // ~200 x 3s = 10 minutos
         (function checar(){
           fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(res.d.taskId))
@@ -3882,7 +3925,10 @@ function dispararGeracao(gerarBtn){
                 pararProgressoFake(true);
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar outra prévia';
                 setTimeout(function(){
-                  if(resultado){ resultado.innerHTML=htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2, W.musicaLetra); ligarPreviasLimitadas(); }
+                  redesenharSemPular();
+                  ligarPreviasLimitadas();
+                  var alvo=el('musicaResultado');
+                  if(alvo) alvo.scrollIntoView({behavior:'smooth', block:'start'});
                 },350);
                 return;
               }
@@ -4285,22 +4331,32 @@ function htmlPasso(k){
   }
 
   case 'musicaHistoria': {
-    return guia("Agora me conta a história de vocês. Pode escrever ou falar, o que for mais fácil.")+
+    var exemploRel = {
+      mae:'Minha mãe se chama Rosa. Ela me criou sozinha costurando de madrugada em Belém. Nunca deixou faltar nada, mesmo quando faltava pra ela. Hoje eu tenho minha casa e é tudo por causa dela.',
+      pai:'Meu pai me ensinou a andar de bicicleta na rua de casa, em 2010. Ele trabalhava em dois empregos e mesmo assim ia em todos os meus jogos. Chamo ele de "chefe" até hoje.',
+      amigo:'A gente se conheceu jogando bola em 2015 e nunca mais parou. Ele me bancou quando fiquei desempregado, sem eu nem pedir. É o tipo de amigo que atende às 3 da manhã.',
+      amiga:'A gente se conheceu no trabalho e virou irmã que a vida deu. Já choramos e rimos juntas no mesmo dia. Ela sabe de coisas minhas que ninguém sabe.'
+    };
+    var exemplo = exemploRel[W.musicaPara] ||
+      'A gente se conheceu numa festa em 2021, em Parauapebas. Eu chamo ela de Nega. No primeiro encontro a gente ficou até 4 da manhã conversando no carro. Hoje temos a Helo, nossa filha.';
+    return guia("Agora me conta a história de vocês. Pode escrever ou falar — o que for mais fácil.")+
       '<div class="wz-t">Conte a história</div>'+
-      '<div class="wz-s">Quanto mais real e específico, melhor fica a letra.</div>'+
+      '<div class="wz-s">É daqui que sai a letra. Quanto mais detalhe real, mais a música vai parecer feita só pra vocês.</div>'+
       '<button type="button" class="btn btn-ghost btn-block" id="musicaDitar" style="margin-bottom:.9rem">🎙️ Ditar por voz</button>'+
-      '<textarea class="inp" id="musicaTexto" rows="6" placeholder="Ex: nos conhecemos numa viagem em 2021, ele mora longe mas a gente nunca deixou de se falar...">'+esc(W.musicaTexto)+'</textarea>'+
+      '<textarea class="inp" id="musicaTexto" rows="6" placeholder="Ex: '+esc(exemplo)+'">'+esc(W.musicaTexto)+'</textarea>'+
       '<div class="mh-contador" id="mhContador"></div>'+
-      '<div class="sug-musica"><span class="sug-lbl">💡 Vale a pena contar:</span>'+
+      '<div class="mh-checklist" id="mhCheck"></div>'+
+      '<div class="sug-musica"><span class="sug-lbl">💡 O que deixa a letra boa</span>'+
         '<ul class="sug-lista">'+
-          ['Onde e como vocês se conheceram, e quando foi',
-           'O que essa pessoa significa pra você',
-           'O que você mais admira nela',
-           'Um apelido ou piada que só vocês entendem',
-           'Um momento que você nunca vai esquecer'].map(function(s){
-            return '<li>'+esc(s)+'</li>';
+          ['<b>Nomes e apelidos</b> — "eu chamo ela de Nega"',
+           '<b>Lugares e datas</b> — "numa festa em 2021, em Parauapebas"',
+           '<b>Uma cena específica</b> — "ficamos até 4h conversando no carro"',
+           '<b>O que só vocês sabem</b> — uma mania, uma piada interna'].map(function(s){
+            return '<li>'+s+'</li>';
           }).join('')+
-        '</ul></div>';
+        '</ul>'+
+        '<button type="button" class="sug-exemplo" id="mhExemplo">Ver um exemplo pronto</button>'+
+      '</div>';
   }
 
   case 'musicaGenero': {
@@ -4341,8 +4397,14 @@ function htmlPasso(k){
   }
 
   case 'musicaFinal': {
-    return guia("Últimos detalhes, e sua música fica pronta pra gerar.")+
-      '<div class="wz-t">Últimos ajustes</div>'+
+    return guia(W.musicaPreviewUrl
+        ? "Ficou pronta! Ouve as duas versões e escolhe a que mais emocionar."
+        : "Últimos detalhes, e sua música fica pronta pra gerar.")+
+      '<div id="musicaResultado">'+
+        (W.musicaPreviewUrl ? htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2, W.musicaLetra) : '')+
+      '</div>'+
+      '<div class="wz-t"'+(W.musicaPreviewUrl?' style="margin-top:1.8rem"':'')+'>'+
+        (W.musicaPreviewUrl?'Quer mudar algo?':'Últimos ajustes')+'</div>'+
       '<div class="field"><label>Nomes que devem aparecer na música (opcional)</label>'+
         '<input class="inp" id="musicaNomesLetra" value="'+esc(W.musicaParaNome)+'" placeholder="Ex: João e Maria"></div>'+
       '<div class="field" style="margin-top:1rem"><label>Frase especial pra incluir (opcional)</label>'+
@@ -4366,11 +4428,8 @@ function htmlPasso(k){
             return '<button type="button" class="chip'+(W.musicaVoz===v?' on':'')+'" data-voz="'+v+'"><span class="lb">'+lb+'</span></button>';
           }).join('')+
         '</div></div>'+
-      '<button class="btn btn-primary btn-block" id="musicaGerar" style="margin-top:1.2rem">'+
-        (W.musicaPreviewUrl ? 'Gerar outra prévia' : 'Gerar prévia da música')+'</button>'+
-      '<div id="musicaResultado" style="margin-top:1rem">'+
-        (W.musicaPreviewUrl ? htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2, W.musicaLetra) : '')+
-      '</div>';
+      '<button class="btn '+(W.musicaPreviewUrl?'btn-ghost':'btn-primary')+' btn-block" id="musicaGerar" style="margin-top:1.2rem">'+
+        (W.musicaPreviewUrl ? 'Não gostou? Gerar outra versão' : 'Gerar prévia da música')+'</button>';
   }
 
   case 'trilha': {
@@ -4726,13 +4785,44 @@ function ligarPasso(k){
   if(k==='musicaHistoria'){
     var txtM=el('musicaTexto');
     function attContador(){
-      var c=el('mhContador'); if(!c) return;
-      var n=(W.musicaTexto||'').trim().length;
-      if(n>=50){ c.className='mh-contador ok'; c.textContent='✓ '+n+' caracteres'; }
-      else{ c.className='mh-contador falta'; c.textContent='Mínimo de 50 caracteres (faltam '+(50-n)+')'; }
+      var c=el('mhContador');
+      var t=(W.musicaTexto||'').trim();
+      var n=t.length;
+      if(c){
+        if(n>=50){ c.className='mh-contador ok'; c.textContent='✓ '+n+' caracteres'; }
+        else{ c.className='mh-contador falta'; c.textContent='Mínimo de 50 caracteres (faltam '+(50-n)+')'; }
+      }
+      // checklist vivo: mostra o que já tem e o que ainda falta pra letra ficar boa
+      var box=el('mhCheck'); if(!box) return;
+      if(n<20){ box.innerHTML=''; return; }
+      var temNome=/[A-ZÀ-Ú][a-zà-ú]{2,}/.test(t) || /chamo|apelido/i.test(t);
+      var temData=/\b(19|20)\d{2}\b|\bjaneiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro\b/i.test(t);
+      var temLugar=/\bem [A-ZÀ-Ú]/.test(t) || /praia|cidade|escola|faculdade|trabalho|festa|igreja|viagem|bar|parque/i.test(t);
+      var bom=n>=160;
+      var itens=[
+        ['Nome ou apelido', temNome],
+        ['Quando aconteceu', temData],
+        ['Onde aconteceu', temLugar],
+        ['História com detalhes', bom]
+      ];
+      var faltam=itens.filter(function(i){ return !i[1]; }).length;
+      box.innerHTML='<div class="mhc-tit">'+(faltam===0
+          ? '🎯 História completa — vai dar uma letra ótima'
+          : 'Sua letra fica ainda melhor com:')+'</div>'+
+        '<div class="mhc-itens">'+itens.map(function(i){
+          return '<span class="mhc'+(i[1]?' ok':'')+'">'+(i[1]?'✓':'+')+' '+i[0]+'</span>';
+        }).join('')+'</div>';
     }
     if(txtM) txtM.oninput=function(ev){ W.musicaTexto=ev.target.value; attContador(); };
     attContador();
+    var btnEx=el('mhExemplo');
+    if(btnEx) btnEx.onclick=function(){
+      var ta=el('musicaTexto'); if(!ta) return;
+      var ex=ta.getAttribute('placeholder').replace(/^Ex:\s*/,'');
+      if(ta.value.trim() && !confirm('Isso vai substituir o que você já escreveu. Continuar?')) return;
+      ta.value=ex; W.musicaTexto=ex; attContador(); ta.focus();
+      toast('Esse é só um exemplo — troca pelos detalhes de vocês!');
+    };
     var ditarBtn=el('musicaDitar');
     if(ditarBtn){
       var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
