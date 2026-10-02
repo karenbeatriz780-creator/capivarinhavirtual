@@ -26,6 +26,16 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=2102013347063288&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<!-- TikTok Pixel Code Start -->
+<script>
+!function (w, d, t) {
+  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<e.methods.length;n++)ttq.setAndDefer(e,e.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src=i+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+
+  ttq.load('DB01EJBC77UF3I06JLH0');
+  ttq.page();
+}(window, document, 'ttq');
+</script>
+<!-- TikTok Pixel Code End -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#E32B6D">
@@ -1116,6 +1126,12 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pnl-pend span{flex:1;min-width:8rem;font-size:.76rem;color:#9C7B34;}
 .pnl-verificar{flex-shrink:0;font-size:.72rem;font-weight:800;padding:.4rem .75rem;border-radius:8px;
   border:0;background:#8A6410;color:#fff;}
+.hora-top{margin-top:.8rem;background:var(--tint);border:1px solid var(--rose-soft);
+  border-radius:12px;padding:.75rem .9rem;}
+.hora-top b{display:block;font-size:.8rem;color:var(--plum);margin-bottom:.4rem;}
+.hora-top span{display:inline-block;font-size:.74rem;font-weight:700;color:var(--rose-deep);
+  background:#fff;border:1px solid var(--rose-soft);border-radius:100px;
+  padding:.25rem .6rem;margin:.15rem .25rem .15rem 0;}
 .pnl-cancelar{width:100%;margin-top:.5rem;padding:.5rem;border-radius:8px;border:1px solid #F5C6CB;
   background:#FDF1F2;color:#B02A37;font-size:.74rem;font-weight:800;}
 .selo.canc{background:#F1F1F1;color:#777;}
@@ -2596,6 +2612,9 @@ function gaEvento(nome, params){
 function fbEvento(nome, params){
   try{ if(typeof fbq==='function') fbq('track', nome, params||{}); }catch(e){}
 }
+function ttqEvento(nome, params){
+  try{ if(typeof ttq!=='undefined' && ttq && typeof ttq.track==='function') ttq.track(nome, params||{}); }catch(e){}
+}
 function gaPasso(){
   var ps=passos(); var k=ps[wStep];
   gaEvento('passo_wizard', {passo:k, indice:wStep+1, total_passos:ps.length, produto:W.produto||'(nenhum)'});
@@ -2620,6 +2639,7 @@ function gaCompraUnica(id, g){
     produto:g.produto, duracao:g.duracao
   });
   fbEvento('Purchase',{value:valor, currency:'BRL', content_name:g.produto, content_type:'product'});
+  ttqEvento('CompletePayment',{value:valor, currency:'BRL', content_name:g.produto, content_type:'product'});
 }
 function fmtRelativo(ts){
   var diffMin=Math.max(1, Math.round((Date.now()-ts)/60000));
@@ -4592,6 +4612,7 @@ function ligarPasso(k){
       W.produto=e.dataset.pcta;
       gaEvento('selecionar_produto',{produto:W.produto});
       fbEvento('ViewContent',{content_name:W.produto, content_type:'product'});
+      ttqEvento('ViewContent',{content_name:W.produto, content_type:'product'});
       proximoPasso();
     });
   }
@@ -5163,6 +5184,7 @@ function finalizar(){
 function finalizarDeVerdade(){
   gaEvento('begin_checkout',{produto:W.produto, duracao:W.duracao, valor:precoTotal(W)});
   fbEvento('InitiateCheckout',{value:precoTotal(W), currency:'BRL', content_name:W.produto, content_type:'product'});
+  ttqEvento('InitiateCheckout',{value:precoTotal(W), currency:'BRL', content_name:W.produto, content_type:'product'});
   var btn=el('wzNext');
   if(btn){ btn.disabled=true; btn.textContent='Gerando o Pix...'; }
   var boxErro=el('pagErro');
@@ -5530,6 +5552,30 @@ function desenharPainel(pedidos, visitas, musicas){
     var p=k.split('-');
     return {label:p[2]+'/'+p[1], valor:porDia[k].vl, sub:'R$ '+fmtPreco(porDia[k].vl)+' · '+porDia[k].ct+' pedido(s)'};
   });
+  /* vendas por hora do dia — só deste mês, pra decidir horário de anúncio */
+  var porHora=[]; for(var hh=0;hh<24;hh++) porHora.push({ct:0,vl:0});
+  mes.forEach(function(p){
+    if(!p.criadoEm) return;
+    var hr=new Date(p.criadoEm).getHours();
+    porHora[hr].ct++; porHora[hr].vl+=Number(p.valor)||0;
+  });
+  var horasGrafico=porHora.map(function(o,i){
+    return {label:(i<10?'0':'')+i+'h', valor:o.vl,
+            sub:o.ct?('R$ '+fmtPreco(o.vl)+' · '+o.ct+' pedido(s)'):'sem venda'};
+  });
+  // top 3 faixas, pra recomendar horário de anúncio
+  var topHoras=porHora.map(function(o,i){ return {h:i, ct:o.ct, vl:o.vl}; })
+    .filter(function(o){ return o.ct>0; })
+    .sort(function(a,b){ return b.vl-a.vl; }).slice(0,3);
+  var totalMesCt=mes.length;
+  var resumoHora = totalMesCt<10
+    ? '<div class="pnl-nota">Só '+totalMesCt+' venda(s) neste mês — ainda é pouco pra confiar no padrão. '+
+      'Vale esperar acumular umas 30 antes de programar o anúncio por horário.</div>'
+    : '<div class="hora-top"><b>Seus melhores horários neste mês:</b>'+
+      topHoras.map(function(o){
+        return '<span>'+((o.h<10?'0':'')+o.h)+'h — R$ '+fmtPreco(o.vl)+' ('+o.ct+')</span>';
+      }).join('')+'</div>';
+
   var diasHtml=diasOrd.map(function(k){
     var d=porDia[k];
     return '<div class="pnl-dia"><span class="dt">'+fmtData(k)+'</span>'+
@@ -5666,6 +5712,9 @@ function desenharPainel(pedidos, visitas, musicas){
       : '')+
     (_pnlAba==='dados'
       ? '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
+        '<div class="pnl-sec"><h2>Vendas por hora</h2>'+
+          '<div class="sub">Só deste mês. Use pra programar o horário do anúncio.</div>'+
+          pnlBarras(horasGrafico,{cor:'var(--gold-deep)'})+resumoHora+'</div>'+
         '<div class="pnl-sec"><h2>Vendas por dia</h2>'+
           (diasGrafico.length ? pnlBarras(diasGrafico,{cor:'var(--rose)'}) : '')+
           '<div class="pnl-nota" style="margin:.6rem 0">Últimos '+diasOrd.length+' dias com venda.</div>'+diasHtml+'</div>'+
