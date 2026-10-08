@@ -513,6 +513,22 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mv-letra pre{white-space:pre-wrap;font-family:'Fraunces',serif;font-size:.86rem;line-height:1.8;
   color:var(--ink);margin:.7rem 0 0;}
 
+/* etapa de prévia/aprovação da letra (antes de compor a música) */
+.letra-wrap{display:flex;flex-direction:column;}
+.letra-rotulo{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);margin-bottom:.5rem;}
+.letra-rotulo span{font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted);opacity:.85;}
+.letra-area{font-family:'Fraunces',serif;font-size:.95rem;line-height:1.85;white-space:pre-wrap;
+  min-height:16rem;resize:vertical;}
+.letra-erro{font-size:.86rem;color:#B8233F;background:#FFF1F4;border:1px solid var(--rose-soft);
+  border-radius:var(--r-md);padding:.8rem .9rem;line-height:1.5;}
+.letra-carregando{background:linear-gradient(165deg,#2A1620,#140A11);border-radius:var(--r-lg);
+  padding:1.8rem 1.3rem;text-align:center;color:#fff;box-shadow:0 16px 40px rgba(20,10,17,.35);}
+.lc-pena{font-size:2.1rem;animation:lcBalanca 1.4s ease-in-out infinite;}
+@keyframes lcBalanca{0%,100%{transform:rotate(-8deg);}50%{transform:rotate(8deg);}}
+.lc-tit{font-family:'Fraunces';font-size:1.05rem;font-weight:600;margin-top:.6rem;}
+.lc-sub{font-size:.8rem;color:#C6A9B6;margin-top:.3rem;}
+
 /* tela de sucesso da música avulsa */
 .ms-hero{background:linear-gradient(165deg,#2A1620,#140A11);border-radius:var(--r-lg);
   padding:2rem 1.3rem 1.6rem;text-align:center;color:#fff;box-shadow:0 16px 40px rgba(20,10,17,.35);}
@@ -2541,6 +2557,13 @@ function htmlMusicaCompondo(){
     '<b>Você vai receber 2 versões diferentes</b> pra escolher a que mais emocionar.</div>'+
   '</div>';
 }
+function htmlLetraCarregando(){
+  return '<div class="letra-carregando">'+
+    '<div class="lc-pena">✍️</div>'+
+    '<div class="lc-tit">Escrevendo a letra da sua música...</div>'+
+    '<div class="lc-sub">Isso leva só alguns segundos.</div>'+
+  '</div>';
+}
 var _mcTimer=null;
 function iniciarProgressoFake(){
   var t0=Date.now();
@@ -3363,10 +3386,10 @@ function telaHome(){
       '</h1>'+
       '<p class="hero-sub">Fotos, memórias e música personalizada viram um presente que emociona de verdade.</p>'+
       '<div class="hero-cta">'+
-        '<a class="btn btn-primary btn-lg cta-brilho" href="#/criar">Criar presente'+IC.arrow+'</a>'+
         '<a class="btn btn-musica btn-lg" href="#/criar/musica">'+
           '<span class="cta-eq"><i></i><i></i><i></i><i></i></span>'+
           'Criar música personalizada</a>'+
+        '<a class="btn btn-primary btn-lg cta-brilho" href="#/criar">Criar presente'+IC.arrow+'</a>'+
         '<button type="button" class="link-amostra" id="heroAmostra">🎧 Ouvir exemplos de músicas</button>'+
         '<a class="btn btn-ghost btn-lg" href="#/meus">Ver meus presentes'+IC.down+'</a>'+
       '</div>'+
@@ -3486,7 +3509,7 @@ function telaHome(){
   previewFake('retro');
   var ha=el('heroAmostra'); if(ha) ha.onclick=abrirAmostras;
   observarReveal(el('app'));
-  ligarVitrineSocial();
+  // ligarVitrineSocial(); // desligado a pedido — aquele avisinho de "Fulano comprou" no canto da tela
 }
 
 /* --------- mini preview animado dentro do celular --------- */
@@ -3536,6 +3559,7 @@ function novoEstado(prod){
     fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:false, trilhaId:null,
     duracao:'vitalicio',
     comboDaMusica:false, musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null, musicaLetra:null,
+    musicaLetraTexto:null, musicaLetraGerando:false, musicaLetraErro:null,
     musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'',
     musicaClima:'', musicaFrase:'', musicaVoz:'masculina', musicaCapa:null, musicaWhatsapp:'',
     jogos:{roleta:false, palavra:false, caca:false, quebra:false, quiz:false, medidor:false},
@@ -3602,7 +3626,12 @@ function passos(){
   var p=W.produto;
   if(!p) return ['produto'];
   if(p==='convite') return ['produto','tema','aniversariante','quando','local','whatsapp','presentes','vitrine','duracao','checkout'];
-  if(p==='musica') return ['musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal','checkout'];
+  if(p==='musica'){
+    var sm=['musicaPara'];
+    if(W.musicaPara!=='ninguem') sm.push('musicaNome');
+    sm.push('musicaOcasiao','musicaGenero','musicaClima','musicaHistoria','musicaLetra','musicaFinal','checkout');
+    return sm;
+  }
   var r=RECURSOS[p]||RECURSOS.completo;
   var s=[];
   s.push('produto','perfil','nomes');
@@ -3611,10 +3640,18 @@ function passos(){
   if(r.carta) s.push('carta');
   if(r.jogos) s.push('jogos');
   if(r.trilha) s.push('trilha');
-  if(r.musicaIA && W.musicaOn) s.push('musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal');
+  if(r.musicaIA && W.musicaOn){
+    s.push('musicaPara');
+    if(W.musicaPara!=='ninguem') s.push('musicaNome');
+    s.push('musicaOcasiao','musicaGenero','musicaClima','musicaHistoria','musicaLetra','musicaFinal');
+  }
   if(r.musicaIA){
     s.push('musicaEscolha');
-    if(W.musicaPersonalizar) s.push('musicaPara','musicaOcasiao','musicaHistoria','musicaGenero','musicaClima','musicaFinal');
+    if(W.musicaPersonalizar){
+      s.push('musicaPara');
+      if(W.musicaPara!=='ninguem') s.push('musicaNome');
+      s.push('musicaOcasiao','musicaGenero','musicaClima','musicaHistoria','musicaLetra','musicaFinal');
+    }
   }
   s.push('vitrine');
   if(p==='completo'||p==='carta') s.push('duracao');
@@ -3933,6 +3970,39 @@ function pedirWhatsapp(aoConfirmar){
   inp.oninput=function(){ inp.classList.remove('erro'); el('zapErr').textContent=''; };
 }
 
+function dispararGeracaoLetra(){
+  W.musicaLetraGerando=true; W.musicaLetraErro=null;
+  redesenharSemPular();
+  fetch('/.netlify/functions/gerar-letra', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      estilo: W.musicaEstilo, texto: W.musicaTexto, clima: W.musicaClima,
+      relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
+      nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz
+    })
+  })
+  .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
+  .then(function(res){
+    W.musicaLetraGerando=false;
+    if(!res.ok || !res.d || !res.d.letra){
+      W.musicaLetraErro=(res.d && res.d.erro) || 'Não consegui escrever a letra agora. Tenta de novo em instantes.';
+      redesenharSemPular();
+      return;
+    }
+    W.musicaLetraTexto=res.d.letra;
+    redesenharSemPular();
+    setTimeout(function(){
+      var alvo=el('letraWrap');
+      if(alvo) alvo.scrollIntoView({behavior:'smooth', block:'start'});
+    },350);
+  })
+  .catch(function(){
+    W.musicaLetraGerando=false;
+    W.musicaLetraErro='Sem conexão com o servidor agora. Tenta de novo.';
+    redesenharSemPular();
+  });
+}
+
 function dispararGeracao(gerarBtn){
   var resultado=el('musicaResultado');
   gerarBtn.disabled=true; gerarBtn.textContent='Começando a compor...';
@@ -3944,6 +4014,7 @@ function dispararGeracao(gerarBtn){
           estilo: W.musicaEstilo, texto: W.musicaTexto, clima: W.musicaClima,
           relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
           nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz,
+          letraAprovada: W.musicaLetraTexto||'',
           whatsapp: W.musicaWhatsapp||''
         })
       })
@@ -4021,7 +4092,7 @@ function desenharPasso(opts){
   el('wzCount').textContent = ps.length>1 ? ((wStep+1)+'/'+ps.length) : '';
   el('wzFill').style.width=((wStep+1)/ps.length*100)+'%';
   el('wzBody').innerHTML=htmlPasso(k);
-  el('wzNext').textContent = (k==='checkout') ? 'Pagar e gerar o link' : 'Continuar';
+  el('wzNext').textContent = (k==='checkout') ? 'Pagar e gerar o link' : (k==='musicaLetra' ? 'Aprovar letra e compor música' : 'Continuar');
   el('wzNext').style.display = (k==='produto') ? 'none' : '';
   var sk=el('wzSkip'); sk.style.display='none';
   if(k==='jogos'){ sk.style.display=''; sk.textContent='Pular os jogos'; sk.onclick=function(){ proximoPasso(true); }; }
@@ -4349,11 +4420,14 @@ function htmlPasso(k){
       '<div class="cards2" id="musicaParaChips">'+relacoes.map(function(r){
         return '<button type="button" class="card2'+(W.musicaPara===r[0]?' on':'')+'" data-para="'+r[0]+'">'+
           '<span class="c2-ic">'+r[1]+'</span><span class="c2-lb">'+r[2]+'</span></button>';
-      }).join('')+'</div>'+
-      (W.musicaPara && W.musicaPara!=='ninguem'
-        ? '<div class="field" style="margin-top:1.2rem"><label>Nome de quem vai receber (opcional)</label>'+
-          '<input class="inp" id="musicaParaNome" value="'+esc(W.musicaParaNome)+'" placeholder="Como essa pessoa gosta de ser chamada"></div>'
-        : '');
+      }).join('')+'</div>';
+  }
+
+  case 'musicaNome': {
+    return guia("Qual o nome de quem vai receber a música?")+
+      '<div class="wz-t">Nome de quem vai receber</div>'+
+      '<div class="wz-s">Coloque o nome ou apelido de quem vai receber a homenagem. Esse nome vai aparecer na letra da música.</div>'+
+      '<input class="inp" id="musicaParaNome" value="'+esc(W.musicaParaNome)+'" placeholder="Digite o nome...">';
   }
 
   case 'musicaOcasiao': {
@@ -4439,6 +4513,30 @@ function htmlPasso(k){
       }).join('')+'</div>';
   }
 
+  case 'musicaLetra': {
+    var temTexto = !!(W.musicaLetraTexto && W.musicaLetraTexto.trim());
+    return guia(temTexto
+        ? "Essa é a prévia da letra escrita pela nossa IA. Lê com calma e ajusta o que quiser — o que estiver escrito aqui vai sair igualzinho, cantado na música."
+        : "Antes de compor a música, a nossa inteligência artificial escreve a letra pra você aprovar primeiro. O que ficar aqui depois sai exatamente igual na música.")+
+      '<div class="wz-t">Nomes que devem aparecer na letra (opcional)</div>'+
+      '<input class="inp" id="musicaNomesLetra" value="'+esc(W.musicaParaNome)+'" placeholder="Ex: João e Maria">'+
+      '<div class="wz-t" style="margin-top:1rem">Frase especial pra incluir (opcional)</div>'+
+      '<input class="inp" id="musicaFrase" value="'+esc(W.musicaFrase)+'" placeholder="Ex: te amo mais que ontem">'+
+      '<div class="letra-wrap" id="letraWrap" style="margin-top:1.3rem">'+
+        (W.musicaLetraGerando ? htmlLetraCarregando()
+          : (temTexto
+              ? '<label class="letra-rotulo">📝 Prévia da letra <span>— edite se quiser</span></label>'+
+                '<textarea class="inp letra-area" id="musicaLetraTexto" rows="14">'+esc(W.musicaLetraTexto)+'</textarea>'
+              : (W.musicaLetraErro ? '<div class="letra-erro">⚠️ '+esc(W.musicaLetraErro)+'</div>' : '')
+            )
+        )+
+      '</div>'+
+      (!W.musicaLetraGerando
+        ? '<button type="button" class="btn '+(temTexto?'btn-ghost':'btn-primary')+' btn-block" id="letraGerarBtn" style="margin-top:1rem">'+
+            (temTexto ? '🔁 Gerar outra versão da letra' : '✍️ Escrever a letra com IA')+'</button>'
+        : '');
+  }
+
   case 'musicaFinal': {
     return guia(W.musicaPreviewUrl
         ? "Ficou pronta! Ouve as duas versões e escolhe a que mais emocionar."
@@ -4448,11 +4546,7 @@ function htmlPasso(k){
       '</div>'+
       '<div class="wz-t"'+(W.musicaPreviewUrl?' style="margin-top:1.8rem"':'')+'>'+
         (W.musicaPreviewUrl?'Quer mudar algo?':'Últimos ajustes')+'</div>'+
-      '<div class="field"><label>Nomes que devem aparecer na música (opcional)</label>'+
-        '<input class="inp" id="musicaNomesLetra" value="'+esc(W.musicaParaNome)+'" placeholder="Ex: João e Maria"></div>'+
-      '<div class="field" style="margin-top:1rem"><label>Frase especial pra incluir (opcional)</label>'+
-        '<input class="inp" id="musicaFrase" value="'+esc(W.musicaFrase)+'" placeholder="Ex: te amo mais que ontem"></div>'+
-      '<div class="field" style="margin-top:1rem"><label>Capa da música (opcional)</label>'+
+      '<div class="field"><label>Capa da música (opcional)</label>'+
         (W.musicaCapa
           ? '<div class="capa-previa"><img src="'+esc(W.musicaCapa)+'" alt="">'+
             '<div class="capa-tx"><b>Capa escolhida</b><span>Ela aparece no disco quando a música tocar</span></div>'+
@@ -4814,8 +4908,10 @@ function ligarPasso(k){
     on('[data-para]','onclick',function(e){
       W.musicaPara=e.dataset.para;
       redesenharSemPular();
-      if(W.musicaPara==='ninguem') setTimeout(function(){ proximoPasso(); },300);
+      setTimeout(function(){ proximoPasso(); },300);
     });
+  }
+  if(k==='musicaNome'){
     var nomeInp=el('musicaParaNome');
     if(nomeInp) nomeInp.oninput=function(ev){ W.musicaParaNome=ev.target.value; };
   }
@@ -4902,11 +4998,22 @@ function ligarPasso(k){
       setTimeout(function(){ proximoPasso(); },300);
     });
   }
+  if(k==='musicaLetra'){
+    var nomesLetraInp2=el('musicaNomesLetra');
+    if(nomesLetraInp2) nomesLetraInp2.oninput=function(ev){ W.musicaParaNome=ev.target.value; };
+    var fraseInp2=el('musicaFrase');
+    if(fraseInp2) fraseInp2.oninput=function(ev){ W.musicaFrase=ev.target.value; };
+    var letraTa=el('musicaLetraTexto');
+    if(letraTa) letraTa.oninput=function(ev){ W.musicaLetraTexto=ev.target.value; };
+    var letraBtn=el('letraGerarBtn');
+    if(letraBtn) letraBtn.onclick=function(){
+      if(W.musicaLetraTexto && W.musicaLetraTexto.trim() &&
+         !confirm('Isso vai substituir a letra atual por uma nova versão. Continuar?')) return;
+      dispararGeracaoLetra();
+    };
+    if(!W.musicaLetraTexto && !W.musicaLetraGerando && !W.musicaLetraErro) dispararGeracaoLetra();
+  }
   if(k==='musicaFinal'){
-    var nomesLetraInp=el('musicaNomesLetra');
-    if(nomesLetraInp) nomesLetraInp.oninput=function(ev){ W.musicaParaNome=ev.target.value; };
-    var fraseInp=el('musicaFrase');
-    if(fraseInp) fraseInp.oninput=function(ev){ W.musicaFrase=ev.target.value; };
     var capaInp=el('musicaCapaInp');
     if(capaInp) capaInp.onchange=function(ev){
       var f=ev.target.files && ev.target.files[0];
@@ -5043,6 +5150,10 @@ function validar(k){
   if(k==='musicaHistoria' && W.musicaTexto.trim().length<50) return erro('Conta um pouco mais — pelo menos 50 caracteres pra letra ficar boa.', 'musicaTexto');
   if(k==='musicaGenero' && !W.musicaEstilo) return erro('Escolhe um estilo.');
   if(k==='musicaClima' && !W.musicaClima) return erro('Escolhe o clima da música.');
+  if(k==='musicaLetra'){
+    if(W.musicaLetraGerando) return erro('Aguenta só um instante — a letra ainda está sendo escrita.');
+    if(!W.musicaLetraTexto || !W.musicaLetraTexto.trim()) return erro('Gere a prévia da letra antes de continuar.');
+  }
   if(k==='musicaFinal' && !W.musicaPreviewUrl) return erro('Gere a prévia da música antes de continuar.');
   if(k==='jogos'){
     if(W.jogos.palavra && !W.palavraSecreta.trim()) return erro('Defina a palavra secreta.','pwA');
@@ -5188,6 +5299,7 @@ function primeiroPassoIncompleto(){
     if(k==='musicaHistoria' && W.musicaTexto.trim().length<50) return i;
     if(k==='musicaGenero' && !W.musicaEstilo) return i;
     if(k==='musicaClima' && !W.musicaClima) return i;
+    if(k==='musicaLetra' && (!W.musicaLetraTexto || !W.musicaLetraTexto.trim())) return i;
     if(k==='musicaFinal' && !W.musicaPreviewUrl) return i;
   }
   return -1;
@@ -5459,7 +5571,7 @@ function entrarPainel(chave){
     copiar(link, 'Link copiado! Salva esse link — com ele você entra direto, sem senha.');
   };
   carregarPainel(chave, function(falhou){
-    if(falhou){ Store.del('cl_admin_key'); desenharTravaPainel('Link ou senha incorretos.'); }
+    if(falhou){ Store.del('cl_admin_key'); desenharTravaPainel('Esse link não é mais válido.'); }
   });
 }
 /* reconsultar dados sem reconstruir a tela — evita o "pulo" de tela ao atualizar */
@@ -5468,42 +5580,18 @@ function atualizarPainel(){
   var scrollAntes=window.scrollY;
   var body=el('pnlBody'); body.style.opacity='.45';
   carregarPainel(_pnlChave, function(falhou){
-    if(falhou){ Store.del('cl_admin_key'); desenharTravaPainel('Link ou senha incorretos.'); return; }
+    if(falhou){ Store.del('cl_admin_key'); desenharTravaPainel('Esse link não é mais válido.'); return; }
     requestAnimationFrame(function(){ window.scrollTo(0,scrollAntes); });
   });
 }
 function desenharTravaPainel(erroInicial){
   var app=el('app');
-  var mostrarSenha=!!erroInicial;
   app.innerHTML='<div class="pnl-lock"><img src="'+MASCOTE+'" alt="">'+
     '<h1>Área restrita</h1>'+
     '<div class="err" style="color:var(--muted);font-weight:400;max-width:280px">'+
-      'Esse painel só abre pelo link privado salvo no seu aparelho.</div>'+
-    (mostrarSenha ? '' :
-      '<button type="button" id="pnlMostrarSenha" class="pnl-link-fraca">Entrar com senha</button>')+
-    '<div id="pnlSenhaBox" style="'+(mostrarSenha?'':'display:none;')+'width:100%;max-width:280px;display:flex;flex-direction:column;gap:.6rem;margin-top:.3rem">'+
-      '<input type="password" id="pnlSenha" placeholder="Senha">'+
-      '<button id="pnlEntrar">Entrar</button>'+
-    '</div>'+
-    '<div class="err" id="pnlErr">'+esc(erroInicial||'')+'</div></div>';
-  var btnMostrar=el('pnlMostrarSenha');
-  if(btnMostrar) btnMostrar.onclick=function(){
-    el('pnlSenhaBox').style.display='flex';
-    btnMostrar.style.display='none';
-    el('pnlSenha').focus();
-  };
-  function tentar(){
-    var v=el('pnlSenha').value.trim();
-    if(!v) return;
-    el('pnlErr').textContent='';
-    Store.set('cl_admin_key', v);
-    carregarPainel(v, function(falhou){
-      if(falhou){ Store.del('cl_admin_key'); el('pnlErr').textContent='Senha incorreta.'; }
-      else{ ir('painel-capivarinha'); navegar(); }
-    });
-  }
-  el('pnlEntrar').onclick=tentar;
-  el('pnlSenha').onkeydown=function(e){ if(e.key==='Enter') tentar(); };
+      'Esse painel só abre pelo link privado. '+
+      (erroInicial ? esc(erroInicial) : 'Pede o link pra quem administra o site.')+
+    '</div></div>';
 }
 function carregarPainel(chave, cb){
   var hdr={ headers:{'x-admin-key':chave} };
