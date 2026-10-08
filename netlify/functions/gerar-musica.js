@@ -171,6 +171,7 @@ export default async (req) => {
     const nomesLetra = String((body && body.nomesLetra) || '').trim();
     const frase = String((body && body.frase) || '').trim();
     const voz = String((body && body.voz) || '').trim();
+    const letraAprovada = String((body && body.letraAprovada) || '').trim();
 
     if (!estilo) return json({ erro: 'Escolhe um estilo primeiro.' }, 400);
     if (texto.length < 50) return json({ erro: 'Conta um pouco mais da história (pelo menos 50 caracteres).' }, 400);
@@ -221,12 +222,36 @@ export default async (req) => {
       : texto;
     const prompt = (prefixo + historiaUsada + sufixo).slice(0, LIMITE_BRIEFING);
 
+    // MODO LITERAL: quando já existe uma letra aprovada pela pessoa (fluxo novo,
+    // com prévia da letra por IA antes de compor), a Suno recebe essa letra
+    // EXATA no campo "prompt" do modo custom — é o único jeito de garantir que
+    // o que a pessoa aprovou saia igual, cantado. Sem letra aprovada (fluxo
+    // antigo / chamada direta), cai no modo por descrição de sempre.
+    const usarLetraLiteral = letraAprovada.length > 0;
+    const inputSuno = usarLetraLiteral
+      ? {
+          mv: 'chirp-bluejay',
+          custom: true,
+          prompt: letraAprovada.slice(0, 5000),
+          tags: tagsEstilo,
+          title: 'Nossa música'
+        }
+      : {
+          mv: 'chirp-bluejay',
+          custom: false,
+          gpt_description_prompt: prompt,
+          tags: tagsEstilo,
+          title: 'Nossa música'
+        };
+
     // Registra exatamente o que vai pra Suno — é o que permite conferir,
     // quando a música sai fora do estilo, se o erro foi nosso ou dela.
     console.log('PEDIDO DE MUSICA >> genero=' + estilo + ' | clima=' + clima +
-      ' | voz=' + voz + ' | relacao=' + relacao + ' | ocasiao=' + ocasiao);
+      ' | voz=' + voz + ' | relacao=' + relacao + ' | ocasiao=' + ocasiao +
+      ' | modo=' + (usarLetraLiteral ? 'letra literal (custom)' : 'briefing (500 car.)'));
     console.log('TAGS >> ' + tagsEstilo);
-    console.log('BRIEFING >> ' + prompt);
+    if (usarLetraLiteral) console.log('LETRA APROVADA >> ' + inputSuno.prompt);
+    else console.log('BRIEFING >> ' + prompt);
 
     let resp;
     try {
@@ -235,13 +260,7 @@ export default async (req) => {
         headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'suno-ai/music',
-          input: {
-            mv: 'chirp-bluejay',
-            custom: false,
-            gpt_description_prompt: prompt,
-            tags: tagsEstilo,
-            title: 'Nossa música'
-          }
+          input: inputSuno
         })
       });
     } catch (e) {
@@ -274,6 +293,7 @@ export default async (req) => {
         ocasiao: ocasiao,
         nomes: nomesLetra,
         historia: texto.slice(0, 400),
+        letraAprovada: usarLetraLiteral ? inputSuno.prompt : null,
         whatsapp: String((body && body.whatsapp) || '').trim(),
         pago: false,
         url: null,
