@@ -453,6 +453,24 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .card2.on .c2-sub{opacity:.85;}
 .inp.erro{border-color:var(--rose)!important;}
 
+/* cards de "tipo de voz" na etapa final da música */
+.voz-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;}
+.voz-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem;
+  background:#fff;border:1.5px solid var(--line);border-radius:var(--r-md);
+  padding:1.1rem .4rem .9rem;text-align:center;transition:all .18s;min-height:6.4rem;}
+.voz-card:active{transform:scale(.97);}
+.voz-card.on{background:var(--rose);border-color:var(--rose);box-shadow:0 6px 18px rgba(227,43,109,.28);}
+.voz-ic{font-size:1.45rem;line-height:1;margin-bottom:.2rem;}
+.voz-lb{font-size:.82rem;font-weight:700;color:var(--plum);line-height:1.2;}
+.voz-sub{font-size:.67rem;color:var(--muted);line-height:1.25;margin-top:.1rem;}
+.voz-card.on .voz-lb, .voz-card.on .voz-sub{color:#fff;}
+.voz-card.on .voz-sub{opacity:.85;}
+.voz-check{position:absolute;top:.45rem;right:.45rem;width:18px;height:18px;border-radius:50%;
+  border:1.5px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;}
+.voz-check svg{width:10px;height:10px;stroke:var(--rose);opacity:0;}
+.voz-card.on .voz-check{border-color:#fff;}
+.voz-card.on .voz-check svg{opacity:1;}
+
 /* modal de pacotes (upsell antes do pagamento) */
 .upsell-fundo{position:fixed;inset:0;z-index:90;background:rgba(20,10,17,.62);
   backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;
@@ -532,6 +550,10 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .letra-rotulo span{font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted);opacity:.85;}
 .letra-area{font-family:'Fraunces',serif;font-size:.95rem;line-height:1.85;white-space:pre-wrap;
   min-height:16rem;resize:vertical;}
+.letra-ajuste{margin-top:1rem;background:var(--tint);border:1px solid var(--rose-soft);
+  border-radius:var(--r-md);padding:.9rem 1rem;}
+.letra-ajuste-lbl{display:block;font-size:.78rem;color:var(--rose-deep);font-weight:800;margin-bottom:.5rem;}
+.letra-ajuste-inp{min-height:3.4rem;font-size:.86rem;resize:vertical;}
 .letra-erro{font-size:.86rem;color:#B8233F;background:#FFF1F4;border:1px solid var(--rose-soft);
   border-radius:var(--r-md);padding:.8rem .9rem;line-height:1.5;}
 .letra-carregando{background:linear-gradient(165deg,#2A1620,#140A11);border-radius:var(--r-lg);
@@ -2569,10 +2591,10 @@ function htmlMusicaCompondo(){
     '<b>Você vai receber 2 versões diferentes</b> pra escolher a que mais emocionar.</div>'+
   '</div>';
 }
-function htmlLetraCarregando(){
+function htmlLetraCarregando(msg){
   return '<div class="letra-carregando">'+
     '<div class="lc-pena">✍️</div>'+
-    '<div class="lc-tit">Escrevendo a letra da sua música...</div>'+
+    '<div class="lc-tit">'+(msg||'Escrevendo a letra da sua música...')+'</div>'+
     '<div class="lc-sub">Isso leva só alguns segundos.</div>'+
   '</div>';
 }
@@ -3572,6 +3594,7 @@ function novoEstado(prod){
     duracao:'vitalicio',
     comboDaMusica:false, musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null, musicaLetra:null,
     musicaLetraTexto:null, musicaLetraGerando:false, musicaLetraErro:null,
+    musicaLetraAjustando:false, musicaLetraInstrucao:'',
     musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'',
     musicaClima:'', musicaFrase:'', musicaMomentos:'', musicaVoz:'masculina', musicaCapa:null, musicaWhatsapp:'',
     jogos:{roleta:false, palavra:false, caca:false, quebra:false, quiz:false, medidor:false},
@@ -4021,11 +4044,56 @@ function dispararGeracaoLetra(){
     redesenharSemPular();
   });
 }
+// Ajuste pontual: em vez de jogar a letra toda fora e escrever outra do
+// zero, manda a letra atual + o pedido da pessoa ("deixa o refrão mais
+// alegre", por exemplo) pra IA aplicar SÓ aquela mudança, preservando o
+// resto. É diferente do botão "gerar outra versão", que recomeça do nada.
+function dispararAjusteLetra(instrucao){
+  W.musicaLetraAjustando=true; W.musicaLetraErro=null;
+  redesenharSemPular();
+  fetch('/.netlify/functions/gerar-letra', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      letraAtual: W.musicaLetraTexto||'', instrucao: instrucao,
+      estilo: W.musicaEstilo, clima: W.musicaClima, voz: W.musicaVoz
+    })
+  })
+  .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
+  .then(function(res){
+    W.musicaLetraAjustando=false;
+    if(!res.ok || !res.d || !res.d.letra){
+      W.musicaLetraErro=(res.d && res.d.erro) || 'Não consegui ajustar a letra agora. Tenta de novo em instantes.';
+      redesenharSemPular();
+      return;
+    }
+    W.musicaLetraTexto=res.d.letra;
+    W.musicaLetraInstrucao='';
+    redesenharSemPular();
+    setTimeout(function(){
+      var alvo=el('letraWrap');
+      if(alvo) alvo.scrollIntoView({behavior:'smooth', block:'start'});
+    },350);
+  })
+  .catch(function(){
+    W.musicaLetraAjustando=false;
+    W.musicaLetraErro='Sem conexão com o servidor agora. Tenta de novo.';
+    redesenharSemPular();
+  });
+}
 
+function mostrarAjustesMusica(mostrar){
+  // Enquanto a música tá sendo gerada, só a animação "Produzindo sua
+  // música" deve aparecer — capa, tipo de voz e o botão saem da tela até
+  // terminar (ou dar erro/timeout, quando voltam pra pessoa poder tentar de novo).
+  ['musicaAjustesTit','musicaCapaField','musicaVozField','musicaGerar'].forEach(function(id){
+    var elx=el(id); if(elx) elx.style.display = mostrar ? '' : 'none';
+  });
+}
 function dispararGeracao(gerarBtn){
   var resultado=el('musicaResultado');
   gerarBtn.disabled=true; gerarBtn.textContent='Começando a compor...';
   if(resultado) resultado.innerHTML=htmlMusicaCompondo();
+  mostrarAjustesMusica(false);
   iniciarProgressoFake();
   fetch('/.netlify/functions/gerar-musica', {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -4043,6 +4111,7 @@ function dispararGeracao(gerarBtn){
           pararProgressoFake(false);
           gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
           if(resultado) resultado.innerHTML='';
+          mostrarAjustesMusica(true);
           toast((res.d && res.d.erro) || 'Não consegui gerar a música agora. Tenta de novo em instantes.');
           return;
         }
@@ -4069,6 +4138,7 @@ function dispararGeracao(gerarBtn){
                 pararProgressoFake(false);
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
                 if(resultado) resultado.innerHTML='';
+                mostrarAjustesMusica(true);
                 toast(res2.d.erro || 'A geração falhou. Tenta de novo.');
                 return;
               }
@@ -4077,6 +4147,7 @@ function dispararGeracao(gerarBtn){
                 pararProgressoFake(false);
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
                 if(resultado) resultado.innerHTML=htmlMusicaDemorou(res.d.taskId);
+                mostrarAjustesMusica(true);
                 return;
               }
               setTimeout(checar,3000);
@@ -4087,6 +4158,7 @@ function dispararGeracao(gerarBtn){
                 pararProgressoFake(false);
                 gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
                 if(resultado) resultado.innerHTML='';
+                mostrarAjustesMusica(true);
                 toast('Sem conexão com o servidor de música agora.');
                 return;
               }
@@ -4096,6 +4168,7 @@ function dispararGeracao(gerarBtn){
       })
       .catch(function(){
         gerarBtn.disabled=false; gerarBtn.textContent='Gerar prévia da música';
+        mostrarAjustesMusica(true);
         toast('Sem conexão com o servidor de música agora.');
       });
 }
@@ -4544,25 +4617,33 @@ function htmlPasso(k){
 
   case 'musicaLetra': {
     var temTexto = !!(W.musicaLetraTexto && W.musicaLetraTexto.trim());
+    var carregando = W.musicaLetraGerando || W.musicaLetraAjustando;
     return guia(temTexto
-        ? "Essa é a prévia da letra escrita pela nossa IA. Lê com calma e ajusta o que quiser — o que estiver escrito aqui vai sair igualzinho, cantado na música."
+        ? "Essa é a prévia da letra escrita pela nossa IA. Lê com calma: você pode editar direto no texto, ou pedir um ajuste pontual pra IA. O que estiver aqui vai sair igualzinho, cantado na música."
         : "Antes de compor a música, a nossa inteligência artificial escreve a letra pra você aprovar primeiro. O que ficar aqui depois sai exatamente igual na música.")+
       '<div class="wz-t">Nomes que devem aparecer na letra (opcional)</div>'+
       '<input class="inp" id="musicaNomesLetra" value="'+esc(W.musicaParaNome)+'" placeholder="Ex: João e Maria">'+
       '<div class="wz-t" style="margin-top:1rem">Frase especial pra incluir (opcional)</div>'+
       '<input class="inp" id="musicaFrase" value="'+esc(W.musicaFrase)+'" placeholder="Ex: te amo mais que ontem">'+
       '<div class="letra-wrap" id="letraWrap" style="margin-top:1.3rem">'+
-        (W.musicaLetraGerando ? htmlLetraCarregando()
-          : (temTexto
-              ? '<label class="letra-rotulo">📝 Prévia da letra <span>— edite se quiser</span></label>'+
-                '<textarea class="inp letra-area" id="musicaLetraTexto" rows="14">'+esc(W.musicaLetraTexto)+'</textarea>'
-              : (W.musicaLetraErro ? '<div class="letra-erro">⚠️ '+esc(W.musicaLetraErro)+'</div>' : '')
+        (W.musicaLetraGerando ? htmlLetraCarregando('Escrevendo a letra da sua música...')
+          : (W.musicaLetraAjustando ? htmlLetraCarregando('Ajustando a letra da sua música...')
+            : (temTexto
+                ? '<label class="letra-rotulo">📝 Prévia da letra <span>— edite direto ou peça um ajuste abaixo</span></label>'+
+                  '<textarea class="inp letra-area" id="musicaLetraTexto" rows="14">'+esc(W.musicaLetraTexto)+'</textarea>'+
+                  '<div class="letra-ajuste">'+
+                    '<label class="letra-ajuste-lbl">✨ Peça um ajuste pontual à IA</label>'+
+                    '<textarea class="inp letra-ajuste-inp" id="musicaLetraInstrucao" rows="2" maxlength="300" placeholder="Ex: deixa o refrão mais alegre / troca \'saudade\' por \'amor\' no segundo verso / encurta a ponte...">'+esc(W.musicaLetraInstrucao||'')+'</textarea>'+
+                    '<button type="button" class="btn btn-primary btn-block" id="letraAjustarBtn" style="margin-top:.5rem">✨ Pedir ajuste à IA</button>'+
+                  '</div>'
+                : (W.musicaLetraErro ? '<div class="letra-erro">⚠️ '+esc(W.musicaLetraErro)+'</div>' : '')
+              )
             )
         )+
       '</div>'+
-      (!W.musicaLetraGerando
+      (!carregando
         ? '<button type="button" class="btn '+(temTexto?'btn-ghost':'btn-primary')+' btn-block" id="letraGerarBtn" style="margin-top:1rem">'+
-            (temTexto ? '🔁 Gerar outra versão da letra' : '✍️ Escrever a letra com IA')+'</button>'
+            (temTexto ? '🔁 Gerar outra versão da letra (começar do zero)' : '✍️ Escrever a letra com IA')+'</button>'
         : '');
   }
 
@@ -4573,9 +4654,9 @@ function htmlPasso(k){
       '<div id="musicaResultado">'+
         (W.musicaPreviewUrl ? htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2, W.musicaLetra) : '')+
       '</div>'+
-      '<div class="wz-t"'+(W.musicaPreviewUrl?' style="margin-top:1.8rem"':'')+'>'+
+      '<div class="wz-t" id="musicaAjustesTit"'+(W.musicaPreviewUrl?' style="margin-top:1.8rem"':'')+'>'+
         (W.musicaPreviewUrl?'Quer mudar algo?':'Últimos ajustes')+'</div>'+
-      '<div class="field"><label>Capa da música (opcional)</label>'+
+      '<div class="field" id="musicaCapaField"><label>Capa da música (opcional)</label>'+
         (W.musicaCapa
           ? '<div class="capa-previa"><img src="'+esc(W.musicaCapa)+'" alt="">'+
             '<div class="capa-tx"><b>Capa escolhida</b><span>Ela aparece no disco quando a música tocar</span></div>'+
@@ -4587,11 +4668,15 @@ function htmlPasso(k){
             '</label>')+
         '<input type="file" id="musicaCapaInp" accept="image/*" style="display:none">'+
       '</div>'+
-      '<div class="field" style="margin-top:1rem"><label>Tipo de voz</label>'+
-        '<div class="chips" style="grid-template-columns:repeat(3,1fr)">'+
-          ['masculina','feminina','dueto'].map(function(v){
-            var lb={masculina:'Masculina',feminina:'Feminina',dueto:'Dueto'}[v];
-            return '<button type="button" class="chip'+(W.musicaVoz===v?' on':'')+'" data-voz="'+v+'"><span class="lb">'+lb+'</span></button>';
+      '<div class="field" id="musicaVozField" style="margin-top:1rem"><label>Tipo de voz</label>'+
+        '<div class="voz-cards">'+
+          [['masculina','🎙️','Masculina','Voz grave'],['feminina','🎙️','Feminina','Voz aguda'],['dueto','🎤','Dueto','Masc. + fem.']].map(function(v){
+            return '<button type="button" class="voz-card'+(W.musicaVoz===v[0]?' on':'')+'" data-voz="'+v[0]+'">'+
+              '<span class="voz-check">'+IC.check+'</span>'+
+              '<span class="voz-ic">'+v[1]+'</span>'+
+              '<span class="voz-lb">'+v[2]+'</span>'+
+              '<span class="voz-sub">'+v[3]+'</span>'+
+            '</button>';
           }).join('')+
         '</div></div>'+
       '<button class="btn '+(W.musicaPreviewUrl?'btn-ghost':'btn-primary')+' btn-block" id="musicaGerar" style="margin-top:1.2rem">'+
@@ -5055,8 +5140,17 @@ function ligarPasso(k){
     var letraBtn=el('letraGerarBtn');
     if(letraBtn) letraBtn.onclick=function(){
       if(W.musicaLetraTexto && W.musicaLetraTexto.trim() &&
-         !confirm('Isso vai substituir a letra atual por uma nova versão. Continuar?')) return;
+         !confirm('Isso vai substituir a letra atual por uma nova versão, começando do zero. Continuar?')) return;
       dispararGeracaoLetra();
+    };
+    var instrucaoTa=el('musicaLetraInstrucao');
+    if(instrucaoTa) instrucaoTa.oninput=function(ev){ W.musicaLetraInstrucao=ev.target.value; };
+    var ajustarBtn=el('letraAjustarBtn');
+    if(ajustarBtn) ajustarBtn.onclick=function(){
+      var pedido=(el('musicaLetraInstrucao')?el('musicaLetraInstrucao').value:W.musicaLetraInstrucao||'').trim();
+      if(!pedido){ toast('Escreve o que você quer ajustar na letra.'); return; }
+      W.musicaLetraInstrucao=pedido;
+      dispararAjusteLetra(pedido);
     };
     if(!W.musicaLetraTexto && !W.musicaLetraGerando && !W.musicaLetraErro) dispararGeracaoLetra();
   }
@@ -5199,6 +5293,7 @@ function validar(k){
   if(k==='musicaClima' && !W.musicaClima) return erro('Escolhe o clima da música.');
   if(k==='musicaLetra'){
     if(W.musicaLetraGerando) return erro('Aguenta só um instante — a letra ainda está sendo escrita.');
+    if(W.musicaLetraAjustando) return erro('Aguenta só um instante — o ajuste ainda está sendo aplicado.');
     if(!W.musicaLetraTexto || !W.musicaLetraTexto.trim()) return erro('Gere a prévia da letra antes de continuar.');
   }
   if(k==='musicaFinal' && !W.musicaPreviewUrl) return erro('Gere a prévia da música antes de continuar.');
