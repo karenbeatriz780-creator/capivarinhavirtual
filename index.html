@@ -492,9 +492,21 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .zap-ok span{display:block;font-size:.85rem;color:var(--plum);font-weight:700;}
 .zap-ok div{flex:1;min-width:0;}
 .zap-trocar{font-size:.74rem;font-weight:700;color:var(--muted);text-decoration:underline;flex-shrink:0;}
-.mh-contador{font-size:.76rem;font-weight:700;margin-top:.4rem;}
+.mh-contador{font-size:.76rem;font-weight:700;}
 .mh-contador.falta{color:var(--rose-deep);}
 .mh-contador.ok{color:#1F9D5C;}
+.mh-counts{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:.4rem;}
+.mh-max{font-size:.76rem;color:var(--muted);flex-shrink:0;}
+.mh-top{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem .7rem;margin-bottom:1.1rem;}
+.mh-ditar{width:auto;flex-shrink:0;}
+.mh-sug{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;}
+.mh-sug-lbl{font-size:.78rem;font-weight:700;color:var(--muted);margin-right:.1rem;}
+.mh-chip{font-size:.76rem;font-weight:700;color:var(--rose-deep);background:var(--rose-soft);
+  border:0;border-radius:100px;padding:.42rem .8rem;white-space:nowrap;}
+.mh-chip:hover{background:var(--rose);color:#fff;}
+.mh-label{display:block;font-size:.84rem;font-weight:800;color:var(--plum);margin:0 0 .4rem;}
+.mh-label .req{color:var(--rose-deep);}
+.mh-label .opc{font-weight:600;color:var(--muted);}
 .mp-topo{text-align:center;font-size:1.8rem;margin-bottom:1rem;}
 .mp-topo b{display:block;font-family:'Fraunces';font-size:1.15rem;color:var(--plum);
   font-weight:600;margin-top:.2rem;}
@@ -3561,7 +3573,7 @@ function novoEstado(prod){
     comboDaMusica:false, musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null, musicaLetra:null,
     musicaLetraTexto:null, musicaLetraGerando:false, musicaLetraErro:null,
     musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'',
-    musicaClima:'', musicaFrase:'', musicaVoz:'masculina', musicaCapa:null, musicaWhatsapp:'',
+    musicaClima:'', musicaFrase:'', musicaMomentos:'', musicaVoz:'masculina', musicaCapa:null, musicaWhatsapp:'',
     jogos:{roleta:false, palavra:false, caca:false, quebra:false, quiz:false, medidor:false},
     roletaOpcoes:['Cinema','Jantar fora','Praia','Dia de preguiça','Sorvete','Viagem surpresa'],
     palavraSecreta:'', palavraPergunta:'O que eu mais amo em você?',
@@ -3970,13 +3982,20 @@ function pedirWhatsapp(aoConfirmar){
   inp.oninput=function(){ inp.classList.remove('erro'); el('zapErr').textContent=''; };
 }
 
+/* junta a história com os "momentos especiais" (campo opcional) num texto só,
+   que é o que efetivamente vai pro gerador de letra/música */
+function textoHistoriaCompleta(){
+  var base=(W.musicaTexto||'').trim();
+  var mom=(W.musicaMomentos||'').trim();
+  return mom ? (base+'\n\nMomentos especiais pra mencionar: '+mom) : base;
+}
 function dispararGeracaoLetra(){
   W.musicaLetraGerando=true; W.musicaLetraErro=null;
   redesenharSemPular();
   fetch('/.netlify/functions/gerar-letra', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-      estilo: W.musicaEstilo, texto: W.musicaTexto, clima: W.musicaClima,
+      estilo: W.musicaEstilo, texto: textoHistoriaCompleta(), clima: W.musicaClima,
       relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
       nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz
     })
@@ -4011,7 +4030,7 @@ function dispararGeracao(gerarBtn){
   fetch('/.netlify/functions/gerar-musica', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-          estilo: W.musicaEstilo, texto: W.musicaTexto, clima: W.musicaClima,
+          estilo: W.musicaEstilo, texto: textoHistoriaCompleta(), clima: W.musicaClima,
           relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
           nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz,
           letraAprovada: W.musicaLetraTexto||'',
@@ -4456,13 +4475,23 @@ function htmlPasso(k){
     };
     var exemplo = exemploRel[W.musicaPara] ||
       'A gente se conheceu numa festa em 2021, em Parauapebas. Eu chamo ela de Nega. No primeiro encontro a gente ficou até 4 da manhã conversando no carro. Hoje temos a Helo, nossa filha.';
-    return guia("Agora me conta a história de vocês. Pode escrever ou falar — o que for mais fácil.")+
-      '<div class="wz-t">Conte a história</div>'+
-      '<div class="wz-s">É daqui que sai a letra. Quanto mais detalhe real, mais a música vai parecer feita só pra vocês.</div>'+
-      '<button type="button" class="btn btn-ghost btn-block" id="musicaDitar" style="margin-bottom:.9rem">🎙️ Ditar por voz</button>'+
-      '<textarea class="inp" id="musicaTexto" rows="6" placeholder="Ex: '+esc(exemplo)+'">'+esc(W.musicaTexto)+'</textarea>'+
-      '<div class="mh-contador" id="mhContador"></div>'+
+    var ROMANTICOS=['namorada','namorado','esposa','marido'];
+    var ehRomantico=ROMANTICOS.indexOf(W.musicaPara)!==-1;
+    var sugestoes=['Como nos conhecemos','Qualidades e virtudes', ehRomantico?'Declaração de amor':'Um momento marcante'];
+    return guia("Digite ou use o microfone para contar os detalhes. Faremos uma composição inesquecível!")+
+      '<div class="wz-t">Conte sua história 📜</div>'+
+      '<div class="mh-top">'+
+        '<button type="button" class="btn btn-ghost mh-ditar" id="musicaDitar">🎙️ Ditar por Voz (Gravar Fala)</button>'+
+        '<div class="mh-sug"><span class="mh-sug-lbl">Sugestões rápidas:</span>'+
+          sugestoes.map(function(s){ return '<button type="button" class="mh-chip" data-sug="'+esc(s)+'">💡 '+esc(s)+'</button>'; }).join('')+
+        '</div>'+
+      '</div>'+
+      '<label class="mh-label" for="musicaTexto">Sua história <span class="req">*</span></label>'+
+      '<textarea class="inp" id="musicaTexto" rows="6" maxlength="2000" placeholder="Como vocês se conheceram? Qual o momento mais especial? O que essa pessoa significa pra você? (Ou toque no microfone acima pra falar)">'+esc(W.musicaTexto)+'</textarea>'+
+      '<div class="mh-counts"><div class="mh-contador" id="mhContador"></div><span class="mh-max" id="mhMax"></span></div>'+
       '<div class="mh-checklist" id="mhCheck"></div>'+
+      '<label class="mh-label" for="musicaMomentos" style="margin-top:1.1rem">Momentos especiais para mencionar <span class="opc">(opcional)</span></label>'+
+      '<textarea class="inp" id="musicaMomentos" rows="3" maxlength="500" placeholder="Ex: primeiro encontro no parque, viagem para a praia, pedido de casamento...">'+esc(W.musicaMomentos||'')+'</textarea>'+
       '<div class="sug-musica"><span class="sug-lbl">💡 O que deixa a letra boa</span>'+
         '<ul class="sug-lista">'+
           ['<b>Nomes e apelidos</b> — "eu chamo ela de Nega"',
@@ -4472,7 +4501,7 @@ function htmlPasso(k){
             return '<li>'+s+'</li>';
           }).join('')+
         '</ul>'+
-        '<button type="button" class="sug-exemplo" id="mhExemplo">Ver um exemplo pronto</button>'+
+        '<button type="button" class="sug-exemplo" id="mhExemplo" data-exemplo="'+esc(exemplo)+'">Ver um exemplo pronto</button>'+
       '</div>';
   }
 
@@ -4932,6 +4961,7 @@ function ligarPasso(k){
         if(n>=50){ c.className='mh-contador ok'; c.textContent='✓ '+n+' caracteres'; }
         else{ c.className='mh-contador falta'; c.textContent='Mínimo de 50 caracteres (faltam '+(50-n)+')'; }
       }
+      var mx=el('mhMax'); if(mx) mx.textContent=n+'/2000';
       // checklist vivo: mostra o que já tem e o que ainda falta pra letra ficar boa
       var box=el('mhCheck'); if(!box) return;
       if(n<20){ box.innerHTML=''; return; }
@@ -4955,14 +4985,31 @@ function ligarPasso(k){
     }
     if(txtM) txtM.oninput=function(ev){ W.musicaTexto=ev.target.value; attContador(); };
     attContador();
+    var momentosInp=el('musicaMomentos');
+    if(momentosInp) momentosInp.oninput=function(ev){ W.musicaMomentos=ev.target.value; };
     var btnEx=el('mhExemplo');
     if(btnEx) btnEx.onclick=function(){
       var ta=el('musicaTexto'); if(!ta) return;
-      var ex=ta.getAttribute('placeholder').replace(/^Ex:\s*/,'');
+      var ex=btnEx.dataset.exemplo||'';
       if(ta.value.trim() && !confirm('Isso vai substituir o que você já escreveu. Continuar?')) return;
       ta.value=ex; W.musicaTexto=ex; attContador(); ta.focus();
       toast('Esse é só um exemplo — troca pelos detalhes de vocês!');
     };
+    var SUG_FRASES={
+      'Como nos conhecemos':'Nos conhecemos ',
+      'Qualidades e virtudes':'O que eu mais admiro é ',
+      'Declaração de amor':'Quero dizer que ',
+      'Um momento marcante':'Teve um momento que eu nunca esqueço: '
+    };
+    on('[data-sug]','onclick',function(e){
+      var ta=el('musicaTexto'); if(!ta) return;
+      var frase=SUG_FRASES[e.dataset.sug] || (e.dataset.sug+': ');
+      var atual=ta.value;
+      var novo=atual.replace(/\s+$/,'');
+      novo=(novo?novo+' ':'')+frase;
+      ta.value=novo; W.musicaTexto=novo; attContador();
+      ta.focus(); ta.setSelectionRange(novo.length, novo.length);
+    });
     var ditarBtn=el('musicaDitar');
     if(ditarBtn){
       var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
