@@ -53,6 +53,22 @@ const SYSTEM_PROMPT =
   'sem explicações, sem comentários, sem aspas, sem markdown, sem títulos. Comece direto com a ' +
   'primeira marcação de estrutura.';
 
+// Modo de AJUSTE PONTUAL: a pessoa já aprovou (ou quase aprovou) uma letra e
+// quer mudar só um detalhe ("deixa o refrão mais alegre", "troca a palavra X
+// no segundo verso"...). Diferente do modo normal (que escreve do zero), aqui
+// o que entra é a letra JÁ EXISTENTE + o pedido — e a letra inteira deve
+// voltar igual, exceto pela mudança pedida. Isso evita que a pessoa perca
+// partes da letra que já estava gostando só por pedir um ajuste pequeno.
+const AJUSTE_SYSTEM_PROMPT =
+  'Você é um letrista brasileiro profissional revisando a letra de uma música personalizada que ' +
+  'já foi escrita para um cliente (encomenda real, não é ficção). A pessoa vai te dizer EXATAMENTE ' +
+  'o que quer mudar. Sua tarefa é aplicar SOMENTE essa mudança pontual, preservando o restante da ' +
+  'letra o mais fiel possível ao original: mesma estrutura e mesmas marcações (como [Verso 1], ' +
+  '[Refrão], [Ponte] etc.), mesmos versos que não têm relação com o pedido, mesmos nomes e frases ' +
+  'que a pessoa não mencionou. Não reescreva nem "melhore" partes que não foram pedidas. Sua ' +
+  'resposta deve conter SOMENTE a letra completa e final, já com o ajuste aplicado, do início ao ' +
+  'fim — sem explicações, sem comentários, sem aspas, sem markdown.';
+
 function montarPrompt(p) {
   var genDesc = GENERO_PT[p.estilo] || GENERO_PT.romantica;
   var climaDesc = CLIMA_PT[p.clima] || '';
@@ -97,6 +113,22 @@ function montarPrompt(p) {
   return partes.join('\n');
 }
 
+function montarPromptAjuste(letraAtual, instrucao) {
+  var partes = [];
+  partes.push('Aqui está a letra atual de uma música personalizada, já com as marcações de estrutura:');
+  partes.push('"""');
+  partes.push(letraAtual);
+  partes.push('"""');
+  partes.push('');
+  partes.push('PEDIDO DE AJUSTE da pessoa, nas palavras dela: "' + instrucao + '"');
+  partes.push('');
+  partes.push('Aplique SOMENTE esse ajuste. Mantenha todo o resto da letra igual — mesmas ' +
+    'marcações de estrutura, mesmos versos que não têm relação com o pedido, mesmo tamanho ' +
+    'aproximado. Responda com a letra completa, já ajustada, do início ao fim — nada antes, ' +
+    'nada depois.');
+  return partes.join('\n');
+}
+
 function limparResposta(txt) {
   var t = String(txt || '').trim();
   // tira cerca de código, se o modelo colocar uma por engano
@@ -120,9 +152,20 @@ export default async (req) => {
     const nomesLetra = String((body && body.nomesLetra) || '').trim();
     const frase = String((body && body.frase) || '').trim();
     const voz = String((body && body.voz) || '').trim();
+    const letraAtual = String((body && body.letraAtual) || '').trim();
+    const instrucao = String((body && body.instrucao) || '').trim();
 
-    if (!estilo) return json({ erro: 'Escolhe um estilo primeiro.' }, 400);
-    if (texto.length < 50) return json({ erro: 'Conta um pouco mais da história (pelo menos 50 caracteres).' }, 400);
+    // Ajuste pontual: já existe uma letra, e a pessoa só quer mudar um
+    // detalhe dela — não precisa (nem deve) repetir estilo/história/etc.
+    const modoAjuste = letraAtual.length > 0 && instrucao.length > 0;
+
+    if (modoAjuste) {
+      if (letraAtual.length < 20) return json({ erro: 'Letra atual inválida.' }, 400);
+      if (instrucao.length < 3) return json({ erro: 'Descreve o que você quer ajustar na letra.' }, 400);
+    } else {
+      if (!estilo) return json({ erro: 'Escolhe um estilo primeiro.' }, 400);
+      if (texto.length < 50) return json({ erro: 'Conta um pouco mais da história (pelo menos 50 caracteres).' }, 400);
+    }
 
     const apiKey = (process.env.UNIFICALLY_API_KEY || '').trim();
     if (!apiKey) {
@@ -131,13 +174,16 @@ export default async (req) => {
 
     // texto da história limitado por segurança (custo/tokens) — 2000 caracteres
     // já é bem mais espaço do que a Suno aceitava no modo antigo (500).
-    const prompt = montarPrompt({
-      estilo, clima, relacao, ocasiao, nomesLetra, frase, voz,
-      texto: texto.slice(0, 2000)
-    });
+    const prompt = modoAjuste
+      ? montarPromptAjuste(letraAtual.slice(0, 3000), instrucao.slice(0, 500))
+      : montarPrompt({
+          estilo, clima, relacao, ocasiao, nomesLetra, frase, voz,
+          texto: texto.slice(0, 2000)
+        });
+    const systemPrompt = modoAjuste ? AJUSTE_SYSTEM_PROMPT : SYSTEM_PROMPT;
 
-    console.log('PEDIDO DE LETRA >> genero=' + estilo + ' | clima=' + clima +
-      ' | relacao=' + relacao + ' | ocasiao=' + ocasiao);
+    console.log('PEDIDO DE LETRA >> modo=' + (modoAjuste ? 'ajuste pontual' : 'geração') +
+      (modoAjuste ? ' | pedido=' + instrucao.slice(0, 80) : ' | genero=' + estilo + ' | clima=' + clima + ' | relacao=' + relacao + ' | ocasiao=' + ocasiao));
 
     let resp;
     try {
@@ -147,10 +193,12 @@ export default async (req) => {
         body: JSON.stringify({
           model: 'openai/gpt-5.4',
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
           ],
-          temperature: 0.9,
+          // Ajuste pontual pede mais fidelidade ao texto original (menos
+          // "criatividade" solta) do que escrever uma letra nova do zero.
+          temperature: modoAjuste ? 0.55 : 0.9,
           max_tokens: 900
         })
       });

@@ -71,7 +71,7 @@ const VOZ_PT = {
 };
 const GENEROS = {
   romantica:  'romantic ballad, acoustic guitar, soft piano, strings, tender vocals',
-  sertanejo:  'sertanejo, viola caipira, acoustic guitar, accordion, country ballad',
+  sertanejo:  'sertanejo universitario, modern sertanejo, acoustic guitar, clean electric guitar, bass, drums, keyboard, polished contemporary production, romantic radio arena anthem',
   pop:        'pop, synth, punchy drums, catchy hook, radio production',
   rock:       'rock, distorted electric guitars, live drums, bass, driving riff',
   mpb:        'MPB, nylon string guitar, subtle percussion, jazzy chords',
