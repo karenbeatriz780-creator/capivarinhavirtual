@@ -2521,7 +2521,7 @@ function htmlMusicaPlayer(url, url2, letra){
     return '<div class="musica-versao'+(ativo?' escolhida':'')+'">'+
       '<div class="mv-topo"><b>'+label+'</b>'+(ativo?'<span class="mv-selo">✓ vai no presente</span>':'')+'</div>'+
       (W.musicaCapa ? '<div class="mv-capa"><img src="'+esc(W.musicaCapa)+'" alt=""></div>' : '')+
-      '<audio class="mv-audio" controls src="'+esc(u)+'" style="width:100%"></audio>'+
+      '<audio class="mv-audio" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="'+esc(u)+'" style="width:100%"></audio>'+
       '<div class="hint" style="margin-top:.4rem">🔒 Prévia de 70 segundos — a música completa libera depois do pagamento.</div>'+
       (ativo?'':'<button type="button" class="btn btn-ghost btn-block mv-escolher" data-versao="'+esc(u)+'" style="margin-top:.5rem">Usar esta no presente</button>')+
     '</div>';
@@ -5608,7 +5608,7 @@ function telaSucessoMusica(id, g){
         '<div class="ms-capa"><div class="ms-disco">🎵</div></div>'+
         '<div class="ms-tit">'+esc(titulo)+'</div>'+
         '<div class="ms-sub">Sua música completa está liberada</div>'+
-        (url ? '<audio class="ms-audio" controls src="'+esc(url)+'"></audio>' : '')+
+        (url ? '<audio class="ms-audio" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="'+esc(url)+'"></audio>' : '')+
       '</div>'+
       (url
         ? '<a class="btn btn-primary btn-block btn-lg" href="'+esc(url)+'" download="minha-musica.mp3" style="margin-top:1.3rem">'+IC.download+' Baixar em MP3</a>'
