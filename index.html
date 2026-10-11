@@ -5703,11 +5703,17 @@ function entrarPainel(chave){
   var app=el('app');
   app.innerHTML='<div class="pnl" id="pnlScope"><div class="pnl-h"><h1>Painel · Capivarinha Love</h1>'+
     '<div class="pnl-h-btns"><button class="pnl-link" id="pnlLink">'+IC.download+' Link de acesso</button>'+
+      '<button class="pnl-link" id="pnlFuso">🕐 Horário '+(pnlFuso()===-2?'do banco (−2h)':'de Belém (−3h)')+'</button>'+
     '<button class="pnl-att" id="pnlAtt">Atualizar</button>'+
     '<button class="pnl-sair" id="pnlSair">Sair</button></div></div>'+
     '<div id="pnlBody">Carregando…</div></div>';
   el('pnlSair').onclick=function(){ Store.del('cl_admin_key'); _pnlChave=''; toast('Senha de administrador esquecida neste aparelho.'); };
   el('pnlAtt').onclick=function(){ atualizarPainel(); };
+  el('pnlFuso').onclick=function(){
+    Store.set('cl_pnl_fuso', String(pnlFuso()===-2?-3:-2));
+    el('pnlFuso').textContent='🕐 Horário '+(pnlFuso()===-2?'do banco (−2h)':'de Belém (−3h)');
+    if(_pnlCache.pedidos) desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas);
+  };
   el('pnlLink').onclick=function(){
     copiar(location.origin+'/#/painel-capivarinha', 'Link do painel copiado!');
   };
@@ -5806,6 +5812,15 @@ function pnlVersaoMusica(p, url, rotulo){
     '</div></div>';
 }
 
+/* Fuso do painel: igual ao horário do banco (Efí). Padrão −2h (Brasília no
+   horário de verão). O botão "Horário" no topo alterna entre −2h e −3h. */
+function pnlFuso(){ var v=parseFloat(Store.get('cl_pnl_fuso')); return (v===-2||v===-3)?v:-2; }
+function pnlDt(ms){ return new Date(ms + pnlFuso()*3600000); }
+function pnlInicioDia(ms, delta){ var d=pnlDt(ms); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()+(delta||0)) - pnlFuso()*3600000; }
+function pnlInicioMes(ms){ var d=pnlDt(ms); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) - pnlFuso()*3600000; }
+function pnlQuando(p){ return p.pagoEm||p.criadoEm||0; }
+function pnlKeyMs(ms){ var d=pnlDt(ms); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0'); }
+function pnlFmt(ms){ var d=pnlDt(ms), z=function(n){ return String(n).padStart(2,'0'); }; return z(d.getUTCDate())+'/'+z(d.getUTCMonth()+1)+'/'+d.getUTCFullYear()+', '+z(d.getUTCHours())+':'+z(d.getUTCMinutes())+':'+z(d.getUTCSeconds()); }
 function pnlDiaKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function pnlGastoGet(diaKey){ var v=Store.get('cl_gasto_'+diaKey); return v?Number(v):0; }
 function pnlGastoSet(diaKey,val){ Store.set('cl_gasto_'+diaKey, String(Number(val)||0)); }
@@ -5815,19 +5830,19 @@ function desenharPainel(pedidos, visitas, musicas){
   musicas=musicas||_pnlCache.musicas||[];
   _pnlCache.pedidos=pedidos; _pnlCache.visitas=visitas; _pnlCache.musicas=musicas;
   var agora=new Date();
-  var inicioDia=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate()).getTime();
-  var inicioOntem=inicioDia-24*3600*1000;
-  var inicioMes=new Date(agora.getFullYear(),agora.getMonth(),1).getTime();
+  var inicioDia=pnlInicioDia(agora.getTime());
+  var inicioOntem=pnlInicioDia(agora.getTime(),-1);
+  var inicioMes=pnlInicioMes(agora.getTime());
   var pagos=pedidos.filter(function(p){ return p.pago; });
-  var hoje=pagos.filter(function(p){ return (p.criadoEm||0)>=inicioDia; });
-  var ontem=pagos.filter(function(p){ return (p.criadoEm||0)>=inicioOntem && (p.criadoEm||0)<inicioDia; });
-  var mes=pagos.filter(function(p){ return (p.criadoEm||0)>=inicioMes; });
+  var hoje=pagos.filter(function(p){ return pnlQuando(p)>=inicioDia; });
+  var ontem=pagos.filter(function(p){ return pnlQuando(p)>=inicioOntem && pnlQuando(p)<inicioDia; });
+  var mes=pagos.filter(function(p){ return pnlQuando(p)>=inicioMes; });
   function soma(l){ return l.reduce(function(s,p){ return s+(Number(p.valor)||0); },0); }
   var nomeProd={completo:'Retrospectiva Completa', carta:'Carta Virtual', convite:'Convite Criativo'};
 
   /* lucro — gasto com anúncio é digitado manualmente (não temos acesso à API do Facebook/TikTok) */
-  var hojeKey=pnlDiaKey(agora);
-  var ontemKey=pnlDiaKey(new Date(agora.getFullYear(),agora.getMonth(),agora.getDate()-1));
+  var hojeKey=pnlKeyMs(agora.getTime());
+  var ontemKey=pnlKeyMs(inicioOntem);
   var gastoHoje=pnlGastoGet(hojeKey), gastoOntem=pnlGastoGet(ontemKey);
   var receitaHoje=soma(hoje), receitaOntem=soma(ontem);
   var lucroHoje=receitaHoje-gastoHoje, lucroOntem=receitaOntem-gastoOntem;
@@ -5855,9 +5870,9 @@ function desenharPainel(pedidos, visitas, musicas){
   /* por dia — lista + gráfico */
   var porDia={};
   pagos.forEach(function(p){
-    if(!p.criadoEm) return;
-    var d=new Date(p.criadoEm), k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    if(!porDia[k]) porDia[k]={ct:0,vl:0,ts:new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()};
+    var q=pnlQuando(p); if(!q) return;
+    var k=pnlKeyMs(q);
+    if(!porDia[k]) porDia[k]={ct:0,vl:0,ts:pnlInicioDia(q)};
     porDia[k].ct++; porDia[k].vl+=Number(p.valor)||0;
   });
   var diasOrd=Object.keys(porDia).sort(function(a,b){ return porDia[b].ts-porDia[a].ts; }).slice(0,20);
@@ -5868,8 +5883,8 @@ function desenharPainel(pedidos, visitas, musicas){
   /* vendas por hora do dia — só deste mês, pra decidir horário de anúncio */
   var porHora=[]; for(var hh=0;hh<24;hh++) porHora.push({ct:0,vl:0});
   mes.forEach(function(p){
-    if(!p.criadoEm) return;
-    var hr=new Date(p.criadoEm).getHours();
+    var q=pnlQuando(p); if(!q) return;
+    var hr=pnlDt(q).getUTCHours();
     porHora[hr].ct++; porHora[hr].vl+=Number(p.valor)||0;
   });
   var horasGrafico=porHora.map(function(o,i){
@@ -5924,7 +5939,7 @@ function desenharPainel(pedidos, visitas, musicas){
   var visitasMostrar=(_pnlOcultarDev ? visitasReais : visitas).slice(0,60);
   var visitasHtml=visitasMostrar.map(function(v){
     var passoNome=PASSO_NOME[v.passo]||v.passo;
-    var quando=v.ultimaVez?new Date(v.ultimaVez).toLocaleString('pt-BR'):'—';
+    var quando=v.ultimaVez?pnlFmt(v.ultimaVez):'—';
     var converteu=idsPagos[v.id];
     var nome=(v.meuNome||'')+(v.meuNome&&v.parceiroNome?' &amp; ':'')+(v.parceiroNome||'');
     var quem=nome?esc(nome):('<span class="id">'+esc(v.id)+'</span>');
@@ -5938,7 +5953,7 @@ function desenharPainel(pedidos, visitas, musicas){
   /* pedidos, com link, copiar e liberação manual pra quem ficou pendente por engano */
   function montarLinhaPedido(p){
     var nome=(p.meuNome||'')+(p.meuNome&&p.parceiroNome?' &amp; ':'')+(p.parceiroNome||'');
-    var dt=p.criadoEm?new Date(p.criadoEm).toLocaleString('pt-BR'):'—';
+    var dt=pnlQuando(p)?pnlFmt(pnlQuando(p)):'—';
     var link=location.origin+'/#/p/'+p.id;
     var liberar='';
     if(!p.pago){
@@ -5976,7 +5991,7 @@ function desenharPainel(pedidos, visitas, musicas){
   var idsComPedido={};
   pedidos.forEach(function(p){ if(p.musicaPreviewUrl) idsComPedido[p.musicaPreviewUrl]=p; });
   var musicasHtml=musicas.map(function(m){
-    var dt=m.criadoEm?new Date(m.criadoEm).toLocaleString('pt-BR'):'—';
+    var dt=m.criadoEm?pnlFmt(m.criadoEm):'—';
     var pedidoLigado=m.url && idsComPedido[m.url];
     var virouPedido=!!pedidoLigado;
     var quem=m.nomes || (RELACAO_NOME[m.relacao]||'') || '(sem nome)';
