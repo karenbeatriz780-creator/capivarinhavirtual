@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { obterToken, conferirPagamentoEfi, aplicarPagamento } from './_efi.mjs';
+// ATENÇÃO: este arquivo precisa ser .mjs. Não deixe um admin-pedidos.js junto na pasta.
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -15,6 +16,7 @@ function autorizado(req) {
 }
 
 export default async (req) => {
+  const t0 = Date.now(); // tudo precisa terminar em ~7s, senão o painel não abre
   try {
     if (req.method !== 'GET') return json({ erro: 'Método não permitido.' }, 405);
     if (!autorizado(req)) return json({ erro: 'Senha incorreta.' }, 401);
@@ -33,25 +35,26 @@ export default async (req) => {
     // Faz isso com limite de tempo (~6s) pra o painel nunca estourar o tempo do
     // Netlify: a cada atualização confere primeiro os que estão há mais tempo
     // sem conferir, então em poucas atualizações todos passam pela checagem.
-    const TRES_DIAS = 3 * 24 * 3600 * 1000, agora = Date.now(), inicio = Date.now();
+    const TRES_DIAS = 3 * 24 * 3600 * 1000, agora = Date.now();
+    const resta = () => 7000 - (Date.now() - t0);
     const pendentes = registros
       .filter((g) => g && !g.pago && !g.cancelado && g.pagamento && g.pagamento.provedor === 'efi' && g.pagamento.txid && (!g.criadoEm || agora - g.criadoEm < TRES_DIAS))
       .sort((x, y) => ((x.pagamento.efiConferidoEm || 0) - (y.pagamento.efiConferidoEm || 0)) || ((y.criadoEm || 0) - (x.criadoEm || 0)));
     let liberadosAgora = 0, conferidos = 0;
-    const comLimite = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r('tempo'), ms))]);
-    if (pendentes.length) {
+    const comLimite = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r('tempo'), Math.max(0, ms)))]);
+    if (pendentes.length && resta() > 2500) {
       try {
-        const token = await comLimite(obterToken(), 4000);
+        const token = await comLimite(obterToken(), Math.min(3000, resta() - 1500));
         if (token && token !== 'tempo') {
-          for (let i = 0; i < pendentes.length && Date.now() - inicio < 6000; i += 8) {
+          for (let i = 0; i < pendentes.length && resta() > 1800; i += 8) {
             await Promise.all(pendentes.slice(i, i + 8).map(async (g) => {
               try {
-                const info = await comLimite(conferirPagamentoEfi(g, token), 3500);
+                const info = await comLimite(conferirPagamentoEfi(g, token), Math.min(2500, resta() - 800));
                 if (info === 'tempo') return;
                 conferidos++;
                 if (info) { aplicarPagamento(g, info, 'consulta-painel'); liberadosAgora++; }
                 else { g.pagamento.efiConferidoEm = Date.now(); }
-                await store.setJSON(g.id, g);
+                await comLimite(store.setJSON(g.id, g), Math.max(300, resta() - 300));
               } catch (e) { console.error('admin-pedidos: conferir', g.id, e && e.message); }
             }));
           }
