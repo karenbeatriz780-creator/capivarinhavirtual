@@ -29,25 +29,36 @@ export default async (req) => {
     // de pedidos.
     const registros = await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' })));
 
-    // Plano B do webhook: pedidos pendentes dos últimos 3 dias que têm cobrança
-    // Pix são conferidos direto na Efí. Se o Pix caiu, o pedido é liberado aqui
-    // mesmo (o cliente passa a receber o presente/música pelo link).
-    const TRES_DIAS = 3 * 24 * 3600 * 1000, agora = Date.now();
-    const pendentes = registros.filter((g) => g && !g.pago && !g.cancelado && g.pagamento && g.pagamento.provedor === 'efi' && g.pagamento.txid && (!g.criadoEm || agora - g.criadoEm < TRES_DIAS));
-    let liberadosAgora = 0;
+    // Plano B do webhook: confere na Efí os pedidos pendentes dos últimos 3 dias.
+    // Faz isso com limite de tempo (~6s) pra o painel nunca estourar o tempo do
+    // Netlify: a cada atualização confere primeiro os que estão há mais tempo
+    // sem conferir, então em poucas atualizações todos passam pela checagem.
+    const TRES_DIAS = 3 * 24 * 3600 * 1000, agora = Date.now(), inicio = Date.now();
+    const pendentes = registros
+      .filter((g) => g && !g.pago && !g.cancelado && g.pagamento && g.pagamento.provedor === 'efi' && g.pagamento.txid && (!g.criadoEm || agora - g.criadoEm < TRES_DIAS))
+      .sort((x, y) => ((x.pagamento.efiConferidoEm || 0) - (y.pagamento.efiConferidoEm || 0)) || ((y.criadoEm || 0) - (x.criadoEm || 0)));
+    let liberadosAgora = 0, conferidos = 0;
+    const comLimite = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r('tempo'), ms))]);
     if (pendentes.length) {
       try {
-        const token = await obterToken();
-        for (let i = 0; i < pendentes.length; i += 6) {
-          await Promise.all(pendentes.slice(i, i + 6).map(async (g) => {
-            try {
-              const info = await conferirPagamentoEfi(g, token);
-              if (info) { aplicarPagamento(g, info, 'consulta-painel'); await store.setJSON(g.id, g); liberadosAgora++; }
-            } catch (e) { console.error('admin-pedidos: conferir', g.id, e && e.message); }
-          }));
+        const token = await comLimite(obterToken(), 4000);
+        if (token && token !== 'tempo') {
+          for (let i = 0; i < pendentes.length && Date.now() - inicio < 6000; i += 8) {
+            await Promise.all(pendentes.slice(i, i + 8).map(async (g) => {
+              try {
+                const info = await comLimite(conferirPagamentoEfi(g, token), 3500);
+                if (info === 'tempo') return;
+                conferidos++;
+                if (info) { aplicarPagamento(g, info, 'consulta-painel'); liberadosAgora++; }
+                else { g.pagamento.efiConferidoEm = Date.now(); }
+                await store.setJSON(g.id, g);
+              } catch (e) { console.error('admin-pedidos: conferir', g.id, e && e.message); }
+            }));
+          }
         }
       } catch (e) { console.error('admin-pedidos: token Efí', e && e.message); }
     }
+    const faltamConferir = Math.max(0, pendentes.length - conferidos);
 
     const pedidos = [];
     for (const g of registros) {
@@ -72,7 +83,7 @@ export default async (req) => {
 
     pedidos.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 
-    return json({ ok: true, pedidos, liberadosAgora });
+    return json({ ok: true, pedidos, liberadosAgora, faltamConferir });
   } catch (e) {
     console.error('admin-pedidos (inesperado):', e && e.stack || e);
     return json({ erro: 'Erro inesperado no servidor: ' + (e && e.message ? e.message : String(e)) }, 500);
