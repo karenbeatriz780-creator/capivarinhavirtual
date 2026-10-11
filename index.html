@@ -5692,10 +5692,10 @@ function telaMarcarDev(){
   };
 }
 function telaPainel(chaveUrl){
-  if(chaveUrl){ Store.set('cl_admin_key', chaveUrl); entrarPainel(chaveUrl); return; }
-  var chave=Store.get('cl_admin_key');
-  if(chave){ entrarPainel(chave); }
-  else{ desenharTravaPainel(); }
+  /* painel aberto: quem tem o link entra sem senha. A senha só é pedida
+     (uma vez) pra ações que mexem em pedidos: cancelar e marcar como pago. */
+  if(chaveUrl){ Store.set('cl_admin_key', chaveUrl); }
+  entrarPainel(chaveUrl || Store.get('cl_admin_key') || '');
 }
 /* primeira entrada na tela: monta o cabeçalho inteiro (só aqui, pra não re-flashar em toda atualização) */
 function entrarPainel(chave){
@@ -5706,14 +5706,13 @@ function entrarPainel(chave){
     '<button class="pnl-att" id="pnlAtt">Atualizar</button>'+
     '<button class="pnl-sair" id="pnlSair">Sair</button></div></div>'+
     '<div id="pnlBody">Carregando…</div></div>';
-  el('pnlSair').onclick=function(){ Store.del('cl_admin_key'); ir('painel-capivarinha'); navegar(); };
+  el('pnlSair').onclick=function(){ Store.del('cl_admin_key'); _pnlChave=''; toast('Senha de administrador esquecida neste aparelho.'); };
   el('pnlAtt').onclick=function(){ atualizarPainel(); };
   el('pnlLink').onclick=function(){
-    var link=location.origin+'/#/painel-capivarinha/'+encodeURIComponent(chave);
-    copiar(link, 'Link copiado! Salva esse link — com ele você entra direto, sem senha.');
+    copiar(location.origin+'/#/painel-capivarinha', 'Link do painel copiado!');
   };
   carregarPainel(chave, function(falhou){
-    if(falhou){ Store.del('cl_admin_key'); desenharTravaPainel('Esse link não é mais válido.'); }
+    if(falhou){ toast('Não consegui carregar o painel agora. Tenta atualizar.'); }
   });
 }
 /* reconsultar dados sem reconstruir a tela — evita o "pulo" de tela ao atualizar */
@@ -5722,7 +5721,7 @@ function atualizarPainel(){
   var scrollAntes=window.scrollY;
   var body=el('pnlBody'); body.style.opacity='.45';
   carregarPainel(_pnlChave, function(falhou){
-    if(falhou){ Store.del('cl_admin_key'); desenharTravaPainel('Esse link não é mais válido.'); return; }
+    if(falhou){ toast('Não consegui atualizar o painel agora.'); return; }
     requestAnimationFrame(function(){ window.scrollTo(0,scrollAntes); });
   });
 }
@@ -5783,7 +5782,13 @@ var RELACAO_NOME={
   amiga:'Pra amiga', amigo:'Pra amigo', filho:'Pra filho(a)', ninguem:'Sem dedicatória'
 };
 var _pnlAba='pagos';
-var _pnlCache={pedidos:[],visitas:[],musicas:[]}, _pnlOcultarDev=true, _pnlChave=null;
+function pedirSenhaAdmin(){
+  if(_pnlChave) return true;
+  var k=(prompt('Pra mexer em pedidos, digite a senha de administrador:')||'').trim();
+  if(!k) return false;
+  _pnlChave=k; Store.set('cl_admin_key',k); return true;
+}
+var _pnlCache={pedidos:[],visitas:[],musicas:[]}, _pnlOcultarDev=true, _pnlChave="";
 /* uma versão da música no painel, com player + baixar + enviar no WhatsApp do cliente */
 function pnlVersaoMusica(p, url, rotulo){
   var nome=(p.meuNome||'cliente').split(' ')[0];
@@ -6066,6 +6071,7 @@ function desenharPainel(pedidos, visitas, musicas){
   });
   body.querySelectorAll('[data-cancelar]').forEach(function(btn){
     btn.onclick=function(){
+      if(!pedirSenhaAdmin()) return;
       if(!confirm('Cancelar este pedido? O cliente perde o acesso ao presente na hora.')) return;
       btn.disabled=true; btn.textContent='Cancelando...';
       fetch('/.netlify/functions/admin-cancelar',{
@@ -6092,6 +6098,7 @@ function desenharPainel(pedidos, visitas, musicas){
       var diasInp=wrap.querySelector('[data-dias]');
       var dias=diasInp ? parseInt(diasInp.value,10) : null;
       if(diasInp && (!dias || dias<1)){ toast('Coloca um número de dias válido.'); return; }
+      if(!pedirSenhaAdmin()) return;
       btn.disabled=true; btn.textContent='Liberando...';
       fetch('/.netlify/functions/admin-marcar-pago', {
         method:'POST',
