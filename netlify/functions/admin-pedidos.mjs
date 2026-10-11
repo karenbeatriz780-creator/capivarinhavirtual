@@ -99,6 +99,7 @@ export default async (req) => {
         pago: !!g.pago,
         cancelado: !!g.cancelado,
         criadoEm: g.criadoEm || null,
+        pagoEm: g.pagoEm || null,
         meuNome: g.meuNome || '',
         parceiroNome: g.parceiroNome || '',
         musicaOn: !!g.musicaOn,
