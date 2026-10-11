@@ -75,7 +75,10 @@ export function efiRequest(path, { method = 'GET', token = null, body = null, he
   });
 }
 
+let _tokenCache = null; // { token, expira } — reaproveita o token enquanto a função está "quente"
+
 export async function obterToken() {
+  if (_tokenCache && _tokenCache.expira > Date.now()) return _tokenCache.token;
   const { clientId, clientSecret } = credenciais();
   const auth = Buffer.from(clientId + ':' + clientSecret).toString('base64');
   const res = await efiRequest('/oauth/token', {
@@ -87,7 +90,36 @@ export async function obterToken() {
     const msg = res.data && (res.data.mensagem || res.data.message || res.data.nome);
     throw new Error('Efí recusou a autenticação' + (msg ? ': ' + msg : ' (HTTP ' + res.status + ')'));
   }
+  const validade = Number(res.data.expires_in || 3600);
+  _tokenCache = { token: res.data.access_token, expira: Date.now() + Math.max(60, validade - 120) * 1000 };
   return res.data.access_token;
+}
+
+/* Plano B do webhook: pergunta direto pra Efí se a cobrança deste pedido já
+   foi paga. Devolve { e2eid, valor } quando o Pix caiu, ou null. */
+export async function conferirPagamentoEfi(presente, token) {
+  const pg = presente && presente.pagamento;
+  if (!presente || presente.pago || presente.cancelado || !pg || pg.provedor !== 'efi' || !pg.txid) return null;
+  const tk = token || await obterToken();
+  const r = await efiRequest('/v2/cob/' + encodeURIComponent(pg.txid), { token: tk });
+  if (!r.ok || !r.data) return null;
+  if (String(r.data.status || '').toUpperCase() !== 'CONCLUIDA') return null;
+  const pix = Array.isArray(r.data.pix) && r.data.pix[0] ? r.data.pix[0] : {};
+  return { e2eid: pix.endToEndId || null, valor: pix.valor || null };
+}
+
+/* Marca o presente como pago (mesma regra do webhook). Muda o objeto e devolve ele. */
+export function aplicarPagamento(presente, info, origem) {
+  const agora = Date.now();
+  presente.pago = true;
+  presente.pagoEm = presente.pagoEm || agora;
+  presente.criadoEm = presente.criadoEm || agora;
+  presente.expiraEm = (presente.duracao === 'h48') ? presente.criadoEm + 48 * 3600 * 1000 : null;
+  presente.pagamento = Object.assign({}, presente.pagamento || {}, {
+    provedor: 'efi', status: 'CONCLUIDA', e2eid: (info && info.e2eid) || null,
+    valorRecebido: (info && info.valor) || null, pagoEm: presente.pagoEm, confirmadoPor: origem || 'consulta'
+  });
+  return presente;
 }
 
 export function erroEfi(data, status) {

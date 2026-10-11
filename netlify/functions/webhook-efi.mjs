@@ -26,6 +26,7 @@ export default async (req) => {
   catch { return new Response('ok', { status: 200 }); }
 
   const pix = Array.isArray(body && body.pix) ? body.pix : [];
+  console.log('Webhook Efí recebido:', pix.length, 'evento(s)');
   if (!pix.length) return new Response('ok', { status: 200 });
 
   const mapStore = getStore('efi-txid');
