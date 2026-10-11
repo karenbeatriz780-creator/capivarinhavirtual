@@ -8,10 +8,8 @@ function json(obj, status = 200) {
 }
 
 function autorizado(req) {
-  const senha = (process.env.ADMIN_SENHA || '').trim();
-  if (!senha) return false;
-  const enviada = req.headers.get('x-admin-key') || '';
-  return enviada === senha;
+  // Painel aberto: quem tem o link vê sem senha.
+  return true;
 }
 
 export default async (req) => {
