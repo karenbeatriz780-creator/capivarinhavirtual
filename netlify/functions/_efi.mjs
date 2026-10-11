@@ -126,3 +126,21 @@ export function erroEfi(data, status) {
   if (data && typeof data === 'object') return data.mensagem || data.message || data.nome || ('HTTP ' + status);
   return (typeof data === 'string' && data.slice(0, 250)) || ('HTTP ' + status);
 }
+
+/* Lista os Pix recebidos na conta num período (todas as páginas, até um limite).
+   Cada item traz o txid da cobrança, que liga o Pix ao pedido. */
+export async function listarPixRecebidos(token, inicio, fim, maxPaginas = 5) {
+  const tk = token || await obterToken();
+  const todos = [];
+  for (let pag = 0; pag < maxPaginas; pag++) {
+    const q = '?inicio=' + encodeURIComponent(inicio.toISOString()) + '&fim=' + encodeURIComponent(fim.toISOString()) +
+      '&paginacao.paginaAtual=' + pag + '&paginacao.itensPorPagina=100';
+    const r = await efiRequest('/v2/pix' + q, { token: tk });
+    if (!r.ok || !r.data) { if (!todos.length) throw new Error('Efí /v2/pix: ' + erroEfi(r.data, r.status)); break; }
+    const lista = Array.isArray(r.data.pix) ? r.data.pix : [];
+    todos.push(...lista);
+    const total = r.data.parametros && r.data.parametros.paginacao && r.data.parametros.paginacao.quantidadeDePaginas;
+    if (!total || pag + 1 >= total || !lista.length) break;
+  }
+  return todos;
+}

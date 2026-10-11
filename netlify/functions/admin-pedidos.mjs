@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { obterToken, conferirPagamentoEfi, aplicarPagamento } from './_efi.mjs';
+import { obterToken, conferirPagamentoEfi, aplicarPagamento, listarPixRecebidos } from './_efi.mjs';
 // ATENÇÃO: este arquivo precisa ser .mjs. Não deixe um admin-pedidos.js junto na pasta.
 
 function json(obj, status = 200) {
@@ -46,6 +46,30 @@ export default async (req) => {
       try {
         const token = await comLimite(obterToken(), Math.min(3000, resta() - 1500));
         if (token && token !== 'tempo') {
+          // 1) Jeito rápido: pega a lista de TODOS os Pix que caíram na conta nos
+          //    últimos 3 dias e libera os pedidos ligados a eles (pelo txid).
+          try {
+            const pixes = await comLimite(listarPixRecebidos(token, new Date(agora - TRES_DIAS), new Date(agora + 60000)), Math.min(4000, resta() - 1500));
+            if (Array.isArray(pixes) && pixes.length) {
+              const porId = {}; registros.forEach((g) => { if (g && g.id) porId[g.id] = g; });
+              const txStore = getStore('efi-txid');
+              await Promise.all(pixes.filter((p) => p && p.txid).map(async (p) => {
+                try {
+                  const mapa = await txStore.get(p.txid, { type: 'json' });
+                  const g = mapa && mapa.giftId && porId[mapa.giftId];
+                  if (!g || g.pago || g.cancelado) return;
+                  aplicarPagamento(g, { e2eid: p.endToEndId || null, valor: p.valor || null }, 'lista-pix-painel');
+                  if (p.horario) { const h = Date.parse(p.horario); if (h) { g.pagoEm = h; g.pagamento.pagoEm = h; } }
+                  liberadosAgora++;
+                  await store.setJSON(g.id, g);
+                } catch (e) { console.error('admin-pedidos: lista pix', p.txid, e && e.message); }
+              }));
+            }
+          } catch (e) { console.error('admin-pedidos: listar pix', e && e.message); }
+
+          // 2) Reforço: confere um a um os pendentes que sobraram (com limite de tempo).
+          const aindaPendentes = pendentes.filter((g) => !g.pago);
+          pendentes.length = 0; pendentes.push(...aindaPendentes);
           for (let i = 0; i < pendentes.length && resta() > 1800; i += 8) {
             await Promise.all(pendentes.slice(i, i + 8).map(async (g) => {
               try {
