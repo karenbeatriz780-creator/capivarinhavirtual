@@ -185,38 +185,55 @@ export default async (req) => {
     console.log('PEDIDO DE LETRA >> modo=' + (modoAjuste ? 'ajuste pontual' : 'geração') +
       (modoAjuste ? ' | pedido=' + instrucao.slice(0, 80) : ' | genero=' + estilo + ' | clima=' + clima + ' | relacao=' + relacao + ' | ocasiao=' + ocasiao));
 
-    let resp;
-    try {
-      resp = await fetch('https://api.unifically.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'openai/gpt-5.4',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: prompt }
-          ],
-          // Ajuste pontual pede mais fidelidade ao texto original (menos
-          // "criatividade" solta) do que escrever uma letra nova do zero.
-          temperature: modoAjuste ? 0.55 : 0.9,
-          max_tokens: 900
-        })
-      });
-    } catch (e) {
-      console.error('Unifically chat (rede):', e && e.stack || e);
-      return json({ erro: 'Não consegui falar com o servidor de letras agora.' }, 502);
+    // O GPT-5.4 às vezes demora mais de 30s (ou dá 503) e o Netlify corta a
+    // função em 30s. Então: tenta o GPT-5.4 com limite de tempo e, se não vier
+    // a tempo, usa o GPT-5.4 mini, que é bem mais rápido.
+    const t0 = Date.now();
+    async function chamar(modelo, limiteMs) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), limiteMs);
+      try {
+        const r = await fetch('https://api.unifically.com/v1/chat/completions', {
+          method: 'POST',
+          signal: ctrl.signal,
+          headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: modelo,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: prompt }
+            ],
+            // Ajuste pontual pede mais fidelidade ao texto original (menos
+            // "criatividade" solta) do que escrever uma letra nova do zero.
+            temperature: modoAjuste ? 0.55 : 0.9,
+            max_tokens: 900
+          })
+        });
+        const d = await r.json().catch(() => null);
+        const txt = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
+        if (!r.ok || !txt || !String(txt).trim()) {
+          console.error('Unifically ' + modelo + ':', r.status, JSON.stringify(d).slice(0, 400));
+          return null;
+        }
+        return String(txt);
+      } catch (e) {
+        console.error('Unifically ' + modelo + (e && e.name === 'AbortError' ? ': passou de ' + limiteMs + 'ms' : ': ' + (e && e.message)));
+        return null;
+      } finally {
+        clearTimeout(timer);
+      }
     }
 
-    const data = await resp.json().catch(() => null);
-    if (!resp.ok || !data) {
-      console.error('Unifically chat completions:', resp.status, JSON.stringify(data));
+    let conteudo = await chamar('openai/gpt-5.4', 15000);
+    if (!conteudo) {
+      const resta = 27000 - (Date.now() - t0);
+      if (resta > 4000) {
+        console.log('Usando plano B: openai/gpt-5.4-mini');
+        conteudo = await chamar('openai/gpt-5.4-mini', resta);
+      }
+    }
+    if (!conteudo) {
       return json({ erro: 'Não consegui escrever a letra agora. Tenta de novo em instantes.' }, 502);
-    }
-
-    const conteudo = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-    if (!conteudo || !conteudo.trim()) {
-      console.error('Unifically chat sem conteúdo:', JSON.stringify(data));
-      return json({ erro: 'O serviço de letra não respondeu com um texto. Tenta de novo.' }, 502);
     }
 
     const letra = limparResposta(conteudo);
