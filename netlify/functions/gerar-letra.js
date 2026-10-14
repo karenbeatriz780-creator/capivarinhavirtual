@@ -137,6 +137,8 @@ function limparResposta(txt) {
 }
 
 export default async (req) => {
+  // modo longo = chamado pela função em segundo plano (sem o corte de 30s)
+  const longo = req.headers.get('x-modo-longo') === '1';
   try {
     if (req.method !== 'POST') return json({ erro: 'Método não permitido.' }, 405);
 
@@ -192,6 +194,7 @@ export default async (req) => {
     const t0 = Date.now();
     const espera = (ms) => new Promise((r) => setTimeout(() => r(null), Math.max(0, ms)));
     async function chamar(modelo, comTemperatura) {
+      const tc = Date.now();
       try {
         const corpo = {
           model: modelo,
@@ -199,7 +202,8 @@ export default async (req) => {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
           ],
-          max_tokens: 900
+          // espaço de sobra: modelos que "pensam" antes gastam parte disso
+          max_tokens: 4000
         };
         // Ajuste pontual pede mais fidelidade ao texto original.
         if (comTemperatura) corpo.temperature = modoAjuste ? 0.55 : 0.9;
@@ -209,12 +213,17 @@ export default async (req) => {
           body: JSON.stringify(corpo)
         });
         const d = await r.json().catch(() => null);
-        const txt = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
-        if (!r.ok || !txt || !String(txt).trim()) {
+        const ch = d && d.choices && d.choices[0];
+        const txt = ch && ch.message && ch.message.content;
+        if (r.ok && ch && ch.finish_reason === 'length') {
+          console.log('FALHA ' + modelo + ' >> letra veio cortada (limite de tamanho)');
+          return null;
+        }
+        if (!r.ok || !txt || !String(txt).trim() || String(txt).trim().split('\n').length < 8) {
           console.log('FALHA ' + modelo + ' >> ' + r.status + ' ' + JSON.stringify(d).slice(0, 300));
           return null;
         }
-        console.log('OK ' + modelo + ' em ' + (Date.now() - t0) + 'ms');
+        console.log('OK ' + modelo + ' em ' + (Date.now() - tc) + 'ms');
         return String(txt);
       } catch (e) {
         console.log('FALHA ' + modelo + ' >> ' + (e && e.message));
@@ -238,13 +247,15 @@ export default async (req) => {
     // estiver desativado na Unifically, os outros cobrem. Custam centavos.
     const reservas = primeiroOk([
       chamar('google/gemini-3.8-flash', true),
-      chamar('anthropic/claude-haiku-5-5', true),
-      chamar('openai/gpt-5.4-nano', false),
-      chamar('deepseek/deepseek-v4-flash', true)
+      chamar('anthropic/claude-haiku-5-5', false),
+      chamar('anthropic/claude-haiku-4-5', false),
+      chamar('google/gemini-3.7-flash', true)
     ]);
-    let conteudo = await Promise.race([p1, espera(14000)]);
-    if (!conteudo) conteudo = await Promise.race([reservas, espera(26000 - (Date.now() - t0))]);
-    if (!conteudo) conteudo = await Promise.race([p1, espera(27000 - (Date.now() - t0))]);
+    // Em segundo plano dá pra esperar o GPT-5.4 bem mais.
+    const T1 = longo ? 55000 : 14000, T2 = longo ? 85000 : 26000, T3 = longo ? 95000 : 27000;
+    let conteudo = await Promise.race([p1, espera(T1)]);
+    if (!conteudo) conteudo = await Promise.race([reservas, espera(T2 - (Date.now() - t0))]);
+    if (!conteudo) conteudo = await Promise.race([p1, espera(T3 - (Date.now() - t0))]);
     if (!conteudo) {
       return json({ erro: 'Não consegui escrever a letra agora. Tenta de novo em instantes.' }, 502);
     }
