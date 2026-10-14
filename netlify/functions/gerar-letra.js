@@ -186,9 +186,9 @@ export default async (req) => {
       (modoAjuste ? ' | pedido=' + instrucao.slice(0, 80) : ' | genero=' + estilo + ' | clima=' + clima + ' | relacao=' + relacao + ' | ocasiao=' + ocasiao));
 
     // O GPT-5.4 às vezes demora mais de 30s (ou dá 503) e o Netlify corta a
-    // função em 30s. Então pedimos a letra ao GPT-5.4 e ao GPT-5.4 mini AO MESMO
-    // TEMPO: se o 5.4 responder em até 14s, usa ele; senão usa o mini (que é
-    // bem mais rápido). O mini custa uma fração de centavo.
+    // função em 30s. Então pedimos a letra ao GPT-5.4 e, AO MESMO TEMPO, a
+    // modelos rápidos de reserva: se o 5.4 responder em até 14s, usa ele;
+    // senão usa o primeiro modelo de reserva que responder.
     const t0 = Date.now();
     const espera = (ms) => new Promise((r) => setTimeout(() => r(null), Math.max(0, ms)));
     async function chamar(modelo, comTemperatura) {
@@ -222,10 +222,28 @@ export default async (req) => {
       }
     }
 
+    // Primeiro que responder com texto (ignora quem falhar).
+    function primeiroOk(promessas) {
+      return new Promise((resolve) => {
+        let faltam = promessas.length;
+        promessas.forEach((p) => p.then((v) => {
+          if (v) resolve(v);
+          else if (--faltam === 0) resolve(null);
+        }));
+      });
+    }
+
     const p1 = chamar('openai/gpt-5.4', true);
-    const p2 = chamar('openai/gpt-5.4-mini', false);
+    // Plano B: modelos rápidos de empresas diferentes, chamados juntos. Se algum
+    // estiver desativado na Unifically, os outros cobrem. Custam centavos.
+    const reservas = primeiroOk([
+      chamar('google/gemini-3.8-flash', true),
+      chamar('anthropic/claude-haiku-5-5', true),
+      chamar('openai/gpt-5.4-nano', false),
+      chamar('deepseek/deepseek-v4-flash', true)
+    ]);
     let conteudo = await Promise.race([p1, espera(14000)]);
-    if (!conteudo) conteudo = await Promise.race([p2, espera(26000 - (Date.now() - t0))]);
+    if (!conteudo) conteudo = await Promise.race([reservas, espera(26000 - (Date.now() - t0))]);
     if (!conteudo) conteudo = await Promise.race([p1, espera(27000 - (Date.now() - t0))]);
     if (!conteudo) {
       return json({ erro: 'Não consegui escrever a letra agora. Tenta de novo em instantes.' }, 502);
