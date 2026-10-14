@@ -4015,15 +4015,11 @@ function textoHistoriaCompleta(){
 function dispararGeracaoLetra(){
   W.musicaLetraGerando=true; W.musicaLetraErro=null;
   redesenharSemPular();
-  fetch('/.netlify/functions/gerar-letra', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
+  pedirLetra({
       estilo: W.musicaEstilo, texto: textoHistoriaCompleta(), clima: W.musicaClima,
       relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
       nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz
-    })
   })
-  .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
   .then(function(res){
     W.musicaLetraGerando=false;
     if(!res.ok || !res.d || !res.d.letra){
@@ -4044,6 +4040,35 @@ function dispararGeracaoLetra(){
     redesenharSemPular();
   });
 }
+// Pede a letra em segundo plano e fica perguntando se ficou pronta (até ~100s).
+// Se a função de segundo plano não estiver disponível, usa o jeito direto (30s).
+function pedirLetra(dados){
+  var id='l'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+  dados=Object.assign({}, dados, {id:id});
+  function direto(){
+    return fetch('/.netlify/functions/gerar-letra', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dados)})
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); });
+  }
+  return fetch('/.netlify/functions/gerar-letra-background', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dados)})
+    .then(function(r){
+      if(r.status!==202) return direto();
+      var inicio=Date.now();
+      return new Promise(function(resolve){
+        (function perguntar(){
+          if(Date.now()-inicio>100000){ resolve({ok:false, d:{erro:'A letra está demorando mais que o normal. Tenta de novo em instantes.'}}); return; }
+          setTimeout(function(){
+            fetch('/.netlify/functions/gerar-letra-status?id='+encodeURIComponent(id))
+              .then(function(r){ return r.json(); })
+              .then(function(d){
+                if(d && d.pronto){ resolve(d.letra ? {ok:true, d:{letra:d.letra}} : {ok:false, d:{erro:d.erro}}); }
+                else perguntar();
+              })
+              .catch(function(){ perguntar(); });
+          }, 2500);
+        })();
+      });
+    });
+}
 // Ajuste pontual: em vez de jogar a letra toda fora e escrever outra do
 // zero, manda a letra atual + o pedido da pessoa ("deixa o refrão mais
 // alegre", por exemplo) pra IA aplicar SÓ aquela mudança, preservando o
@@ -4051,14 +4076,10 @@ function dispararGeracaoLetra(){
 function dispararAjusteLetra(instrucao){
   W.musicaLetraAjustando=true; W.musicaLetraErro=null;
   redesenharSemPular();
-  fetch('/.netlify/functions/gerar-letra', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
+  pedirLetra({
       letraAtual: W.musicaLetraTexto||'', instrucao: instrucao,
       estilo: W.musicaEstilo, clima: W.musicaClima, voz: W.musicaVoz
-    })
   })
-  .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
   .then(function(res){
     W.musicaLetraAjustando=false;
     if(!res.ok || !res.d || !res.d.letra){
