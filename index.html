@@ -678,6 +678,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .me-letra pre{white-space:pre-wrap;font-family:'Fraunces',serif;font-size:.86rem;
   line-height:1.85;color:#EADCE2;margin:.8rem 0 0;}
 /* botões — antes estavam brancos invisíveis */
+.dica-baixar{text-align:center;margin-top:.7rem;font-size:.74rem;opacity:.8;line-height:1.5;}
 .me-acoes{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin-top:1.6rem;}
 .me-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.8rem 1.3rem;
   border-radius:100px;font-size:.87rem;font-weight:800;
@@ -1222,6 +1223,32 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pnl-whats a{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;font-weight:700;
   color:#6BE8AB;background:rgba(31,157,92,.16);padding:.35rem .7rem;border-radius:100px;}
 .pnl-whats svg{width:14px;height:14px;fill:#6BE8AB;}
+.pnl-rec{margin-top:.5rem;background:rgba(31,157,92,.1);border:1px solid rgba(31,157,92,.35);border-radius:12px;padding:.6rem .75rem;}
+.pnl-rec b{display:block;font-size:.8rem;color:#6BE8AB;}
+.pnl-rec span{display:block;font-size:.72rem;color:#B99BA8;margin:.15rem 0 .45rem;}
+.pnl-rec-acoes{display:flex;gap:.4rem;flex-wrap:wrap;}
+.pnl-play{display:block;width:100%;margin:.35rem 0;padding:.6rem;border-radius:100px;border:1px solid rgba(255,255,255,.16);background:rgba(227,43,109,.2);color:#FFD3E4;font-size:.8rem;font-weight:800;}
+.pnl-mais{display:block;width:100%;margin-top:.8rem;padding:.75rem;border-radius:12px;border:1px dashed rgba(255,255,255,.25);background:rgba(255,255,255,.04);color:#F0C987;font-size:.82rem;font-weight:800;}
+.pnl-rec.enviado{opacity:.7;}
+.pnl-rec b i{font-style:normal;font-weight:700;color:#B99BA8;font-size:.72rem;}
+.pnl-modelos{margin:-.2rem 0 .9rem;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem .7rem;}
+.pnl-modelos>span{display:block;font-size:.74rem;font-weight:800;color:#fff;margin-bottom:.4rem;}
+.pnl-modelo{font-size:.72rem;font-weight:800;padding:.35rem .65rem;margin:0 .3rem .3rem 0;border-radius:100px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#B99BA8;}
+.pnl-modelo.on{background:rgba(31,157,92,.25);border-color:#1F9D5C;color:#fff;}
+.pnl-modelo-ex{white-space:pre-wrap;font-size:.72rem;color:#B99BA8;margin-top:.3rem;line-height:1.45;font-style:italic;}
+.pnl-filtros{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.8rem;}
+.pnl-filtro{font-size:.74rem;font-weight:800;padding:.4rem .75rem;border-radius:100px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#B99BA8;}
+.pnl-filtro b{font-weight:900;color:#F0C987;margin-left:.15rem;}
+.pnl-filtro.on{background:rgba(227,43,109,.25);border-color:var(--rose);color:#fff;}
+.pnl-letra{margin-top:.5rem;background:rgba(0,0,0,.22);border:1px solid rgba(240,201,135,.25);border-radius:12px;padding:.55rem .7rem;}
+.pnl-letra summary{cursor:pointer;font-size:.8rem;font-weight:800;color:#F0C987;list-style:none;}
+.pnl-letra summary::-webkit-details-marker{display:none;}
+.pnl-letra-txt{width:100%;box-sizing:border-box;min-height:220px;margin-top:.55rem;font-size:.82rem;line-height:1.55;padding:.6rem .7rem;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.3);color:#F3E9ED;resize:vertical;font-family:inherit;}
+.pnl-letra-acoes{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem;}
+.pnl-mv-btn.gerar{background:var(--rose);border-color:var(--rose);color:#fff;}
+.pnl-letra-nota{font-size:.7rem;color:#B99BA8;margin-top:.4rem;}
+.pnl-letra-ok{font-size:.8rem;font-weight:800;color:#6BE8AB;margin-top:.6rem;}
+.pnl-trocar{width:100%;margin-top:.5rem;padding:.55rem;border-radius:8px;border:0;background:#1F9D5C;color:#fff;font-size:.78rem;font-weight:800;}
 .pnl-liberar{display:flex;align-items:center;gap:.4rem;margin-top:.5rem;padding-top:.5rem;border-top:1px dashed rgba(255,255,255,.14);}
 .pnl-liberar span{font-size:.72rem;color:#B99BA8;flex-shrink:0;}
 .pnl-liberar input{width:3.4rem;font-size:.78rem;padding:.35rem .4rem;border-radius:8px;
@@ -3234,6 +3261,7 @@ function navegar(){
   if(r.nome==='criar'){ telaWizard(r.arg); return; }
   if(r.nome==='meus'){ telaMeus(); return; }
   if(r.nome==='avaliar' && r.arg){ telaAvaliar(r.arg); return; }
+  if(r.nome==='ouvir' && r.arg){ telaOuvir(r.arg); return; }
   if(r.nome==='painel-capivarinha'){ telaPainel(r.arg); return; }
   if(r.nome==='sou-eu'){ telaMarcarDev(); return; }
   telaHome();
@@ -5615,6 +5643,9 @@ function telaConfirmandoDemorado(id){
 }
 
 /* tela de sucesso dedicada da música avulsa — sem QR, foco em ouvir/baixar/enviar */
+/* link de download real (passa pelo nosso servidor, só funciona com pedido pago) */
+function linkBaixarMusica(id, v){ return '/.netlify/functions/baixar-musica?id='+encodeURIComponent(id)+'&v='+(v||1); }
+var DICA_BAIXAR='<div class="hint dica-baixar">Não baixou? Se abriu pelo WhatsApp ou Instagram, toque nos 3 pontinhos ⋮ e escolha <b>"Abrir no navegador"</b>.</div>';
 function telaSucessoMusica(id, g){
   var link=linkPresente(id);
   var url=g.musicaPreviewUrl;
@@ -5632,7 +5663,8 @@ function telaSucessoMusica(id, g){
         (url ? '<audio class="ms-audio" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="'+esc(url)+'"></audio>' : '')+
       '</div>'+
       (url
-        ? '<a class="btn btn-primary btn-block btn-lg" href="'+esc(url)+'" download="minha-musica.mp3" style="margin-top:1.3rem">'+IC.download+' Baixar em MP3</a>'
+        ? '<a class="btn btn-primary btn-block btn-lg" href="'+linkBaixarMusica(id,1)+'" download style="margin-top:1.3rem">'+IC.download+' Baixar em MP3'+(g.musicaPreviewUrl2?' (versão 1)':'')+'</a>'+
+          (g.musicaPreviewUrl2?'<a class="btn btn-ghost btn-block" href="'+linkBaixarMusica(id,2)+'" download style="margin-top:.6rem">'+IC.download+' Baixar versão 2</a>':'')+DICA_BAIXAR
         : '')+
       '<a class="btn btn-ghost btn-block" href="https://wa.me/?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener" style="margin-top:.7rem">'+IC.wpp+' Enviar no WhatsApp</a>'+
       '<div class="link-box" style="margin-top:1.1rem"><input id="lkTxt" readonly value="'+esc(link)+'">'+
@@ -5764,16 +5796,35 @@ function desenharTravaPainel(erroInicial){
 function carregarPainel(chave, cb){
   var hdr={ headers:{'x-admin-key':chave} };
   Promise.all([
-    fetch('/.netlify/functions/admin-pedidos', hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); }),
-    fetch('/.netlify/functions/admin-funil', hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); }),
+    fetch('/.netlify/functions/admin-pedidos?conferir=0', hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); }),
+    (_pnlAba==='dados' ? fetch('/.netlify/functions/admin-funil', hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); }) : Promise.resolve({ok:false,d:{},pulou:true})),
     fetch('/.netlify/functions/admin-musicas', hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
       .catch(function(){ return {ok:false, d:{}}; })
   ]).then(function(res){
     var pRes=res[0], fRes=res[1], mRes=res[2];
     if(!pRes.ok){ if(cb) cb(true); return; }
     if(cb) cb(false);
-    desenharPainel(pRes.d.pedidos||[], (fRes.ok && fRes.d.visitas) || [], (mRes.ok && mRes.d.musicas) || []);
+    if(fRes.ok) _pnlFunilOk=true;
+    desenharPainel(pRes.d.pedidos||[], (fRes.ok && fRes.d.visitas) || _pnlCache.visitas || [], (mRes.ok && mRes.d.musicas) || []);
+    pnlConferirBanco(hdr);
   }).catch(function(){ if(cb) cb(true); });
+}
+/* confere os Pix pendentes na Efí sem travar a abertura do painel */
+var _pnlConferindo=false;
+function pnlConferirBanco(hdr){
+  if(_pnlConferindo) return; _pnlConferindo=true;
+  fetch('/.netlify/functions/admin-pedidos', hdr)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      _pnlConferindo=false;
+      if(d && d.liberadosAgora>0 && d.pedidos){
+        toast('💰 '+d.liberadosAgora+' pedido(s) liberado(s) agora — Pix confirmado no banco!');
+        var y=window.scrollY;
+        desenharPainel(d.pedidos,_pnlCache.visitas,_pnlCache.musicas);
+        requestAnimationFrame(function(){ window.scrollTo(0,y); });
+      }
+    })
+    .catch(function(){ _pnlConferindo=false; });
 }
 var PASSO_NOME={
   produto:'Escolhendo o produto', perfil:'Perfil', nomes:'Nomes', data:'Data especial', titulo:'Título',
@@ -5808,7 +5859,7 @@ var RELACAO_NOME={
   mae:'Pra mãe', pai:'Pra pai', irma:'Pra irmã', irmao:'Pra irmão',
   amiga:'Pra amiga', amigo:'Pra amigo', filho:'Pra filho(a)', ninguem:'Sem dedicatória'
 };
-var _pnlAba='pagos';
+var _pnlFunilOk=false, _pnlLimite=30, _pnlAba='pagos', _pnlFiltro='todos', _pnlItens=[], _pnlLetraAberta={};
 function pedirSenhaAdmin(){
   if(_pnlChave) return true;
   var k=(prompt('Pra mexer em pedidos, digite a senha de administrador:')||'').trim();
@@ -5825,7 +5876,7 @@ function pnlVersaoMusica(p, url, rotulo){
   var zap=String(p.whatsapp||'').replace(/\D/g,'');
   var msgZap='Oi! Aqui está a sua música do Capivarinha Love 🎵 '+url;
   return '<div class="pnl-mv"><div class="pnl-mv-tit">🎵 '+esc(rotulo)+'</div>'+
-    '<audio controls src="'+esc(url)+'" style="width:100%;margin:.3rem 0"></audio>'+
+    '<button type="button" class="pnl-play" data-tocar="'+esc(url)+'">▶ Ouvir</button>'+
     '<div class="pnl-mv-acoes">'+
       '<a class="pnl-mv-btn" href="'+esc(url)+'" download="'+esc(arquivo)+'" target="_blank" rel="noopener">'+IC.download+' Baixar</a>'+
       '<button type="button" class="pnl-mv-btn" data-copiar-musica="'+esc(url)+'">Copiar link</button>'+
@@ -5845,9 +5896,105 @@ function pnlFmt(ms){ var d=pnlDt(ms), z=function(n){ return String(n).padStart(2
 function pnlDiaKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function pnlGastoGet(diaKey){ var v=Store.get('cl_gasto_'+diaKey); return v?Number(v):0; }
 function pnlGastoSet(diaKey,val){ Store.set('cl_gasto_'+diaKey, String(Number(val)||0)); }
+/* Painel: gera uma música nova com a letra (ajustada ou não), mantendo o
+   pedido original do cliente. Depois dá pra colocar no pedido dele. */
+function pnlGerarComLetra(i, btn){
+  var it=_pnlItens[i]; if(!it) return;
+  var p=it.p, m=it.m||{};
+  var t=document.querySelector('[data-letra="'+i+'"]');
+  var letra=t?t.value.trim():'';
+  if(letra.length<20){ toast('Coloca a letra primeiro (pelo menos algumas linhas).'); return; }
+  var hist=((p&&p.musicaHistoria)||m.historia||'').trim();
+  var texto=hist.length>=50?hist:(hist+'\n'+letra);
+  var res=el('pnlRes'+i);
+  btn.disabled=true; btn.textContent='Começando...';
+  if(res) res.innerHTML='<div class="pnl-pend"><span>🎶 Compondo a música com essa letra... leva uns 2 a 4 minutos. Pode deixar o painel aberto.</span></div>';
+  function falhou(msg){
+    btn.disabled=false; btn.textContent='🎵 Gerar música com esta letra';
+    if(res) res.innerHTML='<div class="pnl-pend"><span>'+esc(msg)+'</span></div>';
+  }
+  fetch('/.netlify/functions/gerar-musica',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      estilo:(p&&p.musicaEstilo)||m.estilo||'romantica',
+      clima:(p&&p.musicaClima)||m.clima||'',
+      relacao:(p&&p.musicaPara)||m.relacao||'',
+      ocasiao:(p&&p.musicaOcasiao)||m.ocasiao||'',
+      nomesLetra:(p&&p.musicaParaNome)||m.nomes||'',
+      frase:(p&&p.musicaFrase)||'',
+      voz:(p&&p.musicaVoz)||'',
+      texto:texto,
+      letraAprovada:letra,
+      whatsapp:(p&&p.whatsapp)||m.whatsapp||'',
+      origem:'painel', pedidoId:p?p.id:'', refTaskId:m.taskId||''
+    })
+  })
+  .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+  .then(function(r){
+    if(!r.ok || !r.d || !r.d.taskId){ falhou((r.d&&r.d.erro)||'Não consegui começar a música.'); return; }
+    btn.textContent='Compondo...';
+    var taskId=r.d.taskId, n=0;
+    (function checar(){
+      fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(taskId))
+        .then(function(r2){ return r2.json(); })
+        .then(function(d){
+          if(d && d.pronto && d.url){
+            btn.disabled=false; btn.textContent='🎵 Gerar outra com esta letra';
+            var nome=p?(p.meuNome||'cliente'):(m.nomes||'cliente');
+            var fake={meuNome:nome, whatsapp:(p&&p.whatsapp)||m.whatsapp||''};
+            if(res){
+              res.innerHTML='<div class="pnl-letra-ok">✅ Música nova pronta!</div>'+
+                pnlVersaoMusica(fake,d.url,'Nova versão 1')+(d.url2?pnlVersaoMusica(fake,d.url2,'Nova versão 2'):'')+
+                (p?'<button type="button" class="pnl-trocar">Colocar no pedido do cliente</button>':'');
+              res.querySelectorAll('[data-copiar-musica]').forEach(function(b){ b.onclick=function(){ copiar(b.dataset.copiarMusica,'Link da música copiado!'); }; });
+              var tb=res.querySelector('.pnl-trocar');
+              if(tb) tb.onclick=function(){
+                if(!pedirSenhaAdmin()) return;
+                if(!confirm('Trocar a música do link do cliente por essa nova?')) return;
+                tb.disabled=true; tb.textContent='Trocando...';
+                fetch('/.netlify/functions/admin-trocar-musica',{
+                  method:'POST', headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},
+                  body:JSON.stringify({id:p.id, url:d.url, url2:d.url2||'', letra:letra, taskId:taskId})
+                }).then(function(r3){ return r3.json().then(function(x){ return {ok:r3.ok,d:x}; }); })
+                .then(function(r3){
+                  if(!r3.ok){ tb.disabled=false; tb.textContent='Colocar no pedido do cliente'; toast((r3.d&&r3.d.erro)||'Não consegui trocar.'); return; }
+                  toast('Pronto! O link do cliente já toca a música nova.');
+                  atualizarPainel();
+                }).catch(function(){ tb.disabled=false; tb.textContent='Colocar no pedido do cliente'; toast('Sem conexão.'); });
+              };
+            }
+            return;
+          }
+          if(d && d.falhou){ falhou(d.erro||'A geração falhou. Tenta de novo.'); return; }
+          if(++n>120){ falhou('Demorou demais. Clica em gerar de novo daqui a pouco.'); return; }
+          setTimeout(checar,4000);
+        })
+        .catch(function(){ if(++n>120){ falhou('Sem conexão.'); return; } setTimeout(checar,5000); });
+    })();
+  })
+  .catch(function(){ falhou('Sem conexão com o servidor.'); });
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest && e.target.closest('.pnl-play'); if(!b) return;
+  document.querySelectorAll('.pnl-mv audio').forEach(function(a){ a.pause(); });
+  var a=document.createElement('audio'); a.controls=true; a.autoplay=true; a.preload='auto'; a.src=b.dataset.tocar;
+  a.style.cssText='width:100%;margin:.3rem 0'; b.replaceWith(a);
+});
+/* modelos de mensagem de recuperação (o painel lembra qual você escolheu) */
+var PNL_MODELOS=[
+  {nome:'💖 Carinhoso', txt:function(n,p,l){ return 'Oi'+(n?' '+n:'')+'! 😊 Aqui é da Capivarinha Love. A música'+(p?' pra '+p:'')+' que você criou ficou linda e tá guardadinha aqui pra você 🎵\n\n'+l+'\n\nOuve a prévia e, se amar, libera as 2 versões completas por só R$ 9,99 no Pix 💖'; }},
+  {nome:'⏰ Última chance', txt:function(n,p,l){ return 'Oi'+(n?' '+n:'')+'! Passando pra avisar que a sua música'+(p?' pra '+p:'')+' ainda tá reservada, mas não fica guardada pra sempre ⏳\n\nOuve aqui e libera as 2 versões completas por R$ 9,99:\n'+l; }},
+  {nome:'🎁 Surpresa', txt:function(n,p,l){ return 'Já imaginou a cara'+(p?' de '+p:' da pessoa')+' ouvindo uma música feita só pra ela? 🥹🎶\n\nA sua tá pronta'+(n?', '+n:'')+'! Dá o play na prévia:\n'+l+'\n\nSão 2 versões completas por só R$ 9,99 no Pix. Leva menos de 1 minuto 💝'; }},
+  {nome:'🙋 Ajuda', txt:function(n,p,l){ return 'Oi'+(n?' '+n:'')+', tudo bem? Vi que você criou uma música'+(p?' pra '+p:'')+' na Capivarinha Love mas não finalizou. Aconteceu algum problema no pagamento? Posso te ajudar 😊\n\nO link da sua música:\n'+l; }}
+];
+function pnlModelo(){ var k=parseInt(Store.get('cl_pnl_modelo'),10); return (k>=0 && k<PNL_MODELOS.length)?k:0; }
+function pnlMsgRec(nome, para, link){ return PNL_MODELOS[pnlModelo()].txt(nome, para, link); }
+function pnlEnviadoGet(k){ var v=Store.get('cl_rec_'+k); return v?Number(v):0; }
+function pnlEnviadoSet(k){ Store.set('cl_rec_'+k, String(Date.now())); }
 function desenharPainel(pedidos, visitas, musicas){
   var body=el('pnlBody'); if(!body) return;
   body.style.opacity='1';
+  if(_pnlAba==='gerados') _pnlAba='musicas';
   musicas=musicas||_pnlCache.musicas||[];
   _pnlCache.pedidos=pedidos; _pnlCache.visitas=visitas; _pnlCache.musicas=musicas;
   var agora=new Date();
@@ -5859,7 +6006,7 @@ function desenharPainel(pedidos, visitas, musicas){
   var ontem=pagos.filter(function(p){ return pnlQuando(p)>=inicioOntem && pnlQuando(p)<inicioDia; });
   var mes=pagos.filter(function(p){ return pnlQuando(p)>=inicioMes; });
   function soma(l){ return l.reduce(function(s,p){ return s+(Number(p.valor)||0); },0); }
-  var nomeProd={completo:'Retrospectiva Completa', carta:'Carta Virtual', convite:'Convite Criativo'};
+  var nomeProd={completo:'Retrospectiva Completa', carta:'Carta Virtual', convite:'Convite Criativo', musica:'Música Personalizada'};
 
   /* lucro — gasto com anúncio é digitado manualmente (não temos acesso à API do Facebook/TikTok) */
   var hojeKey=pnlKeyMs(agora.getTime());
@@ -6008,39 +6155,123 @@ function desenharPainel(pedidos, visitas, musicas){
       '</div>';
   }
 
-  /* todas as músicas geradas, independente de pagamento */
-  var idsComPedido={};
-  pedidos.forEach(function(p){ if(p.musicaPreviewUrl) idsComPedido[p.musicaPreviewUrl]=p; });
-  var musicasHtml=musicas.map(function(m){
-    var dt=m.criadoEm?pnlFmt(m.criadoEm):'—';
-    var pedidoLigado=m.url && idsComPedido[m.url];
-    var virouPedido=!!pedidoLigado;
-    var quem=m.nomes || (RELACAO_NOME[m.relacao]||'') || '(sem nome)';
-    var zap=String(m.whatsapp||'').replace(/\D/g,'');
-    var fake={ meuNome:(m.nomes||'cliente'), whatsapp:m.whatsapp };
-    return '<div class="pnl-row-wrap"><div class="pnl-row"><div>'+
-      '<div class="nm">'+esc(quem)+
-        '<span class="selo '+(virouPedido?'pago':'pend')+'">'+(virouPedido?'virou pedido':'só gerou')+'</span></div>'+
-      '<div class="meta">'+esc([m.estilo,m.clima,m.ocasiao].filter(Boolean).join(' · '))+' · '+dt+'</div>'+
-      '</div></div>'+
-      (m.historia?'<div class="pnl-hist">'+esc(m.historia)+'</div>':'')+
-      (zap ? '<div class="pnl-whats"><a href="https://wa.me/55'+esc(zap)+'" target="_blank" rel="noopener">'+IC.wpp+' '+esc(m.whatsapp)+'</a></div>' : '')+
-      (m.url
-        ? pnlVersaoMusica(fake, m.url, 'Versão 1')+(m.url2?pnlVersaoMusica(fake, m.url2, 'Versão 2'):'')
-        : '<div class="pnl-pend"><span>Ainda processando ou o cliente fechou a página.</span>'+
-          '<button type="button" class="pnl-verificar" data-verificar="'+esc(m.taskId)+'">Verificar agora</button></div>')+
-    '</div>';
-  }).join('') || '<div class="pnl-nota">Nenhuma música gerada ainda.</div>';
+  /* LISTA ÚNICA: cada pedido junto da sua música + músicas que não viraram pedido.
+     Cada item mostra a letra (copiar / editar) e permite gerar uma nova versão
+     seguindo o mesmo pedido do cliente (gênero, clima, voz, nomes). */
+  var musPorTask={}, musPorUrl={};
+  musicas.forEach(function(m){ if(m.taskId) musPorTask[m.taskId]=m; if(m.url) musPorUrl[m.url]=m; });
+  var usadas={}, itens=[];
+  pedidos.forEach(function(p){
+    var m=(p.musicaPreviewId && musPorTask[p.musicaPreviewId]) || (p.musicaPreviewUrl && musPorUrl[p.musicaPreviewUrl]) || null;
+    if(m) usadas[m.taskId]=true;
+    itens.push({p:p, m:m, t:p.criadoEm||(m&&m.criadoEm)||0});
+  });
+  musicas.forEach(function(m){
+    if(usadas[m.taskId]) return;
+    if(m.origem==='painel') return; /* versões feitas por você no painel não viram "cliente novo" */
+    itens.push({p:null, m:m, t:m.criadoEm||0});
+  });
+  itens.sort(function(x,y){ return y.t-x.t; });
+  _pnlItens=itens;
+  var contaF={todos:itens.length,pend:0,pagos:0,so:0,rec:0};
+  itens.forEach(function(it){
+    if(!it.p) contaF.so++; else if(it.p.pago && !it.p.cancelado) contaF.pagos++; else contaF.pend++;
+    if((!it.p || !it.p.pago || it.p.cancelado) && ((it.p&&it.p.whatsapp)||(it.m&&it.m.whatsapp)) && ((it.p&&it.p.musicaPreviewUrl)||(it.m&&it.m.url)) && !pnlEnviadoGet(it.p?it.p.id:('t.'+it.m.taskId))) contaF.rec++;
+  });
+  var itensVer=itens.map(function(it,i){ return {it:it,i:i}; }).filter(function(o){
+    var it=o.it;
+    if(_pnlFiltro==='pend') return it.p && (!it.p.pago || it.p.cancelado);
+    if(_pnlFiltro==='pagos') return it.p && it.p.pago && !it.p.cancelado;
+    if(_pnlFiltro==='so') return !it.p;
+    if(_pnlFiltro==='rec') return (!it.p || !it.p.pago || it.p.cancelado) && ((it.p&&it.p.whatsapp)||(it.m&&it.m.whatsapp)) && ((it.p&&it.p.musicaPreviewUrl)||(it.m&&it.m.url)) && !pnlEnviadoGet(it.p?it.p.id:('t.'+it.m.taskId));
+    return true;
+  });
+  function montarItem(o){
+    var it=o.it, p=it.p, m=it.m||{}, i=o.i;
+    var nome = p ? ((p.meuNome||'')+(p.meuNome&&p.parceiroNome?' & ':'')+(p.parceiroNome||'')) : '';
+    nome = nome || m.nomes || p&&p.musicaParaNome || (RELACAO_NOME[m.relacao]||'') || '(sem nome)';
+    var selo = !p ? '<span class="selo pend">só gerou música</span>'
+      : (p.cancelado ? '<span class="selo canc">cancelado</span>'
+      : (p.pago ? '<span class="selo pago">pago</span>' : '<span class="selo pend">pendente</span>'));
+    var dt=it.t?pnlFmt(it.t):'—';
+    var estilo=(p&&p.musicaEstilo)||m.estilo||'', clima=(p&&p.musicaClima)||m.clima||'', ocas=(p&&p.musicaOcasiao)||m.ocasiao||'';
+    var meta=[p?(nomeProd[p.produto]||p.produto):'', estilo, clima, ocas].filter(Boolean).join(' · ');
+    var hist=(p&&p.musicaHistoria)||m.historia||'';
+    var zapTxt=(p&&p.whatsapp)||m.whatsapp||'';
+    var zap=String(zapTxt).replace(/\D/g,'');
+    var url1=(p&&p.musicaPreviewUrl)||m.url||null, url2=(p&&p.musicaPreviewUrl2)||m.url2||null;
+    var letra=(p&&p.letra)||m.letraAprovada||m.letra||'';
+    var pago=!!(p && p.pago && !p.cancelado);
+    var fake={ meuNome:nome, whatsapp: pago ? zapTxt : '' }; /* quem não pagou não recebe o MP3 completo */
+    var linkRec = url1 ? (location.origin+'/#/ouvir/'+(p ? p.id : ('t.'+m.taskId))) : '';
+    var primeiro=String(p&&p.meuNome||'').trim().split(' ')[0];
+    var paraQuem=(p&&p.musicaParaNome)||m.nomes||'';
+    var msgRec=pnlMsgRec(primeiro, paraQuem, linkRec);
+    var chaveEnv=p?p.id:('t.'+m.taskId);
+    var envEm=pnlEnviadoGet(chaveEnv);
+    var html='<div class="pnl-row-wrap" data-item="'+i+'"><div class="pnl-row"><div>'+
+      '<div class="nm">'+esc(nome)+selo+'</div>'+
+      '<div class="meta">'+esc(meta)+(meta?' · ':'')+dt+'</div></div>'+
+      (p?'<div class="vl">R$ '+fmtPreco(p.valor||0)+'</div>':'')+'</div>';
+    if(hist) html+='<div class="pnl-hist">'+esc(hist)+'</div>';
+    if(zap) html+='<div class="pnl-whats"><a href="https://wa.me/55'+esc(zap)+'" target="_blank" rel="noopener">'+IC.wpp+' '+esc(zapTxt)+'</a></div>';
+    if(p){
+      var link=location.origin+'/#/p/'+p.id;
+      html+='<div class="pnl-linkbar"><input readonly value="'+esc(link)+'" onclick="this.select()">'+
+        '<button data-copiar-link="'+esc(link)+'">Copiar</button></div>';
+    }
+    if(url1){
+      html+='<div class="pnl-musica">'+pnlVersaoMusica(fake,url1,'Versão 1')+(url2?pnlVersaoMusica(fake,url2,'Versão 2'):'')+'</div>';
+    } else if(m.taskId){
+      html+='<div class="pnl-pend"><span>Música ainda processando ou o cliente fechou a página.</span>'+
+        '<button type="button" class="pnl-verificar" data-verificar="'+esc(m.taskId)+'">Verificar agora</button></div>';
+    }
+    if(!pago && linkRec){
+      html+='<div class="pnl-rec'+(envEm?' enviado':'')+'"><b>💸 Recuperar venda'+(envEm?' <i>✓ enviado '+pnlFmt(envEm).slice(0,5)+'</i>':'')+'</b>'+
+        '<span>Manda o link da prévia com o Pix pra pessoa fechar.</span>'+
+        '<div class="pnl-rec-acoes">'+
+          (zap?'<a class="pnl-mv-btn zap" data-enviado="'+esc(chaveEnv)+'" href="https://wa.me/55'+esc(zap)+'?text='+encodeURIComponent(msgRec)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar no WhatsApp</a>':'')+
+          '<button type="button" class="pnl-mv-btn" data-copiar-link="'+esc(linkRec)+'">Copiar link</button>'+
+          '<button type="button" class="pnl-mv-btn" data-copiar-msg="'+esc(msgRec)+'">Copiar mensagem</button>'+
+        '</div></div>';
+    }
+    /* letra: ver, copiar, editar e gerar de novo */
+    html+='<details class="pnl-letra"'+(_pnlLetraAberta[i]?' open':'')+'><summary>📝 Letra'+(letra?'':' (sem letra salva)')+'</summary>'+
+      '<textarea class="pnl-letra-txt" data-letra="'+i+'" placeholder="Cole ou escreva aqui a letra que você quer usar...">'+esc(letra)+'</textarea>'+
+      '<div class="pnl-letra-acoes">'+
+        '<button type="button" class="pnl-mv-btn" data-copiar-letra="'+i+'">📋 Copiar letra</button>'+
+        '<button type="button" class="pnl-mv-btn gerar" data-gerar-letra="'+i+'">🎵 Gerar música com esta letra</button>'+
+      '</div>'+
+      '<div class="pnl-letra-nota">Mantém o mesmo pedido do cliente: '+esc([estilo||'romântica',clima,ocas].filter(Boolean).join(' · '))+'.</div>'+
+      '<div class="pnl-letra-res" id="pnlRes'+i+'"></div>'+
+    '</details>';
+    if(p && !p.pago){
+      html+='<div class="pnl-liberar" data-liberar-id="'+esc(p.id)+'">'+
+        (p.duracao==='h48'
+          ? '<span>Liberar por</span><input type="number" min="1" value="2" data-dias><span>dia(s)</span><button data-marcar-pago>Marcar como pago</button>'
+          : '<button data-marcar-pago style="flex:1">Marcar como pago (link pra sempre)</button>')+
+        '</div>';
+    }
+    if(p && p.pago && !p.cancelado) html+='<button type="button" class="pnl-cancelar" data-cancelar="'+esc(p.id)+'">Cancelar pedido</button>';
+    return html+'</div>';
+  }
+  var filtrosHtml='<div class="pnl-filtros">'+
+    [['todos','Todos'],['pend','Não pagos'],['pagos','Pagos'],['so','Só gerou música'],['rec','💸 Falta mandar recuperação']].map(function(f){
+      return '<button type="button" class="pnl-filtro'+(_pnlFiltro===f[0]?' on':'')+'" data-filtro="'+f[0]+'">'+f[1]+' <b>'+contaF[f[0]]+'</b></button>';
+    }).join('')+'</div>'+
+    '<div class="pnl-modelos"><span>Mensagem de recuperação:</span>'+
+      PNL_MODELOS.map(function(md,k){ return '<button type="button" class="pnl-modelo'+(pnlModelo()===k?' on':'')+'" data-modelo="'+k+'">'+md.nome+'</button>'; }).join('')+
+    '<div class="pnl-modelo-ex">'+esc(pnlMsgRec('Ana','Pedro','[link da prévia]'))+'</div></div>';
+  var musicasHtml=filtrosHtml+(itensVer.slice(0,_pnlLimite).map(montarItem).join('') || '<div class="pnl-nota">Nada aqui ainda.</div>')+
+    (itensVer.length>_pnlLimite?'<button type="button" class="pnl-mais" data-mais>Ver mais ('+(itensVer.length-_pnlLimite)+' restantes)</button>':'');
 
-  var pagosHtml=pedidos.filter(function(p){ return p.pago && !p.cancelado; })
-    .map(montarLinhaPedido).join('') || '<div class="pnl-nota">Nenhum pedido pago ainda.</div>';
-  var geradosHtml=pedidos.filter(function(p){ return !p.pago || p.cancelado; })
-    .map(montarLinhaPedido).join('') || '<div class="pnl-nota">Nenhum pedido pendente.</div>';
+  var pagosLista=pedidos.filter(function(p){ return p.pago && !p.cancelado; });
+  var pagosHtml=pagosLista.slice(0,_pnlLimite).map(montarLinhaPedido).join('')+
+    (pagosLista.length>_pnlLimite?'<button type="button" class="pnl-mais" data-mais>Ver mais ('+(pagosLista.length-_pnlLimite)+' restantes)</button>':'') || '<div class="pnl-nota">Nenhum pedido pago ainda.</div>';
 
   body.innerHTML=
     '<div class="pnl-abas" id="pnlAbas">'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='pagos'?' on':'')+'" data-aba="pagos">💰 Pagos</button>'+
-      '<button type="button" class="pnl-aba'+(_pnlAba==='gerados'?' on':'')+'" data-aba="gerados">📋 Gerados</button>'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='musicas'?' on':'')+'" data-aba="musicas">🎵 Músicas</button>'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='dados'?' on':'')+'" data-aba="dados">📊 Dados</button>'+
     '</div>'+
@@ -6050,15 +6281,10 @@ function desenharPainel(pedidos, visitas, musicas){
         '<div class="pnl-sec"><h2>Pedidos pagos</h2><div class="sub">Mais recentes primeiro.</div>'+
         '<div class="pnl-lista">'+pagosHtml+'</div></div>'
       : '')+
-    (_pnlAba==='gerados'
-      ? '<div class="pnl-sec"><h2>Gerados sem pagar</h2>'+
-        '<div class="sub">Quem montou o presente mas não finalizou. Use o WhatsApp pra recuperar.</div>'+
-        '<div class="pnl-lista">'+geradosHtml+'</div></div>'
-      : '')+
     (_pnlAba==='musicas'
-      ? '<div class="pnl-sec"><h2>Todas as músicas geradas</h2>'+
-        '<div class="sub">Toda música que passou pelo gerador — paga ou não.</div>'+
-        musicasHtml+'</div>'
+      ? '<div class="pnl-sec"><h2>Músicas e pedidos</h2>'+
+        '<div class="sub">Tudo num lugar só: quem gerou, quem pagou e quem só ouviu a prévia. Abra a letra pra copiar, ajustar ou gerar de novo.</div>'+
+        '<div class="pnl-lista">'+musicasHtml+'</div></div>'
       : '')+
     (_pnlAba==='dados'
       ? '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
@@ -6079,9 +6305,46 @@ function desenharPainel(pedidos, visitas, musicas){
       : '');
 
   body.querySelectorAll('[data-aba]').forEach(function(b){
-    b.onclick=function(){ _pnlAba=b.dataset.aba; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); };
+    b.onclick=function(){ _pnlAba=b.dataset.aba; _pnlLimite=30; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas);
+      if(_pnlAba==='dados' && !_pnlFunilOk){
+        fetch('/.netlify/functions/admin-funil',{headers:{'x-admin-key':_pnlChave}}).then(function(r){ return r.json(); })
+          .then(function(d){ if(d && d.visitas){ _pnlFunilOk=true; if(_pnlAba==='dados') desenharPainel(_pnlCache.pedidos,d.visitas,_pnlCache.musicas); } }).catch(function(){});
+      }
+    };
   });
 
+  body.querySelectorAll('[data-filtro]').forEach(function(b){
+    b.onclick=function(){ _pnlFiltro=b.dataset.filtro; _pnlLimite=30; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); };
+  });
+  body.querySelectorAll('details.pnl-letra').forEach(function(d){
+    d.addEventListener('toggle',function(){ var w=d.closest('[data-item]'); if(w) _pnlLetraAberta[w.dataset.item]=d.open; });
+  });
+  body.querySelectorAll('[data-copiar-letra]').forEach(function(btn){
+    btn.onclick=function(){
+      var t=body.querySelector('[data-letra="'+btn.dataset.copiarLetra+'"]');
+      var v=t?t.value.trim():'';
+      if(!v){ toast('Não tem letra pra copiar.'); return; }
+      copiar(v,'Letra copiada!');
+    };
+  });
+  body.querySelectorAll('[data-gerar-letra]').forEach(function(btn){
+    btn.onclick=function(){ pnlGerarComLetra(Number(btn.dataset.gerarLetra), btn); };
+  });
+  body.querySelectorAll('[data-copiar-msg]').forEach(function(btn){
+    btn.onclick=function(){ copiar(btn.dataset.copiarMsg,'Mensagem copiada!'); };
+  });
+  body.querySelectorAll('[data-mais]').forEach(function(b){
+    b.onclick=function(){ var y=window.scrollY; _pnlLimite+=30; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); };
+  });
+  body.querySelectorAll('[data-modelo]').forEach(function(b){
+    b.onclick=function(){ Store.set('cl_pnl_modelo', b.dataset.modelo); var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); };
+  });
+  body.querySelectorAll('[data-enviado]').forEach(function(a){
+    a.addEventListener('click',function(){
+      pnlEnviadoSet(a.dataset.enviado);
+      var box=a.closest('.pnl-rec'); if(box){ box.classList.add('enviado'); var t=box.querySelector('b'); if(t && !t.querySelector('i')) t.insertAdjacentHTML('beforeend',' <i>✓ enviado agora</i>'); }
+    });
+  });
   body.querySelectorAll('[data-copiar-link]').forEach(function(btn){
     btn.onclick=function(){ copiar(btn.dataset.copiarLink, 'Link copiado!'); };
   });
@@ -6290,6 +6553,76 @@ function abrirPresenteChecado(g){
   if(g.produto==='convite'){ montarConvite(g); return; }
   if(g.produto==='musica'){ montarMusicaEntrega(g); return; }
   montarPortao(g);
+}
+/* ---------- RECUPERAÇÃO: link que o painel manda no WhatsApp de quem quase comprou ----------
+   #/ouvir/<idDoPedido>  ou  #/ouvir/t.<taskIdDaMusica>  → ouve a prévia e paga no Pix ali mesmo */
+function telaOuvir(arg){
+  var q = arg.indexOf('t.')===0 ? ('t='+encodeURIComponent(arg.slice(2))) : ('id='+encodeURIComponent(arg));
+  var corpo = arg.indexOf('t.')===0 ? {t:arg.slice(2)} : {id:arg};
+  el('app').innerHTML='<div class="g-scope"><div class="expired">'+
+    '<img src="'+MASCOTE+'" alt="" style="animation:float 2.4s ease-in-out infinite">'+
+    '<h2 style="font-family:Fraunces;font-size:1.4rem">Buscando sua música...</h2></div></div>';
+  fetch('/.netlify/functions/recuperar-pix?'+q)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || !d.encontrado){ telaPresenteNaoEncontrado(); return; }
+      if(d.pago && d.id){ location.hash='#/p/'+d.id; return; }
+      var para=(d.para||'').trim();
+      var valor=d.valor||9.99;
+      function versao(u,rot){
+        if(!u) return '';
+        return '<div class="musica-versao"><div class="mv-topo"><b>'+rot+'</b></div>'+
+          '<audio class="mv-audio" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="'+esc(u)+'" style="width:100%"></audio>'+
+          '<div class="hint" style="margin-top:.4rem">🔒 Prévia de 70 segundos</div></div>';
+      }
+      el('app').innerHTML=
+        '<div class="wz-wrap ouvir">'+
+          '<div style="text-align:center"><img src="'+MASCOTE+'" alt="" style="width:78px;animation:float 2.4s ease-in-out infinite"></div>'+
+          '<div class="wz-t" style="text-align:center">'+(para?('A música pra '+esc(para)+' ficou pronta 🎵'):'Sua música ficou pronta 🎵')+'</div>'+
+          '<div class="wz-s" style="text-align:center">Ela está guardadinha aqui. Dá o play e sente.</div>'+
+          '<div class="musica-pronta">'+versao(d.url,'Versão 1')+versao(d.url2,'Versão 2')+
+            '<div class="mp-oferta"><div class="mp-of-tx"><b>'+(d.url2?'Leve as 2 versões completas':'Leve a versão completa')+'</b>'+
+            '<span>Sem corte, em MP3, com link pra enviar e guardar pra sempre.</span></div>'+
+            '<div class="mp-of-pr">R$ '+fmtPreco(valor)+'</div></div>'+
+          '</div>'+
+          '<button class="btn btn-primary btn-block" id="ouvirPagar" style="margin-top:1rem">Quero minha música — pagar R$ '+fmtPreco(valor)+' no Pix</button>'+
+          '<div id="ouvirPix" style="display:none;margin-top:1rem"></div>'+
+        '</div>';
+      ligarPreviasLimitadas();
+      el('ouvirPagar').onclick=function(){
+        var b=el('ouvirPagar'); b.disabled=true; b.textContent='Gerando o Pix...';
+        fbEvento('InitiateCheckout',{value:valor, currency:'BRL', content_name:'musica', content_type:'product'});
+        fetch('/.netlify/functions/recuperar-pix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo)})
+          .then(function(r){ return r.json().then(function(x){ return {ok:r.ok,d:x}; }); })
+          .then(function(res){
+            if(res.d && res.d.pago && res.d.id){ location.hash='#/p/'+res.d.id; return; }
+            if(!res.ok || !res.d || !res.d.payload){
+              toast((res.d&&res.d.erro)||'Não consegui gerar o Pix agora.');
+              b.disabled=false; b.textContent='Quero minha música — pagar R$ '+fmtPreco(valor)+' no Pix'; return;
+            }
+            var id=res.d.id, payload=res.d.payload, svg='';
+            try{ svg=QRCodeGen.toSVG(payload,{ec:'M',quiet:2}); }catch(e){}
+            b.style.display='none';
+            var area=el('ouvirPix'); area.style.display='block';
+            area.innerHTML='<div class="qrbox">'+(svg?'<div class="qr">'+svg+'</div>':'')+
+              '<p style="font-size:.83rem;color:var(--muted);line-height:1.5">Abra o app do seu banco, escaneie o QR ou use o Pix copia e cola.</p>'+
+              '<div class="pix-code"><input readonly value="'+esc(payload)+'">'+
+              '<button class="btn btn-ghost" id="ouvirCopia" style="padding:.6rem 1rem;font-size:.8rem">Copiar</button></div></div>'+
+              '<div id="ouvirStatus" style="text-align:center;margin-top:1.2rem;font-size:.87rem;color:var(--muted)"><span class="cur"></span> Aguardando o pagamento cair...</div>';
+            el('ouvirCopia').onclick=function(){ copiar(payload,'Código Pix copiado!'); };
+            var n=0, iv=setInterval(function(){
+              n++;
+              fetch('/.netlify/functions/presente?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).then(function(x){
+                if(x && x.pago && x.presente){ clearInterval(iv); salvarPresente(x.presente); telaSucesso(id); }
+                else if(n>=100){ clearInterval(iv); var st=el('ouvirStatus'); if(st) st.innerHTML='Ainda não caiu. Assim que confirmar, sua música abre neste mesmo link.'; }
+              }).catch(function(){});
+            },3000);
+            aoSair(function(){ clearInterval(iv); });
+          })
+          .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent='Quero minha música — pagar R$ '+fmtPreco(valor)+' no Pix'; });
+      };
+    })
+    .catch(function(){ telaPresenteNaoEncontrado(); });
 }
 function telaPresenteNaoEncontrado(){
   el('app').innerHTML='<div class="g-scope"><div class="expired">'+
@@ -6648,9 +6981,10 @@ function montarMusicaEntrega(g){
         '<audio id="meAudio" src="'+esc(url)+'" preload="metadata"></audio>'+
         (letra ? '<details class="me-letra"><summary>📝 Ver a letra</summary><pre>'+esc(letra)+'</pre></details>' : '')+
         '<div class="me-acoes">'+
-          '<a class="me-btn" href="'+esc(url)+'" download="musica-'+esc((para||'presente').toLowerCase().replace(/[^a-z0-9]+/gi,'-'))+'.mp3">'+IC.download+'Baixar MP3</a>'+
+          '<a class="me-btn" href="'+linkBaixarMusica(g.id,1)+'" download>'+IC.download+(g.musicaPreviewUrl2?'Baixar versão 1':'Baixar MP3')+'</a>'+
+          (g.musicaPreviewUrl2?'<a class="me-btn" href="'+linkBaixarMusica(g.id,2)+'" download>'+IC.download+'Baixar versão 2</a>':'')+
           '<a class="me-btn zap" href="https://wa.me/?text='+encodeURIComponent(msgShare)+'" target="_blank" rel="noopener">'+IC.wpp+'Compartilhar</a>'+
-        '</div>'+
+        '</div>'+DICA_BAIXAR+
         '<div class="me-rodape">Feito com carinho no Capivarinha Love</div>'
         : '<div class="me-vazio">Essa música ainda não foi gerada. Se você é quem criou esse presente, volta em "Meus presentes" e gera a prévia antes de enviar o link.</div>'
       )+
