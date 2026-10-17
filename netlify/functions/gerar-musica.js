@@ -295,6 +295,11 @@ export default async (req) => {
         historia: texto.slice(0, 400),
         letraAprovada: usarLetraLiteral ? inputSuno.prompt : null,
         whatsapp: String((body && body.whatsapp) || '').trim(),
+        // Gerada pelo painel (ajuste de letra) → fica ligada ao pedido original
+        // e não aparece como "nova cliente" na lista.
+        origem: (body && body.origem) === 'painel' ? 'painel' : 'site',
+        pedidoId: String((body && body.pedidoId) || '').trim() || null,
+        refTaskId: String((body && body.refTaskId) || '').trim() || null,
         pago: false,
         url: null,
         url2: null

@@ -20,11 +20,11 @@ export default async (req) => {
     const store = getStore('musicas');
     const { blobs } = await store.list();
 
-    const musicas = [];
-    for (const b of blobs) {
-      const m = await store.get(b.key, { type: 'json' });
-      if (m) musicas.push(m);
-    }
+    // Busca tudo em paralelo em vez de um registro de cada vez — essa fila
+    // serial é o que fazia o painel travar pra abrir conforme o número de
+    // músicas geradas crescia.
+    const registros = await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' })));
+    const musicas = registros.filter(Boolean);
     // mais recentes primeiro
     musicas.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 

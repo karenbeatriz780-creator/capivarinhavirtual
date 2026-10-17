@@ -42,7 +42,10 @@ export default async (req) => {
       .sort((x, y) => ((x.pagamento.efiConferidoEm || 0) - (y.pagamento.efiConferidoEm || 0)) || ((y.criadoEm || 0) - (x.criadoEm || 0)));
     let liberadosAgora = 0, conferidos = 0;
     const comLimite = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r('tempo'), Math.max(0, ms)))]);
-    if (pendentes.length && resta() > 2500) {
+    // ?conferir=0 → só lista (o painel abre na hora); a conferência na Efí
+    // roda numa segunda chamada, em segundo plano.
+    const conferir = new URL(req.url).searchParams.get('conferir') !== '0';
+    if (conferir && pendentes.length && resta() > 2500) {
       try {
         const token = await comLimite(obterToken(), Math.min(3000, resta() - 1500));
         if (token && token !== 'tempo') {
@@ -105,7 +108,19 @@ export default async (req) => {
         musicaOn: !!g.musicaOn,
         musicaPreviewUrl: g.musicaPreviewUrl || null,
         musicaPreviewUrl2: g.musicaPreviewUrl2 || null,
-        whatsapp: g.musicaWhatsapp || ''
+        whatsapp: g.musicaWhatsapp || '',
+        // Dados da música pedida — o painel usa pra mostrar/copiar a letra e
+        // pra gerar uma nova versão seguindo o mesmo pedido do cliente.
+        musicaPreviewId: g.musicaPreviewId || null,
+        letra: g.musicaLetraTexto || g.musicaLetra || null,
+        musicaEstilo: g.musicaEstilo || '',
+        musicaClima: g.musicaClima || '',
+        musicaPara: g.musicaPara || '',
+        musicaOcasiao: g.musicaOcasiao || '',
+        musicaParaNome: g.musicaParaNome || '',
+        musicaFrase: g.musicaFrase || '',
+        musicaVoz: g.musicaVoz || '',
+        musicaHistoria: String(g.musicaTexto || '').slice(0, 1500)
       });
     }
 
