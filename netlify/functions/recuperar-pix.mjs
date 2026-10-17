@@ -9,6 +9,11 @@ import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 // Quem só gerou a música (sem pedido) ganha um pedido na hora, com a música dele.
 
 const PRECO_MUSICA = 9.99;
+function previa(g, t, v) {
+  const base = '/.netlify/functions/previa-musica?';
+  return g.id ? base + 'id=' + encodeURIComponent(g.id) + '&v=' + v
+              : base + 'taskId=' + encodeURIComponent(t) + '&v=' + v;
+}
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -68,8 +73,9 @@ export default async (req) => {
         pago: !!g.pago,
         id: g.id,
         para: g.musicaParaNome || g.parceiroNome || '',
-        url: g.musicaPreviewUrl,
-        url2: g.musicaPreviewUrl2 || null,
+        // Nunca entrega o MP3 completo aqui: só a prévia de 70s, cortada no servidor.
+        url: previa(g, t, 1),
+        url2: g.musicaPreviewUrl2 ? previa(g, t, 2) : null,
         valor: (g.pagamento && g.pagamento.valor) || PRECO_MUSICA
       });
     }
