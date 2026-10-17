@@ -1229,6 +1229,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pnl-rec-acoes{display:flex;gap:.4rem;flex-wrap:wrap;}
 .pnl-play{display:block;width:100%;margin:.35rem 0;padding:.6rem;border-radius:100px;border:1px solid rgba(255,255,255,.16);background:rgba(227,43,109,.2);color:#FFD3E4;font-size:.8rem;font-weight:800;}
 .pnl-mais{display:block;width:100%;margin-top:.8rem;padding:.75rem;border-radius:12px;border:1px dashed rgba(255,255,255,.25);background:rgba(255,255,255,.04);color:#F0C987;font-size:.82rem;font-weight:800;}
+.pnl-mv-trava{font-size:.7rem;color:#F0C987;}
 .pnl-rec.enviado{opacity:.7;}
 .pnl-rec b i{font-style:normal;font-weight:700;color:#B99BA8;font-size:.72rem;}
 .pnl-modelos{margin:-.2rem 0 .9rem;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem .7rem;}
@@ -5868,7 +5869,7 @@ function pedirSenhaAdmin(){
 }
 var _pnlCache={pedidos:[],visitas:[],musicas:[]}, _pnlOcultarDev=true, _pnlChave="";
 /* uma versão da música no painel, com player + baixar + enviar no WhatsApp do cliente */
-function pnlVersaoMusica(p, url, rotulo){
+function pnlVersaoMusica(p, url, rotulo, soOuvir){
   var nome=(p.meuNome||'cliente').split(' ')[0];
   var arquivo=('musica-'+nome+'-'+rotulo).toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -5878,8 +5879,9 @@ function pnlVersaoMusica(p, url, rotulo){
   return '<div class="pnl-mv"><div class="pnl-mv-tit">🎵 '+esc(rotulo)+'</div>'+
     '<button type="button" class="pnl-play" data-tocar="'+esc(url)+'">▶ Ouvir</button>'+
     '<div class="pnl-mv-acoes">'+
+      (soOuvir ? '<span class="pnl-mv-trava">🔒 Não pagou — pra mandar, use "Recuperar venda" (só a prévia)</span>' :
       '<a class="pnl-mv-btn" href="'+esc(url)+'" download="'+esc(arquivo)+'" target="_blank" rel="noopener">'+IC.download+' Baixar</a>'+
-      '<button type="button" class="pnl-mv-btn" data-copiar-musica="'+esc(url)+'">Copiar link</button>'+
+      '<button type="button" class="pnl-mv-btn" data-copiar-musica="'+esc(url)+'">Copiar link</button>')+
       (zap ? '<a class="pnl-mv-btn zap" href="https://wa.me/55'+esc(zap)+'?text='+encodeURIComponent(msgZap)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar</a>' : '')+
     '</div></div>';
 }
@@ -6221,7 +6223,7 @@ function desenharPainel(pedidos, visitas, musicas){
         '<button data-copiar-link="'+esc(link)+'">Copiar</button></div>';
     }
     if(url1){
-      html+='<div class="pnl-musica">'+pnlVersaoMusica(fake,url1,'Versão 1')+(url2?pnlVersaoMusica(fake,url2,'Versão 2'):'')+'</div>';
+      html+='<div class="pnl-musica">'+pnlVersaoMusica(fake,url1,'Versão 1',!pago)+(url2?pnlVersaoMusica(fake,url2,'Versão 2',!pago):'')+'</div>';
     } else if(m.taskId){
       html+='<div class="pnl-pend"><span>Música ainda processando ou o cliente fechou a página.</span>'+
         '<button type="button" class="pnl-verificar" data-verificar="'+esc(m.taskId)+'">Verificar agora</button></div>';
