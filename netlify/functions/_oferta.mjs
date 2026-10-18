@@ -10,6 +10,17 @@ export function pagoEmDe(g) {
 
 export async function statusOferta(id) {
   if (!id) return { valida: false, motivo: 'pedido' };
+  // PROMOÇÃO PESSOAL (link do painel / WhatsApp): só pra quem já tem pedido
+  // (pagou ou desistiu) ou já gerou música no site.
+  //   p.<id do pedido>   ou   t.<taskId da música>
+  if (id.indexOf('p.') === 0) {
+    const g = await getStore('presentes').get(id.slice(2), { type: 'json' });
+    return g ? { valida: true, expiraEm: 0, promo: true } : { valida: false, motivo: 'pedido' };
+  }
+  if (id.indexOf('t.') === 0) {
+    const m = await getStore('musicas').get(id.slice(2), { type: 'json' });
+    return m ? { valida: true, expiraEm: 0, promo: true } : { valida: false, motivo: 'pedido' };
+  }
   const presentes = getStore('presentes');
   const g = await presentes.get(id, { type: 'json' });
   if (!g || !g.pago || g.cancelado || g.produto !== 'musica') return { valida: false, motivo: 'pedido' };

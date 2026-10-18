@@ -55,11 +55,12 @@ export default async (req) => {
       if (presente.produto !== 'musica' || !presente.ofertaDe || !presente.ofertaM1) {
         delete presente.ofertaDe; delete presente.ofertaM1;
       } else {
+        // p.<pedido> / t.<música> = promoção pessoal de quem já comprou ou desistiu
         const st = await statusOferta(String(presente.ofertaDe));
         if (!st.valida) {
-          return json({ erro: st.motivo === 'usada' ? 'Essa oferta já foi usada.' : 'Essa oferta expirou.' }, 400);
+          return json({ erro: st.motivo === 'usada' ? 'Essa oferta já foi usada.' : 'Essa oferta não está disponível.' }, 400);
         }
-        await registrarTentativa(String(presente.ofertaDe), presente.id);
+        if (!st.promo) await registrarTentativa(String(presente.ofertaDe), presente.id);
       }
     }
 
