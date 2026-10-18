@@ -754,6 +754,10 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mx-vazio{padding:4rem 1rem;color:#D8BFCB;}
 .mx .of-box{margin-top:1.3rem;}
 /* ===== anúncio do cliente ===== */
+.seg{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.5rem;}
+.seg-b{flex:1 1 0;min-width:96px;padding:.85rem .6rem;border-radius:16px;border:1.5px solid #F2D6E1;background:#fff;color:#2A1520;font:inherit;font-weight:700;font-size:.92rem;cursor:pointer;box-shadow:0 2px 8px rgba(227,43,109,.06);}
+.seg-b.on{border-color:#E32B6D;background:#E32B6D;color:#fff;box-shadow:0 6px 18px rgba(227,43,109,.3);}
+.letra-aviso{margin-bottom:.8rem;padding:.75rem .9rem;border-radius:12px;background:rgba(233,185,79,.12);border:1px solid rgba(233,185,79,.5);font-size:.88rem;line-height:1.4;}
 .ad-fundo{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:99999;background:rgba(8,2,5,.88);display:flex;align-items:center;justify-content:center;padding:1rem;box-sizing:border-box;opacity:0;transition:opacity .25s;-webkit-overflow-scrolling:touch;}
 .ad-fundo.on{opacity:1;}
 .ad-card{position:relative;width:100%;max-width:23rem;max-height:94vh;overflow:auto;text-align:center;color:#fff;border-radius:28px;padding:1.5rem 1.05rem .8rem;
@@ -3773,7 +3777,7 @@ function novoEstado(prod){
     comboDaMusica:false, musicaOn:false, musicaEstilo:'', musicaTexto:'', musicaPreviewUrl:null, musicaPreviewUrl2:null, musicaPreviewId:null, musicaLetra:null,
     musicaLetraTexto:null, musicaLetraGerando:false, musicaLetraErro:null,
     musicaLetraAjustando:false, musicaLetraInstrucao:'',
-    musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'',
+    musicaPersonalizar:null, musicaPara:'', musicaParaNome:'', musicaOcasiao:'', musicaDe:'', musicaParaGen:'', musicaParaOutro:'', musicaVozEscolhida:false,
     musicaClima:'', musicaFrase:'', musicaMomentos:'', musicaVoz:'masculina', musicaCapa:null, musicaWhatsapp:'',
     jogos:{roleta:false, palavra:false, caca:false, quebra:false, quiz:false, medidor:false},
     roletaOpcoes:['Cinema','Jantar fora','Praia','Dia de preguiça','Sorvete','Viagem surpresa'],
@@ -3876,7 +3880,8 @@ function telaWizard(prod){
   if(!W || (prod && W.produto!==prod && !W.pago)){
     W=novoEstado(prod && PACOTES[prod] ? prod : null);
     if(W.produto==='jogo'){ W.jogos.roleta=true; W.jogos.palavra=true; W.jogos.caca=true; W.jogos.quebra=true; }
-    wStep = W.produto ? 1 : 0;
+    // a música não tem a etapa "produto": começa direto em "Pra quem é"
+    wStep = (W.produto && W.produto!=='musica') ? 1 : 0;
   }
   el('app').innerHTML =
     '<div class="wz-top">'+
@@ -4183,6 +4188,23 @@ function pedirWhatsapp(aoConfirmar){
   inp.oninput=function(){ inp.classList.remove('erro'); el('zapErr').textContent=''; };
 }
 
+/* cartões que juntam ela/ele → rótulos do botão de gênero */
+var MUSICA_PARA_GEN={avo:['Vó','Vô'],tio:['Tia','Tio'],sogro:['Sogra','Sogro'],padrinho:['Dinda / Madrinha','Padrinho'],filho:['Filha','Filho']};
+function musicaParaCompleto(){
+  if(!W.musicaPara) return false;
+  if(W.musicaPara==='outro' && (W.musicaParaOutro||'').trim().length<3) return false;
+  if((MUSICA_PARA_GEN[W.musicaPara]||W.musicaPara==='outro'||W.musicaPara==='ninguem') && !W.musicaParaGen) return false;
+  if(W.musicaPara!=='comercial' && !W.musicaDe) return false;
+  return true;
+}
+/* Confere se cada nome saiu na letra escrito igualzinho */
+function avisoNomesLetra(){
+  var letra=String(W.musicaLetraTexto||'').toLowerCase();
+  var nomes=String(W.musicaParaNome||'').split(/,|\s+e\s+|&|\//).map(function(n){ return n.trim(); }).filter(function(n){ return n.length>1; });
+  var faltam=nomes.filter(function(n){ return letra.indexOf(n.toLowerCase())===-1; });
+  if(!faltam.length) return '';
+  return '<div class="letra-aviso">⚠️ O nome <b>'+faltam.map(esc).join('</b>, <b>')+'</b> não aparece escrito igualzinho na letra. Corrija direto no texto abaixo ou peça um ajuste.</div>';
+}
 /* junta a história com os "momentos especiais" (campo opcional) num texto só,
    que é o que efetivamente vai pro gerador de letra/música */
 function textoHistoriaCompleta(){
@@ -4196,7 +4218,8 @@ function dispararGeracaoLetra(){
   pedirLetra({
       estilo: W.musicaEstilo, texto: textoHistoriaCompleta(), clima: W.musicaClima,
       relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
-      nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz
+      nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz,
+      de: W.musicaDe, paraGen: W.musicaParaGen, paraOutro: W.musicaParaOutro
   })
   .then(function(res){
     W.musicaLetraGerando=false;
@@ -4256,7 +4279,7 @@ function dispararAjusteLetra(instrucao){
   redesenharSemPular();
   pedirLetra({
       letraAtual: W.musicaLetraTexto||'', instrucao: instrucao,
-      estilo: W.musicaEstilo, clima: W.musicaClima, voz: W.musicaVoz
+      estilo: W.musicaEstilo, clima: W.musicaClima, voz: W.musicaVoz, nomesLetra: W.musicaParaNome
   })
   .then(function(res){
     W.musicaLetraAjustando=false;
@@ -4710,23 +4733,47 @@ function htmlPasso(k){
       ['namorada','💗','Namorada'],['namorado','❤️','Namorado'],
       ['esposa','💍','Esposa'],['marido','🤵','Marido'],
       ['mae','👩','Mãe'],['pai','👨','Pai'],
-      ['irma','👭','Irmã'],['irmao','👬','Irmão'],
-      ['amiga','💛','Amiga'],['amigo','🤝','Amigo'],
-      ['filho','🧒','Filho(a)'],['ninguem','🎵','Não é pra ninguém']
+      ['filho','🧒','Filho / Filha'],['irma','👭','Irmã'],
+      ['irmao','👬','Irmão'],['amiga','💛','Amiga'],
+      ['amigo','🤝','Amigo'],['avo','👵','Vó / Vô'],
+      ['tio','🧑‍🤝‍🧑','Tia / Tio'],['sogro','🏡','Sogra / Sogro'],
+      ['padrinho','🙏','Dinda / Padrinho'],['comercial','📣','Comercial (empresa)'],
+      ['outro','✍️','Outro (eu escrevo)'],['ninguem','🎵','Não é pra ninguém']
     ];
+    var pGen=MUSICA_PARA_GEN[W.musicaPara];
+    function seg(attr, val, ic, lb, on){ return '<button type="button" class="seg-b'+(on?' on':'')+'" data-'+attr+'="'+val+'">'+ic+' '+lb+'</button>'; }
+    var extras='';
+    if(W.musicaPara==='outro'){
+      extras+='<div class="wz-t" style="margin-top:1.1rem">Pra quem é?</div>'+
+        '<input class="inp" id="musicaParaOutro" maxlength="80" value="'+esc(W.musicaParaOutro)+'" placeholder="Ex: minha professora, meu chefe, meu cachorro...">';
+    }
+    if(pGen || W.musicaPara==='outro' || W.musicaPara==='ninguem'){
+      extras+='<div class="wz-t" style="margin-top:1.1rem">'+(W.musicaPara==='ninguem'?'A música fala de':'Quem vai receber é')+'</div>'+
+        '<div class="seg">'+seg('pgen','ela','👩',pGen?pGen[0]:'Mulher',W.musicaParaGen==='ela')+seg('pgen','ele','👨',pGen?pGen[1]:'Homem',W.musicaParaGen==='ele')+'</div>';
+    }
+    if(W.musicaPara && W.musicaPara!=='comercial'){
+      extras+='<div class="wz-t" style="margin-top:1.1rem">E quem está dando a música?</div>'+
+        '<div class="wz-s">Assim a letra fala certinho: “grata” se for mulher, “grato” se for homem.</div>'+
+        '<div class="seg">'+seg('de','mulher','👩','Sou mulher',W.musicaDe==='mulher')+seg('de','homem','👨','Sou homem',W.musicaDe==='homem')+seg('de','varios','👨‍👩‍👧','Somos vários',W.musicaDe==='varios')+'</div>';
+    }
     return guia("Pra quem é essa música? Isso me ajuda a dar o tom certo na letra.")+
       '<div class="wz-t">Quem vai receber</div>'+
       '<button type="button" class="link-amostra dentro" id="passoAmostra">🎧 Ouvir exemplos antes de começar</button>'+
       '<div class="cards2" id="musicaParaChips">'+relacoes.map(function(r){
         return '<button type="button" class="card2'+(W.musicaPara===r[0]?' on':'')+'" data-para="'+r[0]+'">'+
           '<span class="c2-ic">'+r[1]+'</span><span class="c2-lb">'+r[2]+'</span></button>';
-      }).join('')+'</div>';
+      }).join('')+'</div>'+
+      (extras?'<div id="musicaParaExtras">'+extras+'</div>':'');
   }
 
   case 'musicaNome': {
+    if(W.musicaPara==='comercial') return guia("Qual o nome da empresa ou marca? Ele vai ser cantado no refrão.")+
+      '<div class="wz-t">Nome da empresa / marca</div>'+
+      '<div class="wz-s">Escreva exatamente como ele deve aparecer na música.</div>'+
+      '<input class="inp" id="musicaParaNome" value="'+esc(W.musicaParaNome)+'" placeholder="Ex: Açaí da Praça">';
     return guia("Qual o nome de quem vai receber a música?")+
       '<div class="wz-t">Nome de quem vai receber</div>'+
-      '<div class="wz-s">Coloque o nome ou apelido de quem vai receber a homenagem. Esse nome vai aparecer na letra da música.</div>'+
+      '<div class="wz-s">Coloque o nome ou apelido de quem vai receber a homenagem. Esse nome vai aparecer na letra <b>exatamente como você escrever</b>.</div>'+
       '<input class="inp" id="musicaParaNome" value="'+esc(W.musicaParaNome)+'" placeholder="Digite o nome...">';
   }
 
@@ -4737,7 +4784,10 @@ function htmlPasso(k){
       ['Dia dos Pais','👔'],['Declaração de amor','💌'],
       ['Pedido de namoro','💍'],['Aniversário de namoro','💞'],
       ['Formatura','🎓'],['Chá revelação','👶'],
-      ['Surpresa','🎁'],['Homenagem','🌟']
+      ['Surpresa','🎁'],['Homenagem','🌟'],
+      ['Casamento','💒'],['Batizado','🕊️'],
+      ['Dia dos Avós','👵'],['Só pra zoar','😂'],
+      ['Propaganda da empresa','📣'],['Só porque sim','💛']
     ];
     return guia("Qual é a ocasião? Isso deixa a música na medida certa.")+
       '<div class="wz-t">Qual a ocasião</div>'+
@@ -4752,6 +4802,7 @@ function htmlPasso(k){
       mae:'Minha mãe se chama Rosa. Ela me criou sozinha costurando de madrugada em Belém. Nunca deixou faltar nada, mesmo quando faltava pra ela. Hoje eu tenho minha casa e é tudo por causa dela.',
       pai:'Meu pai me ensinou a andar de bicicleta na rua de casa, em 2010. Ele trabalhava em dois empregos e mesmo assim ia em todos os meus jogos. Chamo ele de "chefe" até hoje.',
       amigo:'A gente se conheceu jogando bola em 2015 e nunca mais parou. Ele me bancou quando fiquei desempregado, sem eu nem pedir. É o tipo de amigo que atende às 3 da manhã.',
+      comercial:'Minha loja se chama Açaí da Praça, fica no centro de Parauapebas. Açaí cremoso, mais de 20 complementos, entrega rápida e preço justo. Abre todo dia das 14h às 23h. Pede pelo WhatsApp!',
       amiga:'A gente se conheceu no trabalho e virou irmã que a vida deu. Já choramos e rimos juntas no mesmo dia. Ela sabe de coisas minhas que ninguém sabe.'
     };
     var exemplo = exemploRel[W.musicaPara] ||
@@ -4788,16 +4839,19 @@ function htmlPasso(k){
 
   case 'musicaGenero': {
     var generos=[
-      ['romantica','💗','Romântica','violão e piano'],['sertanejo','🤠','Sertanejo','viola e clima raiz'],
-      ['pop','⚡','Pop','moderno e dançante'],['rock','🎸','Rock','guitarras marcantes'],
-      ['mpb','☕','MPB','clássico e intimista'],['bossa','🌊','Bossa Nova','suave e elegante'],
-      ['gospel','⛪','Gospel','fé e inspiração'],['samba','🥁','Samba','ginga brasileira'],
-      ['pagode','🪘','Pagode','descontraído e alegre'],['forro','🪗','Forró','ritmo nordestino'],
-      ['piseiro','🎹','Piseiro','nordestino dançante'],['funk','🔊','Funk','batida forte'],
-      ['trap','🎤','Trap / Rap','batidas urbanas'],['eletronica','🎛️','Eletrônica','synths modernos'],
-      ['reggae','🌴','Reggae','vibe relaxada'],['jazz','🎷','Jazz','sofisticado e swing'],
-      ['blues','🎺','Blues','melancólico e cru'],['axe','🌞','Axé','festa e verão'],
-      ['lofi','🎧','Lo-Fi','suave e tranquila'],['infantil','🧸','Infantil','leve e divertida']
+      ['infantil','🧸','Infantil','leve e divertida'],['sertanejo','🤠','Sertanejo','sertanejo de hoje'],
+      ['pagode','🪘','Pagode','descontraído e alegre'],['samba','🥁','Samba','ginga brasileira'],
+      ['funk','🔊','Funk','batida forte'],['rock','🎸','Rock','guitarras marcantes'],
+      ['eletronica','🎛️','Eletrônica','synths modernos'],['romantica','💗','Romântica','violão e piano'],
+      ['forro','🪗','Forró','ritmo nordestino'],['piseiro','🎹','Piseiro','nordestino dançante'],
+      ['funkcria','🧢','Funk de cria','baile de favela'],['bregafunk','💃','Brega funk','batidão de Recife'],
+      ['eletrofunk','⚡','Eletrofunk','funk + eletrônica'],['trap','🎤','Trap / Rap','batidas urbanas'],
+      ['pop','✨','Pop','moderno e dançante'],['mpb','☕','MPB','clássico e intimista'],
+      ['reggae','🌴','Reggae','vibe relaxada'],['anos80','📼','Anos 80','retrô e nostálgico'],
+      ['jingle','📣','Comercial / Chiclete','jingle que gruda'],['gospel','⛪','Gospel','fé e inspiração'],
+      ['axe','🌞','Axé','festa e verão'],['bossa','🌊','Bossa Nova','suave e elegante'],
+      ['lofi','🎧','Lo-Fi','suave e tranquila'],['jazz','🎷','Jazz','sofisticado e swing'],
+      ['blues','🎺','Blues','melancólico e cru']
     ];
     return guia("Qual estilo combina mais com vocês?")+
       '<div class="wz-t">Gênero musical</div>'+
@@ -4813,7 +4867,8 @@ function htmlPasso(k){
       ['romantica','💗','Romântica','declaração amorosa'],['calma','🍃','Calma','suave e acolhedora'],
       ['nostalgica','🍂','Nostálgica','recordações e saudade'],['festiva','🎉','Festiva','clima de celebração'],
       ['energetica','🔥','Energética','cheia de ritmo'],['divertida','😄','Divertida','leve e bem-humorada'],
-      ['inspiradora','✨','Inspiradora','superação e motivação'],['melancolica','🕊️','Melancólica','saudade e homenagem']
+      ['inspiradora','✨','Inspiradora','superação e motivação'],['melancolica','🕊️','Melancólica','saudade e homenagem'],
+      ['triste','😢','Triste','pra chorar junto'],['zoeira','🤪','Modo trollagem','zoeira e deboche']
     ];
     return guia("E o clima? Como você quer que ela faça vocês se sentirem?")+
       '<div class="wz-t">Clima da música</div>'+
@@ -4837,7 +4892,7 @@ function htmlPasso(k){
         (W.musicaLetraGerando ? htmlLetraCarregando('Escrevendo a letra da sua música...')
           : (W.musicaLetraAjustando ? htmlLetraCarregando('Ajustando a letra da sua música...')
             : (temTexto
-                ? '<label class="letra-rotulo">📝 Prévia da letra <span>— edite direto ou peça um ajuste abaixo</span></label>'+
+                ? avisoNomesLetra()+'<label class="letra-rotulo">📝 Prévia da letra <span>— edite direto ou peça um ajuste abaixo</span></label>'+
                   '<textarea class="inp letra-area" id="musicaLetraTexto" rows="14">'+esc(W.musicaLetraTexto)+'</textarea>'+
                   '<div class="letra-ajuste">'+
                     '<label class="letra-ajuste-lbl">✨ Peça um ajuste pontual à IA</label>'+
@@ -5236,11 +5291,25 @@ function ligarPasso(k){
   }
   if(k==='musicaPara'){
     var pa=el('passoAmostra'); if(pa) pa.onclick=abrirAmostras;
+    function talvezAvancar(){ if(musicaParaCompleto() && W.musicaPara!=='outro') setTimeout(function(){ proximoPasso(); },350); }
     on('[data-para]','onclick',function(e){
+      if(W.musicaPara!==e.dataset.para) W.musicaParaGen='';
       W.musicaPara=e.dataset.para;
+      // relações que já dizem o gênero de quem recebe
+      var fixo={namorada:'ela',esposa:'ela',mae:'ela',irma:'ela',amiga:'ela',namorado:'ele',marido:'ele',pai:'ele',irmao:'ele',amigo:'ele'}[W.musicaPara];
+      if(fixo) W.musicaParaGen=fixo;
       redesenharSemPular();
-      setTimeout(function(){ proximoPasso(); },300);
+      var ex=el('musicaParaExtras'); if(ex && !musicaParaCompleto()) setTimeout(function(){ ex.scrollIntoView({behavior:'smooth',block:'center'}); },80);
+      talvezAvancar();
     });
+    on('[data-pgen]','onclick',function(e){ W.musicaParaGen=e.dataset.pgen; redesenharSemPular(); talvezAvancar(); });
+    on('[data-de]','onclick',function(e){
+      W.musicaDe=e.dataset.de;
+      if(!W.musicaVozEscolhida) W.musicaVoz = W.musicaDe==='mulher' ? 'feminina' : W.musicaDe==='homem' ? 'masculina' : 'dueto';
+      redesenharSemPular(); talvezAvancar();
+    });
+    var outroInp=el('musicaParaOutro');
+    if(outroInp) outroInp.oninput=function(ev){ W.musicaParaOutro=ev.target.value; };
   }
   if(k==='musicaNome'){
     var nomeInp=el('musicaParaNome');
@@ -5384,7 +5453,7 @@ function ligarPasso(k){
     var capaX=el('musicaCapaX');
     if(capaX) capaX.onclick=function(){ W.musicaCapa=null; redesenharSemPular(); };
     on('[data-voz]','onclick',function(e){
-      W.musicaVoz=e.dataset.voz;
+      W.musicaVoz=e.dataset.voz; W.musicaVozEscolhida=true;
       document.querySelectorAll('[data-voz]').forEach(function(c){ c.classList.remove('on'); });
       e.classList.add('on');
     });
@@ -5504,6 +5573,9 @@ function validar(k){
   if(k==='carta' && W.carta.trim().length<10) return erro('Campo obrigatório — escreva a carta ou toque em “Gerar cartas”.', 'fCarta');
   if(k==='musicaEscolha' && W.musicaPersonalizar===null) return erro('Escolhe uma opção pra continuar.');
   if(k==='musicaPara' && !W.musicaPara) return erro('Escolhe pra quem é a música.');
+  if(k==='musicaPara' && W.musicaPara==='outro' && (W.musicaParaOutro||'').trim().length<3) return erro('Escreve pra quem é a música.', 'musicaParaOutro');
+  if(k==='musicaPara' && (MUSICA_PARA_GEN[W.musicaPara]||W.musicaPara==='outro'||W.musicaPara==='ninguem') && !W.musicaParaGen) return erro('Escolhe se quem recebe é mulher ou homem.');
+  if(k==='musicaPara' && W.musicaPara!=='comercial' && !W.musicaDe) return erro('Escolhe quem está dando a música (mulher, homem ou vários).');
   if(k==='musicaOcasiao' && !W.musicaOcasiao) return erro('Escolhe a ocasião.');
   if(k==='musicaHistoria' && W.musicaTexto.trim().length<50) return erro('Conta um pouco mais — pelo menos 50 caracteres pra letra ficar boa.', 'musicaTexto');
   if(k==='musicaGenero' && !W.musicaEstilo) return erro('Escolhe um estilo.');
@@ -6018,7 +6090,9 @@ var PNL_FUNIL_ORDEM=['produto','perfil','nomes','data','titulo','fotos','carta',
 var RELACAO_NOME={
   namorada:'Pra namorada', namorado:'Pra namorado', esposa:'Pra esposa', marido:'Pra marido',
   mae:'Pra mãe', pai:'Pra pai', irma:'Pra irmã', irmao:'Pra irmão',
-  amiga:'Pra amiga', amigo:'Pra amigo', filho:'Pra filho(a)', ninguem:'Sem dedicatória'
+  amiga:'Pra amiga', amigo:'Pra amigo', filho:'Pra filho(a)', ninguem:'Sem dedicatória',
+  avo:'Pra vó/vô', tio:'Pra tia/tio', sogro:'Pra sogra/sogro', padrinho:'Pra dinda/padrinho',
+  comercial:'Comercial (empresa)', outro:'Outro'
 };
 var _pnlFunilOk=false, _pnlLimite=30, _pnlAba='pagos', _pnlFiltro='todos', _pnlItens=[], _pnlLetraAberta={};
 function pedirSenhaAdmin(){
