@@ -18,7 +18,7 @@ export default async (req) => {
   try {
     const u = new URL(req.url);
     const id = u.searchParams.get('id') || '';
-    const v = u.searchParams.get('v') === '2' ? 2 : 1;
+    const v = Math.min(4, Math.max(1, parseInt(u.searchParams.get('v'), 10) || 1));
     if (!id) return erro('Faltou o pedido.', 400);
 
     const g = await getStore('presentes').get(id, { type: 'json' });
@@ -26,14 +26,15 @@ export default async (req) => {
     if (!g.pago || g.cancelado) return erro('Esse download libera depois do pagamento.', 403);
     if (g.expiraEm && Date.now() > g.expiraEm) return erro('Esse link expirou.', 403);
 
-    const url = v === 2 ? g.musicaPreviewUrl2 : g.musicaPreviewUrl;
+    const m1 = g.ofertaM1 || {};
+    const url = v === 4 ? m1.url2 : v === 3 ? m1.url : v === 2 ? g.musicaPreviewUrl2 : g.musicaPreviewUrl;
     if (!url) return erro('Música não encontrada.', 404);
 
     const origem = await fetch(url);
     if (!origem.ok || !origem.body) return erro('Não consegui pegar a música agora. Tenta de novo.', 502);
 
-    const para = g.musicaParaNome || g.parceiroNome || 'presente';
-    const arquivo = 'musica-' + nomeArquivo(para) + (v === 2 ? '-versao-2' : '') + '.mp3';
+    const para = (v > 2 ? (m1.paraNome || m1.estilo) : (g.musicaParaNome || g.musicaEstilo)) || g.parceiroNome || 'presente';
+    const arquivo = 'musica-' + nomeArquivo(para) + (v === 2 || v === 4 ? '-versao-2' : '-versao-1') + '.mp3';
     const headers = {
       'Content-Type': 'audio/mpeg',
       'Content-Disposition': 'attachment; filename="' + arquivo + '"',

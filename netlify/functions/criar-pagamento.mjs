@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
+import { statusOferta, registrarTentativa } from './_oferta.mjs';
 
 const PACOTES = {
   completo:  { nome: 'Retrospectiva Completa', preco: 19, preco48: 9.99 },
@@ -47,6 +48,20 @@ export default async (req) => {
     const chavePix = (process.env.EFI_PIX_KEY || '').trim();
     if (!chavePix) return json({ erro: 'Servidor sem EFI_PIX_KEY configurada.' }, 500);
 
+    // Oferta de cliente (4 músicas por R$ 9,99): só vale com pedido de origem pago,
+    // dentro de 48h e se ainda não foi usada. Sem oferta válida, a 2ª música é descartada.
+    if (presente.ofertaDe || presente.ofertaM1) {
+      if (presente.produto !== 'musica' || !presente.ofertaDe || !presente.ofertaM1) {
+        delete presente.ofertaDe; delete presente.ofertaM1;
+      } else {
+        const st = await statusOferta(String(presente.ofertaDe));
+        if (!st.valida) {
+          return json({ erro: st.motivo === 'usada' ? 'Essa oferta já foi usada.' : 'Essa oferta expirou.' }, 400);
+        }
+        await registrarTentativa(String(presente.ofertaDe), presente.id);
+      }
+    }
+
     const pacote = PACOTES[presente.produto];
     const duracao = presente.duracao === 'h48' ? 'h48' : 'vitalicio';
     const temAddonMusica = !!presente.musicaOn && PRODUTOS_COM_ADDON_MUSICA.indexOf(presente.produto) !== -1;
@@ -68,7 +83,7 @@ export default async (req) => {
       await getStore('efi-txid').setJSON(txid, { giftId: presente.id, produto: presente.produto, valor: precoFinal, duracao, criadoEm });
 
       const token = await obterToken();
-      const nomeCobranca = pacote.nome + (temAddonMusica ? ' + Música' : '');
+      const nomeCobranca = (presente.ofertaM1 ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '');
       const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
         method: 'PUT', token,
         body: {

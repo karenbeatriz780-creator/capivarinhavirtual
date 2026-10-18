@@ -76,6 +76,8 @@ export default async (req) => {
         // Nunca entrega o MP3 completo aqui: só a prévia de 70s, cortada no servidor.
         url: previa(g, t, 1),
         url2: g.musicaPreviewUrl2 ? previa(g, t, 2) : null,
+        url3: g.ofertaM1 && g.ofertaM1.url ? previa(g, t, 3) : null,
+        url4: g.ofertaM1 && g.ofertaM1.url2 ? previa(g, t, 4) : null,
         valor: (g.pagamento && g.pagamento.valor) || PRECO_MUSICA
       });
     }
