@@ -701,7 +701,6 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mx-disco-solo~.mx-play{right:50%;bottom:50%;margin:0 -34px -34px 0;background:rgba(227,43,109,.92);}
 .mx-hero.tocando .mx-disco-solo~.mx-play{opacity:.85;}
 .mx-play svg{width:28px;height:28px;fill:#fff;}
-.mx-atual{display:inline-block;font-size:.72rem;font-weight:800;color:#3A0A1E;background:linear-gradient(180deg,#FFF0C2,#E9B94F);padding:.25rem .7rem;border-radius:100px;margin-bottom:.5rem;}
 .mx-tit{font-family:Fraunces,Georgia,serif;font-size:1.75rem;line-height:1.15;color:#fff;margin:.2rem 0 .4rem;letter-spacing:-.01em;}
 .mx-sub{font-size:.9rem;color:#E3C6D2;line-height:1.5;max-width:22rem;margin:0 auto;}
 .mx-player{margin:1.3rem 0 .4rem;}
@@ -6069,7 +6068,6 @@ function pnlGerarComLetra(i, btn){
   var t=document.querySelector('[data-letra="'+i+'"]');
   var letra=t?t.value.trim():'';
   if(letra.length<20){ toast('Coloca a letra primeiro (pelo menos algumas linhas).'); return; }
-  if(p && !pedirSenhaAdmin()) return;
   var hist=((p&&p.musicaHistoria)||m.historia||'').trim();
   var texto=hist.length>=50?hist:(hist+'\n'+letra);
   var res=el('pnlRes'+i);
@@ -6109,23 +6107,25 @@ function pnlGerarComLetra(i, btn){
             var nome=p?(p.meuNome||'cliente'):(m.nomes||'cliente');
             var fake={meuNome:nome, whatsapp:(p&&p.whatsapp)||m.whatsapp||''};
             if(res){
-              res.innerHTML='<div class="pnl-letra-ok">✅ Música nova pronta!'+(p?' Atualizando o link do cliente...':'')+'</div>'+
-                pnlVersaoMusica(fake,d.url,'Nova versão 1')+(d.url2?pnlVersaoMusica(fake,d.url2,'Nova versão 2'):'');
+              res.innerHTML='<div class="pnl-letra-ok">✅ Música nova pronta!</div>'+
+                pnlVersaoMusica(fake,d.url,'Nova versão 1')+(d.url2?pnlVersaoMusica(fake,d.url2,'Nova versão 2'):'')+
+                (p?'<button type="button" class="pnl-trocar">Colocar no pedido do cliente</button>':'');
               res.querySelectorAll('[data-copiar-musica]').forEach(function(b){ b.onclick=function(){ copiar(b.dataset.copiarMusica,'Link da música copiado!'); }; });
-            }
-            if(p){
-              /* já coloca no link que o cliente tem (a versão antiga sai) */
-              fetch('/.netlify/functions/admin-trocar-musica',{
-                method:'POST', headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},
-                body:JSON.stringify({id:p.id, url:d.url, url2:d.url2||'', letra:letra, taskId:taskId})
-              }).then(function(r3){ return r3.json().then(function(x){ return {ok:r3.ok,d:x}; }); })
-              .then(function(r3){
-                var ok=res && res.querySelector('.pnl-letra-ok');
-                if(!r3.ok){ if(ok) ok.textContent='⚠️ Música pronta, mas não consegui atualizar o link: '+((r3.d&&r3.d.erro)||'erro'); toast((r3.d&&r3.d.erro)||'Não consegui atualizar o link.'); return; }
-                if(ok) ok.textContent='✅ Música alterada e já atualizada no link do cliente!';
-                toast('Pronto! O link do cliente já toca a música alterada.');
-                setTimeout(atualizarPainel, 1500);
-              }).catch(function(){ toast('Sem conexão pra atualizar o link.'); });
+              var tb=res.querySelector('.pnl-trocar');
+              if(tb) tb.onclick=function(){
+                if(!pedirSenhaAdmin()) return;
+                if(!confirm('Trocar a música do link do cliente por essa nova?')) return;
+                tb.disabled=true; tb.textContent='Trocando...';
+                fetch('/.netlify/functions/admin-trocar-musica',{
+                  method:'POST', headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},
+                  body:JSON.stringify({id:p.id, url:d.url, url2:d.url2||'', letra:letra, taskId:taskId})
+                }).then(function(r3){ return r3.json().then(function(x){ return {ok:r3.ok,d:x}; }); })
+                .then(function(r3){
+                  if(!r3.ok){ tb.disabled=false; tb.textContent='Colocar no pedido do cliente'; toast((r3.d&&r3.d.erro)||'Não consegui trocar.'); return; }
+                  toast('Pronto! O link do cliente já toca a música nova.');
+                  atualizarPainel();
+                }).catch(function(){ tb.disabled=false; tb.textContent='Colocar no pedido do cliente'; toast('Sem conexão.'); });
+              };
             }
             return;
           }
@@ -6473,8 +6473,7 @@ function desenharPainel(pedidos, visitas, musicas){
           if(!x.url) return '<div class="pnl-pend"><span>Gerada em '+quando+' — ainda processando.</span><button type="button" class="pnl-verificar" data-verificar="'+esc(x.taskId)+'">Verificar agora</button></div>';
           return '<div class="pnl-feita"><div class="pnl-feita-t">Gerada em '+quando+'</div>'+
             pnlVersaoMusica({meuNome:nome},x.url,'Nova versão 1')+(x.url2?pnlVersaoMusica({meuNome:nome},x.url2,'Nova versão 2'):'')+
-            (p ? (p.musicaPreviewUrl===x.url ? '<div class="pnl-letra-ok">✓ Esta é a que está no link do cliente</div>'
-                 : '<button type="button" class="pnl-trocar" data-trocar-pedido="'+esc(p.id)+'" data-trocar-task="'+esc(x.taskId)+'">Colocar no pedido do cliente</button>') : '')+
+            (p?'<button type="button" class="pnl-trocar" data-trocar-pedido="'+esc(p.id)+'" data-trocar-task="'+esc(x.taskId)+'">Colocar no pedido do cliente</button>':'')+
           '</div>';
         }).join('')+'</div>';
     }
@@ -7321,7 +7320,6 @@ function montarMusicaEntrega(g, opts){
             : '<div class="mx-disco mx-disco-solo"><i></i><span class="mx-selo"><img src="'+MASCOTE+'" alt=""></span></div>')+
           '<button class="mx-play" id="mxPlay" aria-label="Tocar">'+IC.play+'</button>'+
         '</div>'+
-        (g.musicaTrocadaEm?'<div class="mx-atual">✨ Música atualizada</div>':'')+
         '<h1 class="mx-tit">'+esc(titulo)+'</h1>'+
         '<div class="mx-sub">'+esc(sub)+'</div>'+
         '<div class="mx-player">'+
