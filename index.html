@@ -701,6 +701,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mx-disco-solo~.mx-play{right:50%;bottom:50%;margin:0 -34px -34px 0;background:rgba(227,43,109,.92);}
 .mx-hero.tocando .mx-disco-solo~.mx-play{opacity:.85;}
 .mx-play svg{width:28px;height:28px;fill:#fff;}
+.mx-atual{display:inline-block;font-size:.72rem;font-weight:800;color:#3A0A1E;background:linear-gradient(180deg,#FFF0C2,#E9B94F);padding:.25rem .7rem;border-radius:100px;margin-bottom:.5rem;}
 .mx-tit{font-family:Fraunces,Georgia,serif;font-size:1.75rem;line-height:1.15;color:#fff;margin:.2rem 0 .4rem;letter-spacing:-.01em;}
 .mx-sub{font-size:.9rem;color:#E3C6D2;line-height:1.5;max-width:22rem;margin:0 auto;}
 .mx-player{margin:1.3rem 0 .4rem;}
@@ -1367,6 +1368,12 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .pnl-play{display:block;width:100%;margin:.35rem 0;padding:.6rem;border-radius:100px;border:1px solid rgba(255,255,255,.16);background:rgba(227,43,109,.2);color:#FFD3E4;font-size:.8rem;font-weight:800;}
 .pnl-mais{display:block;width:100%;margin-top:.8rem;padding:.75rem;border-radius:12px;border:1px dashed rgba(255,255,255,.25);background:rgba(255,255,255,.04);color:#F0C987;font-size:.82rem;font-weight:800;}
 .pnl-mv-trava{font-size:.7rem;color:#F0C987;}
+.pnl-mv-btn.promo{background:rgba(233,185,79,.16);border-color:rgba(233,185,79,.5);color:#FFE3A3;}
+.pnl-mv-btn.promo.feito{opacity:.6;}
+.pnl-feitas{margin-top:.5rem;background:rgba(123,92,255,.12);border:1px solid rgba(160,140,255,.4);border-radius:12px;padding:.6rem .75rem;}
+.pnl-feitas>b{display:block;font-size:.8rem;color:#CFC4FF;}
+.pnl-feita{margin-top:.4rem;}
+.pnl-feita-t{font-size:.7rem;color:#B99BA8;margin-top:.3rem;}
 .pnl-rec.enviado{opacity:.7;}
 .pnl-rec b i{font-style:normal;font-weight:700;color:#B99BA8;font-size:.72rem;}
 .pnl-modelos{margin:-.2rem 0 .9rem;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem .7rem;}
@@ -4380,7 +4387,7 @@ function desenharPasso(opts){
   el('wzNext').textContent = (k==='checkout') ? 'Pagar e gerar o link' : (k==='musicaLetra' ? 'Aprovar letra e compor música' :
     ((k==='musicaFinal' && W.ofertaDe && !W.ofertaM1) ? 'Próximo: criar a 2ª música →' : 'Continuar'));
   if(W.ofertaDe && W.produto==='musica'){
-    el('wzBody').insertAdjacentHTML('afterbegin','<div class="of-faixa">🎁 <b>Oferta de cliente:</b> 4 músicas por R$ 9,99 · '+
+    el('wzBody').insertAdjacentHTML('afterbegin','<div class="of-faixa">🎁 <b>'+(/^[pt]\./.test(String(W.ofertaDe))?'Promoção':'Oferta de cliente')+':</b> 4 músicas por R$ 9,99 · '+
       (W.ofertaM1?'<span>2ª música</span>':'<span>1ª música</span>')+'</div>');
   }
   if(W.bonusDe && W.produto==='musica'){
@@ -6062,6 +6069,7 @@ function pnlGerarComLetra(i, btn){
   var t=document.querySelector('[data-letra="'+i+'"]');
   var letra=t?t.value.trim():'';
   if(letra.length<20){ toast('Coloca a letra primeiro (pelo menos algumas linhas).'); return; }
+  if(p && !pedirSenhaAdmin()) return;
   var hist=((p&&p.musicaHistoria)||m.historia||'').trim();
   var texto=hist.length>=50?hist:(hist+'\n'+letra);
   var res=el('pnlRes'+i);
@@ -6101,25 +6109,23 @@ function pnlGerarComLetra(i, btn){
             var nome=p?(p.meuNome||'cliente'):(m.nomes||'cliente');
             var fake={meuNome:nome, whatsapp:(p&&p.whatsapp)||m.whatsapp||''};
             if(res){
-              res.innerHTML='<div class="pnl-letra-ok">✅ Música nova pronta!</div>'+
-                pnlVersaoMusica(fake,d.url,'Nova versão 1')+(d.url2?pnlVersaoMusica(fake,d.url2,'Nova versão 2'):'')+
-                (p?'<button type="button" class="pnl-trocar">Colocar no pedido do cliente</button>':'');
+              res.innerHTML='<div class="pnl-letra-ok">✅ Música nova pronta!'+(p?' Atualizando o link do cliente...':'')+'</div>'+
+                pnlVersaoMusica(fake,d.url,'Nova versão 1')+(d.url2?pnlVersaoMusica(fake,d.url2,'Nova versão 2'):'');
               res.querySelectorAll('[data-copiar-musica]').forEach(function(b){ b.onclick=function(){ copiar(b.dataset.copiarMusica,'Link da música copiado!'); }; });
-              var tb=res.querySelector('.pnl-trocar');
-              if(tb) tb.onclick=function(){
-                if(!pedirSenhaAdmin()) return;
-                if(!confirm('Trocar a música do link do cliente por essa nova?')) return;
-                tb.disabled=true; tb.textContent='Trocando...';
-                fetch('/.netlify/functions/admin-trocar-musica',{
-                  method:'POST', headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},
-                  body:JSON.stringify({id:p.id, url:d.url, url2:d.url2||'', letra:letra, taskId:taskId})
-                }).then(function(r3){ return r3.json().then(function(x){ return {ok:r3.ok,d:x}; }); })
-                .then(function(r3){
-                  if(!r3.ok){ tb.disabled=false; tb.textContent='Colocar no pedido do cliente'; toast((r3.d&&r3.d.erro)||'Não consegui trocar.'); return; }
-                  toast('Pronto! O link do cliente já toca a música nova.');
-                  atualizarPainel();
-                }).catch(function(){ tb.disabled=false; tb.textContent='Colocar no pedido do cliente'; toast('Sem conexão.'); });
-              };
+            }
+            if(p){
+              /* já coloca no link que o cliente tem (a versão antiga sai) */
+              fetch('/.netlify/functions/admin-trocar-musica',{
+                method:'POST', headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},
+                body:JSON.stringify({id:p.id, url:d.url, url2:d.url2||'', letra:letra, taskId:taskId})
+              }).then(function(r3){ return r3.json().then(function(x){ return {ok:r3.ok,d:x}; }); })
+              .then(function(r3){
+                var ok=res && res.querySelector('.pnl-letra-ok');
+                if(!r3.ok){ if(ok) ok.textContent='⚠️ Música pronta, mas não consegui atualizar o link: '+((r3.d&&r3.d.erro)||'erro'); toast((r3.d&&r3.d.erro)||'Não consegui atualizar o link.'); return; }
+                if(ok) ok.textContent='✅ Música alterada e já atualizada no link do cliente!';
+                toast('Pronto! O link do cliente já toca a música alterada.');
+                setTimeout(atualizarPainel, 1500);
+              }).catch(function(){ toast('Sem conexão pra atualizar o link.'); });
             }
             return;
           }
@@ -6150,6 +6156,15 @@ function pnlMsgRec(nome, para, link){ return PNL_MODELOS[pnlModelo()].txt(nome, 
 function pnlEnviadoGet(k){ var v=Store.get('cl_rec_'+k); return v?Number(v):0; }
 function pnlEnviadoSet(k){ Store.set('cl_rec_'+k, String(Date.now())); }
 /* ===== aba Clientes: quem comprou mais de uma vez + indicações ===== */
+function pnlMsgPromo(nome, codigo){
+  var n=String(nome||'').trim().split(' ')[0];
+  return 'Oi'+(n?' '+n:'')+'! 😊 Aqui é da Capivarinha Love 💝\n\nLiberei uma condição especial pra você:\n\n🎵 *4 músicas personalizadas por só R$ 9,99* (metade do preço!)\n✓ 2 letras diferentes\n✓ 2 estilos diferentes\n✓ 2 versões de cada\n✓ Você ouve a prévia antes de pagar\n\nAproveita aqui:\n'+location.origin+'/#/oferta/'+codigo;
+}
+function pnlBotaoPromo(chave, zap, nome, codigo){
+  if(!zap || !codigo) return '';
+  var env=pnlEnviadoGet('promo_'+chave);
+  return '<a class="pnl-mv-btn promo'+(env?' feito':'')+'" data-promo="'+esc(chave)+'" href="https://wa.me/55'+esc(zap)+'?text='+encodeURIComponent(pnlMsgPromo(nome, codigo))+'" target="_blank" rel="noopener">📣 '+(env?'Promoção enviada ✓':'Mandar promoção')+'</a>';
+}
 function pnlMsgOferta(nome, id){
   var n=String(nome||'').trim().split(' ')[0];
   return 'Oi'+(n?' '+n:'')+'! 😊 Aqui é da Capivarinha Love 💝\n\nComo você já é nosso cliente, liberei uma condição exclusiva pra você:\n\n🎵 *4 músicas personalizadas por só R$ 9,99* (metade do preço!)\n✓ 2 letras diferentes\n✓ 2 estilos diferentes\n✓ 2 versões de cada\n\nVale só por 48h:\n'+location.origin+'/#/oferta/'+id;
@@ -6173,7 +6188,7 @@ function pnlClientesHtml(pedidos){
       '<div class="meta">Última: '+pnlFmt(c.ult)+(env?' · ✓ oferta enviada '+pnlFmt(env).slice(0,5):'')+'</div></div>'+
       '<div class="vl">R$ '+fmtPreco(c.total)+'</div></div>'+
       '<div class="pnl-whats"><a href="https://wa.me/55'+esc(c.zap)+'" target="_blank" rel="noopener">'+IC.wpp+' '+esc(c.zap)+'</a></div>'+
-      '<div class="pnl-rec-acoes" style="margin-top:.5rem"><button type="button" class="pnl-mv-btn gerar" data-lib-oferta="'+esc(c.ultId)+'" data-zap="'+esc(c.zap)+'" data-nome="'+esc(c.nome||'')+'">🎁 Liberar oferta (48h)</button></div>'+
+      '<div class="pnl-rec-acoes" style="margin-top:.5rem">'+pnlBotaoPromo('z'+c.zap, c.zap, c.nome, 'p.'+c.ultId)+'</div>'+
     '</div>';
   }
   var porRef={};
@@ -6182,7 +6197,7 @@ function pnlClientesHtml(pedidos){
   var refs=Object.keys(porRef).sort(function(a,b){ return porRef[b]-porRef[a]; });
   var bonusUsados=pedidos.filter(function(p){ return p.bonusDe && p.pago; }).length;
   return '<div class="pnl-sec"><h2>💎 Compraram mais de uma vez ('+fieis.length+')</h2>'+
-      '<div class="sub">Seus melhores clientes. Toque em "Liberar oferta" (4 músicas por R$ 9,99 por 48h) e depois envie no WhatsApp.</div>'+
+      '<div class="sub">Seus melhores clientes. Toque em "Mandar promoção" (4 músicas por R$ 9,99) pra abrir o WhatsApp com a mensagem pronta.</div>'+
       '<div class="pnl-lista">'+(fieis.map(linha).join('')||'<div class="pnl-nota">Ninguém comprou 2 vezes ainda.</div>')+'</div></div>'+
     '<div class="pnl-sec"><h2>🤝 Indicações</h2>'+
       '<div class="sub">Clientes que trouxeram amigos pelo link "Indique e ganhe". Cada amigo que pagou = 1 música grátis pra quem indicou. Músicas grátis já resgatadas: <b>'+bonusUsados+'</b>.</div>'+
@@ -6362,7 +6377,12 @@ function desenharPainel(pedidos, visitas, musicas){
      seguindo o mesmo pedido do cliente (gênero, clima, voz, nomes). */
   var musPorTask={}, musPorUrl={};
   musicas.forEach(function(m){ if(m.taskId) musPorTask[m.taskId]=m; if(m.url) musPorUrl[m.url]=m; });
-  var usadas={}, itens=[];
+  var usadas={}, itens=[], doPainel={};
+  musicas.forEach(function(m){
+    if(m.origem!=='painel') return;
+    var k1=m.pedidoId?('p:'+m.pedidoId):null, k2=m.refTaskId?('t:'+m.refTaskId):null;
+    [k1,k2].forEach(function(k){ if(k){ (doPainel[k]=doPainel[k]||[]).push(m); } });
+  });
   pedidos.forEach(function(p){
     var m=(p.musicaPreviewId && musPorTask[p.musicaPreviewId]) || (p.musicaPreviewUrl && musPorUrl[p.musicaPreviewUrl]) || null;
     if(m) usadas[m.taskId]=true;
@@ -6440,6 +6460,23 @@ function desenharPainel(pedidos, visitas, musicas){
           '<button type="button" class="pnl-mv-btn" data-copiar-link="'+esc(linkRec)+'">Copiar link</button>'+
           '<button type="button" class="pnl-mv-btn" data-copiar-msg="'+esc(msgRec)+'">Copiar mensagem</button>'+
         '</div></div>';
+    }
+    if(zap) html+='<div class="pnl-rec-acoes" style="margin-top:.5rem">'+pnlBotaoPromo('z'+zap.replace(/^55(?=\d{10,11}$)/,''), zap.replace(/^55(?=\d{10,11}$)/,''), (p&&p.meuNome)||m.nomes||'', p ? 'p.'+p.id : (m.taskId ? 't.'+m.taskId : ''))+'</div>';
+    /* versões que você gerou aqui no painel (ajuste de letra) */
+    var feitas=[]; var vistos={};
+    ((p&&doPainel['p:'+p.id])||[]).concat((m.taskId&&doPainel['t:'+m.taskId])||[]).forEach(function(x){ if(!vistos[x.taskId]){ vistos[x.taskId]=1; feitas.push(x); } });
+    feitas.sort(function(a,b){ return (b.criadoEm||0)-(a.criadoEm||0); });
+    if(feitas.length){
+      html+='<div class="pnl-feitas"><b>🎛️ Versões que você gerou no painel ('+feitas.length+')</b>'+
+        feitas.map(function(x){
+          var quando=x.criadoEm?pnlFmt(x.criadoEm):'';
+          if(!x.url) return '<div class="pnl-pend"><span>Gerada em '+quando+' — ainda processando.</span><button type="button" class="pnl-verificar" data-verificar="'+esc(x.taskId)+'">Verificar agora</button></div>';
+          return '<div class="pnl-feita"><div class="pnl-feita-t">Gerada em '+quando+'</div>'+
+            pnlVersaoMusica({meuNome:nome},x.url,'Nova versão 1')+(x.url2?pnlVersaoMusica({meuNome:nome},x.url2,'Nova versão 2'):'')+
+            (p ? (p.musicaPreviewUrl===x.url ? '<div class="pnl-letra-ok">✓ Esta é a que está no link do cliente</div>'
+                 : '<button type="button" class="pnl-trocar" data-trocar-pedido="'+esc(p.id)+'" data-trocar-task="'+esc(x.taskId)+'">Colocar no pedido do cliente</button>') : '')+
+          '</div>';
+        }).join('')+'</div>';
     }
     /* letra: ver, copiar, editar e gerar de novo */
     html+='<details class="pnl-letra"'+(_pnlLetraAberta[i]?' open':'')+'><summary>📝 Letra'+(letra?'':' (sem letra salva)')+'</summary>'+
@@ -6567,6 +6604,25 @@ function desenharPainel(pedidos, visitas, musicas){
           a.innerHTML=IC.wpp+' Enviar a oferta no WhatsApp'; btn.replaceWith(a);
           toast('Oferta liberada por 48h! Agora é só enviar.');
         }).catch(function(){ btn.disabled=false; btn.textContent='🎁 Liberar oferta (48h)'; toast('Sem conexão.'); });
+    };
+  });
+  body.querySelectorAll('[data-promo]').forEach(function(a){
+    a.addEventListener('click',function(){ pnlEnviadoSet('promo_'+a.dataset.promo); a.classList.add('feito'); a.textContent='📣 Promoção enviada ✓'; });
+  });
+  body.querySelectorAll('[data-trocar-pedido]').forEach(function(tb){
+    tb.onclick=function(){
+      var mx=null; (_pnlCache.musicas||[]).forEach(function(z){ if(z.taskId===tb.dataset.trocarTask) mx=z; });
+      if(!mx || !mx.url){ toast('Essa versão ainda não está pronta.'); return; }
+      if(!pedirSenhaAdmin()) return;
+      if(!confirm('Trocar a música do link do cliente por essa versão?')) return;
+      tb.disabled=true; tb.textContent='Trocando...';
+      fetch('/.netlify/functions/admin-trocar-musica',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},
+        body:JSON.stringify({id:tb.dataset.trocarPedido, url:mx.url, url2:mx.url2||'', letra:mx.letraAprovada||mx.letra||'', taskId:mx.taskId})})
+        .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+        .then(function(r){
+          if(!r.ok){ tb.disabled=false; tb.textContent='Colocar no pedido do cliente'; toast((r.d&&r.d.erro)||'Não consegui trocar.'); return; }
+          toast('Pronto! O link do cliente já toca essa versão.'); atualizarPainel();
+        }).catch(function(){ tb.disabled=false; tb.textContent='Colocar no pedido do cliente'; toast('Sem conexão.'); });
     };
   });
   body.querySelectorAll('[data-copiar-link]').forEach(function(btn){
@@ -6798,17 +6854,19 @@ function telaOferta(id){
 function ligarQuadroOferta(id, alvoId){
   var alvo=el(alvoId); if(!alvo || !id) return;
   fetch('/.netlify/functions/oferta?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).then(function(d){
-    if(!d || !d.valida || !el(alvoId)) return;
+    if(!el(alvoId)) return;
+    var linkOf = (d && d.valida) ? '#/oferta/'+encodeURIComponent(id) : '#/oferta/p.'+encodeURIComponent(id);
+    if(!d || !d.valida) d={expiraEm:0};
     alvo.innerHTML='<div class="of-box"><div class="of-tag">🎁 Só pra quem já é cliente</div>'+
       '<div class="of-tit">Você ganhou <b>50% de desconto</b></div>'+
       '<div class="of-sub">Crie mais <b>2 músicas novas</b> (2 letras, 2 versões cada) =</div>'+
       '<div class="of-preco"><span>4 músicas</span> por <b>R$ 9,99</b></div>'+
-      '<div class="of-tempo">⏳ termina em <b id="ofTempo">--</b></div>'+
-      '<a class="of-btn" href="#/oferta/'+encodeURIComponent(id)+'">Quero minhas 4 músicas</a>'+
+      (d.expiraEm?'<div class="of-tempo">⏳ termina em <b id="ofTempo">--</b></div>':'<div class="of-tempo">🔥 Condição especial por tempo limitado</div>')+
+      '<a class="of-btn" href="'+linkOf+'">Quero minhas 4 músicas</a>'+
       '<div class="of-nota">Vale uma vez, só por este link.</div></div>';
     var iv=setInterval(function(){
       var t=el('ofTempo'); if(!t){ clearInterval(iv); return; }
-      var ms=d.expiraEm-Date.now(); if(ms<=0){ clearInterval(iv); alvo.innerHTML=''; return; }
+      var ms=d.expiraEm-Date.now(); if(ms<=0){ clearInterval(iv); return; }
       var h=Math.floor(ms/3600000), m=Math.floor(ms%3600000/60000), sg=Math.floor(ms%60000/1000);
       t.textContent=h+'h '+(m<10?'0':'')+m+'m '+(sg<10?'0':'')+sg+'s';
     },1000);
@@ -7263,6 +7321,7 @@ function montarMusicaEntrega(g, opts){
             : '<div class="mx-disco mx-disco-solo"><i></i><span class="mx-selo"><img src="'+MASCOTE+'" alt=""></span></div>')+
           '<button class="mx-play" id="mxPlay" aria-label="Tocar">'+IC.play+'</button>'+
         '</div>'+
+        (g.musicaTrocadaEm?'<div class="mx-atual">✨ Música atualizada</div>':'')+
         '<h1 class="mx-tit">'+esc(titulo)+'</h1>'+
         '<div class="mx-sub">'+esc(sub)+'</div>'+
         '<div class="mx-player">'+
@@ -7384,7 +7443,9 @@ function abrirAnuncioCliente(id){
   var tm=setTimeout(function(){
     fetch('/.netlify/functions/oferta?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).catch(function(){ return {}; }).then(function(d){
       if(!document.querySelector('.mx') || document.querySelector('.ad-fundo')) return;
-      var temOferta = d && d.valida;
+      var temOferta = true; /* a promoção 4 por R$ 9,99 é pra todo mundo */
+      var linkOf = (d && d.valida) ? '#/oferta/'+encodeURIComponent(id) : '#/oferta/p.'+encodeURIComponent(id);
+      if(!(d && d.valida)) d={};
       var linkInd=location.origin+'/#/criar/musica/r.'+encodeURIComponent(id);
       var msgInd='Olha que presente lindo 😍 Uma música personalizada com o nome e a história de quem você ama 🎵\n\n2 músicas por R$ 9,99 e você ouve a prévia antes de pagar:\n'+linkInd;
       var corpo=
@@ -7393,13 +7454,13 @@ function abrirAnuncioCliente(id){
         '<div class="ad-tit">Você ganhou um presente!</div>'+
         '<div class="ad-sub">Escolha como quer aproveitar 👇</div>'+
         (temOferta
-          ? '<a class="ad-op ad-op1" href="#/oferta/'+encodeURIComponent(id)+'">'+
+          ? '<a class="ad-op ad-op1" href="'+linkOf+'">'+
               '<span class="ad-op-tag">OPÇÃO 1 · METADE DO PREÇO</span>'+
               '<span class="ad-op-linha"><span class="ad-q">4</span><span class="ad-q-tx">músicas<br>personalizadas</span></span>'+
               '<span class="ad-preco"><s>R$ 19,98</s> <b>R$ 9,99</b></span>'+
               '<span class="ad-mini">2 letras · 2 estilos diferentes · 4 músicas completas</span>'+
               '<span class="ad-cta">Quero minhas 4 músicas →</span>'+
-              '<span class="ad-tempo">⏳ termina em <b id="adTempo">--</b></span>'+
+              (d.expiraEm?'<span class="ad-tempo">⏳ termina em <b id="adTempo">--</b></span>':'<span class="ad-tempo">🔥 Por tempo limitado</span>')+
             '</a>'+
             '<div class="ad-ou"><span>ou</span></div>'
           : '')+
