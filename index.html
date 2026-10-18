@@ -761,6 +761,9 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pnl-cortesia small{font-weight:600;opacity:.8;}
 .pnl-cortesia.enviar{border:0;background:#1FAF5F;color:#fff;}
 .pnl-cortesia.enviar svg{width:18px;height:18px;fill:#fff;}
+.card2.destaque{position:relative;border:2px solid #FFB547;background:linear-gradient(180deg,#FFF6E0,#FFFFFF);box-shadow:0 6px 18px rgba(255,181,71,.25);}
+.card2.destaque.on{border-color:#E32B6D;}
+.c2-selo{position:absolute;top:-.6rem;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:.68rem;font-weight:900;color:#7A4A00;background:#FFD27A;padding:.15rem .55rem;border-radius:100px;}
 .gen-box{margin-top:.4rem;padding:1.1rem 1rem 1rem;border-radius:20px;background:#FFF5F9;border:1.5px solid #F7D3E2;}
 .gen-tit{font-weight:900;font-size:1.05rem;}
 .gen-s{font-size:.85rem;color:var(--muted);margin-top:.2rem;line-height:1.45;}
@@ -4198,44 +4201,35 @@ function pedirWhatsapp(aoConfirmar){
 
 /* estilos musicais — os que mais tocam primeiro */
 var GENEROS_LISTA=[
-  ['sertanejo','🤠','Sertanejo atual','o que toca hoje'],['funk','🔊','Funk atual','batida de hoje'],
-  ['pagode','🪘','Pagode','descontraído e alegre'],['infantil','🧸','Infantil','leve e divertida'],
-  ['gospel','🙌','Gospel atual','louvor de hoje'],['samba','🥁','Samba','ginga brasileira'],
-  ['piseiro','🎹','Piseiro','nordestino dançante'],['romantica','💗','Romântica','violão e piano'],
-  ['rock','🎸','Rock','guitarras marcantes'],['eletronica','🎛️','Eletrônica','synths modernos'],
-  ['melody','💜','Melody','melody do Pará'],
-  ['bregamarcante','🎸','Brega marcante','brega do Pará'],
-  ['batidao','🔉','Batidão','grave de paredão'],
-  ['seresta','🌹','Seresta / Sofrência','pra sofrer junto'],
-  ['bregaromantico','💔','Brega romântico','anos 80 e 90'],
-  ['carimbo','🥁','Carimbó','raiz do Pará'],
-  ['lambada','🌺','Lambada','dançante e quente'],
-  ['forroeletronico','🎛️','Forró eletrônico','vaquejada e paredão'],
-  ['xote','🌾','Xote / Baião','forró das antigas'],
-  ['pagodao','🔥','Pagodão baiano','swingueira'],
-  ['pagode90','📼','Pagode anos 90','romântico das antigas'],
-  ['sambaraiz','🪇','Samba de raiz','roda de samba'],
-  ['sambaenredo','🎭','Samba-enredo','escola de samba'],
-  ['choro','🪈','Choro','instrumental brasileiro'],
-  ['frevo','☂️','Frevo','carnaval de Recife'],
-  ['boibumba','🐂','Boi-bumbá','toada de Parintins'],
-  ['vanera','🐎','Vanerão gaúcho','música gaúcha'],
-  ['jovemguarda','🎙️','Jovem Guarda','anos 60 do Brasil'],
-  ['rapnacional','🎧','Rap nacional','rima e batida'],
-  ['sertanejoraiz','🪕','Sertanejo raiz','viola e modão'],['funkantigo','📻','Funk antigo','anos 2000, tamborzão'],
-  ['gospeltrad','⛪','Gospel tradicional','estilo Assembleia, hino'],['catolica','✝️','Católica','música de igreja católica'],
-  ['forro','🪗','Forró','ritmo nordestino'],['arrocha','🌙','Arrocha','sofrência dançante'],
-  ['tecnobrega','💿','Tecnobrega','aparelhagem do Pará'],['bregafunk','💃','Brega funk','batidão de Recife'],
-  ['funkcria','🧢','Funk de cria','baile de favela'],['eletrofunk','⚡','Eletrofunk','funk + eletrônica'],
-  ['trap','🎤','Trap / Rap','batidas urbanas'],['pop','✨','Pop','moderno e dançante'],
-  ['mpb','☕','MPB','clássico e intimista'],['reggae','🌴','Reggae','vibe relaxada'],
-  ['anos60','🕺','Anos 60','rock e twist internacional'],['anos70','🪩','Anos 70','disco e soul internacional'],
-  ['anos80','📼','Anos 80','synth pop internacional'],['jingle','📣','Comercial / Chiclete','jingle que gruda'],
-  ['axe','🌞','Axé','festa e verão'],['bossa','🌊','Bossa Nova','suave e elegante'],
-  ['lofi','🎧','Lo-Fi','suave e tranquila'],['jazz','🎷','Jazz','sofisticado e swing'],
-  ['blues','🎺','Blues','melancólico e cru']
+  ['sertanejo','🤠','Sertanejo moderno','o que toca hoje'], ['sertanejoraiz','🪕','Sertanejo raiz','viola e modão'],
+  ['pagode','🪘','Pagode','descontraído e alegre'], ['infantil','🧸','Infantil','para criança'],
+  ['gospel','🙌','Gospel moderno','louvor de hoje'], ['gospeltrad','⛪','Gospel tradicional','estilo Assembleia, hino'],
+  ['catolica','✝️','Católica','música de igreja católica'], ['romantica','💗','Romântica','violão e piano'],
+  ['rock','🎸','Rock','guitarras marcantes'], ['eletronica','🎛️','Eletrônica','synths modernos'],
+  ['samba','🥁','Samba','ginga brasileira'], ['piseiro','🎹','Piseiro','nordestino dançante'],
+  ['arrocha','🌙','Arrocha','sofrência dançante'], ['melody','💜','Melody','melody do Pará'],
+  ['mpb','☕','MPB','clássico e intimista'], ['anos90','💿','Anos 90','hits dos anos 90'],
+  ['funk','🔊','Funk atual','batida de hoje'], ['funkantigo','📻','Funk antigo','anos 2000, tamborzão'],
+  ['rapnacional','🎧','Rap nacional','rima e batida'], ['jingle','📣','Comercial / Chiclete','jingle que gruda'],
+  ['bregafunk','💃','Brega funk','batidão de Recife'], ['pagodao','🔥','Pagodão baiano','swingueira'],
+  ['forro','🪗','Forró','ritmo nordestino'], ['forroeletronico','🎛️','Forró eletrônico','vaquejada e paredão'],
+  ['bregamarcante','🎸','Brega marcante','brega do Pará'], ['batidao','🔉','Batidão','grave de paredão'],
+  ['tecnobrega','💿','Tecnobrega','aparelhagem do Pará'], ['carimbo','🥁','Carimbó','raiz do Pará'],
+  ['seresta','🌹','Seresta / Sofrência','pra sofrer junto'], ['bregaromantico','💔','Brega romântico','anos 80 e 90'],
+  ['pagode90','📼','Pagode anos 90','romântico das antigas'], ['sambaraiz','🪇','Samba de raiz','roda de samba'],
+  ['sambaenredo','🎭','Samba-enredo','escola de samba'], ['choro','🪈','Choro','instrumental brasileiro'],
+  ['xote','🌾','Xote / Baião','forró das antigas'], ['vanera','🐎','Vanerão gaúcho','música gaúcha'],
+  ['frevo','☂️','Frevo','carnaval de Recife'], ['lambada','🌺','Lambada','dançante e quente'],
+  ['boibumba','🐂','Boi-bumbá','toada de Parintins'], ['axe','🌞','Axé','festa e verão'],
+  ['funkcria','🧢','Funk de cria','baile de favela'], ['eletrofunk','⚡','Eletrofunk','funk + eletrônica'],
+  ['jovemguarda','🎙️','Jovem Guarda','anos 60 do Brasil'], ['bossa','🌊','Bossa Nova','suave e elegante'],
+  ['anos80','📼','Anos 80','synth pop internacional'], ['anos70','🪩','Anos 70','disco e soul internacional'],
+  ['anos60','🕺','Anos 60','rock e twist internacional'], ['pop','✨','Pop','moderno e dançante'],
+  ['trap','🎤','Trap / Rap','batidas urbanas'], ['reggae','🌴','Reggae','vibe relaxada'],
+  ['lofi','🎧','Lo-Fi','suave e tranquila'], ['jazz','🎷','Jazz','sofisticado e swing'],
+  ['blues','🎺','Blues','melancólico e cru'], ['zoeira','🤪','Modo trollagem','zoeira e deboche']
 ];
-function nomeGenero(k){ for(var i=0;i<GENEROS_LISTA.length;i++) if(GENEROS_LISTA[i][0]===k) return GENEROS_LISTA[i][2]; return k||''; }
+function nomeGenero(k){ for(var i=0;i<GENEROS_LISTA.length;i++) if(GENEROS_LISTA[i][0]===k && k!=='#') return GENEROS_LISTA[i][2]; return k||''; }
 /* cartão junto (namorada/namorado...) → ao tocar, pergunta pra quem é e quem está dando */
 var PARA_DUPLO={namorado:['Namorada','Namorado'],esposa:['Esposa','Marido'],mae:['Mãe','Pai'],filho:['Filha','Filho'],
   irmao:['Irmã','Irmão'],amigo:['Amiga','Amigo'],avo:['Vó','Vô'],tio:['Tia','Tio'],sogro:['Sogra','Sogro'],padrinho:['Dinda / Madrinha','Padrinho']};
@@ -4904,15 +4898,13 @@ function htmlPasso(k){
 
   case 'musicaGenero': {
     var generos=GENEROS_LISTA;
-    var PRINC=12, todos=W._todosGeneros || generos.slice(PRINC).some(function(g){ return g[0]===W.musicaEstilo; });
-    var vis=todos?generos:generos.slice(0,PRINC);
+    var vis=generos;
     return guia("Qual estilo combina mais com vocês?")+
       '<div class="wz-t">Gênero musical</div>'+
       '<div class="cards2" id="musicaGeneroChips">'+vis.map(function(g){
-        return '<button type="button" class="card2'+(W.musicaEstilo===g[0]?' on':'')+'" data-genero="'+g[0]+'">'+
+        return '<button type="button" class="card2'+(g[4]?' destaque':'')+(W.musicaEstilo===g[0]?' on':'')+'" data-genero="'+g[0]+'">'+(g[4]?'<span class="c2-selo">👶 Pra criança</span>':'')+
           '<span class="c2-ic">'+g[1]+'</span><span class="c2-lb">'+g[2]+'</span><small class="c2-sub">'+g[3]+'</small></button>';
-      }).join('')+'</div>'+
-      (todos?'':'<button type="button" class="btn btn-ghost btn-block" id="verTodosGeneros" style="margin-top:.9rem">🎶 Ver todos os estilos (+'+(generos.length-PRINC)+')</button>');
+      }).join('')+'</div>';
   }
 
   case 'musicaClima': {
@@ -5456,7 +5448,6 @@ function ligarPasso(k){
     }
   }
   if(k==='musicaGenero'){
-    var vtg=el('verTodosGeneros'); if(vtg) vtg.onclick=function(){ W._todosGeneros=true; redesenharSemPular(); };
     on('[data-genero]','onclick',function(e){
       W.musicaEstilo=e.dataset.genero;
       redesenharSemPular();
