@@ -680,9 +680,9 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 /* botões — antes estavam brancos invisíveis */
 /* ===== página da música (premium) ===== */
 .mx{position:relative;min-height:100vh;overflow:hidden;background:#12040B;color:#F7EDF1;font-family:Inter,system-ui,sans-serif;}
-.mx-bg{position:fixed;inset:-40px;background-size:cover;background-position:center;filter:blur(38px) saturate(1.3) brightness(.45);transform:scale(1.15);z-index:0;}
-.mx-bg-sem{filter:none;transform:none;inset:0;background:radial-gradient(70% 40% at 20% 0%,rgba(227,43,109,.45),transparent 70%),radial-gradient(60% 40% at 100% 60%,rgba(140,20,70,.5),transparent 70%),radial-gradient(80% 30% at 50% 110%,rgba(233,185,79,.25),transparent 70%),linear-gradient(180deg,#2A0614,#12040B 55%,#1C0510);}
-.mx:before{content:"";position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,rgba(18,4,11,.25),rgba(18,4,11,.85) 60%,#12040B);}
+.mx-bg{position:absolute;top:-40px;left:-40px;right:-40px;height:620px;background-size:cover;background-position:center;filter:blur(30px) brightness(.45);z-index:0;pointer-events:none;}
+.mx-bg-sem{filter:none;top:0;left:0;right:0;bottom:0;height:auto;background:radial-gradient(70% 40% at 20% 0%,rgba(227,43,109,.45),transparent 70%),radial-gradient(60% 40% at 100% 60%,rgba(140,20,70,.5),transparent 70%),radial-gradient(80% 30% at 50% 110%,rgba(233,185,79,.25),transparent 70%),linear-gradient(180deg,#2A0614,#12040B 55%,#1C0510);}
+.mx:before{content:"";position:absolute;top:0;left:0;right:0;height:640px;z-index:0;pointer-events:none;background:linear-gradient(180deg,rgba(18,4,11,.25),rgba(18,4,11,.8) 70%,#12040B);}
 .mx-in{position:relative;z-index:1;max-width:30rem;margin:0 auto;padding:1.6rem 1.2rem 2.5rem;text-align:center;}
 .mx-saud{display:inline-block;font-size:.8rem;font-weight:800;letter-spacing:.03em;color:#FFE3A3;background:rgba(233,185,79,.12);border:1px solid rgba(233,185,79,.45);padding:.4rem .95rem;border-radius:100px;}
 .mx-hero{position:relative;width:250px;height:250px;margin:1.6rem auto 1.3rem;}
@@ -701,6 +701,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mx-disco-solo~.mx-play{right:50%;bottom:50%;margin:0 -34px -34px 0;background:rgba(227,43,109,.92);}
 .mx-hero.tocando .mx-disco-solo~.mx-play{opacity:.85;}
 .mx-play svg{width:28px;height:28px;fill:#fff;}
+.mx-atual{display:inline-block;font-size:.72rem;font-weight:800;color:#3A0A1E;background:linear-gradient(180deg,#FFF0C2,#E9B94F);padding:.25rem .7rem;border-radius:100px;margin-bottom:.5rem;}
 .mx-tit{font-family:Fraunces,Georgia,serif;font-size:1.75rem;line-height:1.15;color:#fff;margin:.2rem 0 .4rem;letter-spacing:-.01em;}
 .mx-sub{font-size:.9rem;color:#E3C6D2;line-height:1.5;max-width:22rem;margin:0 auto;}
 .mx-player{margin:1.3rem 0 .4rem;}
@@ -709,7 +710,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mx-barra{height:6px;border-radius:6px;background:rgba(255,255,255,.14);overflow:hidden;cursor:pointer;}
 .mx-barra i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FF6BA3,#FFD36B);border-radius:6px;}
 .mx-tempo{display:flex;justify-content:space-between;font-size:.72rem;color:#B99BA8;margin-top:.35rem;font-variant-numeric:tabular-nums;}
-.mx-lista{margin-top:.8rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:.35rem;text-align:left;backdrop-filter:blur(6px);}
+.mx-lista{margin-top:.8rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:.35rem;text-align:left;}
 .mx-fx{display:flex;align-items:center;gap:.35rem;padding:.35rem;border-radius:13px;}
 .mx-fx.on{background:rgba(227,43,109,.18);}
 .mx-fx-play{width:38px;height:38px;flex:none;border-radius:11px;border:0;background:rgba(255,255,255,.08);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font:800 .9rem Inter,sans-serif;}
@@ -753,13 +754,12 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mx-vazio{padding:4rem 1rem;color:#D8BFCB;}
 .mx .of-box{margin-top:1.3rem;}
 /* ===== anúncio do cliente ===== */
-.ad-fundo{position:fixed;inset:0;z-index:9999;background:rgba(8,2,5,.78);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;transition:opacity .3s;}
+.ad-fundo{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:99999;background:rgba(8,2,5,.88);display:flex;align-items:center;justify-content:center;padding:1rem;box-sizing:border-box;opacity:0;transition:opacity .25s;-webkit-overflow-scrolling:touch;}
 .ad-fundo.on{opacity:1;}
 .ad-card{position:relative;width:100%;max-width:23rem;max-height:94vh;overflow:auto;text-align:center;color:#fff;border-radius:28px;padding:1.5rem 1.05rem .8rem;
   background:radial-gradient(90% 45% at 50% 0%,rgba(227,43,109,.6),transparent 70%),linear-gradient(170deg,#3A0A1E,#14030A);
-  border:1.5px solid #E9B94F;box-shadow:0 30px 80px rgba(0,0,0,.65),0 0 46px rgba(233,185,79,.3);transform:translateY(30px) scale(.92);transition:transform .45s cubic-bezier(.2,1.3,.3,1);}
-.ad-fundo.on .ad-card{transform:none;}
-.ad-brilho{position:absolute;inset:0;border-radius:28px;pointer-events:none;overflow:hidden;}
+  border:1.5px solid #E9B94F;box-shadow:0 30px 80px rgba(0,0,0,.65),0 0 46px rgba(233,185,79,.3);box-sizing:border-box;}
+.ad-brilho{position:absolute;top:0;left:0;right:0;bottom:0;border-radius:28px;pointer-events:none;overflow:hidden;}
 .ad-brilho:after{content:"";position:absolute;top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.18),transparent);transform:rotate(18deg);animation:adbrilho 3.2s ease-in-out infinite;}
 @keyframes adbrilho{0%{left:-60%}55%,100%{left:130%}}
 .ad-notas i{position:absolute;font-style:normal;color:#FF8DB3;opacity:.0;font-size:1.3rem;animation:adnota 4s ease-in-out infinite;}
@@ -767,12 +767,12 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 @keyframes adnota{0%{opacity:0;transform:translateY(10px)}30%{opacity:.8}100%{opacity:0;transform:translateY(-26px) rotate(15deg)}}
 .ad-x{position:absolute;top:.6rem;right:.7rem;z-index:2;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:1.4rem;line-height:1;cursor:pointer;}
 .ad-tag{display:inline-block;font-size:.7rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#3A0A1E;background:linear-gradient(180deg,#FFF0C2,#E9B94F);padding:.3rem .8rem;border-radius:100px;}
-.ad-tit{font-family:Fraunces,Georgia,serif;font-size:1.65rem;line-height:1.1;margin-top:.55rem;animation:adpop .6s .2s both;}
+.ad-tit{font-family:Fraunces,Georgia,serif;font-size:1.65rem;line-height:1.1;margin-top:.55rem;}
 .ad-sub{font-size:.85rem;color:#F0C9D8;margin-top:.25rem;}
 @keyframes adpop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
-.ad-op{position:relative;display:block;margin-top:.8rem;padding:.9rem .85rem .85rem;border-radius:20px;text-decoration:none;color:#fff;animation:adpop .6s both;}
-.ad-op1{background:linear-gradient(165deg,rgba(255,107,163,.28),rgba(140,15,60,.5));border:1.5px solid rgba(255,141,179,.7);box-shadow:0 0 26px rgba(227,43,109,.35);animation-delay:.35s;}
-.ad-op2{background:linear-gradient(165deg,rgba(43,214,123,.22),rgba(14,80,45,.45));border:1.5px solid rgba(107,232,171,.7);box-shadow:0 0 26px rgba(31,175,95,.3);animation-delay:.5s;}
+.ad-op{position:relative;display:block;margin-top:.8rem;padding:.9rem .85rem .85rem;border-radius:20px;text-decoration:none;color:#fff;}
+.ad-op1{background:linear-gradient(165deg,rgba(255,107,163,.28),rgba(140,15,60,.5));border:1.5px solid rgba(255,141,179,.7);box-shadow:0 0 26px rgba(227,43,109,.35);}
+.ad-op2{background:linear-gradient(165deg,rgba(43,214,123,.22),rgba(14,80,45,.45));border:1.5px solid rgba(107,232,171,.7);box-shadow:0 0 26px rgba(31,175,95,.3);}
 .ad-op-tag{display:inline-block;font-size:.66rem;font-weight:900;letter-spacing:.06em;color:#fff;background:#E32B6D;padding:.22rem .65rem;border-radius:100px;}
 .ad-op-tag.verde{background:#1FAF5F;}
 .ad-op-linha{display:flex;align-items:center;justify-content:center;gap:.55rem;margin-top:.35rem;}
@@ -6068,6 +6068,7 @@ function pnlGerarComLetra(i, btn){
   var t=document.querySelector('[data-letra="'+i+'"]');
   var letra=t?t.value.trim():'';
   if(letra.length<20){ toast('Coloca a letra primeiro (pelo menos algumas linhas).'); return; }
+  if(p && !pedirSenhaAdmin()) return;
   var hist=((p&&p.musicaHistoria)||m.historia||'').trim();
   var texto=hist.length>=50?hist:(hist+'\n'+letra);
   var res=el('pnlRes'+i);
@@ -6107,25 +6108,23 @@ function pnlGerarComLetra(i, btn){
             var nome=p?(p.meuNome||'cliente'):(m.nomes||'cliente');
             var fake={meuNome:nome, whatsapp:(p&&p.whatsapp)||m.whatsapp||''};
             if(res){
-              res.innerHTML='<div class="pnl-letra-ok">✅ Música nova pronta!</div>'+
-                pnlVersaoMusica(fake,d.url,'Nova versão 1')+(d.url2?pnlVersaoMusica(fake,d.url2,'Nova versão 2'):'')+
-                (p?'<button type="button" class="pnl-trocar">Colocar no pedido do cliente</button>':'');
+              res.innerHTML='<div class="pnl-letra-ok">✅ Música nova pronta!'+(p?' Atualizando o link do cliente...':'')+'</div>'+
+                pnlVersaoMusica(fake,d.url,'Nova versão 1')+(d.url2?pnlVersaoMusica(fake,d.url2,'Nova versão 2'):'');
               res.querySelectorAll('[data-copiar-musica]').forEach(function(b){ b.onclick=function(){ copiar(b.dataset.copiarMusica,'Link da música copiado!'); }; });
-              var tb=res.querySelector('.pnl-trocar');
-              if(tb) tb.onclick=function(){
-                if(!pedirSenhaAdmin()) return;
-                if(!confirm('Trocar a música do link do cliente por essa nova?')) return;
-                tb.disabled=true; tb.textContent='Trocando...';
-                fetch('/.netlify/functions/admin-trocar-musica',{
-                  method:'POST', headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},
-                  body:JSON.stringify({id:p.id, url:d.url, url2:d.url2||'', letra:letra, taskId:taskId})
-                }).then(function(r3){ return r3.json().then(function(x){ return {ok:r3.ok,d:x}; }); })
-                .then(function(r3){
-                  if(!r3.ok){ tb.disabled=false; tb.textContent='Colocar no pedido do cliente'; toast((r3.d&&r3.d.erro)||'Não consegui trocar.'); return; }
-                  toast('Pronto! O link do cliente já toca a música nova.');
-                  atualizarPainel();
-                }).catch(function(){ tb.disabled=false; tb.textContent='Colocar no pedido do cliente'; toast('Sem conexão.'); });
-              };
+            }
+            if(p){
+              /* já coloca no link que o cliente tem (a versão antiga sai) */
+              fetch('/.netlify/functions/admin-trocar-musica',{
+                method:'POST', headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},
+                body:JSON.stringify({id:p.id, url:d.url, url2:d.url2||'', letra:letra, taskId:taskId})
+              }).then(function(r3){ return r3.json().then(function(x){ return {ok:r3.ok,d:x}; }); })
+              .then(function(r3){
+                var ok=res && res.querySelector('.pnl-letra-ok');
+                if(!r3.ok){ if(ok) ok.textContent='⚠️ Música pronta, mas não consegui atualizar o link: '+((r3.d&&r3.d.erro)||'erro'); toast((r3.d&&r3.d.erro)||'Não consegui atualizar o link.'); return; }
+                if(ok) ok.textContent='✅ Música alterada e já atualizada no link do cliente!';
+                toast('Pronto! O link do cliente já toca a música alterada.');
+                setTimeout(atualizarPainel, 1500);
+              }).catch(function(){ toast('Sem conexão pra atualizar o link.'); });
             }
             return;
           }
@@ -6473,7 +6472,8 @@ function desenharPainel(pedidos, visitas, musicas){
           if(!x.url) return '<div class="pnl-pend"><span>Gerada em '+quando+' — ainda processando.</span><button type="button" class="pnl-verificar" data-verificar="'+esc(x.taskId)+'">Verificar agora</button></div>';
           return '<div class="pnl-feita"><div class="pnl-feita-t">Gerada em '+quando+'</div>'+
             pnlVersaoMusica({meuNome:nome},x.url,'Nova versão 1')+(x.url2?pnlVersaoMusica({meuNome:nome},x.url2,'Nova versão 2'):'')+
-            (p?'<button type="button" class="pnl-trocar" data-trocar-pedido="'+esc(p.id)+'" data-trocar-task="'+esc(x.taskId)+'">Colocar no pedido do cliente</button>':'')+
+            (p ? (p.musicaPreviewUrl===x.url ? '<div class="pnl-letra-ok">✓ Esta é a que está no link do cliente</div>'
+                 : '<button type="button" class="pnl-trocar" data-trocar-pedido="'+esc(p.id)+'" data-trocar-task="'+esc(x.taskId)+'">Colocar no pedido do cliente</button>') : '')+
           '</div>';
         }).join('')+'</div>';
     }
@@ -7320,6 +7320,7 @@ function montarMusicaEntrega(g, opts){
             : '<div class="mx-disco mx-disco-solo"><i></i><span class="mx-selo"><img src="'+MASCOTE+'" alt=""></span></div>')+
           '<button class="mx-play" id="mxPlay" aria-label="Tocar">'+IC.play+'</button>'+
         '</div>'+
+        (g.musicaTrocadaEm?'<div class="mx-atual">✨ Música atualizada</div>':'')+
         '<h1 class="mx-tit">'+esc(titulo)+'</h1>'+
         '<div class="mx-sub">'+esc(sub)+'</div>'+
         '<div class="mx-player">'+
@@ -7439,7 +7440,10 @@ function ligarIndique(id, alvoId){
 /* anúncio pro cliente: aparece 2s depois de abrir o link — TODA vez que abrir/atualizar */
 function abrirAnuncioCliente(id){
   var tm=setTimeout(function(){
-    fetch('/.netlify/functions/oferta?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).catch(function(){ return {}; }).then(function(d){
+    Promise.race([
+      fetch('/.netlify/functions/oferta?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).catch(function(){ return {}; }),
+      new Promise(function(r){ setTimeout(function(){ r({}); },1500); })
+    ]).then(function(d){
       if(!document.querySelector('.mx') || document.querySelector('.ad-fundo')) return;
       var temOferta = true; /* a promoção 4 por R$ 9,99 é pra todo mundo */
       var linkOf = (d && d.valida) ? '#/oferta/'+encodeURIComponent(id) : '#/oferta/p.'+encodeURIComponent(id);
