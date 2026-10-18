@@ -66,7 +66,9 @@ const GENERO_PT = {
   boibumba:'toada de boi-bumbá de Parintins, com tambores, palmas e coro grandioso',
   vanera:'vanerão gaúcho, com gaita (acordeão), violão e baixo, ritmo de fandango',
   jovemguarda:'Jovem Guarda dos anos 60, iê-iê-iê com guitarra, órgão e bateria retrô',
-  rapnacional:'rap nacional, com batida boom bap, sample e rimas faladas'
+  rapnacional:'rap nacional, com batida boom bap, sample e rimas faladas',
+  anos90:'pop e dance dos anos 90, estilo internacional, com sintetizadores, batida eurodance e refrão marcante',
+  zoeira:'música de zoeira, estilo paródia cômica, arranjo animado, exagerado e engraçado'
 };
 
 // A Suno tende a "cair" sempre em sertanejo ou samba — são os gêneros mais
@@ -123,7 +125,9 @@ const GENERO_EVITAR = {
   boibumba:'sertanejo, eletrônico',
   vanera:'samba, eletrônico',
   jovemguarda:'trap, eletrônico',
-  rapnacional:'sertanejo, samba'
+  rapnacional:'sertanejo, samba',
+  anos90:'sertanejo, samba, trap',
+  zoeira:'balada triste, música lenta e séria'
 };
 
 // Instrução de voz em português — vai no texto que a Suno lê, não só nas
@@ -185,7 +189,9 @@ const GENEROS = {
   boibumba:'boi bumba toada, amazonian drums, big choir, epic',
   vanera:'vanerao, gaucho, accordion, acoustic guitar, southern brazil',
   jovemguarda:'jovem guarda, 60s brazilian rock, ye-ye, organ, retro guitar',
-  rapnacional:'brazilian rap, boom bap beat, sample, rap vocals'
+  rapnacional:'brazilian rap, boom bap beat, sample, rap vocals',
+  anos90:     '90s eurodance pop, retro synths, dance beat, catchy chorus, 1990s',
+  zoeira:     'comedy song, funny parody, upbeat, playful, humorous brazilian'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',

@@ -43,7 +43,9 @@ const GENERO_PT = {
   boibumba:'toada de boi-bumbá (amazônica, épica)',
   vanera:'vanerão gaúcho (alegre, de fandango)',
   jovemguarda:'Jovem Guarda dos anos 60 (iê-iê-iê, inocente e romântico)',
-  rapnacional:'rap nacional (rimas, flow e verdade)'
+  rapnacional:'rap nacional (rimas, flow e verdade)',
+  anos90:'hits dos anos 90 (pop/dance dos anos 90, refrão marcante e nostálgico)',
+  zoeira:'música de zoeira / trollagem (paródia engraçada e debochada, cheia de piadas, sem ofensa pesada e sem palavrão)'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
