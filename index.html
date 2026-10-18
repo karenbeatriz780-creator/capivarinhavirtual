@@ -678,6 +678,105 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .me-letra pre{white-space:pre-wrap;font-family:'Fraunces',serif;font-size:.86rem;
   line-height:1.85;color:#EADCE2;margin:.8rem 0 0;}
 /* botões — antes estavam brancos invisíveis */
+/* ===== página da música (premium) ===== */
+.mx{position:relative;min-height:100vh;overflow:hidden;background:#12040B;color:#F7EDF1;font-family:Inter,system-ui,sans-serif;}
+.mx-bg{position:fixed;inset:-40px;background-size:cover;background-position:center;filter:blur(38px) saturate(1.3) brightness(.45);transform:scale(1.15);z-index:0;}
+.mx-bg-sem{filter:none;transform:none;inset:0;background:radial-gradient(70% 40% at 20% 0%,rgba(227,43,109,.45),transparent 70%),radial-gradient(60% 40% at 100% 60%,rgba(140,20,70,.5),transparent 70%),radial-gradient(80% 30% at 50% 110%,rgba(233,185,79,.25),transparent 70%),linear-gradient(180deg,#2A0614,#12040B 55%,#1C0510);}
+.mx:before{content:"";position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,rgba(18,4,11,.25),rgba(18,4,11,.85) 60%,#12040B);}
+.mx-in{position:relative;z-index:1;max-width:30rem;margin:0 auto;padding:1.6rem 1.2rem 2.5rem;text-align:center;}
+.mx-saud{display:inline-block;font-size:.8rem;font-weight:800;letter-spacing:.03em;color:#FFE3A3;background:rgba(233,185,79,.12);border:1px solid rgba(233,185,79,.45);padding:.4rem .95rem;border-radius:100px;}
+.mx-hero{position:relative;width:250px;height:250px;margin:1.6rem auto 1.3rem;}
+.mx-capa{position:absolute;inset:0;border-radius:22px;overflow:hidden;box-shadow:0 26px 60px rgba(0,0,0,.6),0 0 0 1.5px rgba(255,227,163,.45);z-index:2;}
+.mx-capa img{width:100%;height:100%;object-fit:cover;display:block;}
+.mx-disco{border-radius:50%;background:repeating-radial-gradient(circle at 50% 50%,#151015 0 2px,#0b080b 2px 4px);box-shadow:0 20px 50px rgba(0,0,0,.65),inset 0 0 0 2px rgba(255,255,255,.04);}
+.mx-disco i{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 30deg,transparent 0 40deg,rgba(255,255,255,.14) 55deg,transparent 75deg 220deg,rgba(255,255,255,.1) 235deg,transparent 255deg);}
+.mx-disco-atras{position:absolute;width:230px;height:230px;top:10px;left:60px;z-index:1;transition:left .6s cubic-bezier(.2,.8,.2,1);}
+.mx-hero.tocando .mx-disco-atras{left:95px;animation:mxgira 3.2s linear infinite;}
+.mx-disco-solo{position:absolute;inset:0;}
+.mx-hero.tocando .mx-disco-solo{animation:mxgira 3.2s linear infinite;}
+.mx-selo{position:absolute;left:50%;top:50%;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;background:radial-gradient(circle,#FF7FAB,#C41857 70%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px #0b080b,0 0 0 6px rgba(233,185,79,.6);}
+.mx-selo img{width:64px;height:64px;object-fit:contain;}
+@keyframes mxgira{to{transform:rotate(360deg)}}
+.mx-play{position:absolute;z-index:3;right:-8px;bottom:-8px;width:68px;height:68px;border-radius:50%;border:0;background:linear-gradient(180deg,#FF6BA3,#E32B6D);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 28px rgba(227,43,109,.55),0 0 0 4px rgba(18,4,11,.85);cursor:pointer;}
+.mx-disco-solo~.mx-play{right:50%;bottom:50%;margin:0 -34px -34px 0;background:rgba(227,43,109,.92);}
+.mx-hero.tocando .mx-disco-solo~.mx-play{opacity:.85;}
+.mx-play svg{width:28px;height:28px;fill:#fff;}
+.mx-tit{font-family:Fraunces,Georgia,serif;font-size:1.75rem;line-height:1.15;color:#fff;margin:.2rem 0 .4rem;letter-spacing:-.01em;}
+.mx-sub{font-size:.9rem;color:#E3C6D2;line-height:1.5;max-width:22rem;margin:0 auto;}
+.mx-player{margin:1.3rem 0 .4rem;}
+.mx-agora{font-size:.8rem;color:#E3C6D2;margin-bottom:.5rem;}
+.mx-agora b{color:#FFE3A3;}
+.mx-barra{height:6px;border-radius:6px;background:rgba(255,255,255,.14);overflow:hidden;cursor:pointer;}
+.mx-barra i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FF6BA3,#FFD36B);border-radius:6px;}
+.mx-tempo{display:flex;justify-content:space-between;font-size:.72rem;color:#B99BA8;margin-top:.35rem;font-variant-numeric:tabular-nums;}
+.mx-lista{margin-top:.8rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:.35rem;text-align:left;backdrop-filter:blur(6px);}
+.mx-fx{display:flex;align-items:center;gap:.35rem;padding:.35rem;border-radius:13px;}
+.mx-fx.on{background:rgba(227,43,109,.18);}
+.mx-fx-play{width:38px;height:38px;flex:none;border-radius:11px;border:0;background:rgba(255,255,255,.08);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font:800 .9rem Inter,sans-serif;}
+.mx-fx.on .mx-fx-play{background:#E32B6D;}
+.mx-eq{display:none;align-items:flex-end;gap:2px;height:14px;}
+.mx-eq i{width:3px;background:#fff;border-radius:1px;animation:mxeq .8s ease-in-out infinite;}
+.mx-eq i:nth-child(2){animation-delay:-.3s}.mx-eq i:nth-child(3){animation-delay:-.55s}
+@keyframes mxeq{0%,100%{height:4px}50%{height:14px}}
+.mx-fx.tocando .mx-n{display:none}.mx-fx.tocando .mx-eq{display:flex}
+.mx-fx-tx{flex:1;min-width:0;border:0;background:none;color:inherit;text-align:left;padding:.2rem .3rem;cursor:pointer;font-family:inherit;}
+.mx-fx-tx b{display:block;font-size:.88rem;color:#fff;}
+.mx-fx-tx span{display:block;font-size:.74rem;color:#B99BA8;}
+.mx-fx-dl{width:38px;height:38px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;color:#FFE3A3;background:rgba(233,185,79,.12);border:1px solid rgba(233,185,79,.35);}
+.mx-fx-dl svg{width:17px;height:17px;fill:currentColor;}
+.mx-acoes{display:flex;gap:.5rem;margin-top:1rem;}
+.mx-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.45rem;padding:.85rem 1rem;border-radius:100px;font:800 .88rem Inter,sans-serif;color:#fff;text-decoration:none;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);cursor:pointer;}
+.mx-btn svg{width:17px;height:17px;fill:currentColor;}
+.mx-btn-ouro{background:linear-gradient(180deg,#FFE3A3,#E9B94F 60%,#C99530);color:#3A0A1E;border:0;box-shadow:0 10px 24px rgba(233,185,79,.3);}
+.mx-btn-zap{background:#1FAF5F;border:0;}
+.mx-btn-rosa{background:linear-gradient(180deg,#FF6BA3,#E32B6D);border:0;box-shadow:0 10px 24px rgba(227,43,109,.45);}
+.mx-dica{font-size:.72rem;color:#B99BA8;margin-top:.7rem;line-height:1.5;}
+.mx-letra{margin-top:.8rem;text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:.7rem .9rem;}
+.mx-letra summary{cursor:pointer;font-weight:800;font-size:.85rem;color:#FFE3A3;}
+.mx-letra pre{white-space:pre-wrap;font-family:Fraunces,Georgia,serif;font-size:.92rem;line-height:1.75;color:#F3E2EA;margin:.6rem 0 0;}
+.mx-share,.mx-ind,.mx-devolva{margin-top:1.3rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:1rem;}
+.mx-share>b,.mx-ind>b,.mx-devolva>b{display:block;font-size:1rem;color:#fff;}
+.mx-share>span,.mx-ind>span,.mx-devolva>span{display:block;font-size:.8rem;color:#D8BFCB;margin:.3rem 0 .75rem;line-height:1.5;}
+.mx-share-row{display:flex;gap:.5rem;}
+.mx-ind{border-color:rgba(31,175,95,.4);background:linear-gradient(160deg,rgba(31,175,95,.12),rgba(255,255,255,.04));}
+.mx-ind-top{display:inline-block;font-size:.7rem;font-weight:800;color:#0E3B22;background:#6BE8AB;padding:.2rem .65rem;border-radius:100px;margin-bottom:.5rem;}
+.mx-ind-ganhou{font-size:.9rem;color:#6BE8AB;margin-bottom:.6rem;}
+.mx-ind-num{font-size:.8rem;color:#6BE8AB;margin-bottom:.6rem;}
+.mx-ind-st .mx-btn{width:100%;margin-bottom:.6rem;}
+.mx-devolva{border-color:rgba(227,43,109,.45);background:linear-gradient(160deg,rgba(227,43,109,.18),rgba(255,255,255,.04));}
+.mx-dv-ic{font-size:2rem;}
+.mx-devolva .mx-btn{width:100%;}
+.mx-devolva small{display:block;font-size:.72rem;color:#B99BA8;margin-top:.55rem;}
+.mx-rodape{display:flex;align-items:center;justify-content:center;gap:.4rem;font-size:.74rem;color:#9C7F8B;margin-top:1.6rem;}
+.mx-rodape img{width:22px;height:22px;object-fit:contain;}
+.mx-rodape b{color:#E3C6D2;}
+.mx-vazio{padding:4rem 1rem;color:#D8BFCB;}
+.mx .of-box{margin-top:1.3rem;}
+/* ===== anúncio do cliente ===== */
+.ad-fundo{position:fixed;inset:0;z-index:9999;background:rgba(8,2,5,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;transition:opacity .3s;}
+.ad-fundo.on{opacity:1;}
+.ad-card{position:relative;width:100%;max-width:23rem;max-height:92vh;overflow:auto;text-align:center;color:#fff;border-radius:26px;padding:1.6rem 1.2rem 1rem;
+  background:radial-gradient(80% 50% at 50% 0%,rgba(227,43,109,.55),transparent 70%),linear-gradient(170deg,#3A0A1E,#160409);
+  border:1.5px solid #E9B94F;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 40px rgba(233,185,79,.25);transform:translateY(24px) scale(.96);transition:transform .35s cubic-bezier(.2,.8,.2,1);}
+.ad-fundo.on .ad-card{transform:none;}
+.ad-x{position:absolute;top:.6rem;right:.7rem;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:1.4rem;line-height:1;cursor:pointer;}
+.ad-coroa{font-size:2.2rem;}
+.ad-tag{display:inline-block;margin-top:.3rem;font-size:.7rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#3A0A1E;background:linear-gradient(180deg,#FFE3A3,#E9B94F);padding:.28rem .75rem;border-radius:100px;}
+.ad-tit{font-family:Fraunces,Georgia,serif;font-size:1.5rem;margin-top:.6rem;}
+.ad-oferta{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-top:.5rem;}
+.ad-q{font-family:Fraunces,Georgia,serif;font-size:4.2rem;line-height:1;background:linear-gradient(180deg,#FFF3C4,#E9B94F);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.ad-q-tx{text-align:left;font-weight:800;font-size:1.05rem;line-height:1.15;}
+.ad-preco{margin-top:.3rem;font-size:1rem;}
+.ad-preco s{color:#B99BA8;}
+.ad-preco b{font-size:1.9rem;color:#FFD36B;margin:0 .2rem;}
+.ad-preco em{display:block;font-style:normal;font-size:.75rem;font-weight:800;color:#FF8DB3;letter-spacing:.04em;text-transform:uppercase;}
+.ad-lista{list-style:none;padding:0;margin:.8rem auto 0;text-align:left;max-width:17rem;font-size:.84rem;line-height:1.75;color:#F0DCE5;}
+.ad-txt{font-size:.88rem;color:#F0DCE5;margin-top:.6rem;line-height:1.55;}
+.ad-cta{display:block;margin-top:1rem;padding:.95rem;border-radius:100px;background:linear-gradient(180deg,#FF6BA3,#E32B6D);color:#fff;font-weight:900;font-size:1rem;text-decoration:none;box-shadow:0 12px 26px rgba(227,43,109,.5);animation:adpulsa 1.6s ease-in-out infinite;}
+@keyframes adpulsa{50%{transform:scale(1.03)}}
+.ad-tempo{font-size:.78rem;color:#F0C987;margin-top:.55rem;}
+.ad-ind{display:block;margin-top:.8rem;font-size:.82rem;font-weight:700;color:#6BE8AB;text-decoration:none;}
+.ad-depois{margin-top:.5rem;background:none;border:0;color:#9C7F8B;font-size:.78rem;cursor:pointer;padding:.4rem;}
 .of-faixa{background:linear-gradient(90deg,#E32B6D,#B8155A);color:#fff;font-size:.82rem;border-radius:12px;padding:.6rem .8rem;margin-bottom:1rem;}
 .of-faixa span{font-weight:800;background:rgba(255,255,255,.2);padding:.1rem .5rem;border-radius:100px;margin-left:.2rem;}
 .of-m1{background:var(--tint,#FFF1F5);border:1px solid var(--rose-soft,#F5C6D4);border-radius:16px;padding:.8rem;margin-bottom:.4rem;}
@@ -2558,6 +2657,7 @@ function temAddonMusica(W){
    sempre vitalício. Tem que bater com criar-pagamento.mjs. */
 var COMBO_DA_MUSICA = { carta: 7.99, completo: 24.99 };
 function precoTotal(W){
+  if(W.bonusDe) return 0;
   if(W.comboDaMusica && COMBO_DA_MUSICA[W.produto]!=null){
     return PACOTES.musica.preco + COMBO_DA_MUSICA[W.produto];
   }
@@ -3280,7 +3380,11 @@ function navegar(){
   if(r.nome==='pago' && r.arg){ telaConfirmando(r.arg); return; }
   if(r.nome==='extras' && r.arg){ telaExtras(r.arg); return; }
   if(r.nome==='sucesso' && r.arg){ telaSucesso(r.arg); return; }
-  if(r.nome==='criar'){ telaWizard(r.arg); return; }
+  if(r.nome==='criar'){
+    if(r.arg2 && r.arg2.indexOf('r.')===0){ try{ Store.set('cl_ref', JSON.stringify({id:r.arg2.slice(2), em:Date.now()})); }catch(e){} }
+    telaWizard(r.arg); return;
+  }
+  if(r.nome==='bonus' && r.arg){ telaBonus(r.arg); return; }
   if(r.nome==='meus'){ telaMeus(); return; }
   if(r.nome==='avaliar' && r.arg){ telaAvaliar(r.arg); return; }
   if(r.nome==='ouvir' && r.arg){ telaOuvir(r.arg); return; }
@@ -4262,6 +4366,10 @@ function desenharPasso(opts){
     el('wzBody').insertAdjacentHTML('afterbegin','<div class="of-faixa">🎁 <b>Oferta de cliente:</b> 4 músicas por R$ 9,99 · '+
       (W.ofertaM1?'<span>2ª música</span>':'<span>1ª música</span>')+'</div>');
   }
+  if(W.bonusDe && W.produto==='musica'){
+    el('wzBody').insertAdjacentHTML('afterbegin','<div class="of-faixa">🎁 <b>Música grátis</b> por indicação · 2 versões</div>');
+    if(k==='checkout') el('wzNext').textContent='Gerar minha música grátis';
+  }
   el('wzNext').style.display = (k==='produto') ? 'none' : '';
   var sk=el('wzSkip'); sk.style.display='none';
   if(k==='jogos'){ sk.style.display=''; sk.textContent='Pular os jogos'; sk.onclick=function(){ proximoPasso(true); }; }
@@ -4820,6 +4928,7 @@ function htmlPasso(k){
       linhas+='<div class="sum-r"><span>Trilha sonora</span><span>Incluída</span></div>';
     if(temAddonMusica(W))
       linhas+='<div class="sum-r"><span>Música personalizada</span><span>+ R$ '+fmtPreco(PRECO_MUSICA_ADDON)+'</span></div>';
+    if(W.bonusDe) linhas='<div class="sum-r"><span>🎁 Música grátis por indicação</span><span>2 versões</span></div>';
     if(W.ofertaM1) linhas='<div class="sum-r"><span>🎁 Oferta de cliente</span><span>4 músicas</span></div>'+
       '<div class="sum-r"><span>Música 1 ('+esc(W.ofertaM1.estilo||'')+')</span><span>2 versões</span></div>'+
       '<div class="sum-r"><span>Música 2 ('+esc(W.musicaEstilo||'')+')</span><span>2 versões</span></div>';
@@ -5552,6 +5661,7 @@ function finalizar(){
     if(wIn){ wIn.focus(); wIn.classList.add('erro'); }
     return;
   }
+  if(W.ofertaDe || W.bonusDe){ finalizarDeVerdade(); return; }
   abrirUpsell(function(){ finalizarDeVerdade(); });
 }
 function finalizarDeVerdade(){
@@ -5562,12 +5672,19 @@ function finalizarDeVerdade(){
   if(btn){ btn.disabled=true; btn.textContent='Gerando o Pix...'; }
   var boxErro=el('pagErro');
   if(boxErro){ boxErro.style.display='none'; }
+  if(!W.refDe && !W.bonusDe){
+    try{ var rf=JSON.parse(Store.get('cl_ref')||'null'); if(rf && rf.id && Date.now()-rf.em < 7*86400000) W.refDe=rf.id; }catch(e){}
+  }
   fetch('/.netlify/functions/criar-pagamento', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({presente:W})
   })
   .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
   .then(function(res){
+    if(res.ok && res.d && res.d.gratis && res.d.presente){
+      salvarPresente(res.d.presente); toast('🎁 Sua música grátis foi liberada!');
+      telaSucesso(res.d.id); return;
+    }
     if(!res.ok || !res.d || !res.d.payload){
       var msg=(res.d && res.d.erro) || 'Não consegui gerar o Pix. Tenta de novo em instantes.';
       toast(msg);
@@ -5694,36 +5811,7 @@ function telaConfirmandoDemorado(id){
 function linkBaixarMusica(id, v){ return '/.netlify/functions/baixar-musica?id='+encodeURIComponent(id)+'&v='+(v||1); }
 var DICA_BAIXAR='<div class="hint dica-baixar">Não baixou? Se abriu pelo WhatsApp ou Instagram, toque nos 3 pontinhos ⋮ e escolha <b>"Abrir no navegador"</b>.</div>';
 function telaSucessoMusica(id, g){
-  var link=linkPresente(id);
-  var url=g.musicaPreviewUrl;
-  var titulo=g.musicaParaNome ? ('Melodia para '+g.musicaParaNome) : 'Sua música personalizada';
-  var msg='Fiz uma música pra você 🎵 '+link;
-  el('app').innerHTML=
-    '<div class="wz-top"><a class="wz-back" href="#/">'+IC.back+'</a>'+
-      '<div class="wz-track"><div class="wz-fill" style="width:100%"></div></div>'+
-      '<span class="wz-count">Pronto!</span></div>'+
-    '<div class="wz-wrap">'+
-      '<div class="ms-hero">'+
-        '<div class="ms-capa"><div class="ms-disco">🎵</div></div>'+
-        '<div class="ms-tit">'+esc(titulo)+'</div>'+
-        '<div class="ms-sub">Sua música completa está liberada</div>'+
-        (url ? '<audio class="ms-audio" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="'+esc(url)+'"></audio>' : '')+
-      '</div>'+
-      (url
-        ? (g.ofertaM1 && g.ofertaM1.url ? '<div class="of-claro" style="margin-top:1rem">🎁 Suas <b>4 músicas</b> estão liberadas.</div>'+
-            '<a class="btn btn-ghost btn-block" href="'+linkBaixarMusica(id,3)+'" download style="margin-top:.6rem">'+IC.download+' Música 1 · versão 1</a>'+
-            (g.ofertaM1.url2?'<a class="btn btn-ghost btn-block" href="'+linkBaixarMusica(id,4)+'" download style="margin-top:.6rem">'+IC.download+' Música 1 · versão 2</a>':'') : '')+
-          '<a class="btn btn-primary btn-block btn-lg" href="'+linkBaixarMusica(id,1)+'" download style="margin-top:1.3rem">'+IC.download+(g.ofertaM1?' Música 2 · versão 1':' Baixar em MP3'+(g.musicaPreviewUrl2?' (versão 1)':''))+'</a>'+
-          (g.musicaPreviewUrl2?'<a class="btn btn-ghost btn-block" href="'+linkBaixarMusica(id,2)+'" download style="margin-top:.6rem">'+IC.download+' Baixar versão 2</a>':'')+DICA_BAIXAR
-        : '')+
-      '<a class="btn btn-ghost btn-block" href="https://wa.me/?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener" style="margin-top:.7rem">'+IC.wpp+' Enviar no WhatsApp</a>'+
-      '<div class="link-box" style="margin-top:1.1rem"><input id="lkTxt" readonly value="'+esc(link)+'">'+
-        '<button class="btn btn-primary" id="lkCopy" style="padding:.75rem 1.2rem">Copiar</button></div>'+
-      '<div class="hint" style="text-align:center;margin-top:.5rem">Esse link abre a página da música, pra quem você quiser mandar.</div>'+
-      '<a class="btn btn-ghost btn-block" href="#/meus" style="margin-top:1.2rem">Ver minhas músicas</a>'+
-    '</div>';
-  var cp=el('lkCopy');
-  if(cp) cp.onclick=function(){ copiar(link,'Link copiado!'); };
+  montarMusicaEntrega(g, {cliente:true, sucesso:true});
 }
 
 function telaSucesso(id){
@@ -5925,7 +6013,7 @@ function pnlVersaoMusica(p, url, rotulo, soOuvir){
     .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.mp3';
   var zap=String(p.whatsapp||'').replace(/\D/g,'');
   /* pedido com id → manda a página do presente (as 2 versões + baixar/compartilhar), não o arquivo solto */
-  var linkEnvio = p.id ? (location.origin+'/#/p/'+p.id) : url;
+  var linkEnvio = p.id ? (location.origin+'/#/p/'+p.id+'/c') : url;
   var msgZap='Oi! Aqui está a sua música do Capivarinha Love 🎵\n\n'+linkEnvio+'\n\nNesse link você ouve as 2 versões e baixa no celular 😊';
   return '<div class="pnl-mv"><div class="pnl-mv-tit">🎵 '+esc(rotulo)+'</div>'+
     '<button type="button" class="pnl-play" data-tocar="'+esc(url)+'">▶ Ouvir</button>'+
@@ -6044,6 +6132,49 @@ function pnlModelo(){ var k=parseInt(Store.get('cl_pnl_modelo'),10); return (k>=
 function pnlMsgRec(nome, para, link){ return PNL_MODELOS[pnlModelo()].txt(nome, para, link); }
 function pnlEnviadoGet(k){ var v=Store.get('cl_rec_'+k); return v?Number(v):0; }
 function pnlEnviadoSet(k){ Store.set('cl_rec_'+k, String(Date.now())); }
+/* ===== aba Clientes: quem comprou mais de uma vez + indicações ===== */
+function pnlMsgOferta(nome, id){
+  var n=String(nome||'').trim().split(' ')[0];
+  return 'Oi'+(n?' '+n:'')+'! 😊 Aqui é da Capivarinha Love 💝\n\nComo você já é nosso cliente, liberei uma condição exclusiva pra você:\n\n🎵 *4 músicas personalizadas por só R$ 9,99* (metade do preço!)\n✓ 2 letras diferentes\n✓ 2 estilos diferentes\n✓ 2 versões de cada\n\nVale só por 48h:\n'+location.origin+'/#/oferta/'+id;
+}
+function pnlClientesHtml(pedidos){
+  var grupos={};
+  pedidos.forEach(function(p){
+    if(!p.pago || p.cancelado || p.bonusDe) return;
+    var z=String(p.whatsapp||'').replace(/\D/g,''); if(z.length>11 && z.indexOf('55')===0) z=z.slice(2);
+    if(z.length<10) return;
+    var gq=grupos[z]||(grupos[z]={zap:z, nome:'', n:0, total:0, ult:0, ultId:null});
+    gq.n++; gq.total+=Number(p.valor)||0;
+    var q=pnlQuando(p); if(q>=gq.ult){ gq.ult=q; gq.ultId=p.id; gq.nome=p.meuNome||gq.nome; }
+  });
+  var lista=Object.keys(grupos).map(function(k){ return grupos[k]; }).sort(function(a,b){ return b.n-a.n || b.ult-a.ult; });
+  var fieis=lista.filter(function(c){ return c.n>=2; }), uma=lista.filter(function(c){ return c.n<2; });
+  function linha(c){
+    var env=pnlEnviadoGet('of_'+c.ultId);
+    return '<div class="pnl-row-wrap"><div class="pnl-row"><div>'+
+      '<div class="nm">'+esc(c.nome||'(sem nome)')+(c.n>=2?'<span class="selo pago">'+c.n+' compras</span>':'')+'</div>'+
+      '<div class="meta">Última: '+pnlFmt(c.ult)+(env?' · ✓ oferta enviada '+pnlFmt(env).slice(0,5):'')+'</div></div>'+
+      '<div class="vl">R$ '+fmtPreco(c.total)+'</div></div>'+
+      '<div class="pnl-whats"><a href="https://wa.me/55'+esc(c.zap)+'" target="_blank" rel="noopener">'+IC.wpp+' '+esc(c.zap)+'</a></div>'+
+      '<div class="pnl-rec-acoes" style="margin-top:.5rem"><button type="button" class="pnl-mv-btn gerar" data-lib-oferta="'+esc(c.ultId)+'" data-zap="'+esc(c.zap)+'" data-nome="'+esc(c.nome||'')+'">🎁 Liberar oferta (48h)</button></div>'+
+    '</div>';
+  }
+  var porRef={};
+  pedidos.forEach(function(p){ if(p.refDe && p.pago && !p.cancelado && !p.bonusDe){ porRef[p.refDe]=(porRef[p.refDe]||0)+1; } });
+  var nomes={}; pedidos.forEach(function(p){ nomes[p.id]=p.meuNome||''; });
+  var refs=Object.keys(porRef).sort(function(a,b){ return porRef[b]-porRef[a]; });
+  var bonusUsados=pedidos.filter(function(p){ return p.bonusDe && p.pago; }).length;
+  return '<div class="pnl-sec"><h2>💎 Compraram mais de uma vez ('+fieis.length+')</h2>'+
+      '<div class="sub">Seus melhores clientes. Toque em "Liberar oferta" (4 músicas por R$ 9,99 por 48h) e depois envie no WhatsApp.</div>'+
+      '<div class="pnl-lista">'+(fieis.map(linha).join('')||'<div class="pnl-nota">Ninguém comprou 2 vezes ainda.</div>')+'</div></div>'+
+    '<div class="pnl-sec"><h2>🤝 Indicações</h2>'+
+      '<div class="sub">Clientes que trouxeram amigos pelo link "Indique e ganhe". Cada amigo que pagou = 1 música grátis pra quem indicou. Músicas grátis já resgatadas: <b>'+bonusUsados+'</b>.</div>'+
+      '<div class="pnl-lista">'+(refs.map(function(r){ return '<div class="pnl-row-wrap"><div class="pnl-row"><div class="nm">'+esc(nomes[r]||r)+'</div><div class="vl">'+porRef[r]+' 🤝</div></div><div class="meta" style="font-size:.72rem;color:#B99BA8;margin-top:.2rem">'+porRef[r]+' amigo(s) indicado(s) que pagaram</div></div>'; }).join('')||'<div class="pnl-nota">Nenhuma indicação paga ainda.</div>')+'</div></div>'+
+    '<div class="pnl-sec"><h2>🙂 Compraram 1 vez ('+uma.length+')</h2>'+
+      '<div class="sub">Também dá pra mandar a oferta pra eles voltarem.</div>'+
+      '<div class="pnl-lista">'+(uma.slice(0,_pnlLimite).map(linha).join('')||'<div class="pnl-nota">—</div>')+
+      (uma.length>_pnlLimite?'<button type="button" class="pnl-mais" data-mais>Ver mais ('+(uma.length-_pnlLimite)+' restantes)</button>':'')+'</div></div>';
+}
 function desenharPainel(pedidos, visitas, musicas){
   var body=el('pnlBody'); if(!body) return;
   body.style.opacity='1';
@@ -6331,6 +6462,7 @@ function desenharPainel(pedidos, visitas, musicas){
     '<div class="pnl-abas" id="pnlAbas">'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='pagos'?' on':'')+'" data-aba="pagos">💰 Pagos</button>'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='musicas'?' on':'')+'" data-aba="musicas">🎵 Músicas</button>'+
+      '<button type="button" class="pnl-aba'+(_pnlAba==='clientes'?' on':'')+'" data-aba="clientes">👥 Clientes</button>'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='dados'?' on':'')+'" data-aba="dados">📊 Dados</button>'+
     '</div>'+
     (_pnlAba==='pagos'
@@ -6344,6 +6476,7 @@ function desenharPainel(pedidos, visitas, musicas){
         '<div class="sub">Tudo num lugar só: quem gerou, quem pagou e quem só ouviu a prévia. Abra a letra pra copiar, ajustar ou gerar de novo.</div>'+
         '<div class="pnl-lista">'+musicasHtml+'</div></div>'
       : '')+
+    (_pnlAba==='clientes' ? pnlClientesHtml(pedidos) : '')+
     (_pnlAba==='dados'
       ? '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
         '<div class="pnl-sec"><h2>Vendas por hora</h2>'+
@@ -6402,6 +6535,22 @@ function desenharPainel(pedidos, visitas, musicas){
       pnlEnviadoSet(a.dataset.enviado);
       var box=a.closest('.pnl-rec'); if(box){ box.classList.add('enviado'); var t=box.querySelector('b'); if(t && !t.querySelector('i')) t.insertAdjacentHTML('beforeend',' <i>✓ enviado agora</i>'); }
     });
+  });
+  body.querySelectorAll('[data-lib-oferta]').forEach(function(btn){
+    btn.onclick=function(){
+      if(!pedirSenhaAdmin()) return;
+      btn.disabled=true; btn.textContent='Liberando...';
+      fetch('/.netlify/functions/admin-oferta',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({id:btn.dataset.libOferta})})
+        .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+        .then(function(res){
+          if(!res.ok){ btn.disabled=false; btn.textContent='🎁 Liberar oferta (48h)'; toast((res.d&&res.d.erro)||'Não consegui liberar.'); return; }
+          pnlEnviadoSet('of_'+btn.dataset.libOferta);
+          var a=document.createElement('a'); a.className='pnl-mv-btn zap'; a.target='_blank'; a.rel='noopener';
+          a.href='https://wa.me/55'+btn.dataset.zap+'?text='+encodeURIComponent(pnlMsgOferta(btn.dataset.nome, btn.dataset.libOferta));
+          a.innerHTML=IC.wpp+' Enviar a oferta no WhatsApp'; btn.replaceWith(a);
+          toast('Oferta liberada por 48h! Agora é só enviar.');
+        }).catch(function(){ btn.disabled=false; btn.textContent='🎁 Liberar oferta (48h)'; toast('Sem conexão.'); });
+    };
   });
   body.querySelectorAll('[data-copiar-link]').forEach(function(btn){
     btn.onclick=function(){ copiar(btn.dataset.copiarLink, 'Link copiado!'); };
@@ -7046,123 +7195,231 @@ function ilustracaoTema(tema){
 /* =========================================================
    ENTREGA — Música Personalizada (produto avulso, sem nomes/casal)
    ========================================================= */
-function montarMusicaEntrega(g){
+/* =========================================================
+   PÁGINA DA MÚSICA (link entregue)
+   - quem RECEBE o presente (#/p/<id>): surpresa + "devolva o carinho"
+   - quem COMPROU (#/p/<id>/c, link que o painel manda): + oferta exclusiva,
+     anúncio (2s), indique e ganhe
+   ========================================================= */
+function montarMusicaEntrega(g, opts){
+  opts=opts||{};
   document.body.style.overflow='auto';
+  var cliente = !!opts.cliente || rota().arg2==='c';
   var url=g.musicaPreviewUrl;
-  var de=(g.meuNome||'').trim();
+  var de=(g.meuNome||'').trim().split(' ')[0];
   var para=(g.musicaParaNome||g.parceiroNome||'').trim();
-  var titulo = para ? ('Uma música pra '+para) : 'Uma música pra você';
-  var assinatura = de ? ('de '+de) : '';
-  var capaFoto=g.musicaCapa||(g.fotos||[]).filter(Boolean)[0]||g.capa||null;
+  var capa=g.musicaCapa||(g.fotos||[]).filter(Boolean)[0]||g.capa||null;
   var letra=(g.musicaLetra||'').trim();
-  var msgShare='Fiz uma surpresa pra você 🎵 '+location.href;
+  var linkReceber=linkPresente(g.id);
   var faixas=[];
   if(g.ofertaM1 && g.ofertaM1.url){
-    faixas.push({rot:'Música 1 · V1', url:g.ofertaM1.url, v:3});
-    if(g.ofertaM1.url2) faixas.push({rot:'Música 1 · V2', url:g.ofertaM1.url2, v:4});
-    if(url) faixas.push({rot:'Música 2 · V1', url:url, v:1});
-    if(g.musicaPreviewUrl2) faixas.push({rot:'Música 2 · V2', url:g.musicaPreviewUrl2, v:2});
+    faixas.push({rot:'Música 1', sub:'Versão 1'+(g.ofertaM1.estilo?' · '+g.ofertaM1.estilo:''), url:g.ofertaM1.url, v:3});
+    if(g.ofertaM1.url2) faixas.push({rot:'Música 1', sub:'Versão 2'+(g.ofertaM1.estilo?' · '+g.ofertaM1.estilo:''), url:g.ofertaM1.url2, v:4});
+    if(url) faixas.push({rot:'Música 2', sub:'Versão 1'+(g.musicaEstilo?' · '+g.musicaEstilo:''), url:url, v:1});
+    if(g.musicaPreviewUrl2) faixas.push({rot:'Música 2', sub:'Versão 2'+(g.musicaEstilo?' · '+g.musicaEstilo:''), url:g.musicaPreviewUrl2, v:2});
   } else if(url){
-    faixas.push({rot:'Versão 1', url:url, v:1});
-    if(g.musicaPreviewUrl2) faixas.push({rot:'Versão 2', url:g.musicaPreviewUrl2, v:2});
+    faixas.push({rot:para?('Pra '+para):'Sua música', sub:'Versão 1', url:url, v:1});
+    if(g.musicaPreviewUrl2) faixas.push({rot:para?('Pra '+para):'Sua música', sub:'Versão 2', url:g.musicaPreviewUrl2, v:2});
   }
+  if(!faixas.length){
+    el('app').innerHTML='<div class="mx"><div class="mx-in"><div class="mx-vazio">Essa música ainda não foi gerada. Se você criou esse presente, volta em "Meus presentes" e gera a prévia antes de enviar o link.</div></div></div>';
+    return;
+  }
+  var saud = cliente
+    ? (opts.sucesso ? '✅ Pagamento confirmado' : '🎧 Suas músicas estão aqui')
+    : (para ? ('Oi, '+para+'! 💌') : 'Oi! 💌');
+  var titulo = cliente
+    ? (faixas.length>2 ? 'Suas 4 músicas estão prontas' : (para ? 'A música pra '+para+' está pronta' : 'Sua música está pronta'))
+    : (de ? (de+' fez uma surpresa pra você') : 'Alguém fez uma surpresa pra você');
+  var sub = cliente
+    ? 'Ouça, baixe no celular e envie pra quem você ama.'
+    : 'Uma música feita só pra você, com a história de vocês. Dá o play 🎶';
 
   el('app').innerHTML=
-    '<div class="musica-entrega">'+
-      '<div class="me-brilho"></div>'+
-      '<div class="me-selo">🎁 Uma surpresa pra você</div>'+
-      '<div class="me-album" id="meAlbum">'+
-        (capaFoto
-          ? '<img class="me-capa-img" src="'+esc(capaFoto)+'" alt="">'
-          : '<div class="me-capa-vazia"><span>🎵</span></div>')+
-        '<div class="me-vidro"></div>'+
-        (url ? '<button class="me-play" id="mePlay">'+IC.play+'</button>' : '')+
+    '<div class="mx'+(capa?' com-capa':'')+'">'+
+      (capa?'<div class="mx-bg" style="background-image:url(\''+esc(capa)+'\')"></div>':'<div class="mx-bg mx-bg-sem"></div>')+
+      '<div class="mx-in">'+
+        '<div class="mx-saud">'+esc(saud)+'</div>'+
+        '<div class="mx-hero" id="mxHero">'+
+          (capa
+            ? '<div class="mx-disco mx-disco-atras"><i></i></div><div class="mx-capa"><img src="'+esc(capa)+'" alt=""></div>'
+            : '<div class="mx-disco mx-disco-solo"><i></i><span class="mx-selo"><img src="'+MASCOTE+'" alt=""></span></div>')+
+          '<button class="mx-play" id="mxPlay" aria-label="Tocar">'+IC.play+'</button>'+
+        '</div>'+
+        '<h1 class="mx-tit">'+esc(titulo)+'</h1>'+
+        '<div class="mx-sub">'+esc(sub)+'</div>'+
+        '<div class="mx-player">'+
+          '<div class="mx-agora" id="mxAgora"></div>'+
+          '<div class="mx-barra" id="mxBarraWrap"><i id="mxBarra"></i></div>'+
+          '<div class="mx-tempo"><span id="mxAtual">0:00</span><span id="mxTotal">--:--</span></div>'+
+        '</div>'+
+        '<audio id="mxAudio" preload="metadata"></audio>'+
+        '<div class="mx-lista">'+faixas.map(function(f,i){
+          return '<div class="mx-fx" data-fx="'+i+'">'+
+            '<button type="button" class="mx-fx-play" data-tocafx="'+i+'"><span class="mx-n">'+(i+1)+'</span><span class="mx-eq"><i></i><i></i><i></i></span></button>'+
+            '<button type="button" class="mx-fx-tx" data-tocafx="'+i+'"><b>'+esc(f.rot)+'</b><span>'+esc(f.sub)+'</span></button>'+
+            '<a class="mx-fx-dl" href="'+linkBaixarMusica(g.id,f.v)+'" download aria-label="Baixar">'+IC.download+'</a>'+
+          '</div>';
+        }).join('')+'</div>'+
+        '<div class="mx-acoes">'+
+          '<button type="button" class="mx-btn mx-btn-ouro" id="mxEnviarAudio">'+IC.wpp+' Enviar o áudio</button>'+
+          '<a class="mx-btn" id="mxBaixar" href="'+linkBaixarMusica(g.id,faixas[0].v)+'" download>'+IC.download+' Baixar MP3</a>'+
+        '</div>'+
+        '<div class="mx-dica">Não baixou? Se abriu pelo WhatsApp ou Instagram, toque nos 3 pontinhos ⋮ e escolha <b>"Abrir no navegador"</b>.</div>'+
+        ((g.ofertaM1&&g.ofertaM1.letra) ? '<details class="mx-letra"><summary>📝 Letra da música 1</summary><pre>'+esc(g.ofertaM1.letra)+'</pre></details>' : '')+
+        (letra ? '<details class="mx-letra"><summary>📝 '+(g.ofertaM1?'Letra da música 2':'Ver a letra')+'</summary><pre>'+esc(letra)+'</pre></details>' : '')+
+        (cliente
+          ? '<div class="mx-share"><b>Mande pra quem vai receber</b><span>Esse link abre a música como surpresa, sem os seus botões de cliente.</span>'+
+              '<div class="mx-share-row"><a class="mx-btn mx-btn-zap" href="https://wa.me/?text='+encodeURIComponent('Fiz uma surpresa pra você 🎵💝 '+linkReceber)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar a surpresa</a>'+
+              '<button type="button" class="mx-btn" id="mxCopiar">'+IC.link+' Copiar link</button></div></div>'+
+            '<div id="meOferta"></div>'+
+            '<div id="mxIndica"></div>'
+          : '<div class="mx-devolva"><div class="mx-dv-ic">💝</div><b>Devolva o carinho</b>'+
+              '<span>Faça uma música personalizada pra '+(de?esc(de):'quem te enviou')+', com a história de vocês. Fica pronta em minutos.</span>'+
+              '<a class="mx-btn mx-btn-rosa" href="#/criar/musica/r.'+encodeURIComponent(g.id)+'">🎵 Criar uma música pra '+(de?esc(de):'essa pessoa')+'</a>'+
+              '<small>2 músicas por R$ 9,99 · prévia grátis antes de pagar</small></div>')+
+        '<div class="mx-rodape"><img src="'+MASCOTE+'" alt=""> Feito com carinho no <b>Capivarinha Love</b></div>'+
       '</div>'+
-      '<div class="me-tit">'+esc(titulo)+'</div>'+
-      (assinatura ? '<div class="me-assina">'+esc(assinatura)+'</div>' : '')+
-      (url ?
-        (faixas.length>1?'<div class="me-versoes'+(faixas.length>2?' quatro':'')+'" id="meVersoes">'+faixas.map(function(f,i){ return '<button type="button" class="'+(i===0?'on':'')+'" data-fx="'+i+'">'+f.rot+'</button>'; }).join('')+'</div>':'')+
-        '<div class="me-eq" id="meEq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>'+
-        '<div class="me-barra" id="meBarraWrap"><i id="meBarra"></i></div>'+
-        '<div class="me-tempo"><span id="meAtual">0:00</span><span id="meTotal">--:--</span></div>'+
-        '<audio id="meAudio" src="'+esc(faixas[0].url)+'" preload="metadata"></audio>'+
-        (g.ofertaM1 && g.ofertaM1.letra ? '<details class="me-letra"><summary>📝 Letra da música 1</summary><pre>'+esc(g.ofertaM1.letra)+'</pre></details>' : '')+
-        (letra ? '<details class="me-letra"><summary>📝 '+(g.ofertaM1?'Letra da música 2':'Ver a letra')+'</summary><pre>'+esc(letra)+'</pre></details>' : '')+
-        '<div class="me-acoes">'+
-          faixas.map(function(f){ return '<a class="me-btn" href="'+linkBaixarMusica(g.id,f.v)+'" download>'+IC.download+(faixas.length>1?'Baixar '+f.rot.toLowerCase():'Baixar MP3')+'</a>'; }).join('')+
-          '<button type="button" class="me-btn zap" id="meEnviarAudio">'+IC.wpp+'Enviar o áudio</button>'+
-          '<a class="me-btn" href="https://wa.me/?text='+encodeURIComponent(msgShare)+'" target="_blank" rel="noopener">🔗 Mandar o link</a>'+
-        '</div>'+DICA_BAIXAR+
-        '<div id="meOferta"></div>'+
-        '<div class="me-rodape">Feito com carinho no Capivarinha Love</div>'
-        : '<div class="me-vazio">Essa música ainda não foi gerada. Se você é quem criou esse presente, volta em "Meus presentes" e gera a prévia antes de enviar o link.</div>'
-      )+
     '</div>';
-  if(!url) return;
 
-  var audio=el('meAudio'), btn=el('mePlay'), album=el('meAlbum'), eq=el('meEq');
-  var tocando=false, versao=faixas[0].v;
-  ligarQuadroOferta(g.id,'meOferta');
-  var vs=el('meVersoes');
-  if(vs) vs.querySelectorAll('[data-fx]').forEach(function(b){
-    b.onclick=function(){
-      var fx=faixas[Number(b.dataset.fx)]; versao=fx.v;
-      vs.querySelectorAll('[data-fx]').forEach(function(x){ x.classList.toggle('on', x===b); });
-      var eraTocando=tocando;
-      audio.pause(); audio.src = fx.url;
-      el('meAtual').textContent='0:00'; el('meTotal').textContent='--:--'; var bb=el('meBarra'); if(bb) bb.style.width='0%';
-      if(eraTocando){ audio.play().catch(function(){}); }
-    };
+  var audio=el('mxAudio'), btn=el('mxPlay'), hero=el('mxHero');
+  var atual=0, tocando=false;
+  function fmtT(s){ if(!isFinite(s)) return '--:--'; var m=Math.floor(s/60), r=Math.floor(s%60); return m+':'+(r<10?'0':'')+r; }
+  function marcar(){
+    document.querySelectorAll('.mx-fx').forEach(function(x,i){ x.classList.toggle('on', i===atual); x.classList.toggle('tocando', i===atual && tocando); });
+    hero.classList.toggle('tocando', tocando);
+    btn.innerHTML = tocando ? IC.pause : IC.play;
+    el('mxAgora').innerHTML='<b>'+esc(faixas[atual].rot)+'</b> · '+esc(faixas[atual].sub);
+    var bx=el('mxBaixar'); if(bx) bx.href=linkBaixarMusica(g.id, faixas[atual].v);
+  }
+  function carregar(i, tocar){
+    atual=i; audio.src=faixas[i].url; el('mxAtual').textContent='0:00'; el('mxTotal').textContent='--:--'; el('mxBarra').style.width='0%';
+    if(tocar){ tocando=true; audio.play().catch(function(){ tocando=false; marcar(); }); }
+    marcar();
+  }
+  carregar(0,false);
+  btn.onclick=function(){
+    if(tocando){ audio.pause(); tocando=false; }
+    else { tocando=true; audio.play().catch(function(){ tocando=false; marcar(); }); }
+    marcar();
+  };
+  document.querySelectorAll('[data-tocafx]').forEach(function(b){
+    b.onclick=function(){ var i=Number(b.dataset.tocafx); if(i===atual){ btn.onclick(); } else { carregar(i,true); } };
   });
-  /* manda o MP3 de verdade (arquivo) pelo WhatsApp/Instagram/etc. usando o compartilhar do celular */
-  var envA=el('meEnviarAudio');
-  if(envA) envA.onclick=function(){
-    var nomeArq='musica-'+((para||'presente').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-'))+'-'+versao+'.mp3';
-    var txtOrig=envA.innerHTML; envA.disabled=true; envA.innerHTML='Preparando o áudio...';
-    function volta(){ envA.disabled=false; envA.innerHTML=txtOrig; }
-    fetch(linkBaixarMusica(g.id, versao)).then(function(r){ if(!r.ok) throw 0; return r.blob(); }).then(function(blob){
-      var f=new File([blob], nomeArq, {type:'audio/mpeg'});
-      if(navigator.canShare && navigator.canShare({files:[f]})){
-        return navigator.share({files:[f], title:titulo}).then(volta, volta);
-      }
-      /* celular sem compartilhar arquivo: baixa direto */
+  audio.onloadedmetadata=function(){ el('mxTotal').textContent=fmtT(audio.duration); };
+  audio.ontimeupdate=function(){
+    el('mxAtual').textContent=fmtT(audio.currentTime);
+    if(audio.duration) el('mxBarra').style.width=(audio.currentTime/audio.duration*100)+'%';
+  };
+  audio.onended=function(){ if(atual<faixas.length-1) carregar(atual+1,true); else { tocando=false; marcar(); } };
+  el('mxBarraWrap').onclick=function(ev){ if(!audio.duration) return; var r=this.getBoundingClientRect(); audio.currentTime=((ev.clientX-r.left)/r.width)*audio.duration; };
+  aoSair(function(){ try{ audio.pause(); }catch(e){} });
+
+  /* enviar o MP3 de verdade pelo compartilhar do celular */
+  var envA=el('mxEnviarAudio');
+  envA.onclick=function(){
+    var f=faixas[atual];
+    var nomeArq='musica-'+((para||'presente').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-'))+'-'+f.v+'.mp3';
+    var orig=envA.innerHTML; envA.disabled=true; envA.innerHTML='Preparando o áudio...';
+    function volta(){ envA.disabled=false; envA.innerHTML=orig; }
+    fetch(linkBaixarMusica(g.id, f.v)).then(function(r){ if(!r.ok) throw 0; return r.blob(); }).then(function(blob){
+      var arq=new File([blob], nomeArq, {type:'audio/mpeg'});
+      if(navigator.canShare && navigator.canShare({files:[arq]})) return navigator.share({files:[arq], title:titulo}).then(volta, volta);
       var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nomeArq; document.body.appendChild(a); a.click();
       setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },4000);
       toast('Áudio baixado! Agora é só mandar pelo WhatsApp.'); volta();
-    }).catch(function(){ volta(); location.href=linkBaixarMusica(g.id, versao); });
+    }).catch(function(){ volta(); location.href=linkBaixarMusica(g.id, f.v); });
   };
-  function fmtT(s){
-    if(!isFinite(s)) return '--:--';
-    var m=Math.floor(s/60), r=Math.floor(s%60);
-    return m+':'+(r<10?'0':'')+r;
+  var cp=el('mxCopiar'); if(cp) cp.onclick=function(){ copiar(linkReceber,'Link copiado!'); };
+
+  if(cliente){
+    ligarQuadroOferta(g.id,'meOferta');
+    ligarIndique(g.id,'mxIndica');
+    abrirAnuncioCliente(g.id);
   }
-  audio.onloadedmetadata=function(){ el('meTotal').textContent=fmtT(audio.duration); };
-  audio.ontimeupdate=function(){
-    el('meAtual').textContent=fmtT(audio.currentTime);
-    var b=el('meBarra');
-    if(b && audio.duration) b.style.width=(audio.currentTime/audio.duration*100)+'%';
-  };
-  btn.onclick=function(){
-    tocando=!tocando;
-    if(tocando){
-      audio.play().catch(function(){ tocando=false; });
-      btn.innerHTML=IC.pause; btn.classList.add('tocando');
-      album.classList.add('tocando'); eq.classList.add('on');
-    } else {
-      audio.pause(); btn.innerHTML=IC.play; btn.classList.remove('tocando');
-      album.classList.remove('tocando'); eq.classList.remove('on');
+}
+
+/* Indique e ganhe — cada amigo que comprar pelo link = 1 música grátis (2 versões) */
+function ligarIndique(id, alvoId){
+  var alvo=el(alvoId); if(!alvo) return;
+  var linkInd=location.origin+'/#/criar/musica/r.'+encodeURIComponent(id);
+  var msg='Olha que presente lindo 😍 Uma música personalizada com o nome e a história de quem você ama 🎵\n\n2 músicas por R$ 9,99 e você ouve a prévia antes de pagar:\n'+linkInd;
+  alvo.innerHTML='<div class="mx-ind"><div class="mx-ind-top">🎁 Indique e ganhe</div>'+
+    '<b>Ganhe 2 músicas personalizadas grátis</b>'+
+    '<span>Mande seu link pra um amigo. Quando ele comprar, você ganha <b>1 música nova com 2 versões</b>, de graça.</span>'+
+    '<div class="mx-ind-st" id="mxIndSt"></div>'+
+    '<div class="mx-share-row"><a class="mx-btn mx-btn-zap" href="https://wa.me/?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">'+IC.wpp+' Indicar no WhatsApp</a>'+
+    '<button type="button" class="mx-btn" id="mxIndCop">'+IC.link+' Copiar link</button></div></div>';
+  el('mxIndCop').onclick=function(){ copiar(msg,'Mensagem de indicação copiada!'); };
+  fetch('/.netlify/functions/indicacao?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).then(function(d){
+    var st=el('mxIndSt'); if(!st || !d) return;
+    if(d.disponiveis>0){
+      st.innerHTML='<div class="mx-ind-ganhou">🎉 Você tem <b>'+d.disponiveis+' música'+(d.disponiveis>1?'s':'')+' grátis</b> por indicação!</div>'+
+        '<a class="mx-btn mx-btn-ouro" href="#/bonus/'+encodeURIComponent(id)+'">Criar minha música grátis</a>';
+    } else if(d.confirmadas>0){
+      st.innerHTML='<div class="mx-ind-num">Indicações confirmadas: <b>'+d.confirmadas+'</b></div>';
     }
-  };
-  audio.onended=function(){
-    tocando=false; btn.innerHTML=IC.play; btn.classList.remove('tocando');
-    album.classList.remove('tocando'); eq.classList.remove('on');
-  };
-  var barraWrap=el('meBarraWrap');
-  if(barraWrap) barraWrap.onclick=function(ev){
-    if(!audio.duration) return;
-    var r=barraWrap.getBoundingClientRect();
-    audio.currentTime=((ev.clientX-r.left)/r.width)*audio.duration;
-  };
+  }).catch(function(){});
+}
+
+/* anúncio pro cliente: aparece 2s depois de abrir o link (uma vez por visita) */
+function abrirAnuncioCliente(id){
+  var chave='cl_anuncio_'+id;
+  try{ if(sessionStorage.getItem(chave)) return; }catch(e){}
+  var tm=setTimeout(function(){
+    fetch('/.netlify/functions/oferta?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).then(function(d){
+      if(!document.querySelector('.mx')) return;
+      try{ sessionStorage.setItem(chave,'1'); }catch(e){}
+      var temOferta = d && d.valida;
+      var linkInd=location.origin+'/#/criar/musica/r.'+encodeURIComponent(id);
+      var corpo = temOferta
+        ? '<div class="ad-coroa">👑</div>'+
+          '<div class="ad-tag">Acesso exclusivo · só pra clientes</div>'+
+          '<div class="ad-tit">Condição especial pra você</div>'+
+          '<div class="ad-oferta"><span class="ad-q">4</span><span class="ad-q-tx">músicas<br>personalizadas</span></div>'+
+          '<div class="ad-preco"><s>R$ 19,98</s> <b>R$ 9,99</b><em>metade do preço</em></div>'+
+          '<ul class="ad-lista"><li>✓ 2 letras diferentes</li><li>✓ 2 estilos totalmente diferentes</li><li>✓ 2 versões de cada = <b>4 músicas completas</b></li><li>✓ Prévia grátis antes de pagar</li></ul>'+
+          '<a class="ad-cta" href="#/oferta/'+encodeURIComponent(id)+'">Quero minhas 4 músicas</a>'+
+          '<div class="ad-tempo">⏳ Termina em <b id="adTempo">--</b></div>'+
+          '<a class="ad-ind" href="https://wa.me/?text='+encodeURIComponent('Olha que presente lindo 😍 Música personalizada com o nome de quem você ama 🎵 '+linkInd)+'" target="_blank" rel="noopener">💌 Ou indique um amigo e ganhe 2 músicas</a>'
+        : '<div class="ad-coroa">🎁</div>'+
+          '<div class="ad-tag">Só pra clientes</div>'+
+          '<div class="ad-tit">Indique e ganhe 2 músicas</div>'+
+          '<div class="ad-txt">Mande seu link pra um amigo. Quando ele comprar, você ganha <b>1 música nova com 2 versões</b>, de graça.</div>'+
+          '<a class="ad-cta" href="https://wa.me/?text='+encodeURIComponent('Olha que presente lindo 😍 Música personalizada com o nome de quem você ama 🎵 2 músicas por R$ 9,99: '+linkInd)+'" target="_blank" rel="noopener">Indicar no WhatsApp</a>';
+      var m=document.createElement('div'); m.className='ad-fundo';
+      m.innerHTML='<div class="ad-card" role="dialog" aria-label="Oferta exclusiva"><button class="ad-x" aria-label="Fechar">&times;</button>'+corpo+
+        '<button class="ad-depois">Agora não</button></div>';
+      document.body.appendChild(m);
+      requestAnimationFrame(function(){ m.classList.add('on'); });
+      function fechar(){ m.classList.remove('on'); setTimeout(function(){ m.remove(); },300); clearInterval(iv); }
+      m.querySelector('.ad-x').onclick=fechar; m.querySelector('.ad-depois').onclick=fechar;
+      m.onclick=function(e){ if(e.target===m) fechar(); };
+      m.querySelectorAll('a[href^="#"]').forEach(function(a){ a.addEventListener('click',fechar); });
+      var iv=setInterval(function(){
+        var t=document.getElementById('adTempo'); if(!t || !d.expiraEm) return;
+        var ms=d.expiraEm-Date.now(); if(ms<=0){ t.textContent='0h'; return; }
+        var h=Math.floor(ms/3600000), mi=Math.floor(ms%3600000/60000), sg=Math.floor(ms%60000/1000);
+        t.textContent=h+'h '+(mi<10?'0':'')+mi+'m '+(sg<10?'0':'')+sg+'s';
+      },1000);
+      aoSair(fechar);
+    }).catch(function(){});
+  },2000);
+  aoSair(function(){ clearTimeout(tm); });
+}
+
+/* resgate da música grátis por indicação: #/bonus/<id do pedido de quem indicou> */
+function telaBonus(id){
+  el('app').innerHTML='<div class="g-scope"><div class="expired"><img src="'+MASCOTE+'" alt="" style="animation:float 2.4s ease-in-out infinite"><h2 style="font-family:Fraunces;font-size:1.4rem">Conferindo seu presente...</h2></div></div>';
+  fetch('/.netlify/functions/indicacao?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).then(function(d){
+    if(!d || d.disponiveis<1){
+      el('app').innerHTML='<div class="g-scope"><div class="expired"><img src="'+MASCOTE+'" alt=""><h2 style="font-family:Fraunces;font-size:1.4rem">Você ainda não tem música grátis</h2>'+
+        '<p style="color:#B99BA8;font-size:.9rem;max-width:22rem;line-height:1.6">Indique um amigo pelo seu link. Quando ele comprar, a sua música grátis libera aqui.</p>'+
+        '<a class="btn btn-primary" href="#/p/'+encodeURIComponent(id)+'/c" style="margin-top:.6rem">Voltar pras minhas músicas</a></div></div>';
+      return;
+    }
+    W=null; telaWizard('musica'); W.bonusDe=id; desenharPasso();
+  }).catch(function(){ telaPresenteNaoEncontrado(); });
 }
 
 function montarConvite(g){
