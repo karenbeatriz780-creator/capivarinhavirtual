@@ -242,20 +242,16 @@ export default async (req) => {
       });
     }
 
-    const p1 = chamar('openai/gpt-5.4', true);
-    // Plano B: modelos rápidos de empresas diferentes, chamados juntos. Se algum
-    // estiver desativado na Unifically, os outros cobrem. Custam centavos.
-    const reservas = primeiroOk([
-      chamar('google/gemini-3.8-flash', true),
-      chamar('anthropic/claude-haiku-5-5', false),
-      chamar('anthropic/claude-haiku-4-5', false),
-      chamar('google/gemini-3.7-flash', true)
-    ]);
-    // Em segundo plano dá pra esperar o GPT-5.4 bem mais.
-    const T1 = longo ? 55000 : 14000, T2 = longo ? 85000 : 26000, T3 = longo ? 95000 : 27000;
-    let conteudo = await Promise.race([p1, espera(T1)]);
-    if (!conteudo) conteudo = await Promise.race([reservas, espera(T2 - (Date.now() - t0))]);
-    if (!conteudo) conteudo = await Promise.race([p1, espera(T3 - (Date.now() - t0))]);
+    // Só o GPT-5.4 (era o único que acertava sempre). Antes 4 modelos reserva
+    // eram chamados JUNTOS em toda letra — gastavam requisição mesmo sem uso.
+    // Em segundo plano (até 15 min) dá pra esperar bem e tentar 2 vezes.
+    const LIMITE = longo ? 95000 : 26000;
+    const resta = () => LIMITE - (Date.now() - t0);
+    let conteudo = await Promise.race([chamar('openai/gpt-5.4', true), espera(resta())]);
+    if (!conteudo && longo && resta() > 40000) {
+      console.log('GPT-5.4 falhou, tentando de novo...');
+      conteudo = await Promise.race([chamar('openai/gpt-5.4', true), espera(resta())]);
+    }
     if (!conteudo) {
       return json({ erro: 'Não consegui escrever a letra agora. Tenta de novo em instantes.' }, 502);
     }
