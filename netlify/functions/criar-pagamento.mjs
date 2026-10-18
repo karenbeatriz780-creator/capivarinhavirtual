@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 import { statusOferta, registrarTentativa } from './_oferta.mjs';
+import { statusIndicacao, registrarIndicado, registrarUso } from './_indicacao.mjs';
 
 const PACOTES = {
   completo:  { nome: 'Retrospectiva Completa', preco: 19, preco48: 9.99 },
@@ -60,6 +61,28 @@ export default async (req) => {
         }
         await registrarTentativa(String(presente.ofertaDe), presente.id);
       }
+    }
+
+    // INDIQUE E GANHE — pedido grátis (resgate de indicação): libera na hora, sem Pix.
+    if (presente.bonusDe) {
+      const refB = String(presente.bonusDe);
+      const st = await statusIndicacao(refB);
+      if (presente.produto !== 'musica' || st.disponiveis < 1) {
+        return json({ erro: 'Você ainda não tem música grátis disponível.' }, 400);
+      }
+      delete presente.ofertaDe; delete presente.ofertaM1; delete presente.refDe;
+      const agoraB = Date.now();
+      const salvoB = Object.assign({}, presente, {
+        pago: true, criadoEm: agoraB, pagoEm: agoraB, duracao: 'vitalicio', expiraEm: null,
+        pagamento: { provedor: 'bonus', status: 'CONCLUIDA', valor: 0, duracao: 'vitalicio', pagoEm: agoraB }
+      });
+      await getStore('presentes').setJSON(presente.id, salvoB);
+      await registrarUso(refB, presente.id);
+      return json({ gratis: true, id: presente.id, presente: salvoB });
+    }
+    // Veio pelo link de indicação de outro cliente → conta pra ele quando pagar
+    if (presente.refDe && String(presente.refDe) !== String(presente.id)) {
+      try { await registrarIndicado(String(presente.refDe), presente.id); } catch (e) {}
     }
 
     const pacote = PACOTES[presente.produto];

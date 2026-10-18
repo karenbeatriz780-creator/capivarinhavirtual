@@ -13,7 +13,8 @@ export async function statusOferta(id) {
   const presentes = getStore('presentes');
   const g = await presentes.get(id, { type: 'json' });
   if (!g || !g.pago || g.cancelado || g.produto !== 'musica') return { valida: false, motivo: 'pedido' };
-  const expiraEm = pagoEmDe(g) + OFERTA_MS;
+  // o painel pode reabrir a oferta por mais 48h pra cliente antigo (ofertaLiberadaAte)
+  const expiraEm = Math.max(pagoEmDe(g) + OFERTA_MS, Number(g.ofertaLiberadaAte) || 0);
   if (Date.now() > expiraEm) return { valida: false, motivo: 'expirou', expiraEm };
   const reg = await getStore('ofertas').get(id, { type: 'json' });
   for (const nid of (reg && reg.tentativas) || []) {

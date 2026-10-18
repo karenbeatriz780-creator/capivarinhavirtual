@@ -122,6 +122,9 @@ export default async (req) => {
         musicaVoz: g.musicaVoz || '',
         musicaHistoria: String(g.musicaTexto || '').slice(0, 1500),
         ofertaDe: g.ofertaDe || null,
+        refDe: g.refDe || null,
+        bonusDe: g.bonusDe || null,
+        ofertaLiberadaAte: g.ofertaLiberadaAte || null,
         ofertaM1: g.ofertaM1 ? { url: g.ofertaM1.url || null, url2: g.ofertaM1.url2 || null, id: g.ofertaM1.id || null, letra: g.ofertaM1.letra || null, estilo: g.ofertaM1.estilo || '', paraNome: g.ofertaM1.paraNome || '' } : null
       });
     }
