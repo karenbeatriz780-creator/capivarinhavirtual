@@ -34,7 +34,12 @@ const GENERO_PT = {
   blues:'blues, com guitarra elétrica de blues, gaita e levada arrastada',
   axe:'axé baiano, com percussão de carnaval, metais e guitarra baiana',
   lofi:'lo-fi, com batida suave, textura de vinil e teclado sonhador',
-  infantil:'música infantil, alegre e simples, com xilofone e melodia cantarolável'
+  infantil:'música infantil, alegre e simples, com xilofone e melodia cantarolável',
+  anos80:'pop rock dos anos 80, com sintetizadores analógicos, bateria eletrônica com reverb e guitarra retrô',
+  eletrofunk:'eletrofunk, com batida de funk acelerada misturada com sintetizadores e drops eletrônicos',
+  bregafunk:'brega funk recifense, com batida de brega funk, teclado e graves marcados',
+  funkcria:'funk de cria, funk de favela com batida de baile pesada, 808 e vocal falado e marrento',
+  jingle:'jingle comercial de rádio, curto, alegre e chiclete, com refrão grudento e produção pop limpa'
 };
 
 // A Suno tende a "cair" sempre em sertanejo ou samba — são os gêneros mais
@@ -59,7 +64,12 @@ const GENERO_EVITAR = {
   blues:'sertanejo, samba',
   axe:'sertanejo',
   lofi:'sertanejo, samba',
-  infantil:'sertanejo, samba'
+  infantil:'sertanejo, samba',
+  anos80:'sertanejo, samba, trap',
+  eletrofunk:'sertanejo, samba, rock',
+  bregafunk:'sertanejo, samba, rock',
+  funkcria:'sertanejo, samba, pop',
+  jingle:'sertanejo romântico, balada lenta'
 };
 
 // Instrução de voz em português — vai no texto que a Suno lê, não só nas
@@ -89,14 +99,20 @@ const GENEROS = {
   blues:      'blues, electric blues guitar, slow shuffle, harmonica',
   axe:        'axé, carnival percussion, brass section, upbeat dance',
   lofi:       'lo-fi, mellow beat, vinyl texture, chill',
-  infantil:   "children's song, playful melody, xylophone, simple bright arrangement"
+  infantil:   "children's song, playful melody, xylophone, simple bright arrangement",
+  anos80:     '80s synth pop, retro analog synths, gated reverb drums, new wave, 1980s',
+  eletrofunk: 'eletrofunk, brazilian funk, electro synths, edm drops, fast baile beat',
+  bregafunk:  'brega funk, recife brega funk beat, keyboard, heavy bass, danceable',
+  funkcria:   'funk de favela, baile funk, heavy 808, tamborzão, spoken rap vocals, street',
+  jingle:     'commercial jingle, catchy hook, upbeat pop, radio ad, short and memorable'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
   romantica:'romântico e apaixonado', calma:'calmo e suave',
   nostalgica:'nostálgico, de saudade', festiva:'festivo, de celebração',
   energetica:'energético e vibrante', divertida:'divertido e bem-humorado',
-  inspiradora:'inspirador, de superação', melancolica:'melancólico'
+  inspiradora:'inspirador, de superação', melancolica:'melancólico',
+  triste:'triste e emocionante', zoeira:'engraçado e debochado, de zoeira'
 };
 // O clima tem que mudar o ARRANJO, não só a letra. Sem isso, "rock animado"
 // sai com a mesma pegada de "rock melancólico".
@@ -110,12 +126,15 @@ const CLIMA_ARRANJO = {
   energetica:'andamento rápido, execução intensa e crua, instrumentos com força total',
   divertida:'andamento saltitante, arranjo leve e brincalhão',
   inspiradora:'crescimento gradual até um final grandioso e triunfante',
-  melancolica:'andamento lento, arranjo contido e sentido'
+  melancolica:'andamento lento, arranjo contido e sentido',
+  triste:'andamento lento, piano e cordas, arranjo triste e emocionado',
+  zoeira:'andamento animado, arranjo cômico e exagerado, com efeitos engraçados'
 };
 const CLIMAS = {
   alegre:'joyful', emocionante:'emotional', romantica:'romantic', calma:'gentle',
   nostalgica:'nostalgic', festiva:'celebratory', energetica:'energetic',
-  divertida:'playful', inspiradora:'uplifting', melancolica:'melancholic'
+  divertida:'playful', inspiradora:'uplifting', melancolica:'melancholic',
+  triste:'sad, emotional', zoeira:'funny, comedic, humorous'
 };
 const VOZES = { masculina:'male vocals', feminina:'female vocals', dueto:'male and female duet vocals' };
 
@@ -125,7 +144,9 @@ const VOZES = { masculina:'male vocals', feminina:'female vocals', dueto:'male a
 const NICHO_TEXTO = {
   namorada:'a namorada', namorado:'o namorado', esposa:'a esposa', marido:'o marido',
   mae:'a mãe', pai:'o pai', irma:'a irmã', irmao:'o irmão',
-  amiga:'a melhor amiga', amigo:'o melhor amigo', filho:'o filho ou filha'
+  amiga:'a melhor amiga', amigo:'o melhor amigo', filho:'o filho ou filha',
+  avo:'a avó ou avô', tio:'a tia ou tio', sogro:'a sogra ou sogro', padrinho:'a madrinha ou padrinho',
+  comercial:'uma empresa (propaganda)'
 };
 // O que a letra NUNCA pode fazer em cada nicho — evita constrangimento
 const NICHO_EVITAR = {
@@ -135,7 +156,12 @@ const NICHO_EVITAR = {
   irmao:'A letra é entre irmãos: nunca use linguagem romântica.',
   amiga:'A letra é sobre amizade: nunca use linguagem romântica ou de paixão.',
   amigo:'A letra é sobre amizade: nunca use linguagem romântica ou de paixão.',
-  filho:'A letra é de pai/mãe para filho: nunca use linguagem romântica.'
+  filho:'A letra é de pai/mãe para filho: nunca use linguagem romântica.',
+  avo:'Para avó/avô: nunca use linguagem romântica.',
+  tio:'Para tia/tio: nunca use linguagem romântica.',
+  sogro:'Para sogra/sogro: nunca use linguagem romântica.',
+  padrinho:'Para madrinha/padrinho: nunca use linguagem romântica.',
+  comercial:'É um jingle de propaganda: cite a marca no refrão, nada romântico.'
 };
 const RELACOES_TAG = {
   namorada:'romantic love song for a girlfriend', namorado:'romantic love song for a boyfriend',

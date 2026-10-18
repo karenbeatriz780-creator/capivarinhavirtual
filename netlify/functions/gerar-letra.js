@@ -13,14 +13,19 @@ const GENERO_PT = {
   pop:'pop moderno', rock:'rock', mpb:'MPB', bossa:'bossa nova', gospel:'gospel de adoração',
   samba:'samba', pagode:'pagode', forro:'forró pé de serra', piseiro:'piseiro',
   funk:'funk carioca', trap:'trap', eletronica:'música eletrônica', reggae:'reggae',
-  jazz:'jazz', blues:'blues', axe:'axé baiano', lofi:'lo-fi', infantil:'música infantil'
+  jazz:'jazz', blues:'blues', axe:'axé baiano', lofi:'lo-fi', infantil:'música infantil',
+  anos80:'pop/rock dos anos 80, retrô', eletrofunk:'eletrofunk', bregafunk:'brega funk',
+  funkcria:'funk de cria (funk de favela, ritmo de baile, gírias de quebrada)',
+  jingle:'jingle comercial chiclete (refrão curto, grudento e repetitivo, fácil de decorar)'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
   romantica:'romântico e apaixonado', calma:'calmo e suave',
   nostalgica:'nostálgico, de saudade', festiva:'festivo, de celebração',
   energetica:'energético e vibrante', divertida:'divertido e bem-humorado',
-  inspiradora:'inspirador, de superação', melancolica:'melancólico'
+  inspiradora:'inspirador, de superação', melancolica:'melancólico',
+  triste:'triste, de saudade e dor, emocionante',
+  zoeira:'MODO TROLLAGEM / ZOEIRA: engraçado, debochado, com piadas e provocações de brincadeira (zoeira entre amigos), exagerado e cômico — mas sem ofensa pesada, sem palavrão pesado e sem preconceito'
 };
 const NICHO_TEXTO = {
   namorada:'é para a namorada da pessoa — tom de romance', namorado:'é para o namorado da pessoa — tom de romance',
@@ -28,7 +33,17 @@ const NICHO_TEXTO = {
   mae:'é de um filho/filha para a mãe — gratidão e amor filial', pai:'é de um filho/filha para o pai — gratidão e amor filial',
   irma:'é entre irmãos — carinho e cumplicidade de família', irmao:'é entre irmãos — carinho e cumplicidade de família',
   amiga:'é para a melhor amiga — amizade', amigo:'é para o melhor amigo — amizade',
-  filho:'é de um pai/mãe para o filho(a) — amor incondicional de pai/mãe'
+  filho:'é de um pai/mãe para o filho(a) — amor incondicional de pai/mãe',
+  avo:'é de um neto/neta para a avó ou avô — carinho, gratidão e memórias de família',
+  tio:'é para a tia ou tio — carinho de família',
+  sogro:'é para a sogra ou sogro — respeito, carinho e gratidão de família',
+  padrinho:'é para a madrinha (dinda) ou padrinho — carinho, gratidão e cuidado',
+  comercial:'é um JINGLE / PROPAGANDA de uma empresa ou marca — não é homenagem pessoal: fale do negócio, dos produtos/serviços e dos diferenciais, cite o nome da marca várias vezes (principalmente no refrão) e termine com uma chamada pra ação'
+};
+// Pra quem é, já com o gênero de quem recebe (cartões que juntam ela/ele)
+const REL_GENERO = {
+  avo:['a avó','o avô'], tio:['a tia','o tio'], sogro:['a sogra','o sogro'],
+  padrinho:['a madrinha (dinda)','o padrinho'], filho:['a filha','o filho']
 };
 const NICHO_EVITAR = {
   mae:'A letra é de filho para mãe: NUNCA use linguagem romântica ou de casal.',
@@ -37,7 +52,12 @@ const NICHO_EVITAR = {
   irmao:'A letra é entre irmãos: NUNCA use linguagem romântica.',
   amiga:'A letra é sobre amizade: NUNCA use linguagem romântica ou de paixão.',
   amigo:'A letra é sobre amizade: NUNCA use linguagem romântica ou de paixão.',
-  filho:'A letra é de pai/mãe para filho: NUNCA use linguagem romântica.'
+  filho:'A letra é de pai/mãe para filho: NUNCA use linguagem romântica.',
+  avo:'A letra é para avó/avô: NUNCA use linguagem romântica.',
+  tio:'A letra é para tia/tio: NUNCA use linguagem romântica.',
+  sogro:'A letra é para sogra/sogro: NUNCA use linguagem romântica.',
+  padrinho:'A letra é para madrinha/padrinho: NUNCA use linguagem romântica.',
+  comercial:'É propaganda: NUNCA use linguagem romântica nem de homenagem pessoal.'
 };
 const VOZ_PT = {
   masculina:'a música será cantada por uma voz masculina — se precisar de concordância de gênero no texto, use a masculina',
@@ -73,6 +93,9 @@ function montarPrompt(p) {
   var genDesc = GENERO_PT[p.estilo] || GENERO_PT.romantica;
   var climaDesc = CLIMA_PT[p.clima] || '';
   var relacaoDesc = NICHO_TEXTO[p.relacao] || 'é uma homenagem pessoal';
+  var gIdx = p.paraGen === 'ela' ? 0 : (p.paraGen === 'ele' ? 1 : -1);
+  if (REL_GENERO[p.relacao] && gIdx >= 0) relacaoDesc = 'é para ' + REL_GENERO[p.relacao][gIdx] + ' de quem está dando a música — ' + relacaoDesc.split('—').slice(1).join('—').trim();
+  if (p.relacao === 'outro' && p.paraOutro) relacaoDesc = 'é para: ' + p.paraOutro + ' (descrito por quem pediu)' + (gIdx === 0 ? ' — quem recebe é MULHER' : gIdx === 1 ? ' — quem recebe é HOMEM' : '');
   var restricao = NICHO_EVITAR[p.relacao] || '';
   var vozDesc = VOZ_PT[p.voz] || '';
 
@@ -83,7 +106,13 @@ function montarPrompt(p) {
   partes.push('PARA QUEM: ' + relacaoDesc + '.');
   if (restricao) partes.push('RESTRIÇÃO IMPORTANTE: ' + restricao);
   if (p.ocasiao) partes.push('OCASIÃO: ' + p.ocasiao + '.');
-  if (vozDesc) partes.push('VOZ: ' + vozDesc + '.');
+  // GÊNERO DE QUEM DÁ A MÚSICA (eu-lírico): é isso que define "grata/grato",
+  // "obrigada/obrigado", "cansada/cansado" etc. Vale mais que a voz.
+  if (p.de === 'mulher') partes.push('QUEM ESTÁ DANDO A MÚSICA (quem fala na letra, o "eu") é uma MULHER: sempre que o "eu" falar de si mesma use o FEMININO (ex.: "grata", "obrigada", "apaixonada", "sozinha", "orgulhosa"). Nunca use o masculino pra ela.');
+  else if (p.de === 'homem') partes.push('QUEM ESTÁ DANDO A MÚSICA (quem fala na letra, o "eu") é um HOMEM: sempre que o "eu" falar de si mesmo use o MASCULINO (ex.: "grato", "obrigado", "apaixonado", "sozinho", "orgulhoso").');
+  else if (p.de === 'varios') partes.push('QUEM ESTÁ DANDO A MÚSICA são VÁRIAS PESSOAS (família, amigos, equipe): escreva na primeira pessoa do PLURAL ("nós", "a gente"), nunca "eu".');
+  if (gIdx >= 0 && (REL_GENERO[p.relacao] || p.relacao === 'outro' || p.relacao === 'ninguem')) partes.push('QUEM RECEBE é ' + (gIdx === 0 ? 'MULHER: ao falar dela use o FEMININO ("linda", "ela", "querida").' : 'HOMEM: ao falar dele use o MASCULINO ("lindo", "ele", "querido").'));
+  if (vozDesc && !p.de) partes.push('VOZ: ' + vozDesc + '.');
   partes.push('');
   partes.push('HISTÓRIA REAL contada por quem está encomendando a música — use estes detalhes ' +
     'verdadeiros (nomes, lugares, datas, cenas específicas) porque são o que torna a letra ' +
@@ -100,6 +129,9 @@ function montarPrompt(p) {
   if (p.nomesLetra) {
     partes.push('');
     partes.push('Cite estes nomes na letra, naturalmente: ' + p.nomesLetra);
+    partes.push('REGRA DOS NOMES (obrigatória): escreva cada nome EXATAMENTE como foi informado — ' +
+      'mesma grafia, mesmas letras e acentos. NÃO corrija, NÃO troque por outro nome parecido, ' +
+      'NÃO invente apelido, NÃO traduza. Se o nome for incomum, use ele mesmo assim, igualzinho.');
   }
   partes.push('');
   partes.push('ESTRUTURA: use estas marcações, cada uma em sua própria linha, exatamente com ' +
@@ -113,7 +145,7 @@ function montarPrompt(p) {
   return partes.join('\n');
 }
 
-function montarPromptAjuste(letraAtual, instrucao) {
+function montarPromptAjuste(letraAtual, instrucao, nomes) {
   var partes = [];
   partes.push('Aqui está a letra atual de uma música personalizada, já com as marcações de estrutura:');
   partes.push('"""');
@@ -122,6 +154,8 @@ function montarPromptAjuste(letraAtual, instrucao) {
   partes.push('');
   partes.push('PEDIDO DE AJUSTE da pessoa, nas palavras dela: "' + instrucao + '"');
   partes.push('');
+  if (nomes) partes.push('Os nomes "' + nomes + '" devem continuar escritos EXATAMENTE assim (não altere a grafia).');
+  partes.push('Mantenha a concordância de gênero que a letra já usa (feminino/masculino), a não ser que o pedido diga o contrário.');
   partes.push('Aplique SOMENTE esse ajuste. Mantenha todo o resto da letra igual — mesmas ' +
     'marcações de estrutura, mesmos versos que não têm relação com o pedido, mesmo tamanho ' +
     'aproximado. Responda com a letra completa, já ajustada, do início ao fim — nada antes, ' +
@@ -156,6 +190,9 @@ export default async (req) => {
     const voz = String((body && body.voz) || '').trim();
     const letraAtual = String((body && body.letraAtual) || '').trim();
     const instrucao = String((body && body.instrucao) || '').trim();
+    const de = String((body && body.de) || '').trim();             // mulher | homem | varios
+    const paraGen = String((body && body.paraGen) || '').trim();   // ela | ele
+    const paraOutro = String((body && body.paraOutro) || '').trim().slice(0, 120);
 
     // Ajuste pontual: já existe uma letra, e a pessoa só quer mudar um
     // detalhe dela — não precisa (nem deve) repetir estilo/história/etc.
@@ -177,15 +214,15 @@ export default async (req) => {
     // texto da história limitado por segurança (custo/tokens) — 2000 caracteres
     // já é bem mais espaço do que a Suno aceitava no modo antigo (500).
     const prompt = modoAjuste
-      ? montarPromptAjuste(letraAtual.slice(0, 3000), instrucao.slice(0, 500))
+      ? montarPromptAjuste(letraAtual.slice(0, 3000), instrucao.slice(0, 500), nomesLetra)
       : montarPrompt({
-          estilo, clima, relacao, ocasiao, nomesLetra, frase, voz,
+          estilo, clima, relacao, ocasiao, nomesLetra, frase, voz, de, paraGen, paraOutro,
           texto: texto.slice(0, 2000)
         });
     const systemPrompt = modoAjuste ? AJUSTE_SYSTEM_PROMPT : SYSTEM_PROMPT;
 
     console.log('PEDIDO DE LETRA >> modo=' + (modoAjuste ? 'ajuste pontual' : 'geração') +
-      (modoAjuste ? ' | pedido=' + instrucao.slice(0, 80) : ' | genero=' + estilo + ' | clima=' + clima + ' | relacao=' + relacao + ' | ocasiao=' + ocasiao));
+      (modoAjuste ? ' | pedido=' + instrucao.slice(0, 80) : ' | genero=' + estilo + ' | clima=' + clima + ' | relacao=' + relacao + ' | ocasiao=' + ocasiao + ' | de=' + de + ' | paraGen=' + paraGen));
 
     // O GPT-5.4 às vezes demora mais de 30s (ou dá 503) e o Netlify corta a
     // função em 30s. Então pedimos a letra ao GPT-5.4 e, AO MESMO TEMPO, a
