@@ -16,7 +16,34 @@ const GENERO_PT = {
   jazz:'jazz', blues:'blues', axe:'axé baiano', lofi:'lo-fi', infantil:'música infantil',
   anos80:'pop/rock dos anos 80, retrô', eletrofunk:'eletrofunk', bregafunk:'brega funk',
   funkcria:'funk de cria (funk de favela, ritmo de baile, gírias de quebrada)',
-  jingle:'jingle comercial chiclete (refrão curto, grudento e repetitivo, fácil de decorar)'
+  jingle:'jingle comercial chiclete (refrão curto, grudento e repetitivo, fácil de decorar)',
+  sertanejoraiz:'sertanejo raiz / modão de viola (linguagem simples do interior, saudade, roça)',
+  funkantigo:'funk carioca antigo dos anos 2000 (funk melody / tamborzão, refrão simples e dançante)',
+  gospeltrad:'gospel tradicional, estilo hino de igreja evangélica (Assembleia de Deus / Harpa Cristã): linguagem bíblica, louvor e fé',
+  catolica:'música católica (canto de igreja, louvor a Deus e a Nossa Senhora, linguagem de fé católica)',
+  arrocha:'arrocha (sofrência romântica dançante, estilo baiano)',
+  tecnobrega:'tecnobrega paraense (aparelhagem, batida acelerada, refrão animado)',
+  anos60:'estilo anos 60 (rock clássico e twist, ritmo retrô)',
+  anos70:'estilo anos 70 (disco e soul, groove dançante retrô)',
+  melody:'melody paraense (tecnomelody romântico, refrão apaixonado)',
+  bregamarcante:'brega marcante paraense (romântico e dançante)',
+  batidao:'batidão de paredão (grave pesado, dançante, refrão chiclete)',
+  seresta:'seresta / sofrência (romântico de bar, dor de amor)',
+  bregaromantico:'brega romântico das antigas (anos 80/90, bem apaixonado)',
+  carimbo:'carimbó paraense (alegre, regional)',
+  lambada:'lambada (dançante e alegre)',
+  forroeletronico:'forró eletrônico (estilo vaquejada, animado)',
+  xote:'xote e baião nordestino (simples e gostoso)',
+  pagodao:'pagodão baiano / swingueira (animado e malicioso, sem palavrão)',
+  pagode90:'pagode romântico anos 90',
+  sambaraiz:'samba de raiz (roda de samba)',
+  sambaenredo:'samba-enredo de escola de samba (refrão forte pra cantar junto)',
+  choro:'choro (chorinho, alegre e virtuoso)',
+  frevo:'frevo pernambucano (carnaval, acelerado)',
+  boibumba:'toada de boi-bumbá (amazônica, épica)',
+  vanera:'vanerão gaúcho (alegre, de fandango)',
+  jovemguarda:'Jovem Guarda dos anos 60 (iê-iê-iê, inocente e romântico)',
+  rapnacional:'rap nacional (rimas, flow e verdade)'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
@@ -28,11 +55,12 @@ const CLIMA_PT = {
   zoeira:'MODO TROLLAGEM / ZOEIRA: engraçado, debochado, com piadas e provocações de brincadeira (zoeira entre amigos), exagerado e cômico — mas sem ofensa pesada, sem palavrão pesado e sem preconceito'
 };
 const NICHO_TEXTO = {
-  namorada:'é para a namorada da pessoa — tom de romance', namorado:'é para o namorado da pessoa — tom de romance',
-  esposa:'é para a esposa — amor maduro e de parceria de vida', marido:'é para o marido — amor maduro e de parceria de vida',
-  mae:'é de um filho/filha para a mãe — gratidão e amor filial', pai:'é de um filho/filha para o pai — gratidão e amor filial',
+  namorada:'é para a namorada da pessoa — tom de romance', namorado:'é para quem a pessoa namora — tom de romance',
+  esposa:'é para o cônjuge (esposa ou marido) — amor maduro e de parceria de vida', marido:'é para o marido — amor maduro e de parceria de vida',
+  mae:'é de um filho/filha para a mãe ou o pai — gratidão e amor filial', pai:'é de um filho/filha para o pai — gratidão e amor filial',
   irma:'é entre irmãos — carinho e cumplicidade de família', irmao:'é entre irmãos — carinho e cumplicidade de família',
-  amiga:'é para a melhor amiga — amizade', amigo:'é para o melhor amigo — amizade',
+  amiga:'é para a melhor amiga — amizade', amigo:'é para um(a) melhor amigo(a) — amizade',
+  familia:'é para a família toda — união, gratidão e amor de família',
   filho:'é de um pai/mãe para o filho(a) — amor incondicional de pai/mãe',
   avo:'é de um neto/neta para a avó ou avô — carinho, gratidão e memórias de família',
   tio:'é para a tia ou tio — carinho de família',
@@ -42,6 +70,8 @@ const NICHO_TEXTO = {
 };
 // Pra quem é, já com o gênero de quem recebe (cartões que juntam ela/ele)
 const REL_GENERO = {
+  namorado:['a namorada','o namorado'], esposa:['a esposa','o marido'], mae:['a mãe','o pai'],
+  irmao:['a irmã','o irmão'], amigo:['a melhor amiga','o melhor amigo'],
   avo:['a avó','o avô'], tio:['a tia','o tio'], sogro:['a sogra','o sogro'],
   padrinho:['a madrinha (dinda)','o padrinho'], filho:['a filha','o filho']
 };
@@ -57,7 +87,8 @@ const NICHO_EVITAR = {
   tio:'A letra é para tia/tio: NUNCA use linguagem romântica.',
   sogro:'A letra é para sogra/sogro: NUNCA use linguagem romântica.',
   padrinho:'A letra é para madrinha/padrinho: NUNCA use linguagem romântica.',
-  comercial:'É propaganda: NUNCA use linguagem romântica nem de homenagem pessoal.'
+  comercial:'É propaganda: NUNCA use linguagem romântica nem de homenagem pessoal.',
+  familia:'A letra é para a família: NUNCA use linguagem romântica.'
 };
 const VOZ_PT = {
   masculina:'a música será cantada por uma voz masculina — se precisar de concordância de gênero no texto, use a masculina',
@@ -110,8 +141,10 @@ function montarPrompt(p) {
   // "obrigada/obrigado", "cansada/cansado" etc. Vale mais que a voz.
   if (p.de === 'mulher') partes.push('QUEM ESTÁ DANDO A MÚSICA (quem fala na letra, o "eu") é uma MULHER: sempre que o "eu" falar de si mesma use o FEMININO (ex.: "grata", "obrigada", "apaixonada", "sozinha", "orgulhosa"). Nunca use o masculino pra ela.');
   else if (p.de === 'homem') partes.push('QUEM ESTÁ DANDO A MÚSICA (quem fala na letra, o "eu") é um HOMEM: sempre que o "eu" falar de si mesmo use o MASCULINO (ex.: "grato", "obrigado", "apaixonado", "sozinho", "orgulhoso").');
+  else if (p.de === 'neutro') partes.push('QUEM ESTÁ DANDO A MÚSICA (o "eu") não quer marcar gênero: ao falar de si, use SOMENTE construções NEUTRAS — nada de "grato/grata", "obrigado/obrigada", "apaixonado/apaixonada". Prefira "tenho gratidão", "meu coração agradece", "sou feliz", "valeu", "te agradeço".');
   else if (p.de === 'varios') partes.push('QUEM ESTÁ DANDO A MÚSICA são VÁRIAS PESSOAS (família, amigos, equipe): escreva na primeira pessoa do PLURAL ("nós", "a gente"), nunca "eu".');
-  if (gIdx >= 0 && (REL_GENERO[p.relacao] || p.relacao === 'outro' || p.relacao === 'ninguem')) partes.push('QUEM RECEBE é ' + (gIdx === 0 ? 'MULHER: ao falar dela use o FEMININO ("linda", "ela", "querida").' : 'HOMEM: ao falar dele use o MASCULINO ("lindo", "ele", "querido").'));
+  if (p.paraGen === 'neutro' && p.relacao !== 'comercial') partes.push('QUEM RECEBE: não marque gênero ao falar dessa pessoa — use construções NEUTRAS (o nome dela, "você", "pessoa especial", "meu amor"), sem adjetivos no feminino ou masculino.');
+  if (gIdx >= 0 && p.relacao !== 'comercial') partes.push('QUEM RECEBE é ' + (gIdx === 0 ? 'MULHER: ao falar dela use o FEMININO ("linda", "ela", "querida").' : 'HOMEM: ao falar dele use o MASCULINO ("lindo", "ele", "querido").'));
   if (vozDesc && !p.de) partes.push('VOZ: ' + vozDesc + '.');
   partes.push('');
   partes.push('HISTÓRIA REAL contada por quem está encomendando a música — use estes detalhes ' +

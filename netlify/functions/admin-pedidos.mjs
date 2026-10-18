@@ -100,6 +100,7 @@ export default async (req) => {
         valor: g.pagamento ? g.pagamento.valor : 0,
         provedor: g.pagamento ? g.pagamento.provedor : null,
         pago: !!g.pago,
+        cortesia: !!g.cortesia,
         cancelado: !!g.cancelado,
         criadoEm: g.criadoEm || null,
         pagoEm: g.pagoEm || null,
