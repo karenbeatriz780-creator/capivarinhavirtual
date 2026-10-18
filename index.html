@@ -6596,6 +6596,8 @@ function desenharPainel(pedidos, visitas, musicas){
           '<button type="button" class="pnl-mv-btn" data-copiar-msg="'+esc(msgRec)+'">Copiar mensagem</button>'+
         '</div></div>';
     }
+    var codPromo = p ? 'p.'+p.id : (m.taskId ? 't.'+m.taskId : '');
+    if(!zap && codPromo) html+='<div class="pnl-rec-acoes" style="margin-top:.5rem"><button type="button" class="pnl-mv-btn promo" data-copiar-link="'+esc(location.origin+'/#/oferta/'+codPromo)+'">📣 Copiar link da promoção</button></div>';
     if(zap) html+='<div class="pnl-rec-acoes" style="margin-top:.5rem">'+pnlBotaoPromo('z'+zap.replace(/^55(?=\d{10,11}$)/,''), zap.replace(/^55(?=\d{10,11}$)/,''), (p&&p.meuNome)||m.nomes||'', p ? 'p.'+p.id : (m.taskId ? 't.'+m.taskId : ''))+'</div>';
     /* versões que você gerou aqui no painel (ajuste de letra) */
     var feitas=[]; var vistos={};
