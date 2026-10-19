@@ -1071,6 +1071,32 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .share-b:hover{border-color:var(--rose);color:var(--rose-deep);}
 .share-b svg{width:16px;height:16px;}
 .gift-list{display:flex;flex-direction:column;gap:.85rem;}
+.ms-login{display:flex;flex-direction:column;gap:.35rem;margin-top:.4rem;}
+.ms-login label{font-weight:700;font-size:.86rem;margin-top:.6rem;}
+.ms-erro{margin-top:.7rem;padding:.7rem .85rem;border-radius:12px;background:#FFF0F3;border:1px solid #F7B9C9;color:#A3123F;font-size:.86rem;line-height:1.4;}
+.ms-conta{display:flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);margin:-.6rem 0 1rem;flex-wrap:wrap;}
+.ms-conta button{margin-left:auto;background:none;border:1.5px solid var(--line);border-radius:100px;padding:.3rem .8rem;font-weight:700;font-size:.78rem;cursor:pointer;}
+.ms-btn{display:inline-flex;align-items:center;font-size:.8rem;font-weight:800;padding:.55rem .95rem;border-radius:100px;border:1.5px solid var(--line);background:#fff;color:inherit;text-decoration:none;}
+.ms-btn.forte{background:linear-gradient(180deg,#F0407C,#C41857);color:#fff;border-color:transparent;}
+.ms-gratis{display:flex;flex-direction:column;gap:.35rem;align-items:flex-start;padding:1rem 1.1rem;border-radius:18px;background:#EFFFF6;border:1.5px solid #6BD69B;margin-bottom:1rem;font-size:.95rem;}
+.ms-gratis span{font-size:.84rem;color:#2C6B47;}
+.ms-gratis .ms-btn{margin-top:.4rem;}
+.ms-mkt{display:flex;flex-direction:column;gap:.75rem;margin-top:1.4rem;}
+.ms-of{display:flex;flex-direction:column;gap:.3rem;padding:1rem 1.1rem;border-radius:18px;text-decoration:none;color:#fff;}
+.ms-of1{background:linear-gradient(160deg,#F0407C,#9C0F45);box-shadow:0 10px 24px rgba(196,24,87,.3);}
+.ms-of2{background:linear-gradient(160deg,#25C26B,#14814A);box-shadow:0 10px 24px rgba(20,129,74,.28);}
+.ms-tag{align-self:flex-start;font-size:.66rem;font-weight:900;letter-spacing:.08em;background:rgba(255,255,255,.22);padding:.25rem .6rem;border-radius:100px;}
+.ms-of b{font-size:1.3rem;font-weight:900;}
+.ms-of small{font-size:.82rem;opacity:.92;line-height:1.4;}
+.ms-tempo{font-size:.8rem;color:#FFE3A3;font-weight:700;}
+.ms-tempo b{font-variant-numeric:tabular-nums;}
+.ms-of em{font-style:normal;font-weight:800;font-size:.9rem;margin-top:.2rem;}
+.ms-amigos{margin-top:1.2rem;padding:1rem 1.1rem;border-radius:16px;border:1.5px solid var(--line);background:#fff;display:flex;flex-direction:column;gap:.5rem;}
+.ms-amigo{display:flex;justify-content:space-between;gap:.6rem;font-size:.86rem;}
+.ms-amigo i{font-style:normal;color:var(--muted);font-size:.8rem;white-space:nowrap;}
+.ms-amigo i.ok{color:#1F9D57;font-weight:800;}
+.ms-local{margin-top:1.4rem;display:flex;flex-direction:column;gap:.7rem;}
+.ms-local>b{font-size:.9rem;}
 .gcard{border:1.5px solid var(--line);border-radius:var(--r-md);padding:1.1rem 1.15rem;background:#fff;}
 .gcard-top{display:flex;align-items:center;gap:.8rem;}
 .gcard-th{width:52px;height:52px;border-radius:12px;object-fit:cover;background:var(--rose-soft);flex-shrink:0;
@@ -6867,7 +6893,120 @@ function desenharPainel(pedidos, visitas, musicas){
 /* =========================================================
    TELA — MEUS PRESENTES
    ========================================================= */
+/* MEUS PRESENTES — entra com o WhatsApp da compra + um nome; aparece em qualquer navegador */
 function telaMeus(){
+  var sess=null; try{ sess=JSON.parse(Store.get('cl_meus')||'null'); }catch(e){}
+  el('app').innerHTML=
+    '<div class="wz-top"><a class="wz-back" href="#/">'+IC.back+'</a>'+
+      '<div class="wz-track"><div class="wz-fill" style="width:100%"></div></div>'+
+      '<span class="wz-count">Meus presentes</span></div>'+
+    '<div class="wz-wrap" id="meusBody"></div>';
+  if(sess && sess.tel){ meusCarregar(sess); } else { meusLogin(); }
+}
+function meusLogin(msg, tel, nome){
+  var b=el('meusBody'); if(!b) return;
+  b.innerHTML='<div class="wz-t">Meus presentes</div>'+
+    '<div class="wz-s">Entre com o <b>WhatsApp que você usou na compra</b>. Suas músicas aparecem em qualquer celular ou navegador.</div>'+
+    '<form id="meusForm" class="ms-login" novalidate>'+
+      '<label for="meusTel">Seu WhatsApp</label>'+
+      '<input class="inp" id="meusTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" value="'+esc(tel||'')+'">'+
+      '<label for="meusNome">Pra confirmar: seu nome ou o de quem recebeu a música</label>'+
+      '<input class="inp" id="meusNome" autocomplete="given-name" placeholder="Ex: Ana" value="'+esc(nome||'')+'">'+
+      (msg?'<div class="ms-erro">'+esc(msg)+'</div>':'')+
+      '<button class="btn btn-primary btn-block" id="meusEntrar" type="submit" style="margin-top:1rem">Ver meus presentes</button>'+
+    '</form>'+
+    meusLocalHtml();
+  ligarMeusLocal();
+  el('meusForm').onsubmit=function(ev){
+    ev.preventDefault();
+    var t=el('meusTel').value.trim(), n=el('meusNome').value.trim();
+    if(t.replace(/\D/g,'').length<10){ meusLogin('Digite o WhatsApp com DDD.', t, n); return; }
+    if(n.length<2){ meusLogin('Digite um nome pra confirmar.', t, n); return; }
+    meusCarregar({tel:t, nome:n});
+  };
+}
+function meusCarregar(sess){
+  var b=el('meusBody'); if(!b) return;
+  b.innerHTML='<div class="empty"><img src="'+MASCOTE+'" alt="" style="animation:float 2.4s ease-in-out infinite"><p>Buscando seus presentes...</p></div>';
+  fetch('/.netlify/functions/meus-presentes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sess)})
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+    .then(function(res){
+      var d=res.d||{};
+      if(!res.ok){ Store.set('cl_meus',''); meusLogin(d.msg||d.erro||'Não consegui entrar agora.', sess.tel, sess.nome); return; }
+      if(d.vazio){ Store.set('cl_meus',''); meusLogin('Não achamos nenhuma música com esse WhatsApp. Confira se é o mesmo número que você colocou na compra.', sess.tel, sess.nome); return; }
+      Store.set('cl_meus', JSON.stringify(sess));
+      meusMostrar(d, sess);
+    })
+    .catch(function(){ meusLogin('Sem conexão agora. Tenta de novo em instantes.', sess.tel, sess.nome); });
+}
+function meusMostrar(d, sess){
+  var b=el('meusBody'); if(!b) return;
+  var ind=d.indicacao||{}, itens=d.itens||[];
+  var tel=String(sess.tel).replace(/\D/g,'');
+  var cards=itens.map(function(it){
+    var badge = it.pago ? (it.cortesia||it.bonus ? '<span class="pillbadge pb-live">🎁 Presente</span>' : '<span class="pillbadge pb-live">✓ Liberada</span>')
+                        : '<span class="pillbadge pb-exp">Falta pagar</span>';
+    var tit = it.produto==='musica' ? (it.quatro ? '4 músicas' : 'Música')+(it.para?' pra '+it.para:'') : (PACOTES[it.produto]?PACOTES[it.produto].nome:'Presente')+(it.para?' · '+it.para:'');
+    return '<div class="gcard"><div class="gcard-top">'+
+      (it.capa?'<img class="gcard-th" src="'+esc(it.capa)+'" alt="">':'<div class="gcard-th">🎵</div>')+
+      '<div style="flex:1;min-width:0"><h4>'+esc(tit)+'</h4><div class="mt">'+esc([nomeGenero(it.estilo), it.em?new Date(it.em).toLocaleDateString('pt-BR'):''].filter(Boolean).join(' · '))+'</div></div>'+badge+
+      '</div><div class="acts">'+
+        '<a class="ms-btn'+(it.pago?' forte':'')+'" href="'+esc(it.link)+'">'+(it.pago?'▶ Ouvir e baixar':'🎧 Ouvir prévia e liberar')+'</a>'+
+        (it.pago && it.produto==='musica' ? '<button type="button" data-ms-copy="'+esc(location.origin+'/'+it.link.replace(/\/c$/,''))+'">Copiar link pra enviar</button>' : '')+
+      '</div></div>';
+  }).join('');
+  var gratis = ind.disponiveis>0
+    ? '<div class="ms-gratis">🎁 <b>Você tem '+ind.disponiveis+' música'+(ind.disponiveis>1?'s':'')+' grátis liberada'+(ind.disponiveis>1?'s':'')+'!</b><span>Porque '+(ind.confirmadas>1?'seus amigos compraram':'seu amigo comprou')+' pelo seu link. Cada uma vem com 2 versões.</span>'+
+        (ind.resgatar?'<a class="ms-btn forte" href="'+esc(ind.resgatar)+'">Criar minha música grátis</a>':'')+'</div>' : '';
+  var amigos=(ind.amigos||[]);
+  var amigosHtml = amigos.length ? '<div class="ms-amigos"><b>Suas indicações</b>'+amigos.map(function(a){
+      return '<div class="ms-amigo"><span>'+esc(a.nome)+(a.tel?' · '+esc(a.tel):'')+'</span>'+(a.pago?'<i class="ok">✓ comprou</i>':'<i>ainda não pagou</i>')+'</div>';
+    }).join('')+'</div>' : '';
+  var linkInd = d.indicarLink ? location.origin+d.indicarLink : '';
+  var msgInd='Olha que presente lindo 😍 Uma música personalizada com o nome e a história de quem você ama 🎵\n\n2 músicas por R$ 9,99 e você ouve a prévia antes de pagar:\n'+linkInd;
+  var mkt='<div class="ms-mkt">'+
+      (d.promo?'<a class="ms-of ms-of1" href="'+esc(d.promo)+'"><span class="ms-tag">PROMOÇÃO DE CLIENTE</span><b>4 músicas por R$ 9,99</b><small>2 letras · 2 estilos · 2 versões de cada</small><span class="ms-tempo">⏳ termina hoje em <b id="msTempo">--</b></span><em>Quero minhas 4 músicas →</em></a>':'')+
+      (linkInd?'<a class="ms-of ms-of2" href="https://wa.me/?text='+encodeURIComponent(msgInd)+'" target="_blank" rel="noopener"><span class="ms-tag">INDIQUE E GANHE</span><b>2 músicas de graça 🎁</b><small>Mande seu link pra um amigo. Quando ele comprar, sua música grátis aparece aqui.</small><em>Enviar meu link no WhatsApp →</em></a>':'')+
+    '</div>';
+  b.innerHTML='<div class="wz-t">Meus presentes</div>'+
+    '<div class="ms-conta">📱 Entrou como <b>'+esc(sess.tel)+'</b> <button type="button" id="meusSair">Sair</button></div>'+
+    gratis+
+    '<div class="gift-list">'+(cards||'<div class="pnl-nota">Nenhuma música ainda.</div>')+'</div>'+
+    mkt+amigosHtml+
+    meusLocalHtml(itens)+
+    '<a class="btn btn-ghost btn-block" href="#/criar/musica" style="margin-top:1.2rem">Criar outra música</a>';
+  el('meusSair').onclick=function(){ Store.set('cl_meus',''); meusLogin(); };
+  document.querySelectorAll('[data-ms-copy]').forEach(function(x){ x.onclick=function(){ copiar(x.dataset.msCopy,'Link copiado! É só enviar pra quem vai receber.'); }; });
+  ligarMeusLocal();
+  var ivm=setInterval(function(){
+    var t=el('msTempo'); if(!t){ clearInterval(ivm); return; }
+    var ms=fimDoDia()-Date.now(), h=Math.floor(ms/3600000), mi=Math.floor(ms%3600000/60000), sg=Math.floor(ms%60000/1000);
+    t.textContent=h+'h '+(mi<10?'0':'')+mi+'m '+(sg<10?'0':'')+sg+'s';
+  },1000);
+  aoSair(function(){ clearInterval(ivm); });
+  /* propaganda: 2s depois de entrar, toda vez (inclusive ao atualizar) */
+  var idBase = d.promo ? d.promo.replace(/^#\/oferta\//,'') : '';
+  if(d.promo) abrirAnuncioCliente(idBase, {alvo:'#meusBody .ms-conta', linkOf:d.promo, linkInd:d.indicarLink?location.origin+d.indicarLink:'', semIndica:!d.indicarLink});
+}
+/* presentes salvos só neste aparelho (ex.: retrospectiva/carta sem WhatsApp) */
+function meusLocalHtml(itensServ){
+  var all=presentes(), ja={};
+  (itensServ||[]).forEach(function(it){ ja[it.id]=1; });
+  var ids=Object.keys(all).filter(function(k){ var p=all[k].produto||''; return !ja[k] && p!=='extra' && p.indexOf('extra_')!==0; })
+    .sort(function(a,b){ return (all[b].criadoEm||0)-(all[a].criadoEm||0); });
+  if(!ids.length) return '';
+  return '<div class="ms-local"><b>Salvos neste celular</b>'+ids.map(function(id){
+    var g=all[id], p=PACOTES[g.produto]||PACOTES.completo, pend=g.pago===false;
+    return '<div class="gcard"><div class="gcard-top"><div class="gcard-th">'+p.icone+'</div>'+
+      '<div style="flex:1;min-width:0"><h4>'+esc(g.titulo||p.nome)+'</h4><div class="mt">Para '+esc(g.parceiroNome||g.musicaParaNome||'—')+' · '+p.nome+'</div></div></div>'+
+      '<div class="acts"><button data-open="'+id+'">'+(pend?'Verificar pagamento':'Abrir')+'</button>'+(pend?'':'<button data-copy="'+id+'">Copiar link</button>')+'</div></div>';
+  }).join('')+'</div>';
+}
+function ligarMeusLocal(){
+  document.querySelectorAll('[data-open]').forEach(function(b){ b.onclick=function(){ ir('p/'+b.dataset.open); }; });
+  document.querySelectorAll('[data-copy]').forEach(function(b){ b.onclick=function(){ copiar(linkPresente(b.dataset.copy),'Link copiado!'); }; });
+}
+function telaMeusAntigo(){
   var all=presentes();
   var ids=Object.keys(all).filter(function(k){
     var p=all[k].produto||'';
@@ -7017,7 +7156,7 @@ function ligarQuadroOferta(id, alvoId){
   fetch('/.netlify/functions/oferta?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).then(function(d){
     if(!el(alvoId)) return;
     var linkOf = (d && d.valida) ? '#/oferta/'+encodeURIComponent(id) : '#/oferta/p.'+encodeURIComponent(id);
-    if(!d || !d.valida) d={expiraEm:0};
+    d={expiraEm:fimDoDia()};
     alvo.innerHTML='<div class="of-box"><div class="of-tag">🎁 Só pra quem já é cliente</div>'+
       '<div class="of-tit">Você ganhou <b>50% de desconto</b></div>'+
       '<div class="of-sub">Crie mais <b>2 músicas novas</b> (2 letras, 2 versões cada) =</div>'+
@@ -7027,7 +7166,8 @@ function ligarQuadroOferta(id, alvoId){
       '<div class="of-nota">Vale uma vez, só por este link.</div></div>';
     var iv=setInterval(function(){
       var t=el('ofTempo'); if(!t){ clearInterval(iv); return; }
-      var ms=d.expiraEm-Date.now(); if(ms<=0){ clearInterval(iv); return; }
+      if(d.expiraEm-Date.now()<=0) d.expiraEm=fimDoDia();
+      var ms=d.expiraEm-Date.now();
       var h=Math.floor(ms/3600000), m=Math.floor(ms%3600000/60000), sg=Math.floor(ms%60000/1000);
       t.textContent=h+'h '+(m<10?'0':'')+m+'m '+(sg<10?'0':'')+sg+'s';
     },1000);
@@ -7600,17 +7740,20 @@ function ligarIndique(id, alvoId){
 }
 
 /* anúncio pro cliente: aparece 2s depois de abrir o link — TODA vez que abrir/atualizar */
-function abrirAnuncioCliente(id){
+/* contagem até a meia-noite: a oferta "termina hoje", mas amanhã aparece de novo */
+function fimDoDia(){ var d=new Date(); d.setHours(23,59,59,999); return d.getTime(); }
+function abrirAnuncioCliente(id, op){
+  op=op||{};
   var tm=setTimeout(function(){
     Promise.race([
       fetch('/.netlify/functions/oferta?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).catch(function(){ return {}; }),
       new Promise(function(r){ setTimeout(function(){ r({}); },1500); })
     ]).then(function(d){
-      if(!document.querySelector('.mx') || document.querySelector('.ad-fundo')) return;
+      if(!document.querySelector(op.alvo||'.mx') || document.querySelector('.ad-fundo')) return;
       var temOferta = true; /* a promoção 4 por R$ 9,99 é pra todo mundo */
-      var linkOf = (d && d.valida) ? '#/oferta/'+encodeURIComponent(id) : '#/oferta/p.'+encodeURIComponent(id);
-      if(!(d && d.valida)) d={};
-      var linkInd=location.origin+'/#/criar/musica/r.'+encodeURIComponent(id);
+      var linkOf = op.linkOf || ((d && d.valida) ? '#/oferta/'+encodeURIComponent(id) : '#/oferta/p.'+encodeURIComponent(id));
+      d={expiraEm:fimDoDia()};
+      var linkInd = op.semIndica ? '' : (op.linkInd || location.origin+'/#/criar/musica/r.'+encodeURIComponent(id));
       var msgInd='Olha que presente lindo 😍 Uma música personalizada com o nome e a história de quem você ama 🎵\n\n2 músicas por R$ 9,99 e você ouve a prévia antes de pagar:\n'+linkInd;
       var corpo=
         '<div class="ad-notas"><i>♪</i><i>♫</i><i>♪</i><i>♬</i><i>♫</i></div>'+
@@ -7628,12 +7771,12 @@ function abrirAnuncioCliente(id){
             '</a>'+
             '<div class="ad-ou"><span>ou</span></div>'
           : '')+
-        '<a class="ad-op ad-op2" href="https://wa.me/?text='+encodeURIComponent(msgInd)+'" target="_blank" rel="noopener">'+
+        (!linkInd ? '' : '<a class="ad-op ad-op2" href="https://wa.me/?text='+encodeURIComponent(msgInd)+'" target="_blank" rel="noopener">'+
           '<span class="ad-op-tag verde">'+(temOferta?'OPÇÃO 2 · ':'')+'INDIQUE E GANHE</span>'+
           '<span class="ad-gratis"><b>2 músicas</b> de <em>GRAÇA</em> 🎁</span>'+
           '<span class="ad-mini">Envie seu link pra um amigo. Quando ele comprar, você ganha 2 músicas personalizadas grátis.</span>'+
           '<span class="ad-cta verde">'+IC.wpp+' Enviar meu link pra um amigo</span>'+
-        '</a>';
+        '</a>');
       var m=document.createElement('div'); m.className='ad-fundo';
       m.innerHTML='<div class="ad-card" role="dialog" aria-label="Oferta exclusiva"><div class="ad-brilho"></div><button class="ad-x" aria-label="Fechar">&times;</button>'+corpo+
         '<button class="ad-depois">Agora não</button></div>';
@@ -7646,7 +7789,8 @@ function abrirAnuncioCliente(id){
       m.querySelectorAll('a').forEach(function(a){ a.addEventListener('click',function(){ setTimeout(fechar,200); }); });
       iv=setInterval(function(){
         var t=document.getElementById('adTempo'); if(!t || !d || !d.expiraEm) return;
-        var ms=d.expiraEm-Date.now(); if(ms<=0){ t.textContent='0h'; return; }
+        if(d.expiraEm-Date.now()<=0) d.expiraEm=fimDoDia();
+        var ms=d.expiraEm-Date.now();
         var h=Math.floor(ms/3600000), mi=Math.floor(ms%3600000/60000), sg=Math.floor(ms%60000/1000);
         t.textContent=h+'h '+(mi<10?'0':'')+mi+'m '+(sg<10?'0':'')+sg+'s';
       },1000);
