@@ -764,6 +764,8 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .card2.destaque{position:relative;border:2px solid #FFB547;background:linear-gradient(180deg,#FFF6E0,#FFFFFF);box-shadow:0 6px 18px rgba(255,181,71,.25);}
 .card2.destaque.on{border-color:#E32B6D;}
 .c2-selo{position:absolute;top:-.6rem;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:.68rem;font-weight:900;color:#7A4A00;background:#FFD27A;padding:.15rem .55rem;border-radius:100px;}
+.gen-outro{grid-column:1/-1;display:flex;flex-direction:column;gap:.4rem;padding:.2rem 0 .4rem;}
+.gen-outro label{font-weight:800;font-size:.92rem;}
 .gen-box{margin-top:.4rem;padding:1.1rem 1rem 1rem;border-radius:20px;background:#FFF5F9;border:1.5px solid #F7D3E2;}
 .gen-tit{font-weight:900;font-size:1.05rem;}
 .gen-s{font-size:.85rem;color:var(--muted);margin-top:.2rem;line-height:1.45;}
@@ -2800,7 +2802,7 @@ function htmlMusicaCompondo(){
     '<div class="mc-fase" id="mcFase">Lendo a história de vocês...</div>'+
     '<div class="mc-bar"><i id="mcBarFill" style="width:0%"></i></div>'+
     '<div class="mc-pct" id="mcPct">0%</div>'+
-    '<div class="mc-fica">Fica aqui — em instantes você ouve.<br>'+
+    '<div class="mc-fica"><b>Espere aqui, leva menos de 1 minuto.</b> Não feche esta página.<br>'+
     '<b>Você vai receber 2 versões diferentes</b> pra escolher a que mais emocionar.</div>'+
   '</div>';
 }
@@ -2829,7 +2831,7 @@ function iniciarProgressoFake(){
     if(!pctEl || !barEl){ clearInterval(_mcTimer); return; }
     var passado=Date.now()-t0;
     // sobe rápido no início, desacelera bem perto de 92% e fica ali esperando o resultado de verdade
-    var pct=Math.min(92, Math.round(92*(1-Math.exp(-passado/55000))));
+    var pct=Math.min(92, Math.round(92*(1-Math.exp(-passado/25000))));
     pctEl.textContent=pct+'%';
     barEl.style.width=pct+'%';
     if(faseEl){
@@ -4200,9 +4202,8 @@ function pedirWhatsapp(aoConfirmar){
   var box=document.createElement('div');
   box.className='upsell-fundo'; box.id='zapFundo';
   box.innerHTML='<div class="upsell-card zap-card">'+
-    '<div class="upsell-top">💬<h3>Qual o seu WhatsApp?</h3>'+
-    '<p>Sua música leva entre 1 e 3 minutos pra ficar pronta. Se você não quiser esperar aqui, '+
-    'a gente te manda a prévia por lá.</p></div>'+
+    '<div class="upsell-top">💬<h3>Confirme seu WhatsApp</h3>'+
+    '<p>Coloque seu número de WhatsApp pra gerar a sua música.</p></div>'+
     '<input class="inp" id="zapInp" placeholder="(00) 00000-0000" inputmode="tel" autocomplete="tel">'+
     '<div class="zap-err" id="zapErr"></div>'+
     '<button type="button" class="btn btn-primary btn-block" id="zapOk" style="margin-top:.8rem">Continuar e gerar</button>'+
@@ -4229,6 +4230,7 @@ function pedirWhatsapp(aoConfirmar){
 var GENEROS_LISTA=[
   ['sertanejo','🤠','Sertanejo moderno','o que toca hoje'], ['sertanejoraiz','🪕','Sertanejo raiz','viola e modão'],
   ['pagode','🪘','Pagode','descontraído e alegre'], ['infantil','🧸','Infantil','para criança'],
+  ['natal','🎄','Natalina','música de Natal'], ['outro','✍️','Outro estilo','eu escrevo qual'],
   ['gospel','🙌','Gospel moderno','louvor de hoje'], ['gospeltrad','⛪','Gospel tradicional','estilo Assembleia, hino'],
   ['catolica','✝️','Católica','música de igreja católica'], ['romantica','💗','Romântica','violão e piano'],
   ['rock','🎸','Rock','guitarras marcantes'], ['eletronica','🎛️','Eletrônica','synths modernos'],
@@ -4255,6 +4257,7 @@ var GENEROS_LISTA=[
   ['lofi','🎧','Lo-Fi','suave e tranquila'], ['jazz','🎷','Jazz','sofisticado e swing'],
   ['blues','🎺','Blues','melancólico e cru'], ['zoeira','🤪','Modo trollagem','zoeira e deboche']
 ];
+function nomeGeneroDe(k,outro){ return k==='outro' && outro ? outro : nomeGenero(k); }
 function nomeGenero(k){ for(var i=0;i<GENEROS_LISTA.length;i++) if(GENEROS_LISTA[i][0]===k && k!=='#') return GENEROS_LISTA[i][2]; return k||''; }
 /* cartão junto (namorada/namorado...) → ao tocar, pergunta pra quem é e quem está dando */
 var PARA_DUPLO={namorado:['Namorada','Namorado'],esposa:['Esposa','Marido'],mae:['Mãe','Pai'],filho:['Filha','Filho'],
@@ -4312,7 +4315,7 @@ function dispararGeracaoLetra(){
   W.musicaLetraGerando=true; W.musicaLetraErro=null;
   redesenharSemPular();
   pedirLetra({
-      estilo: W.musicaEstilo, texto: textoHistoriaCompleta(), clima: W.musicaClima,
+      estilo: W.musicaEstilo, estiloOutro: W.musicaEstiloOutro||'', texto: textoHistoriaCompleta(), clima: W.musicaClima,
       relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
       nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz,
       de: W.musicaDe, paraGen: W.musicaParaGen, paraOutro: W.musicaParaOutro
@@ -4375,7 +4378,7 @@ function dispararAjusteLetra(instrucao){
   redesenharSemPular();
   pedirLetra({
       letraAtual: W.musicaLetraTexto||'', instrucao: instrucao,
-      estilo: W.musicaEstilo, clima: W.musicaClima, voz: W.musicaVoz, nomesLetra: W.musicaParaNome
+      estilo: W.musicaEstilo, estiloOutro: W.musicaEstiloOutro||'', clima: W.musicaClima, voz: W.musicaVoz, nomesLetra: W.musicaParaNome
   })
   .then(function(res){
     W.musicaLetraAjustando=false;
@@ -4418,7 +4421,7 @@ function dispararGeracao(gerarBtn){
   fetch('/.netlify/functions/gerar-musica', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-          estilo: W.musicaEstilo, texto: textoHistoriaCompleta(), clima: W.musicaClima,
+          estilo: W.musicaEstilo, estiloOutro: W.musicaEstiloOutro||'', texto: textoHistoriaCompleta(), clima: W.musicaClima,
           relacao: W.musicaPara, ocasiao: W.musicaOcasiao,
           nomesLetra: W.musicaParaNome, frase: W.musicaFrase, voz: W.musicaVoz,
           letraAprovada: W.musicaLetraTexto||'',
@@ -4929,7 +4932,11 @@ function htmlPasso(k){
       '<div class="wz-t">Gênero musical</div>'+
       '<div class="cards2" id="musicaGeneroChips">'+vis.map(function(g){
         return '<button type="button" class="card2'+(g[4]?' destaque':'')+(W.musicaEstilo===g[0]?' on':'')+'" data-genero="'+g[0]+'">'+(g[4]?'<span class="c2-selo">👶 Pra criança</span>':'')+
-          '<span class="c2-ic">'+g[1]+'</span><span class="c2-lb">'+g[2]+'</span><small class="c2-sub">'+g[3]+'</small></button>';
+          '<span class="c2-ic">'+g[1]+'</span><span class="c2-lb">'+g[2]+'</span><small class="c2-sub">'+g[3]+'</small></button>'+
+          (g[0]==='outro' && W.musicaEstilo==='outro'
+            ? '<div class="gen-outro"><label for="musicaEstiloOutro">Qual estilo você quer?</label>'+
+              '<input class="inp" id="musicaEstiloOutro" maxlength="100" value="'+esc(W.musicaEstiloOutro||'')+'" placeholder="Ex: valsa de 15 anos, rock dos anos 2000, vaquejada..."></div>'
+            : '');
       }).join('')+'</div>';
   }
 
@@ -5477,8 +5484,10 @@ function ligarPasso(k){
     on('[data-genero]','onclick',function(e){
       W.musicaEstilo=e.dataset.genero;
       redesenharSemPular();
+      if(W.musicaEstilo==='outro'){ setTimeout(function(){ var o=el('musicaEstiloOutro'); if(o){ o.focus(); o.scrollIntoView({behavior:'smooth',block:'center'}); } },80); return; }
       setTimeout(function(){ proximoPasso(); },300);
     });
+    var eo=el('musicaEstiloOutro'); if(eo) eo.oninput=function(ev){ W.musicaEstiloOutro=ev.target.value; };
   }
   if(k==='musicaClima'){
     on('[data-clima]','onclick',function(e){
@@ -5660,6 +5669,7 @@ function validar(k){
   if(k==='musicaOcasiao' && !W.musicaOcasiao) return erro('Escolhe a ocasião.');
   if(k==='musicaHistoria' && W.musicaTexto.trim().length<50) return erro('Conta um pouco mais — pelo menos 50 caracteres pra letra ficar boa.', 'musicaTexto');
   if(k==='musicaGenero' && !W.musicaEstilo) return erro('Escolhe um estilo.');
+  if(k==='musicaGenero' && W.musicaEstilo==='outro' && (W.musicaEstiloOutro||'').trim().length<3) return erro('Escreve qual estilo você quer.', 'musicaEstiloOutro');
   if(k==='musicaClima' && !W.musicaClima) return erro('Escolhe o clima da música.');
   if(k==='musicaLetra'){
     if(W.musicaLetraGerando) return erro('Aguenta só um instante — a letra ainda está sendo escrita.');
@@ -6243,7 +6253,7 @@ function pnlGerarComLetra(i, btn){
   fetch('/.netlify/functions/gerar-musica',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
-      estilo:(p&&p.musicaEstilo)||m.estilo||'romantica',
+      estilo:(p&&p.musicaEstilo)||m.estilo||'romantica', estiloOutro:(p&&p.musicaEstiloOutro)||m.estiloOutro||'',
       clima:(p&&p.musicaClima)||m.clima||'',
       relacao:(p&&p.musicaPara)||m.relacao||'',
       ocasiao:(p&&p.musicaOcasiao)||m.ocasiao||'',
@@ -6579,7 +6589,7 @@ function desenharPainel(pedidos, visitas, musicas){
       : (p.cortesia ? '<span class="selo pago">🎁 cortesia</span>' : (p.pago ? '<span class="selo pago">pago</span>' : '<span class="selo pend">pendente</span>'))));
     var dt=it.t?pnlFmt(it.t):'—';
     var estilo=(p&&p.musicaEstilo)||m.estilo||'', clima=(p&&p.musicaClima)||m.clima||'', ocas=(p&&p.musicaOcasiao)||m.ocasiao||'';
-    var meta=[p?(nomeProd[p.produto]||p.produto):'', estilo, clima, ocas].filter(Boolean).join(' · ');
+    var meta=[p?(nomeProd[p.produto]||p.produto):'', estilo==='outro'?('Outro: '+((p&&p.musicaEstiloOutro)||m.estiloOutro||'')):estilo, clima, ocas].filter(Boolean).join(' · ');
     var hist=(p&&p.musicaHistoria)||m.historia||'';
     var zapTxt=(p&&p.whatsapp)||m.whatsapp||'';
     var zap=String(zapTxt).replace(/\D/g,'');
