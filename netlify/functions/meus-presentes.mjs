@@ -2,9 +2,9 @@ import { getStore } from '@netlify/blobs';
 import { statusIndicacao } from './_indicacao.mjs';
 
 // MEUS PRESENTES por WhatsApp: a pessoa entra com o número que usou na compra
-// e confirma um nome (o dela ou de quem recebeu a música). Funciona em qualquer
+// Funciona em qualquer
 // navegador/celular, porque tudo vem do servidor, não do aparelho.
-//   POST { tel, nome } → { ok, itens:[...], indicacao:{...}, promo, indicarLink }
+//   POST { tel } → { ok, itens:[...], indicacao:{...}, promo, indicarLink }
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
@@ -31,9 +31,7 @@ export default async (req) => {
     let body = {};
     try { body = await req.json(); } catch { body = {}; }
     const chave = chaveTel(body.tel);
-    const nome = norm(body.nome);
-    if (!chave) return json({ erro: 'Digite o WhatsApp com DDD.' }, 400);
-    if (nome.length < 2) return json({ erro: 'Digite um nome pra confirmar.' }, 400);
+    if (!chave) return json({ erro: 'Digite o número com DDD.' }, 400);
 
     const presentes = getStore('presentes');
     const { blobs } = await presentes.list();
@@ -54,16 +52,6 @@ export default async (req) => {
     }));
 
     if (!meus.length && !soMusica.length) return json({ ok: true, vazio: true });
-
-    // confirma o nome: o da pessoa ou de quem recebeu alguma música
-    const nomes = new Set();
-    function addNomes(s) { norm(s).split(' ').filter((w) => w.length >= 2 && w !== 'e').forEach((w) => nomes.add(w)); }
-    meus.forEach((g) => { addNomes(g.meuNome); addNomes(g.parceiroNome); addNomes(g.musicaParaNome); if (g.ofertaM1) addNomes(g.ofertaM1.paraNome); });
-    soMusica.forEach((m) => addNomes(m.nomes));
-    if (nomes.size) {
-      const ok = nome.split(' ').some((w) => nomes.has(w));
-      if (!ok) return json({ erro: 'nome', msg: 'Esse nome não confere com as suas músicas. Use o seu nome ou o de quem recebeu a música.' }, 403);
-    }
 
     const itens = [];
     meus.forEach((g) => {
