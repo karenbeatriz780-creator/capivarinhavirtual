@@ -68,7 +68,8 @@ const GENERO_PT = {
   jovemguarda:'Jovem Guarda dos anos 60, iê-iê-iê com guitarra, órgão e bateria retrô',
   rapnacional:'rap nacional, com batida boom bap, sample e rimas faladas',
   anos90:'pop e dance dos anos 90, estilo internacional, com sintetizadores, batida eurodance e refrão marcante',
-  zoeira:'música de zoeira, estilo paródia cômica, arranjo animado, exagerado e engraçado'
+  zoeira:'música de zoeira, estilo paródia cômica, arranjo animado, exagerado e engraçado',
+  natal:'música natalina de Natal, com sinos, piano, cordas e coral, clima festivo e emocionante de fim de ano'
 };
 
 // A Suno tende a "cair" sempre em sertanejo ou samba — são os gêneros mais
@@ -127,7 +128,8 @@ const GENERO_EVITAR = {
   jovemguarda:'trap, eletrônico',
   rapnacional:'sertanejo, samba',
   anos90:'sertanejo, samba, trap',
-  zoeira:'balada triste, música lenta e séria'
+  zoeira:'balada triste, música lenta e séria',
+  natal:'funk, trap, rock pesado'
 };
 
 // Instrução de voz em português — vai no texto que a Suno lê, não só nas
@@ -191,7 +193,8 @@ const GENEROS = {
   jovemguarda:'jovem guarda, 60s brazilian rock, ye-ye, organ, retro guitar',
   rapnacional:'brazilian rap, boom bap beat, sample, rap vocals',
   anos90:     '90s eurodance pop, retro synths, dance beat, catchy chorus, 1990s',
-  zoeira:     'comedy song, funny parody, upbeat, playful, humorous brazilian'
+  zoeira:     'comedy song, funny parody, upbeat, playful, humorous brazilian',
+  natal:      'christmas song, jingle bells, sleigh bells, piano, strings, choir, festive holiday'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
@@ -299,7 +302,8 @@ export default async (req) => {
     // TAGS = SÓ o que é musical. Relação e ocasião saem daqui (são semânticas,
     // não sonoras) e ficam só no briefing da letra.
     // "brazilian" sozinho foi removido: puxava tudo pra samba/bossa.
-    const gen = GENEROS[estilo] || GENEROS.romantica;
+    const estiloOutro = String((body && body.estiloOutro) || '').trim().slice(0, 100);
+    const gen = (estilo === 'outro' && estiloOutro) ? estiloOutro : (GENEROS[estilo] || GENEROS.romantica);
     const tagsPartes = [gen, gen.split(',')[0], 'portuguese vocals'];
     if (CLIMAS[clima]) tagsPartes.push(CLIMAS[clima]);
     if (VOZES[voz]) tagsPartes.push(VOZES[voz]);
@@ -320,7 +324,7 @@ export default async (req) => {
     // curtos), 3) o aviso de "não seja romântico" quando for mãe/pai/
     // irmão/amigo (evita constrangimento). Gênero e clima já vão garantidos
     // pelas TAGS (acima) e não precisam repetir aqui.
-    var genPT = GENERO_PT[estilo] || GENERO_PT.romantica;
+    var genPT = (estilo === 'outro' && estiloOutro) ? estiloOutro : (GENERO_PT[estilo] || GENERO_PT.romantica);
     var genNome = genPT.split(',')[0];
     var LIMITE_BRIEFING = 500;
     var fixos = [];
@@ -401,6 +405,7 @@ export default async (req) => {
         taskId: taskId,
         criadoEm: Date.now(),
         estilo: estilo,
+        estiloOutro: estilo === 'outro' ? estiloOutro : null,
         clima: clima,
         relacao: relacao,
         ocasiao: ocasiao,

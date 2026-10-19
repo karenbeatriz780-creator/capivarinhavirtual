@@ -45,7 +45,8 @@ const GENERO_PT = {
   jovemguarda:'Jovem Guarda dos anos 60 (iê-iê-iê, inocente e romântico)',
   rapnacional:'rap nacional (rimas, flow e verdade)',
   anos90:'hits dos anos 90 (pop/dance dos anos 90, refrão marcante e nostálgico)',
-  zoeira:'música de zoeira / trollagem (paródia engraçada e debochada, cheia de piadas, sem ofensa pesada e sem palavrão)'
+  zoeira:'música de zoeira / trollagem (paródia engraçada e debochada, cheia de piadas, sem ofensa pesada e sem palavrão)',
+  natal:'música natalina / de Natal (clima de Natal, família reunida, luzes, Papai Noel, gratidão e esperança)'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
@@ -123,7 +124,7 @@ const AJUSTE_SYSTEM_PROMPT =
   'fim — sem explicações, sem comentários, sem aspas, sem markdown.';
 
 function montarPrompt(p) {
-  var genDesc = GENERO_PT[p.estilo] || GENERO_PT.romantica;
+  var genDesc = (p.estilo === 'outro' && p.estiloOutro) ? ('estilo pedido pelo cliente: ' + p.estiloOutro) : (GENERO_PT[p.estilo] || GENERO_PT.romantica);
   var climaDesc = CLIMA_PT[p.clima] || '';
   var relacaoDesc = NICHO_TEXTO[p.relacao] || 'é uma homenagem pessoal';
   var gIdx = p.paraGen === 'ela' ? 0 : (p.paraGen === 'ele' ? 1 : -1);
@@ -223,6 +224,7 @@ export default async (req) => {
     const nomesLetra = String((body && body.nomesLetra) || '').trim();
     const frase = String((body && body.frase) || '').trim();
     const voz = String((body && body.voz) || '').trim();
+    const estiloOutro = String((body && body.estiloOutro) || '').trim().slice(0, 100);
     const letraAtual = String((body && body.letraAtual) || '').trim();
     const instrucao = String((body && body.instrucao) || '').trim();
     const de = String((body && body.de) || '').trim();             // mulher | homem | varios
@@ -251,7 +253,7 @@ export default async (req) => {
     const prompt = modoAjuste
       ? montarPromptAjuste(letraAtual.slice(0, 3000), instrucao.slice(0, 500), nomesLetra)
       : montarPrompt({
-          estilo, clima, relacao, ocasiao, nomesLetra, frase, voz, de, paraGen, paraOutro,
+          estilo, estiloOutro, clima, relacao, ocasiao, nomesLetra, frase, voz, de, paraGen, paraOutro,
           texto: texto.slice(0, 2000)
         });
     const systemPrompt = modoAjuste ? AJUSTE_SYSTEM_PROMPT : SYSTEM_PROMPT;

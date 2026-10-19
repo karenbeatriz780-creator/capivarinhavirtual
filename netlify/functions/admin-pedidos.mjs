@@ -115,6 +115,7 @@ export default async (req) => {
         musicaPreviewId: g.musicaPreviewId || null,
         letra: g.musicaLetraTexto || g.musicaLetra || null,
         musicaEstilo: g.musicaEstilo || '',
+        musicaEstiloOutro: g.musicaEstiloOutro || '',
         musicaClima: g.musicaClima || '',
         musicaPara: g.musicaPara || '',
         musicaOcasiao: g.musicaOcasiao || '',
