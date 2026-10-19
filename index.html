@@ -6906,12 +6906,10 @@ function telaMeus(){
 function meusLogin(msg, tel, nome){
   var b=el('meusBody'); if(!b) return;
   b.innerHTML='<div class="wz-t">Meus presentes</div>'+
-    '<div class="wz-s">Entre com o <b>WhatsApp que você usou na compra</b>. Suas músicas aparecem em qualquer celular ou navegador.</div>'+
+    '<div class="wz-s">Confirme o <b>número de telefone que você usou na compra</b>. Suas músicas aparecem em qualquer celular ou navegador.</div>'+
     '<form id="meusForm" class="ms-login" novalidate>'+
-      '<label for="meusTel">Seu WhatsApp</label>'+
+      '<label for="meusTel">Seu número de telefone (WhatsApp)</label>'+
       '<input class="inp" id="meusTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" value="'+esc(tel||'')+'">'+
-      '<label for="meusNome">Pra confirmar: seu nome ou o de quem recebeu a música</label>'+
-      '<input class="inp" id="meusNome" autocomplete="given-name" placeholder="Ex: Ana" value="'+esc(nome||'')+'">'+
       (msg?'<div class="ms-erro">'+esc(msg)+'</div>':'')+
       '<button class="btn btn-primary btn-block" id="meusEntrar" type="submit" style="margin-top:1rem">Ver meus presentes</button>'+
     '</form>'+
@@ -6919,10 +6917,9 @@ function meusLogin(msg, tel, nome){
   ligarMeusLocal();
   el('meusForm').onsubmit=function(ev){
     ev.preventDefault();
-    var t=el('meusTel').value.trim(), n=el('meusNome').value.trim();
-    if(t.replace(/\D/g,'').length<10){ meusLogin('Digite o WhatsApp com DDD.', t, n); return; }
-    if(n.length<2){ meusLogin('Digite um nome pra confirmar.', t, n); return; }
-    meusCarregar({tel:t, nome:n});
+    var t=el('meusTel').value.trim();
+    if(t.replace(/\D/g,'').length<10){ meusLogin('Digite o número com DDD. Ex: (94) 98118-3763', t); return; }
+    meusCarregar({tel:t});
   };
 }
 function meusCarregar(sess){
@@ -6932,12 +6929,12 @@ function meusCarregar(sess){
     .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
     .then(function(res){
       var d=res.d||{};
-      if(!res.ok){ Store.set('cl_meus',''); meusLogin(d.msg||d.erro||'Não consegui entrar agora.', sess.tel, sess.nome); return; }
-      if(d.vazio){ Store.set('cl_meus',''); meusLogin('Não achamos nenhuma música com esse WhatsApp. Confira se é o mesmo número que você colocou na compra.', sess.tel, sess.nome); return; }
+      if(!res.ok){ Store.set('cl_meus',''); meusLogin(d.msg||d.erro||'Não consegui entrar agora.', sess.tel); return; }
+      if(d.vazio){ Store.set('cl_meus',''); meusLogin('Não achamos nenhuma música com esse número. Confira se é o mesmo que você colocou na compra.', sess.tel); return; }
       Store.set('cl_meus', JSON.stringify(sess));
       meusMostrar(d, sess);
     })
-    .catch(function(){ meusLogin('Sem conexão agora. Tenta de novo em instantes.', sess.tel, sess.nome); });
+    .catch(function(){ meusLogin('Sem conexão agora. Tenta de novo em instantes.', sess.tel); });
 }
 function meusMostrar(d, sess){
   var b=el('meusBody'); if(!b) return;
@@ -7630,7 +7627,7 @@ function montarMusicaEntrega(g, opts){
           '<div class="mx-barra" id="mxBarraWrap"><i id="mxBarra"></i></div>'+
           '<div class="mx-tempo"><span id="mxAtual">0:00</span><span id="mxTotal">--:--</span></div>'+
         '</div>'+
-        '<audio id="mxAudio" preload="metadata"></audio>'+
+        '<audio id="mxAudio" preload="none"></audio>'+
         '<div class="mx-lista">'+faixas.map(function(f,i){
           return '<div class="mx-fx" data-fx="'+i+'">'+
             '<button type="button" class="mx-fx-play" data-tocafx="'+i+'"><span class="mx-n">'+(i+1)+'</span><span class="mx-eq"><i></i><i></i><i></i></span></button>'+
@@ -7670,14 +7667,15 @@ function montarMusicaEntrega(g, opts){
     var bx=el('mxBaixar'); if(bx) bx.href=linkBaixarMusica(g.id, faixas[atual].v);
   }
   function carregar(i, tocar){
-    atual=i; audio.src=faixas[i].url; el('mxAtual').textContent='0:00'; el('mxTotal').textContent='--:--'; el('mxBarra').style.width='0%';
+    /* a música só baixa quando a pessoa aperta o play: a página abre na hora */
+    atual=i; if(tocar) audio.src=faixas[i].url; else audio.removeAttribute('src'); el('mxAtual').textContent='0:00'; el('mxTotal').textContent='--:--'; el('mxBarra').style.width='0%';
     if(tocar){ tocando=true; audio.play().catch(function(){ tocando=false; marcar(); }); }
     marcar();
   }
   carregar(0,false);
   btn.onclick=function(){
     if(tocando){ audio.pause(); tocando=false; }
-    else { tocando=true; audio.play().catch(function(){ tocando=false; marcar(); }); }
+    else { if(!audio.getAttribute('src')) audio.src=faixas[atual].url; tocando=true; audio.play().catch(function(){ tocando=false; marcar(); }); }
     marcar();
   };
   document.querySelectorAll('[data-tocafx]').forEach(function(b){
