@@ -588,9 +588,14 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   background:radial-gradient(120% 90% at 50% 0%,#2A1620,#0A0508 72%);
   color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:2.5rem 1.5rem 3rem;text-align:center;overflow:hidden;}
-.capa-drop{display:flex;flex-direction:column;align-items:center;gap:.25rem;
-  border:1.5px dashed var(--rose-soft);border-radius:14px;padding:1.3rem 1rem;
-  background:var(--tint);text-align:center;cursor:pointer;}
+.capa-drop,.field .capa-drop{display:flex;flex-direction:row;align-items:center;gap:.9rem;
+  border:2px dashed #F0A6C2;border-radius:18px;padding:1rem;
+  background:#FFF5F9;text-align:left;cursor:pointer;}
+.capa-mock{display:block;position:relative;width:84px;height:84px;flex-shrink:0;}
+.capa-mock-disco{position:absolute;top:0;bottom:0;right:0;left:18px;border-radius:50%;background:radial-gradient(circle,#3a1a26 0 14%,#111 15% 100%);box-shadow:inset 0 0 0 6px #222;}
+.capa-mock-foto{position:absolute;left:0;top:6px;width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,#FFD3E1,#F0407C);display:flex;align-items:center;justify-content:center;font-size:1.7rem;box-shadow:0 6px 14px rgba(196,24,87,.3);}
+.capa-drop-tx{display:flex;flex-direction:column;gap:.2rem;min-width:0;}
+.capa-btn{margin-top:.45rem;align-self:flex-start;font-size:.8rem;font-weight:800;color:#fff;background:linear-gradient(180deg,#F0407C,#C41857);padding:.5rem .85rem;border-radius:100px;}
 .capa-ic{font-size:1.6rem;}
 .capa-drop b{font-size:.88rem;color:var(--plum);}
 .capa-sub{font-size:.75rem;color:var(--muted);line-height:1.4;}
@@ -766,6 +771,15 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .c2-selo{position:absolute;top:-.6rem;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:.68rem;font-weight:900;color:#7A4A00;background:#FFD27A;padding:.15rem .55rem;border-radius:100px;}
 .gen-outro{grid-column:1/-1;display:flex;flex-direction:column;gap:.4rem;padding:.2rem 0 .4rem;}
 .gen-outro label{font-weight:800;font-size:.92rem;}
+.mp-pac6{display:grid;grid-template-columns:1fr auto;gap:.3rem .8rem;align-items:center;width:100%;margin-top:.8rem;padding:1rem 1.05rem;border-radius:18px;border:2px solid #E9B94F;background:linear-gradient(160deg,#FFF6DD,#FFE7B0);text-align:left;cursor:pointer;font:inherit;color:#5A2B00;box-shadow:0 8px 20px rgba(233,185,79,.3);}
+.mp-pac6-tag{grid-column:1/-1;justify-self:start;font-size:.66rem;font-weight:900;letter-spacing:.06em;color:#fff;background:#C41857;padding:.22rem .6rem;border-radius:100px;}
+.mp-pac6-l b{display:block;font-size:1.02rem;font-weight:900;}
+.mp-pac6-l small{display:block;font-size:.78rem;opacity:.85;}
+.mp-pac6-p{text-align:right;}
+.mp-pac6-p s{display:block;font-size:.75rem;opacity:.6;}
+.mp-pac6-p b{font-size:1.35rem;font-weight:900;color:#C41857;}
+.mp-pac6-cta{grid-column:1/-1;display:block;text-align:center;margin-top:.35rem;padding:.65rem;border-radius:100px;background:linear-gradient(180deg,#F0407C,#C41857);color:#fff;font-weight:800;font-size:.88rem;}
+.of-sair{background:none;border:0;color:inherit;opacity:.75;text-decoration:underline;font-size:.75rem;cursor:pointer;margin-left:.3rem;}
 .gen-box{margin-top:.4rem;padding:1.1rem 1rem 1rem;border-radius:20px;background:#FFF5F9;border:1.5px solid #F7D3E2;}
 .gen-tit{font-weight:900;font-size:1.05rem;}
 .gen-s{font-size:.85rem;color:var(--muted);margin-top:.2rem;line-height:1.45;}
@@ -2724,21 +2738,23 @@ function temAddonMusica(W){
 var COMBO_DA_MUSICA = { carta: 7.99, completo: 24.99 };
 function precoTotal(W){
   if(W.bonusDe) return 0;
+  if(W.pacote6 && W.ofertaM1 && W.ofertaM2) return PRECO_PACOTE6;
   if(W.comboDaMusica && COMBO_DA_MUSICA[W.produto]!=null){
     return PACOTES.musica.preco + COMBO_DA_MUSICA[W.produto];
   }
   return precoDe(W.produto, W.duracao) + (temAddonMusica(W) ? PRECO_MUSICA_ADDON : 0);
 }
+var PRECO_PACOTE6 = 19.99; /* 6 músicas (3 letras × 2 versões) — tem que bater com criar-pagamento.mjs */
+function numMusicaAtual(){ return W.ofertaM2 ? 3 : (W.ofertaM1 ? 2 : 1); }
 function htmlMusicaPlayer(url, url2, letra){
-  function card(u, label){
+  var n=numMusicaAtual(), base=(n-1)*2;
+  function card(u, k){
     if(!u) return '';
-    var ativo=(W.musicaPreviewUrl===u);
-    return '<div class="musica-versao'+(ativo?' escolhida':'')+'">'+
-      '<div class="mv-topo"><b>'+label+'</b>'+(ativo?'<span class="mv-selo">✓ vai no presente</span>':'')+'</div>'+
+    return '<div class="musica-versao">'+
+      '<div class="mv-topo"><b>🎵 Música '+(base+k)+'</b>'+(k===2?'<span class="mv-selo">também é sua</span>':'<span class="mv-selo">é sua</span>')+'</div>'+
       (W.musicaCapa ? '<div class="mv-capa"><img src="'+esc(W.musicaCapa)+'" alt=""></div>' : '')+
       '<audio class="mv-audio" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="'+esc(u)+'" style="width:100%"></audio>'+
-      '<div class="hint" style="margin-top:.4rem">🔒 Prévia de 70 segundos — a música completa libera depois do pagamento.</div>'+
-      (ativo?'':'<button type="button" class="btn btn-ghost btn-block mv-escolher" data-versao="'+esc(u)+'" style="margin-top:.5rem">Usar esta no presente</button>')+
+      '<div class="hint" style="margin-top:.4rem">🔒 Prévia de 70 segundos. A música completa libera depois do pagamento.</div>'+
     '</div>';
   }
   var htmlLetra = letra
@@ -2746,23 +2762,60 @@ function htmlMusicaPlayer(url, url2, letra){
     : '';
   var avulsa=PACOTES.musica?PACOTES.musica.preco:9.99;
   var qtd=url2?2:1;
-  return '<div class="musica-pronta">'+
-    '<div class="mp-topo">🎉<b>Sua música ficou pronta</b>'+
-    '<span>'+(qtd>1?'Duas versões diferentes':'Sua versão')+' — ouve e escolhe a que mais emocionar</span></div>'+
-    card(url,'Versão 1')+card(url2,'Versão 2')+htmlLetra+
-    '<div class="mp-oferta">'+
-      '<div class="mp-of-tx"><b>'+(W.ofertaM1?'Leve as 4 músicas completas':'Leve '+(qtd>1?'as 2 versões completas':'a versão completa'))+'</b>'+
-      '<span>'+(W.ofertaM1?'As 2 da 1ª música + estas 2. Sem corte, em MP3 pra baixar.':'Sem o corte de 70 segundos, em MP3 pra baixar e guardar pra sempre.')+'</span></div>'+
+  var oferta;
+  if(W.pacote6){
+    oferta='<div class="mp-oferta"><div class="mp-of-tx"><b>'+(W.ofertaM2?'Leve as 6 músicas completas':'Pacote de 6 músicas')+'</b>'+
+      '<span>'+(W.ofertaM2?'As 4 anteriores + estas 2. Sem corte, em MP3 pra baixar.':'Falta criar mais 1 letra pra completar as 6.')+'</span></div>'+
+      '<div class="mp-of-pr">R$ '+fmtPreco(PRECO_PACOTE6)+'</div></div>';
+  } else {
+    oferta='<div class="mp-oferta">'+
+      '<div class="mp-of-tx"><b>'+(W.ofertaM1?'Leve as 4 músicas completas':'Leve '+(qtd>1?'as 2 músicas completas':'a música completa'))+'</b>'+
+      '<span>'+(W.ofertaM1?'As 2 da 1ª letra + estas 2. Sem corte, em MP3 pra baixar.':'Sem o corte de 70 segundos, em MP3 pra baixar e guardar pra sempre.')+'</span></div>'+
       '<div class="mp-of-pr">R$ '+fmtPreco(avulsa)+'</div>'+
     '</div>'+
+    (!W.ofertaDe && !W.bonusDe && !W.ofertaM1 && qtd>1
+      ? '<button type="button" class="mp-pac6" data-pac6>'+
+          '<span class="mp-pac6-tag">🎁 MAIS VANTAJOSO</span>'+
+          '<span class="mp-pac6-l"><b>Leve 6 músicas completas</b><small>3 letras diferentes · 2 versões de cada</small></span>'+
+          '<span class="mp-pac6-p"><s>R$ '+fmtPreco(avulsa*3)+'</s><b>R$ '+fmtPreco(PRECO_PACOTE6)+'</b></span>'+
+          '<span class="mp-pac6-cta">Quero as 6 músicas →</span>'+
+        '</button>'
+      : '');
+  }
+  return '<div class="musica-pronta">'+
+    '<div class="mp-topo">🎉<b>'+(qtd>1?'Suas 2 músicas ficaram prontas':'Sua música ficou pronta')+'</b>'+
+    '<span>'+(qtd>1?'Você leva as duas! Quando uma acaba, a outra começa sozinha.':'Dá o play e sente.')+'</span></div>'+
+    card(url,1)+card(url2,2)+htmlLetra+oferta+
   '</div>';
 }
+/* guarda a música atual e volta pro gênero pra criar a próxima */
+function guardarMusicaECriarOutra(campo, msg){
+  W[campo]={ url:W.musicaPreviewUrl, url2:W.musicaPreviewUrl2, id:W.musicaPreviewId,
+    letra:W.musicaLetraTexto||W.musicaLetra||'', estilo:W.musicaEstilo, estiloOutro:W.musicaEstiloOutro||'', clima:W.musicaClima,
+    paraNome:W.musicaParaNome||'', capa:W.musicaCapa||null };
+  W.musicaEstilo=''; W.musicaEstiloOutro=''; W.musicaClima=''; W.musicaLetraTexto=null; W.musicaLetra=null;
+  W.musicaPreviewUrl=null; W.musicaPreviewUrl2=null; W.musicaPreviewId=null; W.musicaLetraErro=null;
+  var ps2=passos(); wStep=Math.max(0, ps2.indexOf('musicaGenero'));
+  desenharPasso(); window.scrollTo(0,0);
+  toast(msg);
+}
 function ligarPreviasLimitadas(){
-  document.querySelectorAll('.mv-audio').forEach(function(a){
+  var auds=[].slice.call(document.querySelectorAll('.mv-audio'));
+  function proxima(a){ var i=auds.indexOf(a); var nx=auds[i+1]; if(nx){ try{ nx.currentTime=0; }catch(e){} nx.play().catch(function(){}); nx.scrollIntoView({behavior:'smooth',block:'center'}); } }
+  auds.forEach(function(a){
     if(a._limitada) return; a._limitada=true;
     a.addEventListener('timeupdate',function(){
-      if(a.currentTime>=70){ a.pause(); a.currentTime=70; }
+      if(a.currentTime>=70 && !a.paused){ a.pause(); a.currentTime=70; proxima(a); }
     });
+    a.addEventListener('ended',function(){ proxima(a); });
+    a.addEventListener('play',function(){ auds.forEach(function(o){ if(o!==a && !o.paused) o.pause(); }); });
+  });
+  document.querySelectorAll('[data-pac6]').forEach(function(b){
+    b.onclick=function(){
+      if(!W.musicaPreviewUrl) return;
+      W.pacote6=true;
+      guardarMusicaECriarOutra('ofertaM1','Suas 2 primeiras músicas estão guardadas ✓ Agora escolhe o estilo da 2ª letra!');
+    };
   });
   document.querySelectorAll('.mv-escolher').forEach(function(b){
     b.onclick=function(){
@@ -4510,8 +4563,19 @@ function desenharPasso(opts){
   el('wzNext').disabled=false;
   el('wzNext').textContent = (k==='checkout') ? 'Pagar e gerar o link' : (k==='musicaLetra' ? (precisaGeneroLetra() && !W.musicaLetraTexto ? 'Escrever a letra' : 'Aprovar letra e compor música') :
     ((k==='musicaFinal' && !W.musicaPreviewUrl) ? (W.musicaCompondo ? 'Compondo sua música...' : 'Gerar prévia da música 🎵') :
-    ((k==='musicaFinal' && W.ofertaDe && !W.ofertaM1) ? 'Próximo: criar a 2ª música →' : 'Continuar')));
+    ((k==='musicaFinal' && W.ofertaDe && !W.ofertaM1) ? 'Próximo: criar a 2ª música →' :
+     ((k==='musicaFinal' && W.pacote6 && W.ofertaM1 && !W.ofertaM2) ? 'Próximo: criar a 3ª letra →' : 'Continuar'))));
   if(k==='musicaFinal' && !W.musicaPreviewUrl && W.musicaCompondo) el('wzNext').disabled=true;
+  if(W.pacote6 && W.produto==='musica'){
+    el('wzBody').insertAdjacentHTML('afterbegin','<div class="of-faixa">🎁 <b>Pacote:</b> 6 músicas por R$ '+fmtPreco(PRECO_PACOTE6)+' · <span>'+numMusicaAtual()+'ª letra de 3</span>'+
+      ' <button type="button" class="of-sair" id="sairPac6">sair do pacote</button></div>');
+    var sp=el('sairPac6'); if(sp) sp.onclick=function(){
+      if(!confirm('Sair do pacote de 6? Você fica só com as 2 primeiras músicas por R$ 9,99.')) return;
+      var m1=W.ofertaM1; W.pacote6=false; W.ofertaM1=null; W.ofertaM2=null;
+      if(m1){ W.musicaPreviewUrl=m1.url; W.musicaPreviewUrl2=m1.url2; W.musicaPreviewId=m1.id; W.musicaLetraTexto=m1.letra; W.musicaEstilo=m1.estilo; W.musicaEstiloOutro=m1.estiloOutro||''; W.musicaClima=m1.clima; }
+      wStep=Math.max(0,passos().indexOf('musicaFinal')); desenharPasso();
+    };
+  }
   if(W.ofertaDe && W.produto==='musica'){
     el('wzBody').insertAdjacentHTML('afterbegin','<div class="of-faixa">🎁 <b>'+(/^[pt]\./.test(String(W.ofertaDe))?'Promoção':'Oferta de cliente')+':</b> 4 músicas por R$ 9,99 · '+
       (W.ofertaM1?'<span>2ª música</span>':'<span>1ª música</span>')+'</div>');
@@ -4992,12 +5056,15 @@ function htmlPasso(k){
 
   case 'musicaFinal': {
     return guia(W.musicaPreviewUrl
-        ? "Ficou pronta! Ouve as duas versões e escolhe a que mais emocionar."
+        ? "Ficaram prontas! As duas músicas são suas: ouça uma e depois a outra."
         : "Últimos detalhes, e sua música fica pronta pra gerar.")+
-      (W.ofertaM1 ? '<div class="of-m1"><div class="of-m1-t">✓ Sua 1ª música ('+esc(W.ofertaM1.estilo||'')+')</div>'+
-        ['url','url2'].map(function(k2,ix){ return W.ofertaM1[k2] ? '<div class="musica-versao"><div class="mv-topo"><b>Música 1 · Versão '+(ix+1)+'</b></div>'+
-          '<audio class="mv-audio" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="'+esc(W.ofertaM1[k2])+'" style="width:100%"></audio></div>' : ''; }).join('')+
-        '</div><div class="wz-t" style="margin-top:1.2rem">Sua 2ª música</div>' : '')+
+      [W.ofertaM1,W.ofertaM2].map(function(om,oi){
+        if(!om) return '';
+        return '<div class="of-m1"><div class="of-m1-t">✓ '+(W.pacote6?'Letra '+(oi+1)+' · músicas '+(oi*2+1)+' e '+(oi*2+2):'Sua 1ª música')+' ('+esc(nomeGeneroDe(om.estilo,om.estiloOutro))+')</div>'+
+          ['url','url2'].map(function(k2,ix){ return om[k2] ? '<div class="musica-versao"><div class="mv-topo"><b>Música '+(oi*2+ix+1)+'</b></div>'+
+            '<audio class="mv-audio" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="'+esc(om[k2])+'" style="width:100%"></audio></div>' : ''; }).join('')+'</div>';
+      }).join('')+
+      (W.ofertaM1 ? '<div class="wz-t" style="margin-top:1.2rem">'+(W.pacote6?'Sua '+numMusicaAtual()+'ª letra':'Sua 2ª música')+'</div>' : '')+
       '<div id="musicaResultado">'+
         (W.musicaPreviewUrl ? htmlMusicaPlayer(W.musicaPreviewUrl, W.musicaPreviewUrl2, W.musicaLetra) : '')+
       '</div>'+
@@ -5009,9 +5076,10 @@ function htmlPasso(k){
             '<div class="capa-tx"><b>Capa escolhida</b><span>Ela aparece no disco quando a música tocar</span></div>'+
             '<button type="button" class="capa-x" id="musicaCapaX">Trocar</button></div>'
           : '<label class="capa-drop" for="musicaCapaInp">'+
-            '<span class="capa-ic">📷</span>'+
-            '<b>Colocar uma foto de capa</b>'+
-            '<span class="capa-sub">Vira a capa do álbum, com o play por cima</span>'+
+            '<span class="capa-mock"><span class="capa-mock-disco"></span><span class="capa-mock-foto">📷</span></span>'+
+            '<span class="capa-drop-tx"><b>Coloque uma foto de vocês</b>'+
+            '<span class="capa-sub">Ela vira a capa da música, como um disco 💿</span>'+
+            '<span class="capa-btn">📷 Escolher foto</span></span>'+
             '</label>')+
         '<input type="file" id="musicaCapaInp" accept="image/*" style="display:none">'+
       '</div>'+
@@ -5086,11 +5154,13 @@ function htmlPasso(k){
     if(temAddonMusica(W))
       linhas+='<div class="sum-r"><span>Música personalizada</span><span>+ R$ '+fmtPreco(PRECO_MUSICA_ADDON)+'</span></div>';
     if(W.bonusDe) linhas='<div class="sum-r"><span>🎁 Música grátis por indicação</span><span>2 versões</span></div>';
-    if(W.ofertaM1) linhas='<div class="sum-r"><span>🎁 Oferta de cliente</span><span>4 músicas</span></div>'+
+    if(W.pacote6 && W.ofertaM2) linhas='<div class="sum-r"><span>🎁 Pacote</span><span>6 músicas</span></div>'+
+      [W.ofertaM1,W.ofertaM2,{estilo:W.musicaEstilo,estiloOutro:W.musicaEstiloOutro}].map(function(om,oi){ return '<div class="sum-r"><span>Letra '+(oi+1)+' ('+esc(nomeGeneroDe(om.estilo,om.estiloOutro))+')</span><span>2 músicas</span></div>'; }).join('');
+    else if(W.ofertaM1) linhas='<div class="sum-r"><span>🎁 Oferta de cliente</span><span>4 músicas</span></div>'+
       '<div class="sum-r"><span>Música 1 ('+esc(W.ofertaM1.estilo||'')+')</span><span>2 versões</span></div>'+
       '<div class="sum-r"><span>Música 2 ('+esc(W.musicaEstilo||'')+')</span><span>2 versões</span></div>';
     linhas+='<div class="sum-r tot"><span>Total</span><span>R$ '+fmtPreco(precoTotal(W))+'</span></div>';
-    if(W.ofertaM1) linhas+='<div class="of-claro">Você vai receber <b>4 músicas completas</b> pra ouvir, baixar e enviar.</div>';
+    if(W.ofertaM1) linhas+='<div class="of-claro">Você vai receber <b>'+(W.pacote6&&W.ofertaM2?6:4)+' músicas completas</b> pra ouvir, baixar e enviar.</div>';
     return guia("Última etapa! O código Pix aparece aqui mesmo, sem sair da página.")+
       '<div class="wz-t">Finalizar</div>'+
       '<div class="sum">'+linhas+'</div>'+
@@ -5713,6 +5783,11 @@ function proximoPasso(pular){
     }
   }
   if(k==='checkout'){ finalizar(); return; }
+  if(k==='musicaFinal' && W.pacote6 && W.ofertaM1 && !W.ofertaM2){
+    if(!W.musicaPreviewUrl){ toast('Gere a prévia dessa música primeiro.'); return; }
+    guardarMusicaECriarOutra('ofertaM2','4 músicas guardadas ✓ Agora escolhe o estilo da 3ª letra!');
+    return;
+  }
   if(k==='musicaFinal' && W.ofertaDe && !W.ofertaM1){
     W.ofertaM1={ url:W.musicaPreviewUrl, url2:W.musicaPreviewUrl2, id:W.musicaPreviewId,
       letra:W.musicaLetraTexto||W.musicaLetra||'', estilo:W.musicaEstilo, clima:W.musicaClima,
@@ -5854,7 +5929,7 @@ function finalizar(){
     if(wIn){ wIn.focus(); wIn.classList.add('erro'); }
     return;
   }
-  if(W.ofertaDe || W.bonusDe){ finalizarDeVerdade(); return; }
+  if(W.ofertaDe || W.bonusDe || W.pacote6){ finalizarDeVerdade(); return; }
   abrirUpsell(function(){ finalizarDeVerdade(); });
 }
 function finalizarDeVerdade(){
@@ -6558,6 +6633,7 @@ function desenharPainel(pedidos, visitas, musicas){
     var m=(p.musicaPreviewId && musPorTask[p.musicaPreviewId]) || (p.musicaPreviewUrl && musPorUrl[p.musicaPreviewUrl]) || null;
     if(m) usadas[m.taskId]=true;
     if(p.ofertaM1 && p.ofertaM1.id) usadas[p.ofertaM1.id]=true;
+    if(p.ofertaM2 && p.ofertaM2.id) usadas[p.ofertaM2.id]=true;
     itens.push({p:p, m:m, t:p.criadoEm||(m&&m.criadoEm)||0});
   });
   musicas.forEach(function(m){
@@ -6584,7 +6660,7 @@ function desenharPainel(pedidos, visitas, musicas){
     var it=o.it, p=it.p, m=it.m||{}, i=o.i;
     var nome = p ? ((p.meuNome||'')+(p.meuNome&&p.parceiroNome?' & ':'')+(p.parceiroNome||'')) : '';
     nome = nome || m.nomes || p&&p.musicaParaNome || (RELACAO_NOME[m.relacao]||'') || '(sem nome)';
-    var selo = (p&&p.ofertaM1?'<span class="selo pago">🎁 4 músicas</span>':'')+(!p ? '<span class="selo pend">só gerou música</span>'
+    var selo = (p&&p.ofertaM1?'<span class="selo pago">🎁 '+(p.ofertaM2?6:4)+' músicas</span>':'')+(!p ? '<span class="selo pend">só gerou música</span>'
       : (p.cancelado ? '<span class="selo canc">cancelado</span>'
       : (p.cortesia ? '<span class="selo pago">🎁 cortesia</span>' : (p.pago ? '<span class="selo pago">pago</span>' : '<span class="selo pend">pendente</span>'))));
     var dt=it.t?pnlFmt(it.t):'—';
@@ -6618,7 +6694,8 @@ function desenharPainel(pedidos, visitas, musicas){
       var om=p&&p.ofertaM1;
       html+='<div class="pnl-musica">'+
         (om&&om.url?pnlVersaoMusica(fake,om.url,'Música 1 · V1',!pago)+(om.url2?pnlVersaoMusica(fake,om.url2,'Música 1 · V2',!pago):''):'')+
-        pnlVersaoMusica(fake,url1,om?'Música 2 · V1':'Versão 1',!pago)+(url2?pnlVersaoMusica(fake,url2,om?'Música 2 · V2':'Versão 2',!pago):'')+'</div>';
+        (p&&p.ofertaM2&&p.ofertaM2.url?pnlVersaoMusica(fake,p.ofertaM2.url,'Música 2 · V1',!pago)+(p.ofertaM2.url2?pnlVersaoMusica(fake,p.ofertaM2.url2,'Música 2 · V2',!pago):''):'')+
+        pnlVersaoMusica(fake,url1,om?'Música '+(p&&p.ofertaM2?3:2)+' · V1':'Versão 1',!pago)+(url2?pnlVersaoMusica(fake,url2,om?'Música '+(p&&p.ofertaM2?3:2)+' · V2':'Versão 2',!pago):'')+'</div>';
     } else if(m.taskId){
       html+='<div class="pnl-pend"><span>Música ainda processando ou o cliente fechou a página.</span>'+
         '<button type="button" class="pnl-verificar" data-verificar="'+esc(m.taskId)+'">Verificar agora</button></div>';
@@ -6934,7 +7011,7 @@ function meusLogin(msg, tel, nome){
 }
 function meusCarregar(sess){
   var b=el('meusBody'); if(!b) return;
-  b.innerHTML='<div class="empty"><img src="'+MASCOTE+'" alt="" style="animation:float 2.4s ease-in-out infinite"><p>Buscando seus presentes...</p></div>';
+  b.innerHTML='<div class="empty"><img src="'+MASCOTE+'" alt="" style="animation:float 2.4s ease-in-out infinite"><p><b>Buscando suas músicas...</b><br>Pode levar até 40 segundos. Não feche a página.</p></div>';
   fetch('/.netlify/functions/meus-presentes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sess)})
     .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
     .then(function(res){
@@ -6953,7 +7030,7 @@ function meusMostrar(d, sess){
   var cards=itens.map(function(it){
     var badge = it.pago ? (it.cortesia||it.bonus ? '<span class="pillbadge pb-live">🎁 Presente</span>' : '<span class="pillbadge pb-live">✓ Liberada</span>')
                         : '<span class="pillbadge pb-exp">Falta pagar</span>';
-    var tit = it.produto==='musica' ? (it.quatro ? '4 músicas' : 'Música')+(it.para?' pra '+it.para:'') : (PACOTES[it.produto]?PACOTES[it.produto].nome:'Presente')+(it.para?' · '+it.para:'');
+    var tit = it.produto==='musica' ? (it.seis ? '6 músicas' : it.quatro ? '4 músicas' : 'Música')+(it.para?' pra '+it.para:'') : (PACOTES[it.produto]?PACOTES[it.produto].nome:'Presente')+(it.para?' · '+it.para:'');
     return '<div class="gcard"><div class="gcard-top">'+
       (it.capa?'<img class="gcard-th" src="'+esc(it.capa)+'" alt="">':'<div class="gcard-th">🎵</div>')+
       '<div style="flex:1;min-width:0"><h4>'+esc(tit)+'</h4><div class="mt">'+esc([nomeGenero(it.estilo), it.em?new Date(it.em).toLocaleDateString('pt-BR'):''].filter(Boolean).join(' · '))+'</div></div>'+badge+
@@ -7207,9 +7284,10 @@ function telaOuvir(arg){
           '<div style="text-align:center"><img src="'+MASCOTE+'" alt="" style="width:78px;animation:float 2.4s ease-in-out infinite"></div>'+
           '<div class="wz-t" style="text-align:center">'+(para?('A música pra '+esc(para)+' ficou pronta 🎵'):'Sua música ficou pronta 🎵')+'</div>'+
           '<div class="wz-s" style="text-align:center">Ela está guardadinha aqui. Dá o play e sente.</div>'+
-          '<div class="musica-pronta">'+(d.url3?versao(d.url3,'Música 1 · Versão 1')+versao(d.url4,'Música 1 · Versão 2')+versao(d.url,'Música 2 · Versão 1')+versao(d.url2,'Música 2 · Versão 2')
+          '<div class="musica-pronta">'+(d.url5?versao(d.url3,'Música 1')+versao(d.url4,'Música 2')+versao(d.url5,'Música 3')+versao(d.url6,'Música 4')+versao(d.url,'Música 5')+versao(d.url2,'Música 6')
+            : d.url3?versao(d.url3,'Música 1 · Versão 1')+versao(d.url4,'Música 1 · Versão 2')+versao(d.url,'Música 2 · Versão 1')+versao(d.url2,'Música 2 · Versão 2')
             : versao(d.url,'Versão 1')+versao(d.url2,'Versão 2'))+
-            '<div class="mp-oferta"><div class="mp-of-tx"><b>'+(d.url3?'Leve as 4 músicas completas':(d.url2?'Leve as 2 versões completas':'Leve a versão completa'))+'</b>'+
+            '<div class="mp-oferta"><div class="mp-of-tx"><b>'+(d.url5?'Leve as 6 músicas completas':d.url3?'Leve as 4 músicas completas':(d.url2?'Leve as 2 versões completas':'Leve a versão completa'))+'</b>'+
             '<span>Sem corte, em MP3, com link pra enviar e guardar pra sempre.</span></div>'+
             '<div class="mp-of-pr">R$ '+fmtPreco(valor)+'</div></div>'+
           '</div>'+
@@ -7595,7 +7673,13 @@ function montarMusicaEntrega(g, opts){
   var letra=(g.musicaLetra||'').trim();
   var linkReceber=linkPresente(g.id);
   var faixas=[];
-  if(g.ofertaM1 && g.ofertaM1.url){
+  if(g.ofertaM1 && g.ofertaM1.url && g.ofertaM2 && g.ofertaM2.url){
+    [[g.ofertaM1,3],[g.ofertaM2,5],[{url:url,url2:g.musicaPreviewUrl2,estilo:g.musicaEstilo,estiloOutro:g.musicaEstiloOutro},1]].forEach(function(par,li){
+      var om=par[0], est=om.estilo?' · '+nomeGeneroDe(om.estilo,om.estiloOutro):'';
+      if(om.url) faixas.push({rot:'Música '+(li*2+1), sub:'Letra '+(li+1)+est, url:om.url, v:par[1]});
+      if(om.url2) faixas.push({rot:'Música '+(li*2+2), sub:'Letra '+(li+1)+est, url:om.url2, v:par[1]+1});
+    });
+  } else if(g.ofertaM1 && g.ofertaM1.url){
     faixas.push({rot:'Música 1', sub:'Versão 1'+(g.ofertaM1.estilo?' · '+nomeGenero(g.ofertaM1.estilo):''), url:g.ofertaM1.url, v:3});
     if(g.ofertaM1.url2) faixas.push({rot:'Música 1', sub:'Versão 2'+(g.ofertaM1.estilo?' · '+nomeGenero(g.ofertaM1.estilo):''), url:g.ofertaM1.url2, v:4});
     if(url) faixas.push({rot:'Música 2', sub:'Versão 1'+(g.musicaEstilo?' · '+nomeGenero(g.musicaEstilo):''), url:url, v:1});
@@ -7612,7 +7696,7 @@ function montarMusicaEntrega(g, opts){
     ? (opts.sucesso ? '✅ Pagamento confirmado' : '🎧 Suas músicas estão aqui')
     : (para ? ('Oi, '+para+'! 💌') : 'Oi! 💌');
   var titulo = cliente
-    ? (faixas.length>2 ? 'Suas 4 músicas estão prontas' : (para ? 'A música pra '+para+' está pronta' : 'Sua música está pronta'))
+    ? (faixas.length>2 ? 'Suas '+faixas.length+' músicas estão prontas' : (para ? 'A música pra '+para+' está pronta' : 'Sua música está pronta'))
     : (de ? (de+' fez uma surpresa pra você') : 'Alguém fez uma surpresa pra você');
   var sub = cliente
     ? 'Ouça, baixe no celular e envie pra quem você ama.'
@@ -7650,8 +7734,9 @@ function montarMusicaEntrega(g, opts){
           '<a class="mx-btn" id="mxBaixar" href="'+linkBaixarMusica(g.id,faixas[0].v)+'" download>'+IC.download+' Baixar MP3</a>'+
         '</div>'+
         '<div class="mx-dica">Não baixou? Se abriu pelo WhatsApp ou Instagram, toque nos 3 pontinhos ⋮ e escolha <b>"Abrir no navegador"</b>.</div>'+
-        ((g.ofertaM1&&g.ofertaM1.letra) ? '<details class="mx-letra"><summary>📝 Letra da música 1</summary><pre>'+esc(g.ofertaM1.letra)+'</pre></details>' : '')+
-        (letra ? '<details class="mx-letra"><summary>📝 '+(g.ofertaM1?'Letra da música 2':'Ver a letra')+'</summary><pre>'+esc(letra)+'</pre></details>' : '')+
+        ((g.ofertaM1&&g.ofertaM1.letra) ? '<details class="mx-letra"><summary>📝 Letra '+(g.ofertaM2?'1':'da música 1')+'</summary><pre>'+esc(g.ofertaM1.letra)+'</pre></details>' : '')+
+        ((g.ofertaM2&&g.ofertaM2.letra) ? '<details class="mx-letra"><summary>📝 Letra 2</summary><pre>'+esc(g.ofertaM2.letra)+'</pre></details>' : '')+
+        (letra ? '<details class="mx-letra"><summary>📝 '+(g.ofertaM2?'Letra 3':g.ofertaM1?'Letra da música 2':'Ver a letra')+'</summary><pre>'+esc(letra)+'</pre></details>' : '')+
         (cliente
           ? '<div class="mx-share"><b>Mande pra quem vai receber</b><span>Esse link abre a música como surpresa, sem os seus botões de cliente.</span>'+
               '<div class="mx-share-row"><a class="mx-btn mx-btn-zap" href="https://wa.me/?text='+encodeURIComponent('Fiz uma surpresa pra você 🎵💝 '+linkReceber)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar a surpresa</a>'+
