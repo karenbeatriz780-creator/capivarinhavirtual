@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { obterToken, conferirPagamentoEfi, aplicarPagamento, listarPixRecebidos } from './_efi.mjs';
+import { lerIndice, lerDias, idsDosDias, diaBR } from './_indice.mjs';
 // ATENÇÃO: este arquivo precisa ser .mjs. Não deixe um admin-pedidos.js junto na pasta.
 
 function json(obj, status = 200) {
@@ -22,14 +23,23 @@ export default async (req) => {
     if (!autorizado(req)) return json({ erro: 'Senha incorreta.' }, 401);
 
     const store = getStore('presentes');
-    const { blobs } = await store.list();
+    // ?dias=N → só os pedidos dos últimos N dias (abre rápido). Sem isso, carrega tudo.
+    const nDias = Math.max(0, Math.min(60, parseInt(new URL(req.url).searchParams.get('dias'), 10) || 0));
+    const idxDias = await lerDias();
+    let blobs, parcial = false;
+    if (nDias && idxDias && idxDias.dias) {
+      blobs = idsDosDias(idxDias, nDias, 'p').map((key) => ({ key }));
+      parcial = true;
+    } else {
+      blobs = (await store.list()).blobs;
+    }
 
     // Antes isso buscava um registro de cada vez, esperando um terminar pra
     // começar o próximo — com centenas de pedidos salvos, essa fila serial
     // é o motivo do painel travar/demorar pra abrir. Buscando todos em
     // paralelo, o tempo de carregamento não cresce junto com a quantidade
     // de pedidos.
-    const registros = await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' })));
+    const registros = await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' }).catch(() => null)));
 
     // Plano B do webhook: confere na Efí os pedidos pendentes dos últimos 3 dias.
     // Faz isso com limite de tempo (~6s) pra o painel nunca estourar o tempo do
@@ -90,6 +100,15 @@ export default async (req) => {
     }
     const faltamConferir = Math.max(0, pendentes.length - conferidos);
 
+    // mantém o índice de telefones (Meus presentes) em dia: remonta em segundo plano a cada 6h
+    try {
+      const idx = await lerIndice();
+      if (!idx || !idx.montadoEm || Date.now() - idx.montadoEm > 6 * 3600 * 1000) {
+        const base = new URL(req.url).origin;
+        await Promise.race([fetch(base + '/.netlify/functions/indexar-telefones-background', { method: 'POST' }).catch(() => null), new Promise((r) => setTimeout(r, 1500))]);
+      }
+    } catch (e) {}
+
     const pedidos = [];
     for (const g of registros) {
       if (!g) continue;
@@ -100,6 +119,7 @@ export default async (req) => {
         valor: g.pagamento ? g.pagamento.valor : 0,
         provedor: g.pagamento ? g.pagamento.provedor : null,
         pago: !!g.pago,
+        trafego: (g.trafego && g.trafego.fonte) || null,
         cortesia: !!g.cortesia,
         cancelado: !!g.cancelado,
         criadoEm: g.criadoEm || null,
@@ -135,7 +155,15 @@ export default async (req) => {
 
     pedidos.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 
-    return json({ ok: true, pedidos, liberadosAgora, faltamConferir });
+    // custos por dia (músicas geradas e letras escritas) — últimos 14 dias
+    const custos = {};
+    if (idxDias && idxDias.dias) {
+      for (let i = 0; i < 14; i++) {
+        const d = diaBR(Date.now() - i * 86400000), e = idxDias.dias[d];
+        custos[d] = { m: e && e.t ? e.t.length : 0, l: (e && e.l) || 0 };
+      }
+    }
+    return json({ ok: true, pedidos, liberadosAgora, faltamConferir, parcial, custos, indiceEm: idxDias && idxDias.montadoEm || 0 });
   } catch (e) {
     console.error('admin-pedidos (inesperado):', e && e.stack || e);
     return json({ erro: 'Erro inesperado no servidor: ' + (e && e.message ? e.message : String(e)) }, 500);

@@ -3,6 +3,7 @@ import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 import { statusOferta, registrarTentativa } from './_oferta.mjs';
 import { statusIndicacao, registrarIndicado, registrarUso } from './_indicacao.mjs';
+import { indexar, indexarDia } from './_indice.mjs';
 
 const PACOTES = {
   completo:  { nome: 'Retrospectiva Completa', preco: 19, preco48: 9.99 },
@@ -83,6 +84,8 @@ export default async (req) => {
         pagamento: { provedor: 'bonus', status: 'CONCLUIDA', valor: 0, duracao: 'vitalicio', pagoEm: agoraB }
       });
       await getStore('presentes').setJSON(presente.id, salvoB);
+      await indexar(presente.musicaWhatsapp || presente.whatsapp, 'p', presente.id);
+      await indexarDia('p', presente.id);
       await registrarUso(refB, presente.id);
       return json({ gratis: true, id: presente.id, presente: salvoB });
     }
@@ -109,6 +112,8 @@ export default async (req) => {
 
     try {
       await getStore('presentes').setJSON(presente.id, salvo);
+      await indexar(presente.musicaWhatsapp || presente.whatsapp, 'p', presente.id);
+      await indexarDia('p', presente.id);
       await getStore('efi-txid').setJSON(txid, { giftId: presente.id, produto: presente.produto, valor: precoFinal, duracao, criadoEm });
 
       const token = await obterToken();

@@ -1,31 +1,23 @@
 import { getStore } from '@netlify/blobs';
-import { statusIndicacao } from './_indicacao.mjs';
+import { chaveTel, lerIndice } from './_indice.mjs';
 
-// MEUS PRESENTES por WhatsApp: a pessoa entra com o número que usou na compra
-// Funciona em qualquer
-// navegador/celular, porque tudo vem do servidor, não do aparelho.
+// MEUS PRESENTES pelo número de telefone. Rápido: usa o índice por telefone
+// (_indice.mjs) e só abre os pedidos daquele número. Nada de áudio aqui —
+// a música só carrega quando a pessoa aperta o play na página dela.
 //   POST { tel } → { ok, itens:[...], indicacao:{...}, promo, indicarLink }
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
-}
-// DDD + últimos 8 dígitos: casa número com ou sem o 9 e com ou sem +55
-export function chaveTel(t) {
-  let d = String(t || '').replace(/\D/g, '');
-  if (d.length > 11 && d.indexOf('55') === 0) d = d.slice(2);
-  if (d.length < 10) return '';
-  return d.slice(0, 2) + d.slice(-8);
-}
-function norm(s) {
-  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z ]+/g, ' ').trim();
 }
 function mascara(t) {
   const d = String(t || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '');
   if (d.length < 10) return '';
   return '(' + d.slice(0, 2) + ') •••••-' + d.slice(-4);
 }
+const comLimite = (p, ms, padrao) => Promise.race([p, new Promise((r) => setTimeout(() => r(padrao), ms))]);
 
 export default async (req) => {
+  const t0 = Date.now();
   try {
     if (req.method !== 'POST') return json({ erro: 'Método não permitido.' }, 405);
     let body = {};
@@ -34,35 +26,43 @@ export default async (req) => {
     if (!chave) return json({ erro: 'Digite o número com DDD.' }, 400);
 
     const presentes = getStore('presentes');
-    const { blobs } = await presentes.list();
-    const todos = (await Promise.all(blobs.map((b) => presentes.get(b.key, { type: 'json' }).catch(() => null)))).filter(Boolean);
-    const meus = todos.filter((g) => !g.cancelado && chaveTel(g.musicaWhatsapp || g.whatsapp) === chave);
-
     const musicasSt = getStore('musicas');
-    const ml = await musicasSt.list();
+    const idx = await lerIndice();
+    if (!idx || !idx.mapa) {
+      // índice ainda não existe: manda montar e pede pra tentar de novo em instantes
+      await comLimite(fetch(new URL(req.url).origin + '/.netlify/functions/indexar-telefones-background', { method: 'POST' }).catch(() => null), 2500, null);
+      return json({ erro: 'preparando', msg: 'Estamos organizando as músicas. Tenta de novo em 1 minutinho.' }, 503);
+    }
+    const ent = idx.mapa[chave] || { p: [], t: [] };
+    if (!ent.p.length && !ent.t.length) return json({ ok: true, vazio: true });
+
+    const lerP = (id) => comLimite(presentes.get(id, { type: 'json' }).catch(() => null), 4000, null);
+    const lerM = (id) => comLimite(musicasSt.get(id, { type: 'json' }).catch(() => null), 4000, null);
+
+    const [ps, ms] = await Promise.all([
+      Promise.all(ent.p.slice(-40).map(lerP)),
+      Promise.all(ent.t.slice(-40).map(async (id) => { const m = await lerM(id); return m ? Object.assign({ taskId: id }, m) : null; }))
+    ]);
+    const meus = ps.filter((g) => g && !g.cancelado);
+    // música que virou pedido (recuperação/cortesia) → traz o pedido junto
+    const jaTem = {}; meus.forEach((g) => { jaTem[g.id] = 1; });
+    const extras = await Promise.all(ms.filter((m) => m && m.pedidoRecId && !jaTem[m.pedidoRecId]).map((m) => lerP(m.pedidoRecId)));
+    extras.forEach((g) => { if (g && !g.cancelado && !jaTem[g.id]) { meus.push(g); jaTem[g.id] = 1; } });
+
     const usadas = {};
     meus.forEach((g) => { if (g.musicaPreviewId) usadas[g.musicaPreviewId] = 1; if (g.ofertaM1 && g.ofertaM1.id) usadas[g.ofertaM1.id] = 1; if (g.ofertaM2 && g.ofertaM2.id) usadas[g.ofertaM2.id] = 1; });
-    const soMusica = [];
-    await Promise.all(ml.blobs.map(async (b) => {
-      if (usadas[b.key]) return;
-      const m = await musicasSt.get(b.key, { type: 'json' }).catch(() => null);
-      if (!m || !m.url || m.origem === 'painel' || m.pedidoRecId) return;
-      if (chaveTel(m.whatsapp) !== chave) return;
-      soMusica.push(Object.assign({ taskId: b.key }, m));
-    }));
-
-    if (!meus.length && !soMusica.length) return json({ ok: true, vazio: true });
+    const soMusica = ms.filter((m) => m && m.url && m.origem !== 'painel' && !m.pedidoRecId && !usadas[m.taskId]);
 
     const itens = [];
     meus.forEach((g) => {
       if (g.produto === 'extra' || String(g.produto || '').indexOf('extra_') === 0) return;
       const pago = !!g.pago;
-      const temMusica = !!g.musicaPreviewUrl;
-      if (!pago && !temMusica) return;
+      if (!pago && !g.musicaPreviewUrl) return;
       itens.push({
         id: g.id, produto: g.produto || 'musica', pago, cortesia: !!g.cortesia, bonus: !!g.bonusDe,
         quatro: !!(g.ofertaM1 && g.ofertaM1.url), seis: !!(g.ofertaM2 && g.ofertaM2.url),
-        para: g.musicaParaNome || g.parceiroNome || '', estilo: g.musicaEstilo || '', capa: g.musicaCapa && String(g.musicaCapa).length < 120000 ? g.musicaCapa : null,
+        para: g.musicaParaNome || g.parceiroNome || '', estilo: g.musicaEstilo || '',
+        capa: g.musicaCapa && String(g.musicaCapa).length < 120000 ? g.musicaCapa : null,
         em: g.pagoEm || g.criadoEm || 0,
         link: pago ? '#/p/' + g.id + (g.produto === 'musica' ? '/c' : '') : '#/ouvir/' + g.id
       });
@@ -72,21 +72,28 @@ export default async (req) => {
       em: m.criadoEm || 0, link: '#/ouvir/t.' + m.taskId
     }));
     itens.sort((a, b) => (b.em || 0) - (a.em || 0));
+    if (!itens.length) return json({ ok: true, vazio: true });
 
-    // indique e ganhe: soma tudo que os amigos indicados pagaram
+    // indique e ganhe (com limite de tempo pra nunca travar a tela)
     const pagos = meus.filter((g) => g.pago && !g.bonusDe).sort((a, b) => (b.pagoEm || b.criadoEm || 0) - (a.pagoEm || a.criadoEm || 0));
-    const indStore = getStore('indicacoes');
-    let disponiveis = 0, confirmadas = 0; let resgatar = null; const amigos = [];
-    for (const g of pagos.slice(0, 20)) {
-      const st = await statusIndicacao(g.id);
-      confirmadas += st.confirmadas; disponiveis += st.disponiveis;
-      if (st.disponiveis > 0 && !resgatar) resgatar = '#/bonus/' + g.id;
-      const reg = await indStore.get(g.id, { type: 'json' }).catch(() => null);
-      for (const nid of ((reg && reg.indicados) || []).slice(-30)) {
-        const n = todos.find((x) => x.id === nid);
-        if (!n || n.bonusDe) continue;
-        amigos.push({ nome: String(n.meuNome || '').trim().split(' ')[0] || 'Amigo(a)', tel: mascara(n.musicaWhatsapp || n.whatsapp), pago: !!(n.pago && !n.cancelado) });
-      }
+    let disponiveis = 0, confirmadas = 0, resgatar = null; const amigos = [];
+    if (pagos.length && Date.now() - t0 < 6000) {
+      const indStore = getStore('indicacoes');
+      await comLimite(Promise.all(pagos.slice(0, 10).map(async (g) => {
+        const reg = await indStore.get(g.id, { type: 'json' }).catch(() => null);
+        const ind = ((reg && reg.indicados) || []).slice(-30);
+        const usados = ((reg && reg.usados) || []).length;
+        const ns = await Promise.all(ind.map(lerP));
+        let conf = 0;
+        ns.forEach((n) => {
+          if (!n || n.bonusDe) return;
+          const ok = !!(n.pago && !n.cancelado); if (ok) conf++;
+          amigos.push({ nome: String(n.meuNome || '').trim().split(' ')[0] || 'Amigo(a)', tel: mascara(n.musicaWhatsapp || n.whatsapp), pago: ok });
+        });
+        const disp = Math.max(0, conf - usados);
+        confirmadas += conf; disponiveis += disp;
+        if (disp > 0 && !resgatar) resgatar = '#/bonus/' + g.id;
+      })), Math.max(500, 7000 - (Date.now() - t0)), null);
     }
     const base = meus.slice().sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0))[0];
     const promo = base ? '#/oferta/p.' + base.id : (soMusica[0] ? '#/oferta/t.' + soMusica[0].taskId : null);

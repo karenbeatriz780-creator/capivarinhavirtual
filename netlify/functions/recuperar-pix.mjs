@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
+import { indexar, indexarDia } from './_indice.mjs';
 
 // RECUPERAÇÃO DE VENDA
 // Link que você manda no WhatsApp pra quem quase comprou: #/ouvir/<id>
@@ -126,6 +127,8 @@ export default async (req) => {
       })
     });
     await getStore('presentes').setJSON(g.id, atualizado);
+    await indexar(atualizado.musicaWhatsapp, 'p', g.id);
+    await indexarDia('p', g.id);
     await getStore('efi-txid').setJSON(txid, { giftId: g.id, produto: g.produto, valor, duracao: atualizado.pagamento.duracao, criadoEm: agora });
 
     return json({ payload: qr.data.qrcode, id: g.id, teste: modoTeste(), valor });

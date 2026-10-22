@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
+import { indexar, indexarDia } from './_indice.mjs';
 
 // PAINEL: libera uma música SEM pagamento ("de presente"/cortesia).
 // O link do cliente passa a funcionar normalmente (ouvir completo + baixar),
@@ -68,6 +69,8 @@ export default async (req) => {
       })
     });
     await presentes.setJSON(atualizado.id, atualizado);
+    await indexar(atualizado.musicaWhatsapp, 'p', atualizado.id);
+    await indexarDia('p', atualizado.id);
     return json({ ok: true, id: atualizado.id });
   } catch (e) {
     console.error('admin-liberar-cortesia:', e && e.stack || e);

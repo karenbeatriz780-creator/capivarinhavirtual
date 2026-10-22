@@ -1,4 +1,5 @@
 import { getStore } from '@netlify/blobs';
+import { indexar, indexarDia } from './_indice.mjs';
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -422,6 +423,8 @@ export default async (req) => {
         url: null,
         url2: null
       });
+      if ((body && body.origem) !== 'painel') await indexar(body && body.whatsapp, 't', taskId);
+      await indexarDia('t', taskId);
     } catch (e) {
       // se o registro falhar, a música ainda deve ser gerada normalmente
       console.error('Falha ao registrar música:', e && e.message);

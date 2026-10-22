@@ -1,3 +1,4 @@
+import { indexarDia } from './_indice.mjs';
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
@@ -333,6 +334,7 @@ export default async (req) => {
     const letra = limparResposta(conteudo);
     console.log('LETRA GERADA >> ' + letra.slice(0, 120) + (letra.length > 120 ? '...' : ''));
 
+    await indexarDia('l');
     return json({ ok: true, letra: letra });
 
   } catch (e) {
@@ -340,3 +342,6 @@ export default async (req) => {
     return json({ erro: 'Erro inesperado no servidor: ' + (e && e.message ? e.message : String(e)) }, 500);
   }
 };
+
+// usados também pela letra rápida (letra-rapida.mjs)
+export { montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT };
