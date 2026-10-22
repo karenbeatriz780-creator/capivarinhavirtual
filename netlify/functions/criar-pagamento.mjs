@@ -14,6 +14,7 @@ const PACOTES = {
   extra_carta:   { nome: 'Cartinha',       preco: 3.99 },
   extra_moldura: { nome: 'Moldura',        preco: 3.99 }
 };
+const PRECO_PACOTE6 = 19.99; // 6 músicas (3 letras × 2 versões) — tem que bater com o site
 // Produtos que aceitam a música personalizada como adicional pago.
 const PRODUTOS_COM_ADDON_MUSICA = ['completo', 'carta'];
 const PRECO_ADDON_MUSICA = 10;
@@ -51,7 +52,11 @@ export default async (req) => {
 
     // Oferta de cliente (4 músicas por R$ 9,99): só vale com pedido de origem pago,
     // dentro de 48h e se ainda não foi usada. Sem oferta válida, a 2ª música é descartada.
-    if (presente.ofertaDe || presente.ofertaM1) {
+    // PACOTE 6 MÚSICAS (3 letras × 2 versões) por R$ 19,99 — escolhido no próprio site
+    const pacote6 = !!presente.pacote6 && presente.produto === 'musica' && !presente.ofertaDe && !presente.bonusDe &&
+      presente.ofertaM1 && presente.ofertaM1.url && presente.ofertaM2 && presente.ofertaM2.url;
+    if (!pacote6) { delete presente.pacote6; delete presente.ofertaM2; }
+    if (!pacote6 && (presente.ofertaDe || presente.ofertaM1)) {
       if (presente.produto !== 'musica' || !presente.ofertaDe || !presente.ofertaM1) {
         delete presente.ofertaDe; delete presente.ofertaM1;
       } else {
@@ -71,7 +76,7 @@ export default async (req) => {
       if (presente.produto !== 'musica' || st.disponiveis < 1) {
         return json({ erro: 'Você ainda não tem música grátis disponível.' }, 400);
       }
-      delete presente.ofertaDe; delete presente.ofertaM1; delete presente.refDe;
+      delete presente.ofertaDe; delete presente.ofertaM1; delete presente.ofertaM2; delete presente.pacote6; delete presente.refDe;
       const agoraB = Date.now();
       const salvoB = Object.assign({}, presente, {
         pago: true, criadoEm: agoraB, pagoEm: agoraB, duracao: 'vitalicio', expiraEm: null,
@@ -91,7 +96,7 @@ export default async (req) => {
     const temAddonMusica = !!presente.musicaOn && PRODUTOS_COM_ADDON_MUSICA.indexOf(presente.produto) !== -1;
     const comboDaMusica = !!presente.comboDaMusica && COMBO_DA_MUSICA[presente.produto] != null;
     const precoBase = (duracao === 'h48' && pacote.preco48 != null) ? pacote.preco48 : pacote.preco;
-    const precoFinal = comboDaMusica
+    const precoFinal = pacote6 ? PRECO_PACOTE6 : comboDaMusica
       ? (PACOTES.musica.preco + COMBO_DA_MUSICA[presente.produto])
       : (precoBase + (temAddonMusica ? PRECO_ADDON_MUSICA : 0));
     const txid = criarTxid(presente.id);
@@ -107,7 +112,7 @@ export default async (req) => {
       await getStore('efi-txid').setJSON(txid, { giftId: presente.id, produto: presente.produto, valor: precoFinal, duracao, criadoEm });
 
       const token = await obterToken();
-      const nomeCobranca = (presente.ofertaM1 ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '');
+      const nomeCobranca = (pacote6 ? '6 Músicas Personalizadas' : presente.ofertaM1 ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '');
       const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
         method: 'PUT', token,
         body: {

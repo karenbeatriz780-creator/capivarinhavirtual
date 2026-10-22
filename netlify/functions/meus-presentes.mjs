@@ -41,7 +41,7 @@ export default async (req) => {
     const musicasSt = getStore('musicas');
     const ml = await musicasSt.list();
     const usadas = {};
-    meus.forEach((g) => { if (g.musicaPreviewId) usadas[g.musicaPreviewId] = 1; if (g.ofertaM1 && g.ofertaM1.id) usadas[g.ofertaM1.id] = 1; });
+    meus.forEach((g) => { if (g.musicaPreviewId) usadas[g.musicaPreviewId] = 1; if (g.ofertaM1 && g.ofertaM1.id) usadas[g.ofertaM1.id] = 1; if (g.ofertaM2 && g.ofertaM2.id) usadas[g.ofertaM2.id] = 1; });
     const soMusica = [];
     await Promise.all(ml.blobs.map(async (b) => {
       if (usadas[b.key]) return;
@@ -61,7 +61,7 @@ export default async (req) => {
       if (!pago && !temMusica) return;
       itens.push({
         id: g.id, produto: g.produto || 'musica', pago, cortesia: !!g.cortesia, bonus: !!g.bonusDe,
-        quatro: !!(g.ofertaM1 && g.ofertaM1.url),
+        quatro: !!(g.ofertaM1 && g.ofertaM1.url), seis: !!(g.ofertaM2 && g.ofertaM2.url),
         para: g.musicaParaNome || g.parceiroNome || '', estilo: g.musicaEstilo || '', capa: g.musicaCapa && String(g.musicaCapa).length < 120000 ? g.musicaCapa : null,
         em: g.pagoEm || g.criadoEm || 0,
         link: pago ? '#/p/' + g.id + (g.produto === 'musica' ? '/c' : '') : '#/ouvir/' + g.id

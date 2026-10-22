@@ -127,6 +127,8 @@ export default async (req) => {
         refDe: g.refDe || null,
         bonusDe: g.bonusDe || null,
         ofertaLiberadaAte: g.ofertaLiberadaAte || null,
+        pacote6: !!g.pacote6,
+        ofertaM2: g.ofertaM2 ? { url: g.ofertaM2.url || null, url2: g.ofertaM2.url2 || null, id: g.ofertaM2.id || null, letra: g.ofertaM2.letra || null, estilo: g.ofertaM2.estilo || '', paraNome: g.ofertaM2.paraNome || '' } : null,
         ofertaM1: g.ofertaM1 ? { url: g.ofertaM1.url || null, url2: g.ofertaM1.url2 || null, id: g.ofertaM1.id || null, letra: g.ofertaM1.letra || null, estilo: g.ofertaM1.estilo || '', paraNome: g.ofertaM1.paraNome || '' } : null
       });
     }

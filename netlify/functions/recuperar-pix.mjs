@@ -78,6 +78,8 @@ export default async (req) => {
         url2: g.musicaPreviewUrl2 ? previa(g, t, 2) : null,
         url3: g.ofertaM1 && g.ofertaM1.url ? previa(g, t, 3) : null,
         url4: g.ofertaM1 && g.ofertaM1.url2 ? previa(g, t, 4) : null,
+        url5: g.ofertaM2 && g.ofertaM2.url ? previa(g, t, 5) : null,
+        url6: g.ofertaM2 && g.ofertaM2.url2 ? previa(g, t, 6) : null,
         valor: (g.pagamento && g.pagamento.valor) || PRECO_MUSICA
       });
     }

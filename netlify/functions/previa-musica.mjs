@@ -65,7 +65,7 @@ export default async (req) => {
   try {
     const u = new URL(req.url);
     const taskId = (u.searchParams.get('taskId') || '').trim();
-    const v = Math.min(4, Math.max(1, parseInt(u.searchParams.get('v'), 10) || 1));
+    const v = Math.min(6, Math.max(1, parseInt(u.searchParams.get('v'), 10) || 1));
     const g = (u.searchParams.get('g') || '').trim();
     const pedidoId = (u.searchParams.get('id') || '').trim();
 
@@ -75,8 +75,8 @@ export default async (req) => {
       if (pedidoId.length > 100) return erro('Pedido inválido.', 400);
       const p = await getStore('presentes').get(pedidoId, { type: 'json' });
       if (!p) return erro('Pedido não encontrado.', 404);
-      const m1 = p.ofertaM1 || {};
-      real = v === 4 ? m1.url2 : v === 3 ? m1.url : v === 2 ? p.musicaPreviewUrl2 : p.musicaPreviewUrl;
+      const m1 = p.ofertaM1 || {}, m2 = p.ofertaM2 || {};
+      real = v === 6 ? m2.url2 : v === 5 ? m2.url : v === 4 ? m1.url2 : v === 3 ? m1.url : v === 2 ? p.musicaPreviewUrl2 : p.musicaPreviewUrl;
       if (!real) return erro('Música não encontrada.', 404);
       if (p.pago === true && !p.cancelado) {
         return new Response(null, { status: 302, headers: { Location: real, 'Cache-Control': 'no-store' } });
