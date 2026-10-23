@@ -2917,9 +2917,8 @@ function htmlMusicaCompondo(){
 function htmlLetraCarregando(msg){
   return '<div class="letra-carregando">'+
     '<div class="lc-pena">✍️</div>'+
-    '<div class="lc-tit" id="letraVivoTit">'+(msg||'Escrevendo a letra da sua música...')+'</div>'+
-    '<div class="lc-sub">Leva só alguns segundos.</div>'+
-    '<pre class="letra-vivo" id="letraAoVivo" style="display:none"></pre>'+
+    '<div class="lc-tit">'+(msg||'Escrevendo a letra da sua música...')+'</div>'+
+    '<div class="lc-sub">Leva só alguns segundos. Pode sair da tela que a letra não se perde.</div>'+
   '</div>';
 }
 var _mcTimer=null;
@@ -4455,7 +4454,7 @@ function dispararGeracaoLetra(){
     redesenharSemPular();
     setTimeout(function(){
       var alvo=el('letraWrap');
-      if(alvo) alvo.scrollIntoView({behavior:'smooth', block:'start'});
+      if(alvo){ var rr=alvo.getBoundingClientRect(); if(rr.top<0 || rr.top>window.innerHeight*0.7) alvo.scrollIntoView({behavior:'smooth', block:'start'}); }
     },350);
   })
   .catch(function(){
@@ -4466,72 +4465,40 @@ function dispararGeracaoLetra(){
 }
 // Pede a letra em segundo plano e fica perguntando se ficou pronta (até ~100s).
 // Se a função de segundo plano não estiver disponível, usa o jeito direto (30s).
-/* LETRA: primeiro o modo rápido (o texto vai aparecendo em 1–2 s, em streaming).
-   Se falhar, cai no modo antigo em segundo plano. Sair da aba não quebra mais:
-   a letra fica guardada no servidor e a página busca de novo quando volta. */
-function letraEhBoa(t){ t=String(t||'').trim(); return t.split('\n').length>=8 && t.length>=250; }
-function letraAoVivo(txt){
-  var e=el('letraAoVivo'); if(!e) return;
-  e.textContent=txt; e.style.display='block';
-  var t=el('letraVivoTit'); if(t) t.textContent='Escrevendo sua letra...';
-  e.scrollTop=e.scrollHeight;
-}
-function letraStream(dados){
-  return new Promise(function(resolve){
-    var ctl=window.AbortController?new AbortController():null, txt='', acabou=false;
-    var parado=setTimeout(function(){ if(!txt && ctl){ ctl.abort(); } },12000);
-    function fim(v){ if(acabou) return; acabou=true; clearTimeout(parado); resolve(v); }
-    fetch('/.netlify/functions/letra-rapida',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados),signal:ctl?ctl.signal:undefined})
-      .then(function(r){
-        var ct=r.headers.get('content-type')||'';
-        if(!r.ok || !r.body || ct.indexOf('text/plain')===-1){ fim(null); return; }
-        var rd=r.body.getReader(), dec=new TextDecoder();
-        (function ler(){
-          rd.read().then(function(x){
-            if(x.done){ fim(letraEhBoa(txt)?txt.trim():null); return; }
-            txt+=dec.decode(x.value,{stream:true}); letraAoVivo(txt); ler();
-          }).catch(function(){ fim('__caiu__'); });
-        })();
-      })
-      .catch(function(){ fim(txt?'__caiu__':null); });
-  });
-}
-function esperarLetraGuardada(id, ms){
-  var ini=Date.now();
-  return new Promise(function(resolve){
-    (function ver(){
-      if(Date.now()-ini>ms){ resolve(null); return; }
-      fetch('/.netlify/functions/gerar-letra-status?id='+encodeURIComponent(id))
-        .then(function(r){ return r.json(); })
-        .then(function(d){ if(d && d.pronto && d.letra) resolve(d.letra); else setTimeout(ver,2000); })
-        .catch(function(){ setTimeout(ver,2500); });
-    })();
-  });
-}
+/* LETRA: é escrita no servidor, em segundo plano. A página só pergunta
+   "ficou pronta?" a cada 1,5 s. Se a pessoa sair da aba ou a internet cair,
+   nada se perde: quando ela volta, a página pergunta de novo e mostra a letra. */
 function pedirLetra(dados){
   var id='l'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
   dados=Object.assign({}, dados, {id:id});
-  return letraStream(dados).then(function(t){
-    if(t && t!=='__caiu__') return {ok:true, d:{letra:t}};
-    var guardada = t==='__caiu__' ? esperarLetraGuardada(id, 20000) : Promise.resolve(null);
-    return guardada.then(function(g){ return g ? {ok:true, d:{letra:g}} : pedirLetraAntigo(dados); });
+  var LIMITE=150000, ini=Date.now();
+  return new Promise(function(resolve){
+    var acabou=false, timer=null, falhasEnvio=0;
+    function fim(v){ if(acabou) return; acabou=true; clearTimeout(timer); document.removeEventListener('visibilitychange',aoVoltar); resolve(v); }
+    function aoVoltar(){ if(document.visibilityState==='visible' && !acabou){ clearTimeout(timer); ver(); } }
+    document.addEventListener('visibilitychange',aoVoltar);
+    function ver(){
+      if(acabou) return;
+      if(Date.now()-ini>LIMITE){ fim({ok:false, d:{erro:'A letra está demorando mais que o normal. Toque em "Escrever a letra" de novo.'}}); return; }
+      fetch('/.netlify/functions/gerar-letra-status?id='+encodeURIComponent(id),{cache:'no-store'})
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d && d.pronto && d.letra) return fim({ok:true, d:{letra:d.letra}});
+          if(d && d.pronto && d.erro) return fim({ok:false, d:{erro:d.erro}});
+          timer=setTimeout(ver,1500);
+        })
+        .catch(function(){ timer=setTimeout(ver,2500); });
+    }
+    function enviar(){
+      fetch('/.netlify/functions/gerar-letra-background', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dados)})
+        .then(function(){ timer=setTimeout(ver,2500); })
+        .catch(function(){
+          falhasEnvio++;
+          if(falhasEnvio<3) setTimeout(enviar,2000); else timer=setTimeout(ver,2500);
+        });
+    }
+    enviar();
   });
-}
-function pedirLetraAntigo(dados){
-  var id='l'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
-  dados=Object.assign({}, dados, {id:id});
-  function direto(){
-    return fetch('/.netlify/functions/gerar-letra', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dados)})
-      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); });
-  }
-  function perguntarAte(limite){
-    return esperarLetraGuardada(id, limite).then(function(l){
-      return l ? {ok:true, d:{letra:l}} : {ok:false, d:{erro:'A letra está demorando mais que o normal. Toque em "Escrever a letra" de novo.'}};
-    });
-  }
-  return fetch('/.netlify/functions/gerar-letra-background', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dados)})
-    .then(function(r){ return r.status===202 ? perguntarAte(150000) : direto(); })
-    .catch(function(){ return perguntarAte(150000); });
 }
 // Ajuste pontual: em vez de jogar a letra toda fora e escrever outra do
 // zero, manda a letra atual + o pedido da pessoa ("deixa o refrão mais
@@ -4556,7 +4523,7 @@ function dispararAjusteLetra(instrucao){
     redesenharSemPular();
     setTimeout(function(){
       var alvo=el('letraWrap');
-      if(alvo) alvo.scrollIntoView({behavior:'smooth', block:'start'});
+      if(alvo){ var rr=alvo.getBoundingClientRect(); if(rr.top<0 || rr.top>window.innerHeight*0.7) alvo.scrollIntoView({behavior:'smooth', block:'start'}); }
     },350);
   })
   .catch(function(){
@@ -7242,6 +7209,15 @@ function meusCarregar(sess){
   buscar(1)
     .then(function(res){
       var d=res.d||{};
+      if(d.erro==='preparando'){
+        var n=(sess._prep||0)+1;
+        if(n<=25){
+          b.innerHTML='<div class="empty"><img src="'+MASCOTE+'" alt="" style="animation:float 2.4s ease-in-out infinite"><p><b>Organizando suas músicas...</b><br>Isso só acontece na primeira vez. Não feche a página.</p></div>';
+          setTimeout(function(){ meusCarregar(Object.assign({},sess,{_prep:n})); },5000);
+          return;
+        }
+      }
+      sess=Object.assign({},sess); delete sess._prep;
       if(!res.ok){ Store.set('cl_meus',''); meusLogin(d.msg||d.erro||'Não consegui entrar agora.', sess.tel); return; }
       if(d.vazio){ Store.set('cl_meus',''); meusLogin('Não achamos nenhuma música com esse número. Confira se é o mesmo que você colocou na compra.', sess.tel); return; }
       Store.set('cl_meus', JSON.stringify(sess));
