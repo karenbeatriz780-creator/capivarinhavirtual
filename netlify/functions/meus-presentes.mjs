@@ -28,10 +28,14 @@ export default async (req) => {
     const presentes = getStore('presentes');
     const musicasSt = getStore('musicas');
     const idx = await lerIndice();
-    if (!idx || !idx.mapa) {
+    if (!idx || !idx.mapa || !idx.montadoEm) {
       // índice ainda não existe: manda montar e pede pra tentar de novo em instantes
       await comLimite(fetch(new URL(req.url).origin + '/.netlify/functions/indexar-telefones-background', { method: 'POST' }).catch(() => null), 2500, null);
       return json({ erro: 'preparando', msg: 'Estamos organizando as músicas. Tenta de novo em 1 minutinho.' }, 503);
+    }
+    // índice com mais de 6 h: manda atualizar em segundo plano (não espera)
+    if (Date.now() - idx.montadoEm > 6 * 3600 * 1000) {
+      comLimite(fetch(new URL(req.url).origin + '/.netlify/functions/indexar-telefones-background', { method: 'POST' }).catch(() => null), 1500, null);
     }
     const ent = idx.mapa[chave] || { p: [], t: [] };
     if (!ent.p.length && !ent.t.length) return json({ ok: true, vazio: true });

@@ -322,7 +322,16 @@ export default async (req) => {
     // Em segundo plano (até 15 min) dá pra esperar bem e tentar 2 vezes.
     const LIMITE = longo ? 95000 : 26000;
     const resta = () => LIMITE - (Date.now() - t0);
-    let conteudo = await Promise.race([chamar('openai/gpt-5.4', true), espera(resta())]);
+    // RÁPIDO: pede ao GPT-5.4. Se em 6 s ele ainda não respondeu, pede também
+    // a um modelo rápido e usa o primeiro que entregar uma letra boa.
+    // (o reserva só é chamado quando o 5.4 está lento — não gasta à toa)
+    const principal = chamar('openai/gpt-5.4', true);
+    const reserva = Promise.race([espera(6000), principal]).then((v) => {
+      if (v) return null; // o 5.4 já entregou
+      console.log('GPT-5.4 lento ou falhou — chamando reserva rápido');
+      return primeiroOk([chamar('openai/gpt-5.4-mini', true), chamar('google/gemini-3.8-flash', true)]);
+    });
+    let conteudo = await Promise.race([primeiroOk([principal, reserva]), espera(resta())]);
     if (!conteudo && longo && resta() > 40000) {
       console.log('GPT-5.4 falhou, tentando de novo...');
       conteudo = await Promise.race([chamar('openai/gpt-5.4', true), espera(resta())]);
