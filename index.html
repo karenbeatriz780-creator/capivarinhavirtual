@@ -1107,6 +1107,19 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .qrbox .qr{width:180px;height:180px;margin:0 auto 1rem;background:#fff;padding:9px;border-radius:12px;box-shadow:var(--shadow-sm);}
 .qrbox .qr svg{width:100%;height:100%;display:block;}
 .pix-code{display:flex;gap:.5rem;margin-top:.9rem;}
+.pixl{display:grid;gap:.8rem;text-align:center;padding:1.3rem 1.1rem;background:var(--paper);border-radius:var(--r-md);border:1px solid var(--line);}
+.pixl-v{display:flex;align-items:baseline;justify-content:center;gap:.5rem;}
+.pixl-v span{font-size:.85rem;color:var(--muted);font-weight:700;}
+.pixl-v b{font-size:1.7rem;font-weight:900;color:var(--plum);}
+.pixl-copiar{font-size:1.1rem!important;}
+.pixl-copiar.ok{background:#13914F!important;border-color:#13914F!important;}
+.pixl-dica{font-size:.82rem;color:var(--muted);line-height:1.5;}
+.pixl-link{background:none;border:0;color:var(--rose-2,#C41857);font:inherit;font-weight:800;font-size:.88rem;text-decoration:underline;cursor:pointer;padding:.2rem;}
+.pixl-qr .qr{width:200px;height:200px;margin:0 auto .5rem;background:#fff;padding:9px;border-radius:12px;box-shadow:var(--shadow-sm);}
+.pixl-qr .qr svg{width:100%;height:100%;display:block;}
+.pixl-qr p{font-size:.78rem;color:var(--muted);margin:0;}
+.pixl-ja{font-weight:800!important;}
+.pixl-st{font-size:.85rem;color:var(--muted);line-height:1.5;}
 .pix-code input{flex:1;border:1.5px solid var(--line);border-radius:9px;padding:.6rem .7rem;font-size:.74rem;
   font-family:ui-monospace,monospace;background:#fff;overflow:hidden;text-overflow:ellipsis;}
 .demo-note{background:#FFF8E6;border:1px solid #F5E2B0;border-radius:12px;padding:.85rem 1rem;
@@ -3603,6 +3616,7 @@ function navegar(){
   window.scrollTo(0,0);
   if(r.nome==='p' && r.arg){ telaPresente(r.arg); return; }
   if(r.nome==='pago' && r.arg){ telaConfirmando(r.arg); return; }
+  if(r.nome==='pagar' && r.arg){ telaPagar(r.arg); return; }
   if(r.nome==='extras' && r.arg){ telaExtras(r.arg); return; }
   if(r.nome==='sucesso' && r.arg){ telaSucesso(r.arg); return; }
   if(r.nome==='criar'){
@@ -6067,67 +6081,91 @@ function finalizarDeVerdade(){
 }
 
 /* ---------- mostra o Pix na própria página e aguarda a confirmação ---------- */
+/* ===== PIX LIMPO: Copiar código · Ver QR (outro aparelho) · Já paguei =====
+   Fica salvo no aparelho: se a pessoa atualizar a página, volta pra esta tela
+   (#/pagar/<id>) em vez de voltar pro começo. */
+function htmlPixLimpo(payload, valor, teste){
+  var svg=''; try{ svg=QRCodeGen.toSVG(payload,{ec:'M',quiet:2}); }catch(e){}
+  return (teste?'<div class="demo-note info" style="margin-bottom:1rem">'+IC.shield+'<div><b>Modo de homologação da Efí.</b> Nenhum valor real será cobrado.</div></div>':'')+
+    '<div class="pixl">'+
+      (valor?'<div class="pixl-v"><span>Total no Pix</span><b>R$ '+fmtPreco(valor)+'</b></div>':'')+
+      '<button type="button" class="btn btn-primary btn-block btn-lg pixl-copiar" id="pxCopiar">📋 Copiar código Pix</button>'+
+      '<div class="pixl-dica">Abra o app do seu banco → <b>Pix</b> → <b>Pix Copia e Cola</b> → cole o código e confirme.</div>'+
+      '<button type="button" class="pixl-link" id="pxVerQr">Ver QR Code para pagar em outro aparelho</button>'+
+      '<div class="pixl-qr" id="pxQr" hidden>'+(svg?'<div class="qr">'+svg+'</div>':'')+'<p>Escaneie com a câmera do app do banco em outro celular.</p></div>'+
+      '<button type="button" class="btn btn-ghost btn-block pixl-ja" id="pxJa">✅ Já paguei</button>'+
+      '<div class="pixl-st" id="pxSt"><span class="cur"></span> Aguardando o pagamento...</div>'+
+    '</div>';
+}
+function ligarPixLimpo(payload, id, aoPagar){
+  var feito=false, iv=null, rapido=0, tent=0;
+  function pagou(d){ if(feito) return; feito=true; clearInterval(iv); try{ Store.set('cl_pix',''); }catch(e){} try{ history.replaceState(null,'','#/p/'+id+'/c'); }catch(e){} salvarPresente(d.presente); aoPagar(d); }
+  function checar(){
+    return fetch('/.netlify/functions/presente?id='+encodeURIComponent(id),{cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if(d && d.pago && d.presente){ pagou(d); return true; } return false; })
+      .catch(function(){ return false; });
+  }
+  el('pxCopiar').onclick=function(){
+    copiar(payload,'Código Pix copiado!');
+    var b=el('pxCopiar'); b.textContent='✓ Copiado! Agora cole no app do banco'; b.classList.add('ok');
+    setTimeout(function(){ if(el('pxCopiar')){ b.textContent='📋 Copiar código Pix de novo'; b.classList.remove('ok'); } },3500);
+  };
+  el('pxVerQr').onclick=function(){ var q=el('pxQr'); q.hidden=!q.hidden; el('pxVerQr').textContent=q.hidden?'Ver QR Code para pagar em outro aparelho':'Esconder QR Code'; };
+  el('pxJa').onclick=function(){
+    var b=el('pxJa'), st=el('pxSt');
+    b.disabled=true; b.textContent='Conferindo seu pagamento...';
+    st.innerHTML='<span class="cur"></span> Conferindo com o banco...';
+    checar().then(function(ok){
+      if(ok || feito) return;
+      st.innerHTML='⏳ <b>Seu pagamento ainda está sendo processado.</b><br>Às vezes o banco leva alguns segundos. <b>Não precisa pagar de novo</b> — esta tela libera sozinha assim que confirmar.';
+      rapido=30; /* confere a cada 2 s pelo próximo minuto */
+      setTimeout(function(){ if(el('pxJa')){ b.disabled=false; b.textContent='✅ Já paguei — conferir de novo'; } },5000);
+    });
+  };
+  iv=setInterval(function(){
+    tent++;
+    if(rapido>0){ rapido--; checar(); return; }
+    if(tent<=200 ? tent%1===0 : tent%4===0) checar(); /* 3 s nos primeiros 10 min, depois 12 s */
+  },3000);
+  aoSair(function(){ clearInterval(iv); });
+  checar();
+}
+function guardarPixPendente(id, payload, valor, teste){
+  try{ Store.set('cl_pix', JSON.stringify({id:id, payload:payload, valor:valor, teste:!!teste, em:Date.now()})); }catch(e){}
+  try{ history.replaceState(null,'','#/pagar/'+id); }catch(e){}
+}
+/* #/pagar/<id>: volta direto pra tela do Pix depois de atualizar a página */
+function telaPagar(id){
+  var px=null; try{ px=JSON.parse(Store.get('cl_pix')||'null'); }catch(e){}
+  if(!px || px.id!==id || Date.now()-px.em>3*3600*1000){ telaConfirmando(id); return; }
+  el('app').innerHTML='<div class="wz-top"><a class="wz-back" href="#/">'+IC.back+'</a><div class="wz-track"><div class="wz-fill" style="width:100%"></div></div><span class="wz-count">Pagamento</span></div>'+
+    '<div class="wz-wrap"><div class="wz-t">Falta só o Pix</div><div class="wz-s">Seu pedido está guardado. Assim que o Pix cair, a sua música libera aqui.</div>'+
+    htmlPixLimpo(px.payload, px.valor, px.teste)+'</div>';
+  ligarPixLimpo(px.payload, id, function(){ telaSucesso(id); });
+}
+
 function mostrarPix(payload, id, teste, valor){
   var form=el('checkoutForm'), area=el('pixArea'), btn=el('wzNext');
   if(form) form.style.display='none';
   if(btn) btn.style.display='none';
-  var svg='';
-  try{ svg=QRCodeGen.toSVG(payload,{ec:'M',quiet:2}); }catch(e){ svg=''; }
   area.style.display='block';
-  area.innerHTML=
-    (teste?'<div class="demo-note info" style="margin-bottom:1rem">'+IC.shield+'<div><b>Modo de homologação da Efí.</b> Nenhum valor real será cobrado.</div></div>':'')+
-    '<div class="qrbox">'+
-      (svg?'<div class="qr">'+svg+'</div>':'')+
-      '<p style="font-size:.83rem;color:var(--muted);line-height:1.5">Abra o app do seu banco, escaneie o QR ou use o Pix copia e cola.</p>'+
-      '<div class="pix-code"><input id="pixTxt" readonly value="'+esc(payload)+'">'+
-      '<button class="btn btn-ghost" id="pixCopy" style="padding:.6rem 1rem;font-size:.8rem">Copiar</button></div>'+
-    '</div>'+
-    (teste?'<button class="btn btn-primary btn-block" id="simularBtn" style="margin-top:1rem">🧪 Simular pagamento (só teste)</button>':'')+
-    '<div id="pixStatus" style="text-align:center;margin-top:1.2rem;font-size:.87rem;color:var(--muted)">'+
-      '<span class="cur"></span> Aguardando o pagamento cair...</div>';
-  el('pixCopy').onclick=function(){ copiar(payload,'Código Pix copiado!'); };
+  area.innerHTML=htmlPixLimpo(payload, valor, teste)+
+    (teste?'<button class="btn btn-primary btn-block" id="simularBtn" style="margin-top:1rem">🧪 Simular pagamento (só teste)</button>':'');
+  guardarPixPendente(id, payload, valor, teste);
   if(teste){
     el('simularBtn').onclick=function(){
       var sb=el('simularBtn'); sb.disabled=true; sb.textContent='Simulando...';
-      fetch('/.netlify/functions/simular-pagamento',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({id:id})
-      })
+      fetch('/.netlify/functions/simular-pagamento',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id})})
       .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
       .then(function(res){
-        if(!res.ok){
-          toast((res.d&&res.d.erro)||'Não consegui simular o pagamento.');
-          sb.disabled=false; sb.textContent='🧪 Simular pagamento (só teste)';
-          return;
-        }
-        toast('Pagamento simulado! Liberando o presente...');
-        sb.textContent='✓ Simulado — aguardando confirmação';
+        if(!res.ok){ toast((res.d&&res.d.erro)||'Não consegui simular o pagamento.'); sb.disabled=false; sb.textContent='🧪 Simular pagamento (só teste)'; return; }
+        toast('Pagamento simulado! Liberando...'); sb.textContent='✓ Simulado — aguardando confirmação';
       })
       .catch(function(){ toast('Sem conexão.'); sb.disabled=false; sb.textContent='🧪 Simular pagamento (só teste)'; });
     };
   }
-
-  var tentativas=0, iv=null;
-  aoSair(function(){ clearInterval(iv); });
-  function checar(){
-    tentativas++;
-    fetch('/.netlify/functions/presente?id='+encodeURIComponent(id))
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if(d && d.pago && d.presente){
-          clearInterval(iv);
-          salvarPresente(d.presente);
-          telaSucesso(id);
-        } else if(tentativas>=40){
-          clearInterval(iv);
-          var st=el('pixStatus');
-          if(st) st.innerHTML='Ainda não caiu. Pode fechar essa tela — assim que confirmar, o presente aparece sozinho em <a href="#/meus">Meus presentes</a>.';
-        }
-      })
-      .catch(function(){ /* tenta de novo no próximo tick */ });
-  }
-  iv=setInterval(checar,3000);
-  checar();
+  ligarPixLimpo(payload, id, function(){ telaSucesso(id); });
 }
 
 /* ---------- tela de confirmação: aguarda o webhook e libera o link ---------- */
@@ -7642,24 +7680,12 @@ function telaOuvir(arg){
               toast((res.d&&res.d.erro)||'Não consegui gerar o Pix agora.');
               b.disabled=false; b.textContent='Quero minha música — pagar R$ '+fmtPreco(valor)+' no Pix'; return;
             }
-            var id=res.d.id, payload=res.d.payload, svg='';
-            try{ svg=QRCodeGen.toSVG(payload,{ec:'M',quiet:2}); }catch(e){}
+            var id=res.d.id, payload=res.d.payload;
             b.style.display='none';
             var area=el('ouvirPix'); area.style.display='block';
-            area.innerHTML='<div class="qrbox">'+(svg?'<div class="qr">'+svg+'</div>':'')+
-              '<p style="font-size:.83rem;color:var(--muted);line-height:1.5">Abra o app do seu banco, escaneie o QR ou use o Pix copia e cola.</p>'+
-              '<div class="pix-code"><input readonly value="'+esc(payload)+'">'+
-              '<button class="btn btn-ghost" id="ouvirCopia" style="padding:.6rem 1rem;font-size:.8rem">Copiar</button></div></div>'+
-              '<div id="ouvirStatus" style="text-align:center;margin-top:1.2rem;font-size:.87rem;color:var(--muted)"><span class="cur"></span> Aguardando o pagamento cair...</div>';
-            el('ouvirCopia').onclick=function(){ copiar(payload,'Código Pix copiado!'); };
-            var n=0, iv=setInterval(function(){
-              n++;
-              fetch('/.netlify/functions/presente?id='+encodeURIComponent(id)).then(function(r){ return r.json(); }).then(function(x){
-                if(x && x.pago && x.presente){ clearInterval(iv); salvarPresente(x.presente); telaSucesso(id); }
-                else if(n>=100){ clearInterval(iv); var st=el('ouvirStatus'); if(st) st.innerHTML='Ainda não caiu. Assim que confirmar, sua música abre neste mesmo link.'; }
-              }).catch(function(){});
-            },3000);
-            aoSair(function(){ clearInterval(iv); });
+            area.innerHTML=htmlPixLimpo(payload, valor, false);
+            guardarPixPendente(id, payload, valor, false);
+            ligarPixLimpo(payload, id, function(){ telaSucesso(id); });
           })
           .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent='Quero minha música — pagar R$ '+fmtPreco(valor)+' no Pix'; });
       };
