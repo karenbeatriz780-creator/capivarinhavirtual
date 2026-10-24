@@ -20,6 +20,19 @@ function chave(f) {
   return 'u_' + crypto.createHash('sha1').update(String(f.url || '')).digest('hex');
 }
 
+// junta todos os links de áudio e ids de faixa que aparecerem na resposta do serviço
+function coletar(obj, urls, ids, prof) {
+  if (!obj || prof > 6) return;
+  if (typeof obj === 'string') {
+    if (/^https?:\/\//.test(obj) && /\.(mp3|m4a|wav)(\?|$)|audiopipe|cdn\d*\.suno/i.test(obj)) urls.push(obj);
+    const m = obj.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/ig);
+    if (m) m.forEach((x) => ids.push(x.toLowerCase()));
+    return;
+  }
+  if (Array.isArray(obj)) { obj.forEach((x) => coletar(x, urls, ids, prof + 1)); return; }
+  if (typeof obj === 'object') Object.keys(obj).forEach((k) => coletar(obj[k], urls, ids, prof + 1));
+}
+
 async function urlsNovas(taskId, n) {
   const out = { urls: [], pronta: false };
   try {
@@ -34,6 +47,21 @@ async function urlsNovas(taskId, n) {
       ? [c.audio_url2, o.audio_url2, Array.isArray(o.clips) && o.clips[1] && o.clips[1].audio_url, Array.isArray(o) && o[1] && o[1].audio_url]
       : [c.audio_url1, c.audio_url, o.audio_url1, o.audio_url, Array.isArray(o.clips) && o.clips[0] && o.clips[0].audio_url, Array.isArray(o) && o[0] && o[0].audio_url];
     lista.forEach((u) => { if (u && out.urls.indexOf(u) === -1) out.urls.push(u); });
+    // Plano C: o arquivo do serviço some em ~7 dias, mas a faixa original da Suno fica.
+    // Procura os ids das faixas (clips) na resposta e monta o link da Suno.
+    const urls = [], ids = [];
+    coletar(c, urls, ids, 0);
+    const clipes = [];
+    [o.clips, c.clips, Array.isArray(o) ? o : null, c.data].forEach((arr) => {
+      if (Array.isArray(arr)) arr.forEach((x) => { const id = x && (x.id || x.clip_id || x.song_id); if (id && clipes.indexOf(id) === -1) clipes.push(String(id)); });
+    });
+    ['clip_id' + n, 'song_id' + n, 'id' + n].forEach((k) => { if (c[k] && clipes.indexOf(c[k]) === -1) clipes.unshift(String(c[k])); });
+    const escolhido = clipes[n - 1] || null;
+    const extra = [];
+    if (escolhido) extra.push('https://cdn1.suno.ai/' + escolhido + '.mp3', 'https://cdn2.suno.ai/' + escolhido + '.mp3');
+    urls.forEach((u) => { if (/suno/i.test(u)) extra.push(u); });
+    ids.filter((x) => x !== String(taskId).toLowerCase()).forEach((x) => extra.push('https://cdn1.suno.ai/' + x + '.mp3'));
+    extra.forEach((u) => { if (out.urls.indexOf(u) === -1) out.urls.push(u); });
   } catch (e) {}
   return out;
 }
@@ -61,10 +89,20 @@ export async function pegarAudio(g, v) {
   // Ainda terminando (streaming) → toca o que tiver, mas NÃO guarda (podia ser um pedaço).
   const novo = f.taskId ? await urlsNovas(f.taskId, f.n) : { urls: [], pronta: true };
   const tentativas = novo.pronta ? novo.urls.concat(f.url ? [f.url] : []) : (f.url ? [f.url] : []).concat(novo.urls);
-  let buf = null;
-  for (const u of tentativas) { buf = await baixarInteira(u); if (buf) break; }
-  if (buf && novo.pronta) { try { await loja.set(k, buf); } catch (e) { console.error('audio: não guardou', k, e && e.message); } }
+  let buf = null, veio = '';
+  for (const u of tentativas.slice(0, 12)) { buf = await baixarInteira(u); if (buf) { veio = u; break; } }
+  if (buf && (novo.pronta || /suno\.ai/.test(veio))) { try { await loja.set(k, buf); } catch (e) { console.error('audio: não guardou', k, e && e.message); } }
   return buf;
+}
+
+// pra prévia: mesmo esquema de links reservas, sem guardar
+export async function baixarPorTask(taskId, n, urlSalva) {
+  const novo = taskId ? await urlsNovas(taskId, n) : { urls: [] };
+  const tentativas = (urlSalva ? [urlSalva] : []).concat(novo.urls);
+  for (const u of tentativas.slice(0, 12)) {
+    try { const r = await fetch(u); if (r.ok) { const b = Buffer.from(await r.arrayBuffer()); if (b.length > 50 * 1024) return b; } } catch (e) {}
+  }
+  return null;
 }
 
 export async function jaGuardado(g, v) {

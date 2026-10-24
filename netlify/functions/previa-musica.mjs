@@ -1,4 +1,5 @@
 import { getStore } from '@netlify/blobs';
+import { baixarPorTask, fonteDoPedido } from './_audio.mjs';
 
 // Entrega só os primeiros 70 segundos do MP3 (a "prévia").
 // A música completa só sai (redirecionando pro arquivo real) se o presente
@@ -97,9 +98,18 @@ export default async (req) => {
       } catch (e) {}
     }
 
-    const up = await fetch(real);
-    if (!up.ok) return erro('Não consegui carregar a música.', 502);
-    const buf = Buffer.from(await up.arrayBuffer());
+    let buf = null;
+    try { const up = await fetch(real); if (up.ok) buf = Buffer.from(await up.arrayBuffer()); } catch (e) {}
+    if (!buf || buf.length < 50 * 1024) {
+      // link do serviço expirou: tenta os links reserva da mesma faixa
+      let tid = taskId, n = v === 2 ? 2 : 1;
+      if (pedidoId) {
+        const p2 = await getStore('presentes').get(pedidoId, { type: 'json' }).catch(() => null);
+        if (p2) { const f = fonteDoPedido(p2, v); tid = f.taskId; n = f.n; }
+      }
+      buf = await baixarPorTask(tid, n, null);
+    }
+    if (!buf) return erro('Não consegui carregar a música.', 502);
     const { ini, fim } = bytesDaPrevia(buf);
     const corte = Buffer.from(buf.subarray(0, fim > ini ? fim : buf.length));
     // O cabeçalho Xing/Info diz a duração da música INTEIRA — apaga, senão o
