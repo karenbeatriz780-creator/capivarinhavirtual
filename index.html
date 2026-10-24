@@ -786,6 +786,12 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mp-pac6-p b{font-size:1.35rem;font-weight:900;color:#C41857;}
 .mp-pac6-cta{grid-column:1/-1;display:block;text-align:center;margin-top:.35rem;padding:.65rem;border-radius:100px;background:linear-gradient(180deg,#F0407C,#C41857);color:#fff;font-weight:800;font-size:.88rem;}
 .of-sair{background:none;border:0;color:inherit;opacity:.75;text-decoration:underline;font-size:.75rem;cursor:pointer;margin-left:.3rem;}
+.pnl-periodo{margin:0 0 1rem;padding:.8rem .9rem;border-radius:14px;background:rgba(233,185,79,.12);border:1px solid rgba(233,185,79,.4);font-size:.85rem;display:grid;gap:.6rem;}
+.pnl-per-b{display:flex;flex-wrap:wrap;gap:.4rem;}
+.pnl-per-b button,.pnl-busca button{border:1px solid rgba(233,185,79,.6);border-radius:100px;padding:.45rem .8rem;font:inherit;font-weight:800;font-size:.8rem;background:transparent;color:inherit;cursor:pointer;}
+.pnl-per-b button.on,.pnl-busca button[type=submit]{background:#E9B94F;color:#3A1200;border-color:#E9B94F;}
+.pnl-busca{display:flex;gap:.4rem;}
+.pnl-busca input{flex:1;min-width:0;border-radius:100px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:inherit;padding:.5rem .8rem;font:inherit;}
 .pnl-parcial{margin:0 0 1rem;padding:.7rem .9rem;border-radius:14px;background:rgba(233,185,79,.14);border:1px solid rgba(233,185,79,.45);font-size:.85rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;}
 .pnl-parcial button{margin-left:auto;border:0;border-radius:100px;padding:.45rem .85rem;font:inherit;font-weight:800;font-size:.8rem;background:#E9B94F;color:#3A1200;cursor:pointer;}
 .dsh{min-width:0;overflow:hidden;background:#FFFFFF;color:#2A0F1C;border-radius:26px;padding:1.1rem;display:flex;flex-direction:column;gap:.9rem;margin-bottom:1.2rem;font-family:Inter,system-ui,sans-serif;}
@@ -6306,9 +6312,9 @@ function desenharTravaPainel(erroInicial){
 function carregarPainel(chave, cb){
   var hdr={ headers:{'x-admin-key':chave} };
   Promise.all([
-    fetch('/.netlify/functions/admin-pedidos?conferir=0'+(_pnlCompleto?'':'&dias=8'), hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); }),
+    fetch('/.netlify/functions/admin-pedidos?conferir=0'+pnlQueryPedidos(), hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); }),
     (_pnlAba==='dados' ? fetch('/.netlify/functions/admin-funil', hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); }) : Promise.resolve({ok:false,d:{},pulou:true})),
-    fetch('/.netlify/functions/admin-musicas'+(_pnlCompleto?'':'?dias=8'), hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
+    fetch('/.netlify/functions/admin-musicas'+pnlQueryMusicas(), hdr).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
       .catch(function(){ return {ok:false, d:{}}; })
   ]).then(function(res){
     var pRes=res[0], fRes=res[1], mRes=res[2];
@@ -6316,6 +6322,7 @@ function carregarPainel(chave, cb){
     if(cb) cb(false);
     if(fRes.ok) _pnlFunilOk=true;
     _pnlCache.custos=pRes.d.custos||{}; _pnlCache.resumo=pRes.d.resumo||null; _pnlParcial=!!pRes.d.parcial;
+    _pnlCache.pixSemPedido=pRes.d.pixSemPedido||null; _pnlCache.conferenciaAuto=pRes.d.conferenciaAuto||null;
     desenharPainel(pRes.d.pedidos||[], (fRes.ok && fRes.d.visitas) || _pnlCache.visitas || [], (mRes.ok && mRes.d.musicas) || []);
     pnlConferirBanco(hdr);
   }).catch(function(){ if(cb) cb(true); });
@@ -6375,6 +6382,28 @@ var RELACAO_NOME={
   avo:'Pra vó/vô', tio:'Pra tia/tio', sogro:'Pra sogra/sogro', padrinho:'Pra dinda/padrinho', familia:'Pra família',
   comercial:'Comercial (empresa)', outro:'Outro'
 };
+/* período do painel: '8' (padrão), '30p' / '90p' (só pagos), 'tudo', ou busca por número */
+var _pnlModo='8', _pnlTel='';
+function pnlPixSemPedidoHtml(){
+  var ca=_pnlCache.conferenciaAuto, ps=_pnlCache.pixSemPedido, itens=(ps&&ps.itens)||[];
+  var nota=ca&&ca.em ? '<div class="sub">🤖 Conferência automática do banco: última às '+new Date(ca.em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(ca.liberados?' · liberou '+ca.liberados+' pedido(s)':'')+'. Roda sozinha a cada 5 minutos.</div>' : '';
+  if(!itens.length) return nota?'<div class="pnl-sec">'+nota+'</div>':'';
+  return '<div class="pnl-sec"><h2>⚠️ Pix recebido sem pedido ligado</h2>'+nota+
+    '<div class="sub">Pix que caiu na conta nas últimas 48 h mas não está ligado a nenhum pedido (ex.: a pessoa copiou a chave e pagou direto). Ache o cliente pelo valor e horário e use "Marcar como pago" ou "Liberar de presente".</div>'+
+    itens.map(function(x){ return '<div class="pnl-dia"><span class="dt">'+(x.horario?new Date(x.horario).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—')+'</span><span class="ct">'+esc(x.pagador||x.info||'sem nome')+'</span><span class="vl">R$ '+esc(String(x.valor||''))+'</span></div>'; }).join('')+'</div>';
+}
+function pnlQueryPedidos(){
+  if(_pnlTel) return '&tel='+encodeURIComponent(_pnlTel);
+  if(_pnlModo==='30p') return '&dias=31&pagos=1';
+  if(_pnlModo==='90p') return '&dias=92&pagos=1';
+  if(_pnlModo==='tudo') return '';
+  return '&dias=8';
+}
+function pnlQueryMusicas(){
+  if(_pnlTel) return '?tel='+encodeURIComponent(_pnlTel);
+  if(_pnlModo==='tudo') return '';
+  return '?dias=8';
+}
 var _pnlCompleto=false, _pnlParcial=false, _pnlFunilOk=false, _pnlLimite=30, _pnlAba='hoje', _pnlFiltro='todos', _pnlItens=[], _pnlLetraAberta={};
 function pedirSenhaAdmin(){
   if(_pnlChave) return true;
@@ -7042,11 +7071,16 @@ function desenharPainel(pedidos, visitas, musicas){
       '<button type="button" class="pnl-aba'+(_pnlAba==='clientes'?' on':'')+'" data-aba="clientes">👥 Clientes</button>'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='dados'?' on':'')+'" data-aba="dados">📊 Dados</button>'+
     '</div>'+
-    (_pnlParcial ? '<div class="pnl-parcial">⚡ Mostrando os <b>últimos 8 dias</b> pra abrir rápido. <button type="button" id="pnlCompleto">Carregar histórico completo</button></div>' : '')+
+    '<div class="pnl-periodo">'+
+      '<div class="pnl-per-l">'+(_pnlTel?'🔎 Mostrando tudo do número <b>'+esc(_pnlTel)+'</b>':'📅 Mostrando: <b>'+({'8':'últimos 8 dias','30p':'pagos dos últimos 30 dias','90p':'pagos dos últimos 90 dias','tudo':'todo o histórico'}[_pnlModo]||'')+'</b>')+'</div>'+
+      '<div class="pnl-per-b">'+[['8','8 dias'],['30p','Pagos 30 dias'],['90p','Pagos 90 dias'],['tudo','Tudo']].map(function(o){ return '<button type="button" data-periodo="'+o[0]+'" class="'+(!_pnlTel&&_pnlModo===o[0]?'on':'')+'">'+o[1]+'</button>'; }).join('')+'</div>'+
+      '<form class="pnl-busca" id="pnlBusca"><input type="tel" inputmode="numeric" id="pnlBuscaTel" placeholder="Buscar pelo WhatsApp do cliente" value="'+esc(_pnlTel)+'"><button type="submit">Buscar</button>'+(_pnlTel?'<button type="button" id="pnlBuscaLimpa">Limpar</button>':'')+'</form>'+
+    '</div>'+
     (_pnlAba==='hoje' ? pnlHojeHtml(pedidos, _pnlCache.custos||{}) : '')+
     (_pnlAba==='pagos'
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+
         '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
+        pnlPixSemPedidoHtml()+
         '<div class="pnl-sec"><h2>Pedidos pagos</h2><div class="sub">Mais recentes primeiro.</div>'+
         '<div class="pnl-lista">'+pagosHtml+'</div></div>'
       : '')+
@@ -7076,6 +7110,14 @@ function desenharPainel(pedidos, visitas, musicas){
           '<div class="pnl-lista" style="margin-top:.6rem">'+visitasHtml+'</div></div>'
       : '');
 
+  function recarregarPeriodo(msg){
+    body.style.opacity='.5'; toast(msg||'Carregando...');
+    _pnlCompleto=(!_pnlTel && _pnlModo==='tudo');
+    carregarPainel(_pnlChave||Store.get('cl_admin_key')||'', function(erro){ body.style.opacity='1'; if(erro) toast('Não consegui carregar agora. Tenta de novo.'); });
+  }
+  body.querySelectorAll('[data-periodo]').forEach(function(b){ b.onclick=function(){ _pnlTel=''; _pnlModo=b.dataset.periodo; _pnlLimite=60; recarregarPeriodo(); }; });
+  var fb=el('pnlBusca'); if(fb) fb.onsubmit=function(e){ e.preventDefault(); var v=(el('pnlBuscaTel').value||'').replace(/\D/g,''); if(v.length<10){ toast('Digite o número com DDD.'); return; } _pnlTel=v; recarregarPeriodo('Buscando esse número...'); };
+  var bl=el('pnlBuscaLimpa'); if(bl) bl.onclick=function(){ _pnlTel=''; recarregarPeriodo(); };
   var bc=el('pnlCompleto'); if(bc) bc.onclick=function(){
     bc.disabled=true; bc.textContent='Carregando tudo...'; _pnlCompleto=true;
     carregarPainel(_pnlChave||Store.get('cl_admin_key')||'', function(erro){ if(erro){ toast('Não consegui carregar tudo agora.'); _pnlCompleto=false; } });
