@@ -6413,8 +6413,11 @@ function pedirSenhaAdmin(){
 }
 var _pnlCache={pedidos:[],visitas:[],musicas:[]}, _pnlOcultarDev=true, _pnlChave="";
 /* uma versão da música no painel, com player + baixar + enviar no WhatsApp do cliente */
-function pnlVersaoMusica(p, url, rotulo, soOuvir){
+function pnlVersaoMusica(p, url, rotulo, soOuvir, v){
   var nome=(p.meuNome||'cliente').split(' ')[0];
+  /* pedido pago: toca e baixa pela cópia guardada no site (o link do serviço expira em ~7 dias) */
+  var linkDl=url;
+  if(v && p.id && p.pago!==false){ url=linkAudio(p.id,v); linkDl=linkBaixarMusica(p.id,v); }
   var arquivo=('musica-'+nome+'-'+rotulo).toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.mp3';
@@ -6426,7 +6429,7 @@ function pnlVersaoMusica(p, url, rotulo, soOuvir){
     '<button type="button" class="pnl-play" data-tocar="'+esc(url)+'">▶ Ouvir</button>'+
     '<div class="pnl-mv-acoes">'+
       (soOuvir ? '<span class="pnl-mv-trava">🔒 Não pagou — pra mandar, use "Recuperar venda" (só a prévia)</span>' :
-      '<a class="pnl-mv-btn" href="'+esc(url)+'" download="'+esc(arquivo)+'" target="_blank" rel="noopener">'+IC.download+' Baixar</a>'+
+      '<a class="pnl-mv-btn" href="'+esc(linkDl)+'" download="'+esc(arquivo)+'" target="_blank" rel="noopener">'+IC.download+' Baixar</a>'+
       '<button type="button" class="pnl-mv-btn" data-copiar-musica="'+esc(linkEnvio)+'">Copiar link</button>')+
       (zap ? '<a class="pnl-mv-btn zap" href="https://wa.me/55'+esc(zap)+'?text='+encodeURIComponent(msgZap)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar</a>' : '')+
     '</div></div>';
@@ -6896,9 +6899,9 @@ function desenharPainel(pedidos, visitas, musicas){
         : '')+
       (p.musicaPreviewUrl
         ? '<div class="pnl-musica">'+
-            (p.ofertaM1&&p.ofertaM1.url ? pnlVersaoMusica(p, p.ofertaM1.url, '🎁 Música 1 · V1')+(p.ofertaM1.url2?pnlVersaoMusica(p, p.ofertaM1.url2, '🎁 Música 1 · V2'):'') : '')+
-            pnlVersaoMusica(p, p.musicaPreviewUrl, 'Versão 1')+
-            (p.musicaPreviewUrl2 ? pnlVersaoMusica(p, p.musicaPreviewUrl2, 'Versão 2') : '')+
+            (p.ofertaM1&&p.ofertaM1.url ? pnlVersaoMusica(p, p.ofertaM1.url, '🎁 Música 1 · V1',false,p.pago?3:0)+(p.ofertaM1.url2?pnlVersaoMusica(p, p.ofertaM1.url2, '🎁 Música 1 · V2',false,p.pago?4:0):'') : '')+
+            pnlVersaoMusica(p, p.musicaPreviewUrl, 'Versão 1',false,p.pago?1:0)+
+            (p.musicaPreviewUrl2 ? pnlVersaoMusica(p, p.musicaPreviewUrl2, 'Versão 2',false,p.pago?2:0) : '')+
           '</div>'
         : '')+
       liberar+
@@ -6987,9 +6990,9 @@ function desenharPainel(pedidos, visitas, musicas){
     if(url1){
       var om=p&&p.ofertaM1;
       html+='<div class="pnl-musica">'+
-        (om&&om.url?pnlVersaoMusica(fake,om.url,'Música 1 · V1',!pago)+(om.url2?pnlVersaoMusica(fake,om.url2,'Música 1 · V2',!pago):''):'')+
-        (p&&p.ofertaM2&&p.ofertaM2.url?pnlVersaoMusica(fake,p.ofertaM2.url,'Música 2 · V1',!pago)+(p.ofertaM2.url2?pnlVersaoMusica(fake,p.ofertaM2.url2,'Música 2 · V2',!pago):''):'')+
-        pnlVersaoMusica(fake,url1,om?'Música '+(p&&p.ofertaM2?3:2)+' · V1':'Versão 1',!pago)+(url2?pnlVersaoMusica(fake,url2,om?'Música '+(p&&p.ofertaM2?3:2)+' · V2':'Versão 2',!pago):'')+'</div>';
+        (om&&om.url?pnlVersaoMusica(fake,om.url,'Música 1 · V1',!pago,pago?3:0)+(om.url2?pnlVersaoMusica(fake,om.url2,'Música 1 · V2',!pago,pago?4:0):''):'')+
+        (p&&p.ofertaM2&&p.ofertaM2.url?pnlVersaoMusica(fake,p.ofertaM2.url,'Música 2 · V1',!pago,pago?5:0)+(p.ofertaM2.url2?pnlVersaoMusica(fake,p.ofertaM2.url2,'Música 2 · V2',!pago,pago?6:0):''):'')+
+        pnlVersaoMusica(fake,url1,om?'Música '+(p&&p.ofertaM2?3:2)+' · V1':'Versão 1',!pago,pago?1:0)+(url2?pnlVersaoMusica(fake,url2,om?'Música '+(p&&p.ofertaM2?3:2)+' · V2':'Versão 2',!pago,pago?2:0):'')+'</div>';
     } else if(m.taskId){
       html+='<div class="pnl-pend"><span>Música ainda processando ou o cliente fechou a página.</span>'+
         '<button type="button" class="pnl-verificar" data-verificar="'+esc(m.taskId)+'">Verificar agora</button></div>';
