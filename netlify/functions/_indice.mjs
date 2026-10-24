@@ -73,11 +73,19 @@ export async function montarIndice() {
     const e = mapa[k] || (mapa[k] = { p: [], t: [] });
     if (e[tipo].indexOf(id) === -1) e[tipo].push(id);
   }
+  const receita = {};
+  function addReceita(g) {
+    if (!g || !g.pago || g.cancelado || g.cortesia || g.dobroDe) return;
+    const ts = g.pagoEm || g.criadoEm; if (!ts) return;
+    const d = diaBR(ts), e = receita[d] || (receita[d] = { r: 0, n: 0 });
+    e.r = Math.round((e.r + (Number(g.pagamento && g.pagamento.valor) || 0)) * 100) / 100; e.n++;
+  }
   const presentes = getStore('presentes');
   const { blobs } = await presentes.list();
   for (let i = 0; i < blobs.length; i += 40) {
     await Promise.all(blobs.slice(i, i + 40).map(async (b) => {
       const g = await presentes.get(b.key, { type: 'json' }).catch(() => null);
+      addReceita(g);
       if (g) { add(g.musicaWhatsapp || g.whatsapp, 'p', g.id || b.key); addDia(g.criadoEm, 'p', g.id || b.key); if (g.pagoEm && diaBR(g.pagoEm) !== diaBR(g.criadoEm)) addDia(g.pagoEm, 'p', g.id || b.key); }
     }));
   }
@@ -109,6 +117,8 @@ export async function montarIndice() {
     e.l = Math.max(e.l || 0, a.l || 0);
   }
   await loja().setJSON('dias', { dias, montadoEm: Date.now() });
+  // faturamento de cada dia de todo o histórico (o painel usa pra mês, semana e total)
+  await loja().setJSON('receita', { dias: receita, montadoEm: Date.now() });
   // junta com o que entrou enquanto montava
   const atual = (await lerIndice()) || {};
   for (const k of Object.keys((atual && atual.mapa) || {})) {

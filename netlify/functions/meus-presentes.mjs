@@ -63,7 +63,8 @@ export default async (req) => {
       const pago = !!g.pago;
       if (!pago && !g.musicaPreviewUrl) return;
       itens.push({
-        id: g.id, produto: g.produto || 'musica', pago, cortesia: !!g.cortesia, bonus: !!g.bonusDe,
+        id: g.id, produto: g.produto || 'musica', pago, cortesia: !!g.cortesia, bonus: !!(g.bonusDe || g.dobroDe),
+        liberadas: !!(pago && g.quatro && !g.dobroUsado && !g.dobroDe), quatroPedido: !!g.quatro,
         quatro: !!(g.ofertaM1 && g.ofertaM1.url), seis: !!(g.ofertaM2 && g.ofertaM2.url),
         para: g.musicaParaNome || g.parceiroNome || '', estilo: g.musicaEstilo || '',
         capa: g.musicaCapa && String(g.musicaCapa).length < 120000 ? g.musicaCapa : null,
@@ -79,7 +80,7 @@ export default async (req) => {
     if (!itens.length) return json({ ok: true, vazio: true });
 
     // indique e ganhe (com limite de tempo pra nunca travar a tela)
-    const pagos = meus.filter((g) => g.pago && !g.bonusDe).sort((a, b) => (b.pagoEm || b.criadoEm || 0) - (a.pagoEm || a.criadoEm || 0));
+    const pagos = meus.filter((g) => g.pago && !g.bonusDe && !g.dobroDe).sort((a, b) => (b.pagoEm || b.criadoEm || 0) - (a.pagoEm || a.criadoEm || 0));
     let disponiveis = 0, confirmadas = 0, resgatar = null; const amigos = [];
     if (pagos.length && Date.now() - t0 < 6000) {
       const indStore = getStore('indicacoes');

@@ -1,4 +1,5 @@
 import { getStore } from '@netlify/blobs';
+import { pegarAudio, corpo } from './_audio.mjs';
 
 // Download de verdade da música (só pra pedido PAGO).
 // O link do MP3 é de outro site, então o celular só "toca" em vez de baixar.
@@ -27,11 +28,9 @@ export default async (req) => {
     if (g.expiraEm && Date.now() > g.expiraEm) return erro('Esse link expirou.', 403);
 
     const m1 = g.ofertaM1 || {}, m2 = g.ofertaM2 || {};
-    const url = v === 6 ? m2.url2 : v === 5 ? m2.url : v === 4 ? m1.url2 : v === 3 ? m1.url : v === 2 ? g.musicaPreviewUrl2 : g.musicaPreviewUrl;
-    if (!url) return erro('Música não encontrada.', 404);
-
-    const origem = await fetch(url);
-    if (!origem.ok || !origem.body) return erro('Não consegui pegar a música agora. Tenta de novo.', 502);
+    // cópia permanente (não depende do link do serviço de música continuar no ar)
+    const buf = await pegarAudio(g, v);
+    if (!buf) return erro('Não consegui pegar a música agora. Tenta de novo em instantes.', 502);
 
     const mx = v > 4 ? m2 : m1;
     const para = (v > 2 ? (mx.paraNome || mx.estilo) : (g.musicaParaNome || g.musicaEstilo)) || g.parceiroNome || 'presente';
@@ -42,10 +41,8 @@ export default async (req) => {
       'Content-Disposition': 'attachment; filename="' + arquivo + '"',
       'Cache-Control': 'private, max-age=3600'
     };
-    const tam = origem.headers.get('content-length');
-    if (tam) headers['Content-Length'] = tam;
-    // repassa o arquivo em "streaming" (não precisa carregar tudo na memória)
-    return new Response(origem.body, { status: 200, headers });
+    headers['Content-Length'] = String(buf.length);
+    return new Response(corpo(buf), { status: 200, headers });
   } catch (e) {
     console.error('baixar-musica:', e && e.stack || e);
     return erro('Erro inesperado.', 500);

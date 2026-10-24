@@ -70,6 +70,33 @@ export default async (req) => {
       }
     }
 
+    // 4 MÚSICAS POR R$ 9,99 — as outras 2 (outra letra, outro estilo) já foram pagas
+    // no pedido de origem. Só vale 1 vez, com o pedido de origem pago e marcado "quatro".
+    if (presente.dobroDe) {
+      const refD = String(presente.dobroDe);
+      const lojaP = getStore('presentes');
+      const origem = await lojaP.get(refD, { type: 'json' }).catch(() => null);
+      if (presente.produto !== 'musica' || !origem || !origem.pago || origem.cancelado || !origem.quatro) {
+        return json({ erro: 'Essas músicas não estão liberadas pra esse pedido.' }, 400);
+      }
+      if (origem.dobroUsado && origem.dobroUsado !== presente.id) {
+        return json({ erro: 'Você já criou as suas outras 2 músicas.', jaUsado: origem.dobroUsado }, 400);
+      }
+      delete presente.ofertaDe; delete presente.ofertaM1; delete presente.ofertaM2; delete presente.pacote6; delete presente.refDe; delete presente.bonusDe;
+      const agoraD = Date.now();
+      const salvoD = Object.assign({}, presente, {
+        pago: true, quatro: false, criadoEm: agoraD, pagoEm: agoraD, duracao: 'vitalicio', expiraEm: null,
+        musicaWhatsapp: presente.musicaWhatsapp || origem.musicaWhatsapp || origem.whatsapp || '',
+        pagamento: { provedor: 'incluso', status: 'CONCLUIDA', valor: 0, duracao: 'vitalicio', pagoEm: agoraD }
+      });
+      await lojaP.setJSON(presente.id, salvoD);
+      origem.dobroUsado = presente.id; origem.dobroEm = agoraD;
+      await lojaP.setJSON(refD, origem);
+      await indexar(salvoD.musicaWhatsapp, 'p', presente.id);
+      await indexarDia('p', presente.id);
+      return json({ gratis: true, id: presente.id, presente: salvoD });
+    }
+
     // INDIQUE E GANHE — pedido grátis (resgate de indicação): libera na hora, sem Pix.
     if (presente.bonusDe) {
       const refB = String(presente.bonusDe);
@@ -94,6 +121,8 @@ export default async (req) => {
       try { await registrarIndicado(String(presente.refDe), presente.id); } catch (e) {}
     }
 
+    // música + carta/retrospectiva: a música que a pessoa fez vai junto, sempre
+    if (presente.comboDaMusica && presente.musicaPreviewUrl) { presente.musicaOn = true; presente.musicaPersonalizar = true; }
     const pacote = PACOTES[presente.produto];
     const duracao = presente.duracao === 'h48' ? 'h48' : 'vitalicio';
     const temAddonMusica = !!presente.musicaOn && PRODUTOS_COM_ADDON_MUSICA.indexOf(presente.produto) !== -1;
@@ -104,8 +133,10 @@ export default async (req) => {
       : (precoBase + (temAddonMusica ? PRECO_ADDON_MUSICA : 0));
     const txid = criarTxid(presente.id);
     const criadoEm = Date.now();
+    // pedido de música normal = 4 músicas: as 2 da prévia + 2 liberadas depois do Pix
+    const quatro = presente.produto === 'musica' && !pacote6 && !presente.ofertaM1 && !presente.ofertaDe;
     const salvo = Object.assign({}, presente, {
-      pago: false,
+      pago: false, quatro,
       criadoEm,
       pagamento: { provedor: 'efi', txid, status: 'ATIVA', valor: precoFinal, duracao, addonMusica: temAddonMusica }
     });
@@ -117,7 +148,7 @@ export default async (req) => {
       await getStore('efi-txid').setJSON(txid, { giftId: presente.id, produto: presente.produto, valor: precoFinal, duracao, criadoEm });
 
       const token = await obterToken();
-      const nomeCobranca = (pacote6 ? '6 Músicas Personalizadas' : presente.ofertaM1 ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '');
+      const nomeCobranca = (pacote6 ? '6 Músicas Personalizadas' : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '');
       const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
         method: 'PUT', token,
         body: {

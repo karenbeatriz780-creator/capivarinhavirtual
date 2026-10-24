@@ -63,6 +63,7 @@ export default async (req) => {
     if (g.pago && !g.cortesia) return json({ ok: true, id: g.id, jaPago: true });
     const atualizado = Object.assign({}, g, {
       pago: true, cancelado: false, cortesia: true, cortesiaEm: agora,
+      quatro: (g.produto || 'musica') === 'musica' && !g.ofertaM1 && !g.pacote6 && !g.dobroDe && !g.bonusDe,
       pagoEm: g.pagoEm || agora, expiraEm: null,
       pagamento: Object.assign({}, g.pagamento || {}, {
         provedor: 'cortesia', status: 'CORTESIA', valor: 0, duracao: 'vitalicio', confirmadoEm: agora

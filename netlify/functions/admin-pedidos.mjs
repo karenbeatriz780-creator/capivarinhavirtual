@@ -108,6 +108,14 @@ export default async (req) => {
         await Promise.race([fetch(base + '/.netlify/functions/indexar-telefones-background', { method: 'POST' }).catch(() => null), new Promise((r) => setTimeout(r, 1500))]);
       }
     } catch (e) {}
+    // cópia de segurança das músicas pagas: roda a cada 3 h
+    try {
+      const bk = await getStore('indices').get('audios-backup', { type: 'json' }).catch(() => null);
+      if (!bk || Date.now() - (bk.em || 0) > 3 * 3600 * 1000) {
+        const base = new URL(req.url).origin;
+        await Promise.race([fetch(base + '/.netlify/functions/guardar-audios-background', { method: 'POST' }).catch(() => null), new Promise((r) => setTimeout(r, 1200))]);
+      }
+    } catch (e) {}
 
     const pedidos = [];
     for (const g of registros) {
@@ -121,6 +129,7 @@ export default async (req) => {
         pago: !!g.pago,
         trafego: (g.trafego && g.trafego.fonte) || null,
         cortesia: !!g.cortesia,
+        comboDaMusica: !!g.comboDaMusica, quatro: !!g.quatro, dobroDe: g.dobroDe || null, dobroUsado: g.dobroUsado || null,
         cancelado: !!g.cancelado,
         criadoEm: g.criadoEm || null,
         pagoEm: g.pagoEm || null,
@@ -163,7 +172,9 @@ export default async (req) => {
         custos[d] = { m: e && e.t ? e.t.length : 0, l: (e && e.l) || 0 };
       }
     }
-    return json({ ok: true, pedidos, liberadosAgora, faltamConferir, parcial, custos, indiceEm: idxDias && idxDias.montadoEm || 0 });
+    let resumo = null;
+    try { resumo = await getStore('indices').get('receita', { type: 'json' }); } catch (e) {}
+    return json({ ok: true, pedidos, liberadosAgora, faltamConferir, parcial, custos, resumo, indiceEm: idxDias && idxDias.montadoEm || 0 });
   } catch (e) {
     console.error('admin-pedidos (inesperado):', e && e.stack || e);
     return json({ erro: 'Erro inesperado no servidor: ' + (e && e.message ? e.message : String(e)) }, 500);
