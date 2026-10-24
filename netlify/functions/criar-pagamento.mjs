@@ -146,6 +146,15 @@ export default async (req) => {
       await indexar(presente.musicaWhatsapp || presente.whatsapp, 'p', presente.id);
       await indexarDia('p', presente.id);
       await getStore('efi-txid').setJSON(txid, { giftId: presente.id, produto: presente.produto, valor: precoFinal, duracao, criadoEm });
+      // liga a música ao pedido (o link de prévia e o Meus presentes sabem que ela já tem pedido)
+      try {
+        const ms = getStore('musicas');
+        for (const tid of [presente.musicaPreviewId, presente.ofertaM1 && presente.ofertaM1.id, presente.ofertaM2 && presente.ofertaM2.id]) {
+          if (!tid) continue;
+          const m = await ms.get(tid, { type: 'json' });
+          if (m && m.presenteId !== presente.id) { m.presenteId = presente.id; await ms.setJSON(tid, m); }
+        }
+      } catch (e) {}
 
       const token = await obterToken();
       const nomeCobranca = (pacote6 ? '6 Músicas Personalizadas' : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '');

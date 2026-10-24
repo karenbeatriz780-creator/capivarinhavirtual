@@ -4,6 +4,7 @@
 // Se o pedido ainda consta como não pago, pergunta direto pra Efí se o Pix
 // já caiu (plano B caso o aviso automático/webhook da Efí não chegue).
 import { getStore } from '@netlify/blobs';
+import { indexarDia } from './_indice.mjs';
 import { conferirPagamentoEfi, aplicarPagamento } from './_efi.mjs';
 
 const ultimaConsulta = new Map(); // evita consultar a Efí a cada segundo pro mesmo pedido
@@ -36,6 +37,7 @@ export default async (req) => {
         if (info) {
           aplicarPagamento(presente, info, 'consulta-presente');
           await store.setJSON(id, presente);
+      try { await indexarDia('pg', presente.id, presente.pagoEm); } catch (e) {}
         }
       } catch (e) {
         console.error('presente: falha ao conferir Pix na Efí', id, e && e.message);

@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
-import { indexar, indexarDia } from './_indice.mjs';
+import { indexar, indexarDia, chaveTel, lerIndice } from './_indice.mjs';
 
 // RECUPERAÇÃO DE VENDA
 // Link que você manda no WhatsApp pra quem quase comprou: #/ouvir/<id>
@@ -37,8 +37,19 @@ async function acharPedido(id, t, criarSeFaltar) {
   const musicas = getStore('musicas');
   const m = await musicas.get(t, { type: 'json' });
   if (!m || !m.url) return null;
+  // pedido pago que usa essa música (direto, ou procurando pelo número do cliente)
+  const usa = (g) => g && (g.musicaPreviewId === t || (g.ofertaM1 && g.ofertaM1.id === t) || (g.ofertaM2 && g.ofertaM2.id === t));
+  const candidatos = [m.presenteId, m.pedidoRecId].filter(Boolean);
+  try {
+    const k = chaveTel(m.whatsapp), ix = k ? await lerIndice() : null;
+    const ent = ix && ix.mapa && ix.mapa[k];
+    if (ent && ent.p) ent.p.slice(-30).forEach((x) => { if (candidatos.indexOf(x) === -1) candidatos.push(x); });
+  } catch (e) {}
+  const achados = (await Promise.all(candidatos.map((x) => presentes.get(x, { type: 'json' }).catch(() => null)))).filter((g) => usa(g) || (g && g.id === m.pedidoRecId));
+  const pago = achados.find((g) => g.pago && !g.cancelado);
+  if (pago) return pago;
   if (m.pedidoRecId) {
-    const g = await presentes.get(m.pedidoRecId, { type: 'json' });
+    const g = achados.find((x) => x.id === m.pedidoRecId);
     if (g) return g;
   }
   const base = {

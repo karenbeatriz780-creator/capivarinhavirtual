@@ -5,6 +5,7 @@
 // depois de configurar o webhook, isso deixa de ser necessário no dia a
 // dia, mas fica disponível como um botão de emergência.
 import { getStore } from '@netlify/blobs';
+import { indexarDia } from './_indice.mjs';
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
@@ -41,6 +42,7 @@ export default async (req) => {
       obs: 'Marcado manualmente via marcar-pago-efi (Pix confirmado fora do webhook).'
     });
     await store.setJSON(id, presente);
+      try { await indexarDia('pg', presente.id, presente.pagoEm); } catch (e) {}
     return json({ ok: true, id, jaEstavaPago: false, presente });
   } catch (e) {
     console.error('marcar-pago-efi:', e && e.stack || e);

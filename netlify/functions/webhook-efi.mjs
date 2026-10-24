@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
+import { indexarDia } from './_indice.mjs';
 
 const HORAS_48 = 48;
 
@@ -52,6 +53,7 @@ export default async (req) => {
         valorRecebido: evento.valor || null, pagoEm: presente.pagoEm
       });
       await giftStore.setJSON(mapa.giftId, presente);
+      try { await indexarDia('pg', presente.id, presente.pagoEm); } catch (e) {}
     } catch (e) {
       console.error('Erro ao processar Pix Efí', txid, e && e.stack || e);
       // Responde 2xx para eventos já processados/irrelevantes; falhas pontuais ficam registradas no log.

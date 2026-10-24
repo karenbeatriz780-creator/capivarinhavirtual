@@ -1,6 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { obterToken, conferirPagamentoEfi, aplicarPagamento, listarPixRecebidos } from './_efi.mjs';
-import { lerIndice, lerDias, idsDosDias, diaBR } from './_indice.mjs';
+import { lerIndice, lerDias, idsDosDias, diaBR, chaveTel, indexarDia } from './_indice.mjs';
 // ATENÇÃO: este arquivo precisa ser .mjs. Não deixe um admin-pedidos.js junto na pasta.
 
 function json(obj, status = 200) {
@@ -24,10 +24,24 @@ export default async (req) => {
 
     const store = getStore('presentes');
     // ?dias=N → só os pedidos dos últimos N dias (abre rápido). Sem isso, carrega tudo.
-    const nDias = Math.max(0, Math.min(60, parseInt(new URL(req.url).searchParams.get('dias'), 10) || 0));
+    const sp = new URL(req.url).searchParams;
+    const nDias = Math.max(0, Math.min(400, parseInt(sp.get('dias'), 10) || 0));
+    const soPagos = sp.get('pagos') === '1';
+    const tel = sp.get('tel') || '';
     const idxDias = await lerDias();
     let blobs, parcial = false;
-    if (nDias && idxDias && idxDias.dias) {
+    if (tel) {
+      // busca por número de WhatsApp (todo o histórico desse número)
+      const ix = await lerIndice(), k = chaveTel(tel), ent = ix && ix.mapa && ix.mapa[k];
+      blobs = ((ent && ent.p) || []).map((key) => ({ key }));
+      parcial = true;
+    } else if (nDias && soPagos && idxDias && idxDias.dias) {
+      // só os PAGOS de um período longo (lista de pagos por dia + os 2 últimos dias inteiros)
+      const ids = idsDosDias(idxDias, nDias, 'pg');
+      idsDosDias(idxDias, 2, 'p').forEach((id) => { if (ids.indexOf(id) === -1) ids.push(id); });
+      blobs = ids.map((key) => ({ key }));
+      parcial = true;
+    } else if (nDias && idxDias && idxDias.dias) {
       blobs = idsDosDias(idxDias, nDias, 'p').map((key) => ({ key }));
       parcial = true;
     } else {
@@ -75,6 +89,7 @@ export default async (req) => {
                   if (p.horario) { const h = Date.parse(p.horario); if (h) { g.pagoEm = h; g.pagamento.pagoEm = h; } }
                   liberadosAgora++;
                   await store.setJSON(g.id, g);
+                  try { await indexarDia('pg', g.id, g.pagoEm); } catch (e) {}
                 } catch (e) { console.error('admin-pedidos: lista pix', p.txid, e && e.message); }
               }));
             }
@@ -89,7 +104,7 @@ export default async (req) => {
                 const info = await comLimite(conferirPagamentoEfi(g, token), Math.min(2500, resta() - 800));
                 if (info === 'tempo') return;
                 conferidos++;
-                if (info) { aplicarPagamento(g, info, 'consulta-painel'); liberadosAgora++; }
+                if (info) { aplicarPagamento(g, info, 'consulta-painel'); liberadosAgora++; indexarDia('pg', g.id, g.pagoEm).catch(() => {}); }
                 else { g.pagamento.efiConferidoEm = Date.now(); }
                 await comLimite(store.setJSON(g.id, g), Math.max(300, resta() - 300));
               } catch (e) { console.error('admin-pedidos: conferir', g.id, e && e.message); }
@@ -103,7 +118,7 @@ export default async (req) => {
     // mantém o índice de telefones (Meus presentes) em dia: remonta em segundo plano a cada 6h
     try {
       const idx = await lerIndice();
-      if (!idx || !idx.montadoEm || Date.now() - idx.montadoEm > 6 * 3600 * 1000) {
+      if (!idx || !idx.montadoEm || Date.now() - idx.montadoEm > 6 * 3600 * 1000 || (idxDias && !idxDias.temPg)) {
         const base = new URL(req.url).origin;
         await Promise.race([fetch(base + '/.netlify/functions/indexar-telefones-background', { method: 'POST' }).catch(() => null), new Promise((r) => setTimeout(r, 1500))]);
       }
@@ -120,6 +135,7 @@ export default async (req) => {
     const pedidos = [];
     for (const g of registros) {
       if (!g) continue;
+      if (soPagos && !tel && !g.pago) continue;
       pedidos.push({
         id: g.id,
         produto: g.produto,
@@ -172,9 +188,11 @@ export default async (req) => {
         custos[d] = { m: e && e.t ? e.t.length : 0, l: (e && e.l) || 0 };
       }
     }
-    let resumo = null;
+    let resumo = null, pixSemPedido = null, conferenciaAuto = null;
     try { resumo = await getStore('indices').get('receita', { type: 'json' }); } catch (e) {}
-    return json({ ok: true, pedidos, liberadosAgora, faltamConferir, parcial, custos, resumo, indiceEm: idxDias && idxDias.montadoEm || 0 });
+    try { pixSemPedido = await getStore('indices').get('pix-sem-pedido', { type: 'json' }); } catch (e) {}
+    try { conferenciaAuto = await getStore('indices').get('pix-conferencia', { type: 'json' }); } catch (e) {}
+    return json({ ok: true, pedidos, liberadosAgora, faltamConferir, parcial, custos, resumo, pixSemPedido, conferenciaAuto, indiceEm: idxDias && idxDias.montadoEm || 0 });
   } catch (e) {
     console.error('admin-pedidos (inesperado):', e && e.stack || e);
     return json({ erro: 'Erro inesperado no servidor: ' + (e && e.message ? e.message : String(e)) }, 500);

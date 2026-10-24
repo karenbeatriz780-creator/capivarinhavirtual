@@ -40,8 +40,9 @@ export default async (req) => {
     const ent = idx.mapa[chave] || { p: [], t: [] };
     if (!ent.p.length && !ent.t.length) return json({ ok: true, vazio: true });
 
-    const lerP = (id) => comLimite(presentes.get(id, { type: 'json' }).catch(() => null), 4000, null);
-    const lerM = (id) => comLimite(musicasSt.get(id, { type: 'json' }).catch(() => null), 4000, null);
+    const umaVez = (st, id) => comLimite(st.get(id, { type: 'json' }).catch(() => null), 3500, null);
+    const lerP = async (id) => (await umaVez(presentes, id)) || (await umaVez(presentes, id));
+    const lerM = async (id) => (await umaVez(musicasSt, id)) || (await umaVez(musicasSt, id));
 
     const [ps, ms] = await Promise.all([
       Promise.all(ent.p.slice(-40).map(lerP)),
@@ -55,13 +56,16 @@ export default async (req) => {
 
     const usadas = {};
     meus.forEach((g) => { if (g.musicaPreviewId) usadas[g.musicaPreviewId] = 1; if (g.ofertaM1 && g.ofertaM1.id) usadas[g.ofertaM1.id] = 1; if (g.ofertaM2 && g.ofertaM2.id) usadas[g.ofertaM2.id] = 1; });
-    const soMusica = ms.filter((m) => m && m.url && m.origem !== 'painel' && !m.pedidoRecId && !usadas[m.taskId]);
+    // prévia sem pedido: some se já existe um pedido PAGO depois dela (ela foi substituída)
+    const ultimoPago = meus.filter((g) => g.pago && !g.cancelado).reduce((mx, g) => Math.max(mx, g.criadoEm || g.pagoEm || 0), 0);
+    const soMusica = ms.filter((m) => m && m.url && m.origem !== 'painel' && !m.pedidoRecId && !m.presenteId && !usadas[m.taskId] && !(ultimoPago && (m.criadoEm || 0) <= ultimoPago));
 
     const itens = [];
     meus.forEach((g) => {
       if (g.produto === 'extra' || String(g.produto || '').indexOf('extra_') === 0) return;
       const pago = !!g.pago;
       if (!pago && !g.musicaPreviewUrl) return;
+      if (!pago && ultimoPago && (g.criadoEm || 0) <= ultimoPago) return; // tentativa antiga, já tem pedido pago
       itens.push({
         id: g.id, produto: g.produto || 'musica', pago, cortesia: !!g.cortesia, bonus: !!(g.bonusDe || g.dobroDe),
         liberadas: !!(pago && g.quatro && !g.dobroUsado && !g.dobroDe), quatroPedido: !!g.quatro,

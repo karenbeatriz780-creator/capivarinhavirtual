@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { lerDias, idsDosDias } from './_indice.mjs';
+import { lerDias, idsDosDias, lerIndice, chaveTel } from './_indice.mjs';
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -19,10 +19,15 @@ export default async (req) => {
     if (!autorizado(req)) return json({ erro: 'Senha incorreta.' }, 401);
 
     const store = getStore('musicas');
-    const nDias = Math.max(0, Math.min(60, parseInt(new URL(req.url).searchParams.get('dias'), 10) || 0));
+    const sp = new URL(req.url).searchParams;
+    const nDias = Math.max(0, Math.min(400, parseInt(sp.get('dias'), 10) || 0));
+    const tel = sp.get('tel') || '';
     const idxDias = nDias ? await lerDias() : null;
     let blobs, parcial = false;
-    if (nDias && idxDias && idxDias.dias) { blobs = idsDosDias(idxDias, nDias, 't').map((key) => ({ key })); parcial = true; }
+    if (tel) {
+      const ix = await lerIndice(), k = chaveTel(tel), ent = ix && ix.mapa && ix.mapa[k];
+      blobs = ((ent && ent.t) || []).map((key) => ({ key })); parcial = true;
+    } else if (nDias && idxDias && idxDias.dias) { blobs = idsDosDias(idxDias, nDias, 't').map((key) => ({ key })); parcial = true; }
     else blobs = (await store.list()).blobs;
 
     // Busca tudo em paralelo em vez de um registro de cada vez — essa fila
