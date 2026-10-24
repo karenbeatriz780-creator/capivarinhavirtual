@@ -1107,6 +1107,29 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .qrbox .qr{width:180px;height:180px;margin:0 auto 1rem;background:#fff;padding:9px;border-radius:12px;box-shadow:var(--shadow-sm);}
 .qrbox .qr svg{width:100%;height:100%;display:block;}
 .pix-code{display:flex;gap:.5rem;margin-top:.9rem;}
+.pxc{background:#fff;border:1.5px solid #F3D3E0;border-radius:22px;padding:1.4rem 1.2rem 1.2rem;box-shadow:0 10px 30px rgba(196,24,87,.08);text-align:left;}
+.pxc-eb{font-size:.72rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#C41857;}
+.pxc-tit{font-family:Fraunces,Georgia,serif;font-size:1.6rem;line-height:1.15;color:var(--plum,#3B1527);margin:.3rem 0 .7rem;}
+.pxc-it{list-style:none;margin:0 0 .8rem;padding:0;display:grid;gap:.4rem;}
+.pxc-it li{display:flex;gap:.5rem;font-size:.92rem;color:#5B3A48;}
+.pxc-it li span{color:#13914F;font-weight:900;}
+.pxc-pr{font-size:2rem;font-weight:900;color:#C41857;margin:.2rem 0 1rem;}
+.pxc-box{background:#FFF6F9;border:1.5px solid #F3D3E0;border-radius:18px;padding:1rem;}
+.pxc-txt{margin:0 0 .9rem;font-size:.9rem;line-height:1.5;color:#5B3A48;}
+.pxc-bts{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
+.pxc-copiar,.pxc-ja{min-height:52px;border-radius:14px;font:inherit;font-weight:800;font-size:.95rem;cursor:pointer;padding:.5rem;}
+.pxc-copiar{border:0;color:#fff;background:linear-gradient(180deg,#F0407C,#C41857);box-shadow:0 6px 16px rgba(196,24,87,.3);}
+.pxc-ja{border:1.5px solid #E7C3D3;background:#fff;color:#3B1527;}
+.pxc-ja:disabled{opacity:.6;}
+.pxc-lb{font-weight:800;font-size:.85rem;color:#3B1527;margin:1rem 0 .4rem;}
+.pxc-cod{width:100%;box-sizing:border-box;border:1.5px solid #E7C3D3;border-radius:12px;padding:.7rem;font:600 .8rem/1.5 ui-monospace,Menlo,Consolas,monospace;color:#3B1527;background:#fff;resize:none;word-break:break-all;}
+.pxc-qr{border-top:1px solid #F0D9E3;margin-top:.9rem;padding-top:.8rem;}
+.pxc-qr summary{cursor:pointer;font-weight:800;color:#C41857;font-size:.9rem;}
+.pxc-qr .qr{width:190px;height:190px;margin:.8rem auto .4rem;background:#fff;padding:9px;border-radius:12px;box-shadow:var(--shadow-sm);}
+.pxc-qr .qr svg{width:100%;height:100%;display:block;}
+.pxc-qr p{text-align:center;font-size:.78rem;color:var(--muted);margin:0;}
+.pxc-rod{margin-top:1rem;font-size:.8rem;line-height:1.5;color:#8A6A78;}
+.pix-msg{margin-top:.8rem;padding:.75rem .9rem;border-radius:12px;background:#FFF8E6;border:1px solid #F0D08A;color:#6A4A00;font-size:.84rem;line-height:1.5;text-align:left;}
 .pixl{display:grid;gap:.8rem;text-align:center;padding:1.3rem 1.1rem;background:var(--paper);border-radius:var(--r-md);border:1px solid var(--line);}
 .pixl-v{display:flex;align-items:baseline;justify-content:center;gap:.5rem;}
 .pixl-v span{font-size:.85rem;color:var(--muted);font-weight:700;}
@@ -2982,7 +3005,7 @@ function htmlLetraCarregando(msg){
   return '<div class="letra-carregando">'+
     '<div class="lc-pena">✍️</div>'+
     '<div class="lc-tit">'+(msg||'Escrevendo a letra da sua música...')+'</div>'+
-    '<div class="lc-sub">Leva só alguns segundos. Pode sair da tela que a letra não se perde.</div>'+
+    '<div class="lc-sub">Leva uns 5 segundinhos ✨</div>'+
   '</div>';
 }
 var _mcTimer=null;
@@ -4490,7 +4513,23 @@ function dispararGeracaoLetra(){
 /* LETRA: é escrita no servidor, em segundo plano. A página só pergunta
    "ficou pronta?" a cada 1,5 s. Se a pessoa sair da aba ou a internet cair,
    nada se perde: quando ela volta, a página pergunta de novo e mostra a letra. */
+/* LETRA: primeiro o jeito RÁPIDO (modelos rápidos em paralelo, ~3–5 s).
+   Se falhar ou passar de 11 s, cai no jeito antigo (segundo plano + conferir). */
 function pedirLetra(dados){
+  var id='l'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+  var ctl=window.AbortController?new AbortController():null, tm=setTimeout(function(){ if(ctl) ctl.abort(); },11000);
+  return fetch('/.netlify/functions/letra-rapida',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},dados,{id:id})),signal:ctl?ctl.signal:undefined})
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+    .then(function(res){ clearTimeout(tm); if(res.ok && res.d && res.d.letra) return {ok:true, d:{letra:res.d.letra}}; return pedirLetraSegundoPlano(dados); })
+    .catch(function(){
+      clearTimeout(tm);
+      /* a conexão caiu (ex.: saiu da aba): a letra pode ter ficado pronta no servidor mesmo assim */
+      return fetch('/.netlify/functions/gerar-letra-status?id='+encodeURIComponent(id),{cache:'no-store'}).then(function(r){ return r.json(); })
+        .then(function(d){ return (d && d.pronto && d.letra) ? {ok:true, d:{letra:d.letra}} : pedirLetraSegundoPlano(dados); })
+        .catch(function(){ return pedirLetraSegundoPlano(dados); });
+    });
+}
+function pedirLetraSegundoPlano(dados){
   var id='l'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
   dados=Object.assign({}, dados, {id:id});
   var LIMITE=150000, ini=Date.now();
@@ -6084,17 +6123,32 @@ function finalizarDeVerdade(){
 /* ===== PIX LIMPO: Copiar código · Ver QR (outro aparelho) · Já paguei =====
    Fica salvo no aparelho: se a pessoa atualizar a página, volta pra esta tela
    (#/pagar/<id>) em vez de voltar pro começo. */
-function htmlPixLimpo(payload, valor, teste){
+function infoPixPedido(){
+  if(W && W.produto==='musica' && (W.quatro || quatroAtivo(W))) return {titulo:'4 Músicas Personalizadas', itens:['2 músicas prontas pra ouvir agora','+ 2 músicas com outra letra e outro estilo','MP3 pra baixar e mandar no WhatsApp']};
+  if(W && W.pacote6) return {titulo:'6 Músicas Personalizadas', itens:['3 letras diferentes, 2 versões de cada','MP3 pra baixar e mandar no WhatsApp']};
+  if(W && W.ofertaM1) return {titulo:'4 Músicas Personalizadas', itens:['2 letras diferentes, 2 versões de cada','MP3 pra baixar e mandar no WhatsApp']};
+  var nome=(W && PACOTES[W.produto] && PACOTES[W.produto].nome)||'Música Personalizada';
+  return {titulo:nome, itens:['Liberado assim que o Pix cair']};
+}
+function htmlPixLimpo(payload, valor, teste, info){
+  info=info||{titulo:'Música Personalizada', itens:['Liberada assim que o Pix cair']};
   var svg=''; try{ svg=QRCodeGen.toSVG(payload,{ec:'M',quiet:2}); }catch(e){}
   return (teste?'<div class="demo-note info" style="margin-bottom:1rem">'+IC.shield+'<div><b>Modo de homologação da Efí.</b> Nenhum valor real será cobrado.</div></div>':'')+
-    '<div class="pixl">'+
-      (valor?'<div class="pixl-v"><span>Total no Pix</span><b>R$ '+fmtPreco(valor)+'</b></div>':'')+
-      '<button type="button" class="btn btn-primary btn-block btn-lg pixl-copiar" id="pxCopiar">📋 Copiar código Pix</button>'+
-      '<div class="pixl-dica">Abra o app do seu banco → <b>Pix</b> → <b>Pix Copia e Cola</b> → cole o código e confirme.</div>'+
-      '<button type="button" class="pixl-link" id="pxVerQr">Ver QR Code para pagar em outro aparelho</button>'+
-      '<div class="pixl-qr" id="pxQr" hidden>'+(svg?'<div class="qr">'+svg+'</div>':'')+'<p>Escaneie com a câmera do app do banco em outro celular.</p></div>'+
-      '<button type="button" class="btn btn-ghost btn-block pixl-ja" id="pxJa">✅ Já paguei</button>'+
-      '<div class="pixl-st" id="pxSt"><span class="cur"></span> Aguardando o pagamento...</div>'+
+    '<div class="pxc">'+
+      '<div class="pxc-eb">Pagamento do seu pedido</div>'+
+      '<div class="pxc-tit">'+esc(info.titulo)+'</div>'+
+      '<ul class="pxc-it">'+info.itens.map(function(t){ return '<li><span>✓</span>'+esc(t)+'</li>'; }).join('')+'</ul>'+
+      (valor?'<div class="pxc-pr">R$ '+fmtPreco(valor)+'</div>':'')+
+      '<div class="pxc-box">'+
+        '<p class="pxc-txt">Copie o código abaixo, abra o aplicativo do seu banco e escolha <b>Pix Copia e Cola</b>. A aprovação é imediata:</p>'+
+        '<div class="pxc-bts"><button type="button" class="pxc-copiar" id="pxCopiar">Copiar código Pix</button>'+
+          '<button type="button" class="pxc-ja" id="pxJa">Já paguei</button></div>'+
+        '<div class="pix-msg" id="pxMsg" hidden></div>'+
+        '<div class="pxc-lb">Código Pix Copia e Cola</div>'+
+        '<textarea class="pxc-cod" id="pxTxt" readonly rows="6">'+esc(payload)+'</textarea>'+
+        '<details class="pxc-qr"><summary>Ver QR Code para pagar em outro aparelho</summary>'+(svg?'<div class="qr">'+svg+'</div>':'')+'<p>Escaneie com o app do banco em outro celular.</p></details>'+
+      '</div>'+
+      '<div class="pxc-rod">A liberação acontece quando o pagamento é confirmado. Sua música continua salva se você fechar esta página.</div>'+
     '</div>';
 }
 function ligarPixLimpo(payload, id, aoPagar){
@@ -6108,31 +6162,29 @@ function ligarPixLimpo(payload, id, aoPagar){
   }
   el('pxCopiar').onclick=function(){
     copiar(payload,'Código Pix copiado!');
-    var b=el('pxCopiar'); b.textContent='✓ Copiado! Agora cole no app do banco'; b.classList.add('ok');
-    setTimeout(function(){ if(el('pxCopiar')){ b.textContent='📋 Copiar código Pix de novo'; b.classList.remove('ok'); } },3500);
+    var c=el('pxCopiar'); c.textContent='✓ Copiado!'; setTimeout(function(){ if(el('pxCopiar')) c.textContent='Copiar código Pix'; },2000);
+    var t=el('pxTxt'); if(t){ t.focus(); t.select(); }
   };
-  el('pxVerQr').onclick=function(){ var q=el('pxQr'); q.hidden=!q.hidden; el('pxVerQr').textContent=q.hidden?'Ver QR Code para pagar em outro aparelho':'Esconder QR Code'; };
   el('pxJa').onclick=function(){
-    var b=el('pxJa'), st=el('pxSt');
-    b.disabled=true; b.textContent='Conferindo seu pagamento...';
-    st.innerHTML='<span class="cur"></span> Conferindo com o banco...';
+    var b=el('pxJa'); b.disabled=true;
     checar().then(function(ok){
+      b.disabled=false;
       if(ok || feito) return;
-      st.innerHTML='⏳ <b>Seu pagamento ainda está sendo processado.</b><br>Às vezes o banco leva alguns segundos. <b>Não precisa pagar de novo</b> — esta tela libera sozinha assim que confirmar.';
-      rapido=30; /* confere a cada 2 s pelo próximo minuto */
-      setTimeout(function(){ if(el('pxJa')){ b.disabled=false; b.textContent='✅ Já paguei — conferir de novo'; } },5000);
+      var m=el('pxMsg'); m.hidden=false;
+      m.innerHTML='⏳ Seu pagamento ainda está sendo processado. Às vezes o banco leva alguns segundos — <b>não precisa pagar de novo</b>. Assim que confirmar, a sua música libera aqui sozinha.';
+      rapido=30; /* confere a cada 3 s pelo próximo minuto e meio */
     });
   };
   iv=setInterval(function(){
     tent++;
     if(rapido>0){ rapido--; checar(); return; }
-    if(tent<=200 ? tent%1===0 : tent%4===0) checar(); /* 3 s nos primeiros 10 min, depois 12 s */
+    if(tent<=200 || tent%4===0) checar(); /* 3 s nos primeiros 10 min, depois 12 s */
   },3000);
   aoSair(function(){ clearInterval(iv); });
   checar();
 }
-function guardarPixPendente(id, payload, valor, teste){
-  try{ Store.set('cl_pix', JSON.stringify({id:id, payload:payload, valor:valor, teste:!!teste, em:Date.now()})); }catch(e){}
+function guardarPixPendente(id, payload, valor, teste, info){
+  try{ Store.set('cl_pix', JSON.stringify({id:id, payload:payload, valor:valor, teste:!!teste, info:info||null, em:Date.now()})); }catch(e){}
   try{ history.replaceState(null,'','#/pagar/'+id); }catch(e){}
 }
 /* #/pagar/<id>: volta direto pra tela do Pix depois de atualizar a página */
@@ -6140,8 +6192,7 @@ function telaPagar(id){
   var px=null; try{ px=JSON.parse(Store.get('cl_pix')||'null'); }catch(e){}
   if(!px || px.id!==id || Date.now()-px.em>3*3600*1000){ telaConfirmando(id); return; }
   el('app').innerHTML='<div class="wz-top"><a class="wz-back" href="#/">'+IC.back+'</a><div class="wz-track"><div class="wz-fill" style="width:100%"></div></div><span class="wz-count">Pagamento</span></div>'+
-    '<div class="wz-wrap"><div class="wz-t">Falta só o Pix</div><div class="wz-s">Seu pedido está guardado. Assim que o Pix cair, a sua música libera aqui.</div>'+
-    htmlPixLimpo(px.payload, px.valor, px.teste)+'</div>';
+    '<div class="wz-wrap">'+htmlPixLimpo(px.payload, px.valor, px.teste, px.info)+'</div>';
   ligarPixLimpo(px.payload, id, function(){ telaSucesso(id); });
 }
 
@@ -6150,9 +6201,10 @@ function mostrarPix(payload, id, teste, valor){
   if(form) form.style.display='none';
   if(btn) btn.style.display='none';
   area.style.display='block';
-  area.innerHTML=htmlPixLimpo(payload, valor, teste)+
+  var info=infoPixPedido();
+  area.innerHTML=htmlPixLimpo(payload, valor, teste, info)+
     (teste?'<button class="btn btn-primary btn-block" id="simularBtn" style="margin-top:1rem">🧪 Simular pagamento (só teste)</button>':'');
-  guardarPixPendente(id, payload, valor, teste);
+  guardarPixPendente(id, payload, valor, teste, info);
   if(teste){
     el('simularBtn').onclick=function(){
       var sb=el('simularBtn'); sb.disabled=true; sb.textContent='Simulando...';
@@ -7683,8 +7735,9 @@ function telaOuvir(arg){
             var id=res.d.id, payload=res.d.payload;
             b.style.display='none';
             var area=el('ouvirPix'); area.style.display='block';
-            area.innerHTML=htmlPixLimpo(payload, valor, false);
-            guardarPixPendente(id, payload, valor, false);
+            var infoR={titulo:'Música Personalizada', itens:['As músicas completas, sem corte','MP3 pra baixar e mandar no WhatsApp']};
+            area.innerHTML=htmlPixLimpo(payload, valor, false, infoR);
+            guardarPixPendente(id, payload, valor, false, infoR);
             ligarPixLimpo(payload, id, function(){ telaSucesso(id); });
           })
           .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent='Quero minha música — pagar R$ '+fmtPreco(valor)+' no Pix'; });
