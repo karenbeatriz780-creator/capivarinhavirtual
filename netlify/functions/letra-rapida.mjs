@@ -2,12 +2,12 @@ import { getStore } from '@netlify/blobs';
 import { montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT } from './gerar-letra.js';
 import { indexarDia } from './_indice.mjs';
 
-// LETRA RÁPIDA: escreve a letra completa e já vai mandando o texto pro
-// navegador enquanto escreve (a pessoa vê a letra aparecendo em 1–2 s).
-// Usa um modelo rápido e bom de texto. Se tudo der errado, o site volta
-// sozinho pro modo antigo (gerar-letra-background).
-//   POST (mesmos campos de gerar-letra) → texto puro, em streaming.
-const MODELOS = ['anthropic/claude-haiku-5-5', 'openai/gpt-5.4-mini', 'google/gemini-3.8-flash'];
+// LETRA RÁPIDA (≈3–5 s): pede a letra a modelos rápidos AO MESMO TEMPO e usa a
+// primeira que chegar completa. Responde direto (sem segundo plano, sem streaming).
+// Também guarda a letra pelo id — se a pessoa sair da aba, o site recupera depois.
+// Se nenhum responder a tempo, o site cai no modo antigo (gerar-letra-background).
+const MODELOS = ['openai/gpt-5.4-mini', 'google/gemini-3.8-flash', 'anthropic/claude-haiku-4-5'];
+const LIMITE_MS = 9000;
 
 function erro(msg, status) {
   return new Response(JSON.stringify({ erro: msg }), { status, headers: { 'Content-Type': 'application/json' } });
@@ -36,61 +36,37 @@ export default async (req) => {
   const system = (modoAjuste ? AJUSTE_SYSTEM_PROMPT : SYSTEM_PROMPT) +
     ' Escreva a música COMPLETA (todas as partes da estrutura pedida), nunca só um trecho.';
 
-  // abre a conexão com o primeiro modelo que responder
-  let up = null, modelo = null;
-  for (const m of MODELOS) {
+  const t0 = Date.now();
+  const ctrls = [];
+  async function chamar(m) {
+    const ctl = new AbortController(); ctrls.push(ctl);
     try {
       const r = await fetch('https://api.unifically.com/v1/chat/completions', {
-        method: 'POST',
+        method: 'POST', signal: ctl.signal,
         headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: m, stream: true, max_tokens: 1800, temperature: modoAjuste ? 0.5 : 0.9,
+        body: JSON.stringify({ model: m, max_tokens: 1600, temperature: modoAjuste ? 0.5 : 0.9,
           messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] })
       });
-      if (r.ok && r.body) { up = r; modelo = m; break; }
-      console.log('letra-rapida: ' + m + ' recusou ' + r.status);
-    } catch (e) { console.log('letra-rapida: ' + m + ' falhou ' + (e && e.message)); }
+      const d = await r.json().catch(() => null);
+      const ch = d && d.choices && d.choices[0];
+      const txt = ch && ch.message && ch.message.content;
+      if (!r.ok || !txt || (ch.finish_reason === 'length')) { console.log('letra-rapida FALHA ' + m + ' ' + r.status); return null; }
+      const letra = limparResposta(txt);
+      if (letra.split('\n').filter((l) => l.trim()).length < 10) { console.log('letra-rapida curta ' + m); return null; }
+      console.log('letra-rapida OK ' + m + ' em ' + (Date.now() - t0) + 'ms');
+      return { letra, modelo: m };
+    } catch (e) { return null; }
   }
-  if (!up) return erro('IA indisponível agora.', 502);
-
-  const enc = new TextEncoder(), dec = new TextDecoder();
-  const t0 = Date.now();
-  const stream = new ReadableStream({
-    async start(ctrl) {
-      let buf = '', tudo = '', sse = (up.headers.get('content-type') || '').indexOf('event-stream') !== -1, cru = '';
-      const reader = up.body.getReader();
-      try {
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          const pedaco = dec.decode(value, { stream: true });
-          if (!sse) { cru += pedaco; continue; }
-          buf += pedaco;
-          let i;
-          while ((i = buf.indexOf('\n')) !== -1) {
-            const linha = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
-            if (!linha.startsWith('data:')) continue;
-            const dado = linha.slice(5).trim();
-            if (dado === '[DONE]') continue;
-            try {
-              const j = JSON.parse(dado);
-              const t = j.choices && j.choices[0] && ((j.choices[0].delta && j.choices[0].delta.content) || (j.choices[0].message && j.choices[0].message.content));
-              if (t) { tudo += t; ctrl.enqueue(enc.encode(t)); }
-            } catch (e) {}
-          }
-        }
-        if (!sse && cru) { // provedor respondeu tudo de uma vez
-          try { const j = JSON.parse(cru); tudo = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || ''; } catch (e) {}
-          if (tudo) ctrl.enqueue(enc.encode(tudo));
-        }
-      } catch (e) { console.log('letra-rapida stream:', e && e.message); }
-      const letra = limparResposta(tudo);
-      console.log('letra-rapida ' + modelo + ' em ' + (Date.now() - t0) + 'ms, ' + letra.length + ' caracteres');
-      if (letra.split('\n').length >= 8) {
-        try { if (id) await getStore('letras').setJSON(id, { pronto: true, letra, em: Date.now(), modelo }); } catch (e) {}
-        await indexarDia('l');
-      }
-      ctrl.close();
-    }
+  // primeiro que entregar uma letra boa ganha; os outros são cancelados
+  const vencedor = await new Promise((resolve) => {
+    let faltam = MODELOS.length;
+    const tm = setTimeout(() => resolve(null), LIMITE_MS);
+    MODELOS.forEach((m) => chamar(m).then((v) => { if (v) { clearTimeout(tm); resolve(v); } else if (--faltam === 0) { clearTimeout(tm); resolve(null); } }));
   });
-  return new Response(stream, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'X-Modelo': modelo } });
+  ctrls.forEach((c) => { try { c.abort(); } catch (e) {} });
+  if (!vencedor) return erro('IA lenta agora.', 504);
+  try { if (id) await getStore('letras').setJSON(id, { pronto: true, letra: vencedor.letra, em: Date.now(), modelo: vencedor.modelo }); } catch (e) {}
+  try { await indexarDia('l'); } catch (e) {}
+  return new Response(JSON.stringify({ ok: true, letra: vencedor.letra, ms: Date.now() - t0, modelo: vencedor.modelo }),
+    { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 };
