@@ -775,7 +775,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .card2.destaque{position:relative;border:2px solid #FFB547;background:linear-gradient(180deg,#FFF6E0,#FFFFFF);box-shadow:0 6px 18px rgba(255,181,71,.25);}
 .card2.destaque.on{border-color:#E32B6D;}
 .c2-selo{position:absolute;top:-.6rem;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:.68rem;font-weight:900;color:#7A4A00;background:#FFD27A;padding:.15rem .55rem;border-radius:100px;}
-.card-louvor{grid-column:1/-1;position:relative;display:flex;align-items:center;justify-content:space-between;gap:.8rem;min-height:118px;padding:1rem 1.1rem;border:0;border-radius:18px;cursor:pointer;text-align:left;color:#fff;overflow:hidden;
+.card-louvor{grid-column:1/-1;order:-1;position:relative;display:flex;align-items:center;justify-content:space-between;gap:.8rem;min-height:118px;padding:1rem 1.1rem;border:0;border-radius:18px;cursor:pointer;text-align:left;color:#fff;overflow:hidden;
   background:linear-gradient(90deg,#0B0812 38%,rgba(11,8,18,.55) 62%,rgba(11,8,18,.05)),url(louvor-fundo.jpg) right 40%/58% auto no-repeat,#0B0812;box-shadow:0 8px 22px rgba(20,10,40,.28);font:inherit;}
 .card-louvor.on{outline:3px solid #E32B6D;outline-offset:2px;}
 .card-louvor .cl-tx{display:flex;flex-direction:column;gap:.25rem;max-width:78%;}
@@ -786,7 +786,11 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
   background:linear-gradient(0deg,rgba(10,6,20,.75),rgba(10,6,20,.1)),url(louvor-fundo.jpg) center 25%/cover;}
 .louvor-topo span{text-shadow:0 2px 8px rgba(0,0,0,.6);}
 .insp-louvor{margin:.4rem 0 1rem;padding:.8rem;border-radius:16px;background:linear-gradient(180deg,#F6F1FF,#FFFFFF);border:1.5px solid #E2D6FF;}
-.il-tit{font-weight:900;font-size:.98rem;margin-bottom:.3rem;}
+.il-tit{font-weight:900;font-size:.95rem;cursor:pointer;list-style:none;display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;}
+.il-tit::-webkit-details-marker{display:none;}
+.il-tit:after{content:'▾';margin-left:auto;color:#8A7AAE;transition:transform .2s;}
+.insp-louvor[open] .il-tit:after{transform:rotate(180deg);}
+.insp-louvor[open] .il-tit{margin-bottom:.3rem;}
 .il-tit small{font-weight:600;color:#8A7AAE;font-size:.75rem;margin-left:.3rem;}
 .il-sub{font-size:.78rem;font-weight:800;color:#6A5A90;margin:.55rem 0 .35rem;text-transform:uppercase;letter-spacing:.04em;}
 .il-chips{display:flex;flex-wrap:wrap;gap:.4rem;}
@@ -2784,9 +2788,8 @@ var TRILHAS = [
 /* card premium da música personalizada, dentro da lista de trilhas */
 /* amostras de música — vitrine premium */
 var AMOSTRAS = [
-  {id:'a1', titulo:'Do Nosso Jeito',      sub:'Romântica · violão e piano',   arquivo:'/amostra-1.mp3', grad:'linear-gradient(150deg,#E32B6D,#8A1246)'},
-  {id:'a2', titulo:'Meu Porto Seguro',    sub:'Sertanejo · viola e sanfona',  arquivo:'/amostra-2.mp3', grad:'linear-gradient(150deg,#E8B44A,#8A5A0B)'},
-  {id:'a3', titulo:'Enquanto Houver Nós', sub:'MPB · voz e violão',           arquivo:'/amostra-3.mp3', grad:'linear-gradient(150deg,#4A6FA5,#1B2F52)'}
+  {id:'a1', titulo:'Música pra Jesus', sub:'🙏 Louvor · adoração ao vivo', arquivo:'/exemplo-louvor.mp3', grad:'linear-gradient(0deg,rgba(11,8,18,.55),rgba(11,8,18,.1)),url(/louvor-fundo.jpg) center 38%/cover'},
+  {id:'a2', titulo:'Música pra Maria', sub:'🤠 Sertanejo · romântica',      arquivo:'/exemplo-sertanejo.mp3', grad:'linear-gradient(150deg,#E8B44A,#8A5A0B)'}
 ];
 function abrirAmostras(){
   var box=document.createElement('div');
@@ -2794,7 +2797,7 @@ function abrirAmostras(){
   box.innerHTML='<div class="upsell-card amostra-card">'+
     '<button type="button" class="amostra-x" id="amostraX" aria-label="Fechar">&times;</button>'+
     '<div class="upsell-top">🎧<h3>Ouça alguns exemplos</h3>'+
-    '<p>Músicas reais feitas aqui. A sua vai ser única, com a história de vocês.</p></div>'+
+    '<p>Músicas completas feitas aqui no site. A sua vai ser única, com a sua história.</p></div>'+
     AMOSTRAS.map(function(a){
       return '<div class="alb" data-alb="'+a.id+'">'+
         '<div class="alb-capa" style="background:'+a.grad+'">'+
@@ -2809,7 +2812,7 @@ function abrirAmostras(){
         '<audio id="amp-'+a.id+'" src="'+a.arquivo+'" preload="none"></audio>'+
       '</div>';
     }).join('')+
-    '<div class="amostra-nota">Estas são prévias de 60 segundos. A sua vem completa e em duas versões.</div>'+
+    '<div class="amostra-nota">Exemplos completos, do jeitinho que o cliente recebe. A sua vem em duas versões.</div>'+
     '<a class="btn btn-primary btn-block" href="#/criar/musica" id="amostraCriar" style="margin-top:.9rem">Criar a minha agora'+IC.arrow+'</a>'+
   '</div>';
   document.body.appendChild(box);
@@ -3843,7 +3846,7 @@ function telaHome(){
           '<svg class="underline-sw" viewBox="0 0 340 12" aria-hidden="true"><path d="M3 8.5C64 3 150 1.6 337 5.4"/></svg>'+
         '</span>'+
       '</h1>'+
-      '<p class="hero-sub">Uma música personalizada com o nome e a história de quem você ama. <b>4 músicas por R$ 9,99</b> e você ouve antes de pagar.</p>'+
+      '<p class="hero-sub">Uma música personalizada com o nome e a história de quem você ama. E você ouve antes de pagar.</p>'+
       '<div class="hero-cta">'+
         '<a class="btn btn-musica btn-lg" href="#/criar/musica">'+
           '<span class="cta-eq"><i></i><i></i><i></i><i></i></span>'+
@@ -3906,7 +3909,7 @@ function telaHome(){
   '<section class="sec sec-plum"><div class="shell" style="text-align:center">'+
     '<img src="'+MASCOTE+'" alt="" style="width:96px;margin:0 auto 1.4rem">'+
     '<h2 style="font-size:clamp(1.8rem,5.4vw,2.6rem);font-weight:600">Alguém aí merece <span class="script" style="color:var(--rose-1);font-size:1.18em">chorar de alegria</span></h2>'+
-    '<p style="color:#C9BCC1;margin:1rem auto 2rem;max-width:32rem;line-height:1.65">Fica pronta em menos de 1 minuto e você ouve antes de pagar. 4 músicas por R$ 9,99.</p>'+
+    '<p style="color:#C9BCC1;margin:1rem auto 2rem;max-width:32rem;line-height:1.65">Fica pronta em menos de 1 minuto e você ouve antes de pagar.</p>'+
     '<a class="btn btn-primary btn-lg" href="#/criar/musica">Criar minha música'+IC.arrow+'</a>'+
   '</div></section>'+
 
@@ -4475,9 +4478,9 @@ var LOUVOR_HISTORIAS=[
   ['Mar Vermelho','Como Deus abriu o Mar Vermelho, Ele abriu um caminho onde eu não via saída:']
 ];
 function htmlInspiraLouvor(){
-  return '<div class="insp-louvor"><div class="il-tit">📖 Inspire-se na Palavra <small>toque pra usar</small></div>'+
+  return '<details class="insp-louvor"><summary class="il-tit">📖 Sugestões de versículos e histórias da Bíblia <small>toque pra abrir</small></summary>'+
     '<div class="il-sub">Versículos</div><div class="il-chips">'+LOUVOR_VERSICULOS.map(function(v){ return '<button type="button" class="il-chip" data-insp="'+esc(v[1])+'">'+esc(v[0])+'</button>'; }).join('')+'</div>'+
-    '<div class="il-sub">Histórias da Bíblia</div><div class="il-chips">'+LOUVOR_HISTORIAS.map(function(v){ return '<button type="button" class="il-chip" data-insp="'+esc(v[1])+'">'+esc(v[0])+'</button>'; }).join('')+'</div></div>';
+    '<div class="il-sub">Histórias da Bíblia</div><div class="il-chips">'+LOUVOR_HISTORIAS.map(function(v){ return '<button type="button" class="il-chip" data-insp="'+esc(v[1])+'">'+esc(v[0])+'</button>'; }).join('')+'</div></details>';
 }
 function ehGospel(k){ for(var i=0;i<GENEROS_LISTA.length;i++) if(GENEROS_LISTA[i][0]===k) return GENEROS_LISTA[i][5]==='g'; return false; }
 function nomeGeneroDe(k,outro){ return k==='outro' && outro ? outro : nomeGenero(k); }
@@ -5109,13 +5112,14 @@ function htmlPasso(k){
     return guia("Pra quem é essa música? Isso me ajuda a dar o tom certo na letra.")+
       '<div class="wz-t">Quem vai receber</div>'+
       '<button type="button" class="link-amostra dentro" id="passoAmostra">🎧 Ouvir exemplos antes de começar</button>'+
-      '<div class="cards2" id="musicaParaChips">'+relacoes.map(function(r){
-        return '<button type="button" class="card2'+(W.musicaPara===r[0]?' on':'')+'" data-para="'+r[0]+'">'+
-          '<span class="c2-ic">'+r[1]+'</span><span class="c2-lb">'+r[2]+'</span></button>';
-      }).join('')+
+      '<div class="cards2" id="musicaParaChips">'+
       '<button type="button" class="card-louvor'+(W.musicaPara==='louvor'?' on':'')+'" data-para="louvor">'+
         '<span class="cl-tx"><b>🙏 Louvor a Deus</b><small>Música gospel de adoração, com seu versículo ou testemunho</small></span>'+
         '<span class="cl-go">'+(W.musicaPara==='louvor'?'✓':'›')+'</span></button>'+
+      relacoes.map(function(r){
+        return '<button type="button" class="card2'+(W.musicaPara===r[0]?' on':'')+'" data-para="'+r[0]+'">'+
+          '<span class="c2-ic">'+r[1]+'</span><span class="c2-lb">'+r[2]+'</span></button>';
+      }).join('')+
       '</div>'+
       htmlParaExtras();
   }
