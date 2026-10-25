@@ -22,7 +22,9 @@ const GENERO_PT = {
   rock:'rock pesado, com guitarra elétrica distorcida, riff marcado, baixo encorpado e bateria forte',
   mpb:'MPB, com violão de nylon dedilhado, arranjo intimista e percussão discreta',
   bossa:'bossa nova, com violão de nylon em batida sincopada, vassourinha na bateria e harmonia de jazz',
-  gospel:'gospel de adoração, com piano, órgão, cordas e coral em crescendo',
+  gospel:'louvor de adoração ao vivo, gospel brasileiro atual, com violão base, bateria marcada, baixo e guitarra solo suave, sem teclado, voz jovem e melódica com enfeites no fim das frases e notas longas',
+  gospelvv:'gospel voz e violão, adoração intimista e suave, só violão dedilhado e voz emocionada',
+  gospelcelebra:'louvor gospel animado de celebração, com violão, bateria forte, baixo e guitarra, refrão alegre pra cantar junto',
   samba:'samba, com cavaquinho, pandeiro, surdo e tamborim',
   pagode:'pagode, com cavaquinho, tantã, banjo e repique de mão',
   forro:'forró pé de serra, com sanfona, zabumba e triângulo',
@@ -81,7 +83,9 @@ const GENERO_EVITAR = {
   rock:'sertanejo, samba, forró',
   mpb:'sertanejo, pagode',
   bossa:'sertanejo, samba pesado, forró',
-  gospel:'sertanejo, samba',
+  gospel:'sertanejo, samba, hino tradicional, teclado, órgão de igreja, coral antigo, forró',
+  gospelvv:'bateria, teclado, órgão, sertanejo',
+  gospelcelebra:'teclado, órgão, sertanejo, forró',
   sertanejo:'sertanejo raiz, modão, música caipira antiga, viola caipira, sanfona, samba',
   samba:'sertanejo',
   pagode:'sertanejo, samba de salão',
@@ -147,7 +151,9 @@ const GENEROS = {
   rock:       'rock, distorted electric guitars, live drums, bass, driving riff',
   mpb:        'MPB, nylon string guitar, subtle percussion, jazzy chords',
   bossa:      'bossa nova, nylon guitar, brushed drums, soft swing, jazz harmony',
-  gospel:     'gospel, church organ, piano, choir, worship',
+  gospel:     'live acoustic worship, brazilian contemporary worship, acoustic guitar strumming, live drums groove, electric bass, soft lead electric guitar licks, no keyboards, no organ, young emotive worship vocals, melodic runs and melisma at phrase endings, long sustained notes, congregational chorus, building intensity, mid-tempo',
+  gospelvv:   'acoustic worship, intimate acoustic guitar and voice only, fingerpicked acoustic guitar, soft emotive worship vocals, melodic runs at phrase endings, sustained notes, no drums, no keyboards',
+  gospelcelebra:'upbeat brazilian worship, celebration praise, acoustic guitar strumming, energetic live drums, electric bass, electric guitar riffs, joyful congregational chorus, no keyboards, no organ',
   samba:      'samba, cavaquinho, pandeiro, surdo, tamborim',
   pagode:     'pagode, cavaquinho, tantã, banjo, repique de mão',
   forro:      'forró, accordion, zabumba, triangle, northeastern groove',
@@ -237,7 +243,7 @@ const NICHO_TEXTO = {
   mae:'a mãe', pai:'o pai', irma:'a irmã', irmao:'o irmão',
   amiga:'a melhor amiga', amigo:'o melhor amigo', filho:'o filho ou filha',
   avo:'a avó ou avô', tio:'a tia ou tio', sogro:'a sogra ou sogro', padrinho:'a madrinha ou padrinho',
-  comercial:'uma empresa (propaganda)'
+  comercial:'uma empresa (propaganda)', louvor:'Deus (louvor e adoração)'
 };
 // O que a letra NUNCA pode fazer em cada nicho — evita constrangimento
 const NICHO_EVITAR = {
@@ -252,7 +258,8 @@ const NICHO_EVITAR = {
   tio:'Para tia/tio: nunca use linguagem romântica.',
   sogro:'Para sogra/sogro: nunca use linguagem romântica.',
   padrinho:'Para madrinha/padrinho: nunca use linguagem romântica.',
-  comercial:'É um jingle de propaganda: cite a marca no refrão, nada romântico.'
+  comercial:'É um jingle de propaganda: cite a marca no refrão, nada romântico.',
+  louvor:'É louvor e adoração a Deus (gospel cristão): nada romântico de casal, linguagem de fé e gratidão.'
 };
 const RELACOES_TAG = {
   namorada:'romantic love song for a girlfriend', namorado:'romantic love song for a boyfriend',

@@ -11,7 +11,9 @@ function json(obj, status = 200) {
 // esta função: esta função só escreve a letra que a pessoa vai aprovar.
 const GENERO_PT = {
   romantica:'balada romântica pop', sertanejo:'sertanejo universitário moderno',
-  pop:'pop moderno', rock:'rock', mpb:'MPB', bossa:'bossa nova', gospel:'gospel de adoração',
+  pop:'pop moderno', rock:'rock', mpb:'MPB', bossa:'bossa nova', gospel:'louvor de adoração ao vivo, gospel brasileiro atual (intimidade com Deus, fé, entrega e gratidão, pode citar versículos e linguagem bíblica, frases que se alongam no fim, refrão de adoração fácil de cantar junto)',
+  gospelvv:'gospel voz e violão (adoração intimista e suave, intimidade com Deus, fé e gratidão, linguagem bíblica)',
+  gospelcelebra:'louvor gospel animado de celebração (alegria, vitória, gratidão a Deus, refrão alegre e fácil de cantar junto)',
   samba:'samba', pagode:'pagode', forro:'forró pé de serra', piseiro:'piseiro',
   funk:'funk carioca', trap:'trap', eletronica:'música eletrônica', reggae:'reggae',
   jazz:'jazz', blues:'blues', axe:'axé baiano', lofi:'lo-fi', infantil:'música infantil',
@@ -70,6 +72,7 @@ const NICHO_TEXTO = {
   tio:'é para a tia ou tio — carinho de família',
   sogro:'é para a sogra ou sogro — respeito, carinho e gratidão de família',
   padrinho:'é para a madrinha (dinda) ou padrinho — carinho, gratidão e cuidado',
+  louvor:'é uma música de LOUVOR E ADORAÇÃO A DEUS (gospel cristão) — quem canta fala COM Deus ("Senhor", "Pai", "Jesus", "Tu"/"Te") ou SOBRE Deus: fé, gratidão, entrega, adoração e testemunho. Use os versículos e histórias da Bíblia que a pessoa citar, parafraseando com reverência (sem inventar citação bíblica errada). Se houver nomes, eles fazem parte do testemunho (a pessoa, a família, a igreja) — não são o destinatário da música. Refrão de adoração fácil de cantar junto, com frases que se alongam no final',
   comercial:'é um JINGLE / PROPAGANDA de uma empresa ou marca — não é homenagem pessoal: fale do negócio, dos produtos/serviços e dos diferenciais, cite o nome da marca várias vezes (principalmente no refrão) e termine com uma chamada pra ação'
 };
 // Pra quem é, já com o gênero de quem recebe (cartões que juntam ela/ele)
@@ -92,6 +95,7 @@ const NICHO_EVITAR = {
   sogro:'A letra é para sogra/sogro: NUNCA use linguagem romântica.',
   padrinho:'A letra é para madrinha/padrinho: NUNCA use linguagem romântica.',
   comercial:'É propaganda: NUNCA use linguagem romântica nem de homenagem pessoal.',
+  louvor:'É louvor a Deus: NUNCA use linguagem romântica de casal, sensualidade ou gíria; nada de tratar Deus como namorado. Linguagem cristã, reverente e emocionante.',
   familia:'A letra é para a família: NUNCA use linguagem romântica.'
 };
 const VOZ_PT = {
@@ -147,8 +151,8 @@ function montarPrompt(p) {
   else if (p.de === 'homem') partes.push('QUEM ESTÁ DANDO A MÚSICA (quem fala na letra, o "eu") é um HOMEM: sempre que o "eu" falar de si mesmo use o MASCULINO (ex.: "grato", "obrigado", "apaixonado", "sozinho", "orgulhoso").');
   else if (p.de === 'neutro') partes.push('QUEM ESTÁ DANDO A MÚSICA (o "eu") não quer marcar gênero: ao falar de si, use SOMENTE construções NEUTRAS — nada de "grato/grata", "obrigado/obrigada", "apaixonado/apaixonada". Prefira "tenho gratidão", "meu coração agradece", "sou feliz", "valeu", "te agradeço".');
   else if (p.de === 'varios') partes.push('QUEM ESTÁ DANDO A MÚSICA são VÁRIAS PESSOAS (família, amigos, equipe): escreva na primeira pessoa do PLURAL ("nós", "a gente"), nunca "eu".');
-  if (p.paraGen === 'neutro' && p.relacao !== 'comercial') partes.push('QUEM RECEBE: não marque gênero ao falar dessa pessoa — use construções NEUTRAS (o nome dela, "você", "pessoa especial", "meu amor"), sem adjetivos no feminino ou masculino.');
-  if (gIdx >= 0 && p.relacao !== 'comercial') partes.push('QUEM RECEBE é ' + (gIdx === 0 ? 'MULHER: ao falar dela use o FEMININO ("linda", "ela", "querida").' : 'HOMEM: ao falar dele use o MASCULINO ("lindo", "ele", "querido").'));
+  if (p.paraGen === 'neutro' && p.relacao !== 'comercial' && p.relacao !== 'louvor') partes.push('QUEM RECEBE: não marque gênero ao falar dessa pessoa — use construções NEUTRAS (o nome dela, "você", "pessoa especial", "meu amor"), sem adjetivos no feminino ou masculino.');
+  if (gIdx >= 0 && p.relacao !== 'comercial' && p.relacao !== 'louvor') partes.push('QUEM RECEBE é ' + (gIdx === 0 ? 'MULHER: ao falar dela use o FEMININO ("linda", "ela", "querida").' : 'HOMEM: ao falar dele use o MASCULINO ("lindo", "ele", "querido").'));
   if (vozDesc && !p.de) partes.push('VOZ: ' + vozDesc + '.');
   partes.push('');
   partes.push('HISTÓRIA REAL contada por quem está encomendando a música — use estes detalhes ' +
