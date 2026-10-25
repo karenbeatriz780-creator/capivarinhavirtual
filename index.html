@@ -775,6 +775,26 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .card2.destaque{position:relative;border:2px solid #FFB547;background:linear-gradient(180deg,#FFF6E0,#FFFFFF);box-shadow:0 6px 18px rgba(255,181,71,.25);}
 .card2.destaque.on{border-color:#E32B6D;}
 .c2-selo{position:absolute;top:-.6rem;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:.68rem;font-weight:900;color:#7A4A00;background:#FFD27A;padding:.15rem .55rem;border-radius:100px;}
+.card-louvor{grid-column:1/-1;position:relative;display:flex;align-items:center;justify-content:space-between;gap:.8rem;min-height:118px;padding:1rem 1.1rem;border:0;border-radius:18px;cursor:pointer;text-align:left;color:#fff;overflow:hidden;
+  background:linear-gradient(90deg,#0B0812 38%,rgba(11,8,18,.55) 62%,rgba(11,8,18,.05)),url(louvor-fundo.jpg) right 40%/58% auto no-repeat,#0B0812;box-shadow:0 8px 22px rgba(20,10,40,.28);font:inherit;}
+.card-louvor.on{outline:3px solid #E32B6D;outline-offset:2px;}
+.card-louvor .cl-tx{display:flex;flex-direction:column;gap:.25rem;max-width:78%;}
+.card-louvor b{font-size:1.15rem;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.6);}
+.card-louvor small{font-size:.82rem;opacity:.92;line-height:1.3;text-shadow:0 1px 6px rgba(0,0,0,.7);}
+.card-louvor .cl-go{flex:0 0 auto;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);font-weight:900;font-size:1.2rem;}
+.louvor-topo{position:relative;height:96px;border-radius:16px;margin:.2rem 0 1rem;overflow:hidden;display:flex;align-items:flex-end;padding:.7rem 1rem;color:#fff;font-weight:900;font-size:1.05rem;
+  background:linear-gradient(0deg,rgba(10,6,20,.75),rgba(10,6,20,.1)),url(louvor-fundo.jpg) center 25%/cover;}
+.louvor-topo span{text-shadow:0 2px 8px rgba(0,0,0,.6);}
+.insp-louvor{margin:.4rem 0 1rem;padding:.8rem;border-radius:16px;background:linear-gradient(180deg,#F6F1FF,#FFFFFF);border:1.5px solid #E2D6FF;}
+.il-tit{font-weight:900;font-size:.98rem;margin-bottom:.3rem;}
+.il-tit small{font-weight:600;color:#8A7AAE;font-size:.75rem;margin-left:.3rem;}
+.il-sub{font-size:.78rem;font-weight:800;color:#6A5A90;margin:.55rem 0 .35rem;text-transform:uppercase;letter-spacing:.04em;}
+.il-chips{display:flex;flex-wrap:wrap;gap:.4rem;}
+.il-chip{border:1px solid #D9CCF5;background:#fff;color:#4B3A78;border-radius:100px;padding:.38rem .75rem;font:700 .82rem inherit;font-family:inherit;cursor:pointer;}
+.il-chip:active{background:#EFE7FF;}
+.gen-sub{grid-column:1/-1;padding:.7rem;border-radius:16px;background:linear-gradient(180deg,#FFF3F8,#FFFFFF);border:1.5px dashed #F2A7C3;}
+.gen-sub-t{font-weight:900;font-size:.95rem;text-align:center;margin:0 0 .7rem;}
+.gen-sub .card2.destaque{margin-top:.35rem;}
 .gen-outro{grid-column:1/-1;display:flex;flex-direction:column;gap:.4rem;padding:.2rem 0 .4rem;}
 .gen-outro label{font-weight:800;font-size:.92rem;}
 .mp-pac6{display:grid;grid-template-columns:1fr auto;gap:.3rem .8rem;align-items:center;width:100%;margin-top:.8rem;padding:1rem 1.05rem;border-radius:18px;border:2px solid #E9B94F;background:linear-gradient(160deg,#FFF6DD,#FFE7B0);text-align:left;cursor:pointer;font:inherit;color:#5A2B00;box-shadow:0 8px 20px rgba(233,185,79,.3);}
@@ -4405,8 +4425,7 @@ var GENEROS_LISTA=[
   ['sertanejo','🤠','Sertanejo moderno','o que toca hoje'], ['sertanejoraiz','🪕','Sertanejo raiz','viola e modão'],
   ['pagode','🪘','Pagode','descontraído e alegre'], ['infantil','🧸','Infantil','para criança'],
   ['natal','🎄','Natalina','música de Natal'], ['outro','✍️','Outro estilo','eu escrevo qual'],
-  ['gospel','🙌','Gospel moderno','louvor de hoje'], ['gospeltrad','⛪','Gospel tradicional','estilo Assembleia, hino'],
-  ['catolica','✝️','Católica','música de igreja católica'], ['romantica','💗','Romântica','violão e piano'],
+  ['romantica','💗','Romântica','violão e piano'], ['gospelmenu','🙏','Gospel / Louvor','toque e escolha o estilo'],
   ['rock','🎸','Rock','guitarras marcantes'], ['eletronica','🎛️','Eletrônica','synths modernos'],
   ['samba','🥁','Samba','ginga brasileira'], ['piseiro','🎹','Piseiro','nordestino dançante'],
   ['arrocha','🌙','Arrocha','sofrência dançante'], ['melody','💜','Melody','melody do Pará'],
@@ -4429,8 +4448,38 @@ var GENEROS_LISTA=[
   ['anos60','🕺','Anos 60','rock e twist internacional'], ['pop','✨','Pop','moderno e dançante'],
   ['trap','🎤','Trap / Rap','batidas urbanas'], ['reggae','🌴','Reggae','vibe relaxada'],
   ['lofi','🎧','Lo-Fi','suave e tranquila'], ['jazz','🎷','Jazz','sofisticado e swing'],
-  ['blues','🎺','Blues','melancólico e cru'], ['zoeira','🤪','Modo trollagem','zoeira e deboche']
+  ['blues','🎺','Blues','melancólico e cru'], ['zoeira','🤪','Modo trollagem','zoeira e deboche'],
+  /* subestilos do Gospel: só aparecem quando a pessoa toca em "Gospel / Louvor" */
+  ['gospel','🙌','Adoração ao vivo','violão, bateria e guitarra · vibe Isadora Pompeu, Fernandinho',0,'g'],
+  ['gospelvv','🎸','Voz e violão','gospel intimista e suave',0,'g'],
+  ['gospelcelebra','🎉','Louvor animado','celebração, pra cantar junto',0,'g'],
+  ['gospeltrad','⛪','Assembleia / Hino','tradicional, com teclado e coral',0,'g'],
+  ['catolica','✝️','Católica','música de igreja católica',0,'g']
 ];
+var LOUVOR_VERSICULOS=[
+  ['Salmos 23','Meu versículo é Salmos 23: "O Senhor é o meu pastor, nada me faltará".'],
+  ['Isaías 41:10','Meu versículo é Isaías 41:10: "Não temas, porque eu sou contigo".'],
+  ['Filipenses 4:13','Meu versículo é Filipenses 4:13: "Tudo posso naquele que me fortalece".'],
+  ['Josué 1:9','Meu versículo é Josué 1:9: "Seja forte e corajoso, o Senhor estará contigo por onde andares".'],
+  ['Jeremias 29:11','Meu versículo é Jeremias 29:11: Deus tem planos de paz e um futuro de esperança pra mim.'],
+  ['Salmos 91','Meu versículo é Salmos 91: quem habita no esconderijo do Altíssimo descansa à sombra do Onipotente.'],
+  ['Romanos 8:28','Meu versículo é Romanos 8:28: todas as coisas cooperam para o bem dos que amam a Deus.'],
+  ['Lamentações 3:22-23','Meu versículo é Lamentações 3:22-23: as misericórdias do Senhor se renovam a cada manhã.']
+];
+var LOUVOR_HISTORIAS=[
+  ['Davi e Golias','Assim como Davi venceu o gigante Golias com fé, eu também enfrentei um gigante na minha vida:'],
+  ['José do Egito','Como José, que foi esquecido e humilhado mas Deus honrou no tempo certo, eu também vivi:'],
+  ['Daniel na cova','Como Daniel na cova dos leões, Deus fechou a boca dos leões na minha vida quando'],
+  ['O filho pródigo','Como o filho pródigo, eu me afastei, mas o Pai me recebeu de braços abertos quando'],
+  ['Jó','Como Jó, eu perdi muita coisa, mas não perdi a fé, e Deus restaurou'],
+  ['Mar Vermelho','Como Deus abriu o Mar Vermelho, Ele abriu um caminho onde eu não via saída:']
+];
+function htmlInspiraLouvor(){
+  return '<div class="insp-louvor"><div class="il-tit">📖 Inspire-se na Palavra <small>toque pra usar</small></div>'+
+    '<div class="il-sub">Versículos</div><div class="il-chips">'+LOUVOR_VERSICULOS.map(function(v){ return '<button type="button" class="il-chip" data-insp="'+esc(v[1])+'">'+esc(v[0])+'</button>'; }).join('')+'</div>'+
+    '<div class="il-sub">Histórias da Bíblia</div><div class="il-chips">'+LOUVOR_HISTORIAS.map(function(v){ return '<button type="button" class="il-chip" data-insp="'+esc(v[1])+'">'+esc(v[0])+'</button>'; }).join('')+'</div></div>';
+}
+function ehGospel(k){ for(var i=0;i<GENEROS_LISTA.length;i++) if(GENEROS_LISTA[i][0]===k) return GENEROS_LISTA[i][5]==='g'; return false; }
 function nomeGeneroDe(k,outro){ return k==='outro' && outro ? outro : nomeGenero(k); }
 function nomeGenero(k){ for(var i=0;i<GENEROS_LISTA.length;i++) if(GENEROS_LISTA[i][0]===k && k!=='#') return GENEROS_LISTA[i][2]; return k||''; }
 /* cartão junto (namorada/namorado...) → ao tocar, pergunta pra quem é e quem está dando */
@@ -4447,7 +4496,7 @@ function htmlParaExtras(){
   var d=PARA_DUPLO[W.musicaPara], h='<div id="musicaParaExtras">';
   if(W.musicaPara==='outro') h+='<div class="wz-t" style="margin-top:1.1rem">Pra quem é?</div>'+
     '<input class="inp" id="musicaParaOutro" maxlength="80" value="'+esc(W.musicaParaOutro)+'" placeholder="Ex: minha professora, meu chefe, meu cachorro...">';
-  if(W.musicaPara!=='familia'){
+  if(W.musicaPara!=='familia' && W.musicaPara!=='louvor'){
     h+='<div class="wz-t" style="margin-top:1.1rem">'+(d?'É pra quem?':(W.musicaPara==='ninguem'?'A música fala de':'Quem vai receber é'))+'</div>'+
       '<div class="seg">'+seg('pgen','ela','👩',d?d[0]:'Mulher',W.musicaParaGen==='ela')+seg('pgen','ele','👨',d?d[1]:'Homem',W.musicaParaGen==='ele')+
       (d?'':seg('pgen','neutro','🤝','Neutro',W.musicaParaGen==='neutro'))+'</div>';
@@ -5063,7 +5112,11 @@ function htmlPasso(k){
       '<div class="cards2" id="musicaParaChips">'+relacoes.map(function(r){
         return '<button type="button" class="card2'+(W.musicaPara===r[0]?' on':'')+'" data-para="'+r[0]+'">'+
           '<span class="c2-ic">'+r[1]+'</span><span class="c2-lb">'+r[2]+'</span></button>';
-      }).join('')+'</div>'+
+      }).join('')+
+      '<button type="button" class="card-louvor'+(W.musicaPara==='louvor'?' on':'')+'" data-para="louvor">'+
+        '<span class="cl-tx"><b>🙏 Louvor a Deus</b><small>Música gospel de adoração, com seu versículo ou testemunho</small></span>'+
+        '<span class="cl-go">'+(W.musicaPara==='louvor'?'✓':'›')+'</span></button>'+
+      '</div>'+
       htmlParaExtras();
   }
 
@@ -5072,6 +5125,10 @@ function htmlPasso(k){
       '<div class="wz-t">Nome da empresa / marca</div>'+
       '<div class="wz-s">Escreva exatamente como ele deve aparecer na música.</div>'+
       '<input class="inp" id="musicaParaNome" value="'+esc(W.musicaParaNome)+'" placeholder="Ex: Açaí da Praça">';
+    if(W.musicaPara==='louvor') return guia("Quer citar algum nome na música? Pode ser o seu, da sua família ou da sua igreja. É opcional.")+
+      '<div class="wz-t">Nome na música <span class="opc">(opcional)</span></div>'+
+      '<div class="wz-s">Se quiser, coloque um ou mais nomes (ex: <b>Ana</b>, <b>família Silva</b>, <b>Igreja Nova Vida</b>). Pode deixar em branco e continuar.</div>'+
+      '<input class="inp" id="musicaParaNome" value="'+esc(W.musicaParaNome)+'" placeholder="Opcional — ex: Ana e família">';
     return guia("Qual o nome de quem vai receber a música?")+
       '<div class="wz-t">Nome de quem vai receber</div>'+
       '<div class="wz-s">Coloque o nome ou apelido de quem vai receber a homenagem. Esse nome vai aparecer na letra <b>exatamente como você escrever</b>.</div>'+
@@ -5090,8 +5147,15 @@ function htmlPasso(k){
       ['Dia dos Avós','👵'],['Só pra zoar','😂'],
       ['Propaganda da empresa','📣'],['Só porque sim','💛']
     ];
-    return guia("Qual é a ocasião? Isso deixa a música na medida certa.")+
-      '<div class="wz-t">Qual a ocasião</div>'+
+    if(W.musicaPara==='louvor') ocasioes=[
+      ['Adoração / momento com Deus','🙌'],['Gratidão a Deus','🙏'],
+      ['Testemunho de vitória','🏆'],['Louvor pra igreja / culto','⛪'],
+      ['Aniversário abençoado','🎂'],['Casamento cristão','💒'],
+      ['Batismo','🕊️'],['Homenagem a pastor(a)','📖'],
+      ['Cura e restauração','💧'],['Família abençoada','👨‍👩‍👧']
+    ];
+    return guia(W.musicaPara==='louvor'?"Qual é o propósito desse louvor?":"Qual é a ocasião? Isso deixa a música na medida certa.")+
+      '<div class="wz-t">'+(W.musicaPara==='louvor'?'Propósito do louvor':'Qual a ocasião')+'</div>'+
       '<div class="cards2" id="musicaOcasiaoChips">'+ocasioes.map(function(o){
         return '<button type="button" class="card2'+(W.musicaOcasiao===o[0]?' on':'')+'" data-ocasiao="'+esc(o[0])+'">'+
           '<span class="c2-ic">'+o[1]+'</span><span class="c2-lb">'+o[0]+'</span></button>';
@@ -5111,26 +5175,36 @@ function htmlPasso(k){
     var ROMANTICOS=['namorada','namorado','esposa','marido'];
     var ehRomantico=ROMANTICOS.indexOf(W.musicaPara)!==-1;
     var sugestoes=['Como nos conhecemos','Qualidades e virtudes', ehRomantico?'Declaração de amor':'Um momento marcante'];
+    var LOUVOR=W.musicaPara==='louvor';
+    if(LOUVOR){
+      exemplo='Meu versículo é Isaías 41:10: "Não temas, porque eu sou contigo". Em 2023 eu perdi o emprego e achei que não ia aguentar, mas Deus abriu uma porta na minha cidade, Parauapebas. Hoje eu quero agradecer por cada livramento e dizer que sem Ele eu não sou nada.';
+      sugestoes=['Meu versículo','Meu testemunho','Gratidão a Deus','O que Deus fez por mim'];
+    }
     return guia("Digite ou use o microfone para contar os detalhes. Faremos uma composição inesquecível!")+
-      '<div class="wz-t">Conte sua história 📜</div>'+
+      '<div class="wz-t">'+(LOUVOR?'Seu louvor 🙏':'Conte sua história 📜')+'</div>'+
       '<div class="mh-top">'+
         '<button type="button" class="btn btn-ghost mh-ditar" id="musicaDitar">🎙️ Ditar por Voz (Gravar Fala)</button>'+
         '<div class="mh-sug"><span class="mh-sug-lbl">Sugestões rápidas:</span>'+
           sugestoes.map(function(s){ return '<button type="button" class="mh-chip" data-sug="'+esc(s)+'">💡 '+esc(s)+'</button>'; }).join('')+
         '</div>'+
       '</div>'+
-      '<label class="mh-label" for="musicaTexto">Sua história <span class="req">*</span></label>'+
-      '<textarea class="inp" id="musicaTexto" rows="6" maxlength="2000" placeholder="Como vocês se conheceram? Qual o momento mais especial? O que essa pessoa significa pra você? (Ou toque no microfone acima pra falar)">'+esc(W.musicaTexto)+'</textarea>'+
+      (LOUVOR ? htmlInspiraLouvor() : '')+
+      '<label class="mh-label" for="musicaTexto">'+(LOUVOR?'Seu louvor':'Sua história')+' <span class="req">*</span></label>'+
+      '<textarea class="inp" id="musicaTexto" rows="6" maxlength="2000" placeholder="'+(LOUVOR?'Qual versículo toca seu coração? O que Deus já fez na sua vida? Pelo que você quer agradecer? (Ou toque no microfone acima pra falar)':'Como vocês se conheceram? Qual o momento mais especial? O que essa pessoa significa pra você? (Ou toque no microfone acima pra falar)')+'">'+esc(W.musicaTexto)+'</textarea>'+
       '<div class="mh-counts"><div class="mh-contador" id="mhContador"></div><span class="mh-max" id="mhMax"></span></div>'+
       '<div class="mh-checklist" id="mhCheck"></div>'+
       '<label class="mh-label" for="musicaMomentos" style="margin-top:1.1rem">Momentos especiais para mencionar <span class="opc">(opcional)</span></label>'+
-      '<textarea class="inp" id="musicaMomentos" rows="3" maxlength="500" placeholder="Ex: primeiro encontro no parque, viagem para a praia, pedido de casamento...">'+esc(W.musicaMomentos||'')+'</textarea>'+
+      '<textarea class="inp" id="musicaMomentos" rows="3" maxlength="500" placeholder="'+(LOUVOR?'Ex: a cura da minha mãe, o batismo do meu filho, a vitória no hospital...':'Ex: primeiro encontro no parque, viagem para a praia, pedido de casamento...')+'">'+esc(W.musicaMomentos||'')+'</textarea>'+
       '<div class="sug-musica"><span class="sug-lbl">💡 O que deixa a letra boa</span>'+
         '<ul class="sug-lista">'+
+          (LOUVOR ? ['<b>Um versículo</b> — "Salmos 23: o Senhor é meu pastor"',
+           '<b>Seu testemunho</b> — "Deus me curou em 2022"',
+           '<b>Pelo que você agradece</b> — família, saúde, um livramento',
+           '<b>Uma história da Bíblia</b> que fala com você — Davi, José, Daniel...'] :
           ['<b>Nomes e apelidos</b> — "eu chamo ela de Nega"',
            '<b>Lugares e datas</b> — "numa festa em 2021, em Parauapebas"',
            '<b>Uma cena específica</b> — "ficamos até 4h conversando no carro"',
-           '<b>O que só vocês sabem</b> — uma mania, uma piada interna'].map(function(s){
+           '<b>O que só vocês sabem</b> — uma mania, uma piada interna']).map(function(s){
             return '<li>'+s+'</li>';
           }).join('')+
         '</ul>'+
@@ -5140,10 +5214,25 @@ function htmlPasso(k){
 
   case 'musicaGenero': {
     var generos=GENEROS_LISTA;
-    var vis=generos;
+    var vis=generos.filter(function(g){ return g[5]!=='g'; });
+    var gospelAberto = W._gospelAberto || ehGospel(W.musicaEstilo);
+    var subGospel=generos.filter(function(g){ return g[5]==='g'; });
+    if(W.musicaPara==='louvor') return guia("Qual estilo de louvor combina com você?")+
+      '<div class="louvor-topo"><span>✝️ Louvor a Deus</span></div>'+
+      '<div class="wz-t">Estilo do louvor</div>'+
+      '<div class="cards2" id="musicaGeneroChips">'+subGospel.map(function(s,i){
+        return '<button type="button" class="card2'+(i===0?' destaque':'')+(W.musicaEstilo===s[0]?' on':'')+'" data-genero="'+s[0]+'">'+(i===0?'<span class="c2-selo">⭐ Mais pedido</span>':'')+
+          '<span class="c2-ic">'+s[1]+'</span><span class="c2-lb">'+s[2]+'</span><small class="c2-sub">'+s[3]+'</small></button>';
+      }).join('')+'</div>';
     return guia("Qual estilo combina mais com vocês?")+
       '<div class="wz-t">Gênero musical</div>'+
       '<div class="cards2" id="musicaGeneroChips">'+vis.map(function(g){
+        if(g[0]==='gospelmenu') return '<button type="button" class="card2'+(gospelAberto?' on':'')+'" data-genero="gospelmenu">'+
+          '<span class="c2-ic">'+g[1]+'</span><span class="c2-lb">'+g[2]+'</span><small class="c2-sub">'+(gospelAberto?'escolha abaixo 👇':g[3])+'</small></button>'+
+          (gospelAberto ? '<div class="gen-sub" id="genSubGospel"><div class="gen-sub-t">Qual estilo de louvor?</div><div class="cards2">'+subGospel.map(function(s,i){
+            return '<button type="button" class="card2'+(i===0?' destaque':'')+(W.musicaEstilo===s[0]?' on':'')+'" data-genero="'+s[0]+'">'+(i===0?'<span class="c2-selo">⭐ Mais pedido</span>':'')+
+              '<span class="c2-ic">'+s[1]+'</span><span class="c2-lb">'+s[2]+'</span><small class="c2-sub">'+s[3]+'</small></button>';
+          }).join('')+'</div></div>' : '');
         return '<button type="button" class="card2'+(g[4]?' destaque':'')+(W.musicaEstilo===g[0]?' on':'')+'" data-genero="'+g[0]+'">'+(g[4]?'<span class="c2-selo">👶 Pra criança</span>':'')+
           '<span class="c2-ic">'+g[1]+'</span><span class="c2-lb">'+g[2]+'</span><small class="c2-sub">'+g[3]+'</small></button>'+
           (g[0]==='outro' && W.musicaEstilo==='outro'
@@ -5162,7 +5251,8 @@ function htmlPasso(k){
       ['inspiradora','✨','Inspiradora','superação e motivação'],['melancolica','🕊️','Melancólica','saudade e homenagem'],
       ['triste','😢','Triste','pra chorar junto'],['zoeira','🤪','Modo trollagem','zoeira e deboche']
     ];
-    return guia("E o clima? Como você quer que ela faça vocês se sentirem?")+
+    if(W.musicaPara==='louvor') climas=climas.filter(function(c){ return c[0]!=='zoeira' && c[0]!=='divertida' && c[0]!=='romantica'; });
+    return guia(W.musicaPara==='louvor'?"E o clima do louvor? Como você quer se sentir na presença de Deus?":"E o clima? Como você quer que ela faça vocês se sentirem?")+
       '<div class="wz-t">Clima da música</div>'+
       '<div class="cards2" id="musicaClimaChips">'+climas.map(function(c){
         return '<button type="button" class="card2'+(W.musicaClima===c[0]?' on':'')+'" data-clima="'+c[0]+'">'+
@@ -5598,6 +5688,7 @@ function ligarPasso(k){
       if(W.musicaPara!==e.dataset.para) W.musicaParaGen='';
       W.musicaPara=e.dataset.para;
       if(W.musicaPara==='familia') W.musicaParaGen='neutro';
+      if(W.musicaPara==='louvor'){ W.musicaParaGen='ele'; if(W.musicaEstilo && !ehGospel(W.musicaEstilo)) W.musicaEstilo=''; if(!W.musicaEstilo) W.musicaEstilo=''; }
       redesenharSemPular();
       var ex=el('musicaParaExtras');
       if(ex && !paraCompleto()) setTimeout(function(){ ex.scrollIntoView({behavior:'smooth',block:'center'}); },80);
@@ -5641,6 +5732,18 @@ function ligarPasso(k){
       var temData=/\b(19|20)\d{2}\b|\bjaneiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro\b/i.test(t);
       var temLugar=/\bem [A-ZÀ-Ú]/.test(t) || /praia|cidade|escola|faculdade|trabalho|festa|igreja|viagem|bar|parque/i.test(t);
       var bom=n>=160;
+      if(W.musicaPara==='louvor'){
+        var itensL=[
+          ['Versículo ou passagem', /\b\d{1,3}\s*[:.]\s*\d{1,3}\b|salmo|salmos|prov[ée]rbios|isa[íi]as|jo[ãa]o|mateus|romanos|filipenses|josu[ée]|jeremias|g[êe]nesis|b[íi]blia|vers[íi]culo/i.test(t)],
+          ['Seu testemunho', /deus (me|nos)|livramento|cura|curou|milagre|vit[óo]ria|passei|perdi|consegui|aben[çc]o/i.test(t)],
+          ['Gratidão', /gratid[ãa]o|agrade[çc]|obrigad|grat[oa]/i.test(t)],
+          ['Louvor com detalhes', bom]
+        ];
+        var faltamL=itensL.filter(function(i){ return !i[1]; }).length;
+        box.innerHTML='<div class="mhc-tit">'+(faltamL===0?'🙌 Que louvor lindo — vai ficar abençoado':'Seu louvor fica ainda mais forte com:')+'</div>'+
+          '<div class="mhc-itens">'+itensL.map(function(i){ return '<span class="mhc'+(i[1]?' ok':'')+'">'+(i[1]?'✓':'+')+' '+i[0]+'</span>'; }).join('')+'</div>';
+        return;
+      }
       var itens=[
         ['Nome ou apelido', temNome],
         ['Quando aconteceu', temData],
@@ -5671,8 +5774,21 @@ function ligarPasso(k){
       'Como nos conhecemos':'Nos conhecemos ',
       'Qualidades e virtudes':'O que eu mais admiro é ',
       'Declaração de amor':'Quero dizer que ',
-      'Um momento marcante':'Teve um momento que eu nunca esqueço: '
+      'Um momento marcante':'Teve um momento que eu nunca esqueço: ',
+      'Meu versículo':'O versículo que mais fala comigo é ',
+      'Meu testemunho':'Meu testemunho: ',
+      'Gratidão a Deus':'Senhor, eu te agradeço por ',
+      'O que Deus fez por mim':'Deus fez algo na minha vida que eu nunca vou esquecer: '
     };
+    on('[data-insp]','onclick',function(e){
+      var ta=el('musicaTexto'); if(!ta) return;
+      var frase=e.dataset.insp;
+      var novo=ta.value.replace(/\s+$/,'');
+      novo=(novo?novo+' ':'')+frase+' ';
+      ta.value=novo; W.musicaTexto=novo; attContador();
+      ta.focus(); ta.setSelectionRange(novo.length, novo.length);
+      toast('Adicionado! Agora conta o que isso significa pra você 🙏');
+    });
     on('[data-sug]','onclick',function(e){
       var ta=el('musicaTexto'); if(!ta) return;
       var frase=SUG_FRASES[e.dataset.sug] || (e.dataset.sug+': ');
@@ -5705,7 +5821,15 @@ function ligarPasso(k){
   }
   if(k==='musicaGenero'){
     on('[data-genero]','onclick',function(e){
+      if(e.dataset.genero==='gospelmenu'){
+        W._gospelAberto=!(W._gospelAberto || ehGospel(W.musicaEstilo));
+        if(!W._gospelAberto && ehGospel(W.musicaEstilo)) W.musicaEstilo='';
+        redesenharSemPular();
+        if(W._gospelAberto) setTimeout(function(){ var s=el('genSubGospel'); if(s) s.scrollIntoView({behavior:'smooth',block:'center'}); },80);
+        return;
+      }
       W.musicaEstilo=e.dataset.genero;
+      W._gospelAberto=ehGospel(W.musicaEstilo);
       redesenharSemPular();
       if(W.musicaEstilo==='outro'){ setTimeout(function(){ var o=el('musicaEstiloOutro'); if(o){ o.focus(); o.scrollIntoView({behavior:'smooth',block:'center'}); } },80); return; }
       setTimeout(function(){ proximoPasso(); },300);
@@ -6476,7 +6600,7 @@ var RELACAO_NOME={
   mae:'Pra mãe/pai', pai:'Pra pai', irma:'Pra irmã', irmao:'Pra irmão/irmã',
   amiga:'Pra amiga', amigo:'Pra amigo(a)', filho:'Pra filho(a)', ninguem:'Sem dedicatória',
   avo:'Pra vó/vô', tio:'Pra tia/tio', sogro:'Pra sogra/sogro', padrinho:'Pra dinda/padrinho', familia:'Pra família',
-  comercial:'Comercial (empresa)', outro:'Outro'
+  comercial:'Comercial (empresa)', louvor:'Louvor a Deus', outro:'Outro'
 };
 /* período do painel: '8' (padrão), '30p' / '90p' (só pagos), 'tudo', ou busca por número */
 var _pnlModo='8', _pnlTel='';
