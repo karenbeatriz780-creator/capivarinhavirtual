@@ -1,6 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { obterToken, conferirPagamentoEfi, aplicarPagamento, listarPixRecebidos } from './_efi.mjs';
-import { lerIndice, lerDias, idsDosDias, diaBR, chaveTel, indexarDia } from './_indice.mjs';
+import { lerIndice, lerDias, idsDosDias, idsDosDiasTudo, idsDoTel, contagemDia, diaBR, chaveTel, indexarDia } from './_indice.mjs';
 // ATENÇÃO: este arquivo precisa ser .mjs. Não deixe um admin-pedidos.js junto na pasta.
 
 function json(obj, status = 200) {
@@ -32,17 +32,17 @@ export default async (req) => {
     let blobs, parcial = false;
     if (tel) {
       // busca por número de WhatsApp (todo o histórico desse número)
-      const ix = await lerIndice(), k = chaveTel(tel), ent = ix && ix.mapa && ix.mapa[k];
-      blobs = ((ent && ent.p) || []).map((key) => ({ key }));
+      const ent = await idsDoTel(tel, await lerIndice());
+      blobs = ent.p.map((key) => ({ key }));
       parcial = true;
-    } else if (nDias && soPagos && idxDias && idxDias.dias) {
+    } else if (nDias && soPagos) {
       // só os PAGOS de um período longo (lista de pagos por dia + os 2 últimos dias inteiros)
-      const ids = idsDosDias(idxDias, nDias, 'pg');
-      idsDosDias(idxDias, 2, 'p').forEach((id) => { if (ids.indexOf(id) === -1) ids.push(id); });
+      const ids = await idsDosDiasTudo(idxDias, nDias, 'pg');
+      (await idsDosDiasTudo(idxDias, 2, 'p')).forEach((id) => { if (ids.indexOf(id) === -1) ids.push(id); });
       blobs = ids.map((key) => ({ key }));
       parcial = true;
-    } else if (nDias && idxDias && idxDias.dias) {
-      blobs = idsDosDias(idxDias, nDias, 'p').map((key) => ({ key }));
+    } else if (nDias) {
+      blobs = (await idsDosDiasTudo(idxDias, nDias, 'p')).map((key) => ({ key }));
       parcial = true;
     } else {
       blobs = (await store.list()).blobs;
@@ -118,7 +118,7 @@ export default async (req) => {
     // mantém o índice de telefones (Meus presentes) em dia: remonta em segundo plano a cada 6h
     try {
       const idx = await lerIndice();
-      if (!idx || !idx.montadoEm || Date.now() - idx.montadoEm > 6 * 3600 * 1000 || (idxDias && !idxDias.temPg)) {
+      if (!idx || !idx.montadoEm || Date.now() - idx.montadoEm > 6 * 3600 * 1000 || !idxDias || !idxDias.v2) {
         const base = new URL(req.url).origin;
         await Promise.race([fetch(base + '/.netlify/functions/indexar-telefones-background', { method: 'POST' }).catch(() => null), new Promise((r) => setTimeout(r, 1500))]);
       }
@@ -182,12 +182,11 @@ export default async (req) => {
 
     // custos por dia (músicas geradas e letras escritas) — últimos 14 dias
     const custos = {};
-    if (idxDias && idxDias.dias) {
-      for (let i = 0; i < 14; i++) {
-        const d = diaBR(Date.now() - i * 86400000), e = idxDias.dias[d];
-        custos[d] = { m: e && e.t ? e.t.length : 0, l: (e && e.l) || 0 };
-      }
-    }
+    try {
+      const ds = []; for (let i = 0; i < 14; i++) ds.push(diaBR(Date.now() - i * 86400000));
+      const cs = await Promise.all(ds.map((d) => contagemDia(d, idxDias)));
+      ds.forEach((d, i) => { custos[d] = cs[i]; });
+    } catch (e) {}
     let resumo = null, pixSemPedido = null, conferenciaAuto = null;
     try { resumo = await getStore('indices').get('receita', { type: 'json' }); } catch (e) {}
     try { pixSemPedido = await getStore('indices').get('pix-sem-pedido', { type: 'json' }); } catch (e) {}

@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { chaveTel, lerIndice } from './_indice.mjs';
+import { chaveTel, lerIndice, idsDoTel } from './_indice.mjs';
 
 // MEUS PRESENTES pelo número de telefone. Rápido: usa o índice por telefone
 // (_indice.mjs) e só abre os pedidos daquele número. Nada de áudio aqui —
@@ -37,7 +37,7 @@ export default async (req) => {
     if (Date.now() - idx.montadoEm > 6 * 3600 * 1000) {
       comLimite(fetch(new URL(req.url).origin + '/.netlify/functions/indexar-telefones-background', { method: 'POST' }).catch(() => null), 1500, null);
     }
-    const ent = idx.mapa[chave] || { p: [], t: [] };
+    const ent = await idsDoTel(body.tel, idx);
     if (!ent.p.length && !ent.t.length) return json({ ok: true, vazio: true });
 
     const umaVez = (st, id) => comLimite(st.get(id, { type: 'json' }).catch(() => null), 3500, null);

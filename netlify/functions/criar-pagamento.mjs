@@ -87,6 +87,8 @@ export default async (req) => {
       const salvoD = Object.assign({}, presente, {
         pago: true, quatro: false, criadoEm: agoraD, pagoEm: agoraD, duracao: 'vitalicio', expiraEm: null,
         musicaWhatsapp: presente.musicaWhatsapp || origem.musicaWhatsapp || origem.whatsapp || '',
+        meuNome: presente.meuNome || origem.meuNome || '', parceiroNome: presente.parceiroNome || origem.parceiroNome || '',
+        musicaParaNome: presente.musicaParaNome || origem.musicaParaNome || '',
         pagamento: { provedor: 'incluso', status: 'CONCLUIDA', valor: 0, duracao: 'vitalicio', pagoEm: agoraD }
       });
       await lojaP.setJSON(presente.id, salvoD);

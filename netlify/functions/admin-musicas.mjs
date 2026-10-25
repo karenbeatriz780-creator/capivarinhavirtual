@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { lerDias, idsDosDias, lerIndice, chaveTel } from './_indice.mjs';
+import { lerDias, idsDosDiasTudo, idsDoTel, lerIndice } from './_indice.mjs';
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -25,9 +25,9 @@ export default async (req) => {
     const idxDias = nDias ? await lerDias() : null;
     let blobs, parcial = false;
     if (tel) {
-      const ix = await lerIndice(), k = chaveTel(tel), ent = ix && ix.mapa && ix.mapa[k];
-      blobs = ((ent && ent.t) || []).map((key) => ({ key })); parcial = true;
-    } else if (nDias && idxDias && idxDias.dias) { blobs = idsDosDias(idxDias, nDias, 't').map((key) => ({ key })); parcial = true; }
+      const ent = await idsDoTel(tel, await lerIndice());
+      blobs = ent.t.map((key) => ({ key })); parcial = true;
+    } else if (nDias) { blobs = (await idsDosDiasTudo(idxDias, nDias, 't')).map((key) => ({ key })); parcial = true; }
     else blobs = (await store.list()).blobs;
 
     // Busca tudo em paralelo em vez de um registro de cada vez — essa fila
