@@ -6700,19 +6700,19 @@ function pnlZapCarregar(){
 function pnlZapHtml(){
   if(!_pnlZap) return '<div class="pnl-sec"><div class="sub">Carregando o WhatsApp...</div></div>';
   if(_pnlZap.erro) return '<div class="pnl-sec"><div class="sub">Não consegui carregar agora. <a href="#" id="zapRecarregar" style="color:#F0C987">Tentar de novo</a></div></div>';
-  var ev=_pnlZap.eventos||[], conv=_pnlZap.conversas||[], agora=_pnlZap.agora||Date.now();
+  var ev=(_pnlZap.eventos||[]).filter(function(e){ return e.t!=='naoenviou' && e.t!=='pago_sem_aviso'; }), conv=_pnlZap.conversas||[], agora=_pnlZap.agora||Date.now();
   function hora(t){ return t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''; }
   function tel(n){ n=String(n||'').replace(/\D/g,''); return n.length>=12?'('+n.slice(2,4)+') '+n.slice(4,-4)+'-'+n.slice(-4):n; }
   function linkMus(t){ return t?' · <a target="_blank" href="/#/ouvir/t.'+esc(t)+'" style="color:#F0C987">ouvir</a>':''; }
   var hoje0=new Date(); hoje0.setHours(0,0,0,0);
   function conta(tp,desde){ return ev.filter(function(e){ return e.t===tp && e.em>=desde; }).length; }
-  var falhas=ev.filter(function(e){ return e.t==='falha' || e.t==='naoenviou' || e.t==='pago_sem_aviso'; });
+  var falhas=ev.filter(function(e){ return e.t==='falha'; });
   var h='<div class="pnl-sec"><h2>🤖 Robô do WhatsApp</h2>'+
-    '<div class="sub">Tudo que o robô fez nos últimos 7 dias. <a href="#" id="zapRecarregar" style="color:#F0C987">Atualizar</a></div>'+
+    '<div class="sub">Tudo que o robô fez nos últimos 7 dias. '+conta('promo_sim',0)+' cliente(s) quiseram ver promoções. <a href="#" id="zapRecarregar" style="color:#F0C987">Atualizar</a></div>'+
     '<div class="pnl-cards">'+
       '<div class="pnl-card"><b>'+conv.length+'</b><span>pessoas conversaram (48 h)</span></div>'+
-      '<div class="pnl-card"><b>'+conta('criou',+hoje0)+'</b><span>músicas criadas pelo robô hoje · '+conta('criou',0)+' na semana</span></div>'+
-      '<div class="pnl-card"><b>'+conta('enviou',+hoje0)+'</b><span>links de música enviados hoje · '+conta('enviou',0)+' na semana</span></div>'+
+      '<div class="pnl-card"><b>'+conta('enviou',+hoje0)+'</b><span>prévias enviadas hoje · '+conta('enviou',0)+' na semana</span></div>'+
+      '<div class="pnl-card"><b>'+(conta('pago_enviado',+hoje0)+conta('reenviou',+hoje0)+conta('pago_audios',+hoje0))+'</b><span>músicas entregues no WhatsApp hoje · '+(conta('pago_enviado',0)+conta('reenviou',0)+conta('pago_audios',0))+' na semana</span></div>'+
       '<div class="pnl-card"><b style="color:'+(falhas.length?'#FF9B93':'#6BE8AB')+'">'+falhas.length+'</b><span>falhas na semana</span></div>'+
     '</div></div>';
   if(falhas.length) h+='<div class="pnl-sec"><h2>⚠️ Falhas</h2><div class="sub">O que deu errado. Se repetir muito, me manda print.</div>'+
@@ -6730,7 +6730,7 @@ function pnlZapHtml(){
   var outras=conv.filter(function(c){ return !c.atendimento; });
   h+='<div class="pnl-sec"><h2>Conversas (últimas 48 h)</h2>'+(outras.length?outras.map(htmlConv).join(''):'<div class="sub">Ninguém conversou ainda.</div>')+'</div>';
   var nomes={conversa:'🎵 Começou a criar música pelo robô',criou:'✅ Robô criou a música',enviou:'📨 Link da música enviado',pediu_site:'📲 Tocou em "Receber no WhatsApp" no site',
-    atendimento:'💬 Pediu atendimento',cancelou:'✖️ Cancelou a criação',limite:'🚫 Bateu o limite de 3 músicas no dia',respondeu:'💬 Você respondeu pelo painel',pago_enviado:'💰 Pagou → recebeu link + áudios',reenviou:'🔁 Pediu a música de novo e recebeu',pago_audios:'🎧 Respondeu o aviso → recebeu os áudios',pago_sem_aviso:'⚠️ Pagou mas não recebeu aviso no WhatsApp',falha:'⚠️ Falha',naoenviou:'⚠️ Não deu pra enviar'};
+    atendimento:'💬 Pediu atendimento',cancelou:'✖️ Cancelou a criação',limite:'🚫 Bateu o limite de 3 músicas no dia',respondeu:'💬 Você respondeu pelo painel',pago_enviado:'💰 Pagou → recebeu link + áudios',reenviou:'🔁 Pediu a música de novo e recebeu',pediu_criar:'🎵 Quis criar música → recebeu o link do site',promo_sim:'🎁 Quis ver as promoções',promo_nao:'🙅 Não quis promoções agora',pago_audios:'🎧 Respondeu o aviso → recebeu os áudios',pago_sem_aviso:'⚠️ Pagou mas não recebeu aviso no WhatsApp',falha:'⚠️ Falha',naoenviou:'⚠️ Não deu pra enviar'};
   h+='<div class="pnl-sec"><h2>📜 Tudo que aconteceu</h2>'+(ev.length?ev.slice(0,120).map(function(e){
     var info=e.t==='criou'?(e.nome?' pra <b>'+esc(e.nome)+'</b>':'')+(e.estilo?' · '+esc(nomeGenero(e.estilo)):'')+linkMus(e.taskId)
       :e.t==='enviou'?(e.nome?' · '+esc(e.nome):'')+' · '+esc(e.via||'')+linkMus(e.taskId)
