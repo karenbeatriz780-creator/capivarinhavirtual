@@ -30,6 +30,18 @@ async function chamar(corpo) {
 
 export const enviarTexto = (para, texto) => chamar({ to: para, type: 'text', text: { preview_url: true, body: texto } });
 export const enviarAudio = (para, link) => chamar({ to: para, type: 'audio', audio: { link } });
+// Botões (até 3, título até 20 letras)
+export const enviarBotoes = (para, texto, botoes) => chamar({
+  to: para, type: 'interactive',
+  interactive: { type: 'button', body: { text: texto },
+    action: { buttons: botoes.slice(0, 3).map(([id, t]) => ({ type: 'reply', reply: { id, title: t.slice(0, 20) } })) } }
+});
+// Lista (até 10 opções, título até 24 letras)
+export const enviarLista = (para, texto, botao, linhas) => chamar({
+  to: para, type: 'interactive',
+  interactive: { type: 'list', body: { text: texto },
+    action: { button: botao.slice(0, 20), sections: [{ title: 'Opções', rows: linhas.slice(0, 10).map(([id, t, d]) => Object.assign({ id, title: t.slice(0, 24) }, d ? { description: d.slice(0, 72) } : {})) }] } }
+});
 
 // Modelo aprovado na Meta (pago) — só pra quem NÃO chamou no WhatsApp.
 // Nome do modelo no Netlify: WHATSAPP_MODELO_PREVIA. Texto com {{1}} = nome e {{2}} = link.
@@ -56,7 +68,7 @@ async function conversaAberta(numero) {
   return u && Date.now() - (u.em || 0) < H23 ? u.numero : null;
 }
 
-// Manda a música (link + áudio da prévia) UMA vez só.
+// Manda o link da música UMA vez só (sem o áudio).
 // Volta: 'enviado' | 'ja' | 'esperando' | 'semjanela' | 'naoachei' | 'erro'
 export async function entregarMusica(taskId, numeroPedido) {
   const loja = getStore('whatsapp');
@@ -75,10 +87,10 @@ export async function entregarMusica(taskId, numeroPedido) {
   if (para) {
     ok = await enviarTexto(para,
       '🎶 *Sua música ficou pronta!*' + (nome ? '\nFeita pra *' + nome + '* 💗' : '') + '\n\n' +
-      '▶️ Ouça e finalize aqui:\n' + link + '\n\n' +
+      '▶️ Toque pra ouvir sua música:\n' + link + '\n\n' +
       'Depois do pagamento você recebe as músicas *completas*, sem corte, pra baixar e mandar pra quem você ama.\n\n' +
       'Guarde esta conversa: o link fica salvo aqui pra você voltar quando quiser. 💗');
-    if (ok) await enviarAudio(para, SITE + '/.netlify/functions/previa-musica?taskId=' + encodeURIComponent(taskId) + '&v=1');
+    // só o link (sem áudio no WhatsApp, pra pessoa ouvir no site e comprar)
   } else {
     let d = String(numeroPedido || m.whatsapp || '').replace(/\D/g, '');
     if (d.length < 10) return 'semjanela';
@@ -89,6 +101,7 @@ export async function entregarMusica(taskId, numeroPedido) {
   }
   if (!ok) return 'erro';
   await loja.setJSON('env_' + taskId, { para, em: Date.now() }).catch(() => {});
+  await loja.delete('bot_' + chaveNum(para)).catch(() => {}); // conversa do robô terminou
   await loja.setJSON('bv_' + String(para).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});
   return 'enviado';
 }

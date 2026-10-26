@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
-import { enviarTexto, marcarConversa, entregarMusica, SITE } from './_zap.mjs';
+import { enviarTexto, marcarConversa, entregarMusica, chaveNum, SITE } from './_zap.mjs';
+import { tratarBot, boasVindas } from './_bot.mjs';
 
 // WEBHOOK DO WHATSAPP (Meta Cloud API)
 // URL de callback:  https://capivarinhalove.com.br/.netlify/functions/whatsapp-webhook
@@ -45,8 +46,9 @@ export default async (req) => {
         for (const ch of en.changes || []) {
           const v = ch.value || {};
           for (const msg of v.messages || []) {
+            const ir = msg.interactive && (msg.interactive.button_reply || msg.interactive.list_reply);
             const txt = (msg.text && msg.text.body) || (msg.button && msg.button.text) ||
-              (msg.interactive && JSON.stringify(msg.interactive).slice(0, 200)) || msg.type;
+              (ir && ('[' + ir.id + '] ' + ir.title)) || msg.type;
             console.log('WHATSAPP MSG de ' + msg.from + ': ' + String(txt).slice(0, 300));
             await loja.setJSON('msg_' + msg.id, { de: msg.from, em: Date.now(), msg });
             // Cliente apertou "Receber minha música no WhatsApp" no site:
@@ -70,13 +72,25 @@ export default async (req) => {
                 continue;
               }
             } catch (e) { console.error('enviar música:', e && e.message); }
-            // boas-vindas automática: no máximo 1 vez a cada 12 h por número
+            // Robô de criar música (passo a passo)
+            try {
+              if (await tratarBot(msg)) {
+                await loja.setJSON('bv_' + String(msg.from).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});
+                continue;
+              }
+            } catch (e) { console.error('robô:', e && e.stack || e); }
+            // pediu atendente: o robô fica quieto por 12 h
+            try {
+              const h = await loja.get('humano_' + chaveNum(msg.from), { type: 'json' }).catch(() => null);
+              if (h && Date.now() - (h.em || 0) < 12 * 3600 * 1000) continue;
+            } catch (e) {}
+            // boas-vindas automática (com botões): no máximo 1 vez a cada 12 h por número
             try {
               const chave = 'bv_' + String(msg.from).replace(/\D/g, '');
               const ult = await loja.get(chave, { type: 'json' }).catch(() => null);
               if (!ult || Date.now() - (ult.em || 0) > 12 * 3600 * 1000) {
                 await loja.setJSON(chave, { em: Date.now() });
-                const ok = await enviarTexto(msg.from, BOAS_VINDAS);
+                const ok = await boasVindas(msg.from);
                 if (!ok) await loja.setJSON(chave, { em: 0 }).catch(() => {});
               }
             } catch (e) { console.error('boas-vindas:', e && e.message); }
