@@ -136,7 +136,7 @@ export default async (req) => {
     const txid = criarTxid(presente.id);
     const criadoEm = Date.now();
     // pedido de música normal = 4 músicas: as 2 da prévia + 2 liberadas depois do Pix
-    const quatro = presente.produto === 'musica' && !pacote6 && !presente.ofertaM1 && !presente.ofertaDe;
+    const quatro = (presente.produto === 'musica' || comboDaMusica) && !pacote6 && !presente.ofertaM1 && !presente.ofertaDe;
     const salvo = Object.assign({}, presente, {
       pago: false, quatro,
       criadoEm,
@@ -159,7 +159,7 @@ export default async (req) => {
       } catch (e) {}
 
       const token = await obterToken();
-      const nomeCobranca = (pacote6 ? '6 Músicas Personalizadas' : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '');
+      const nomeCobranca = (pacote6 ? '6 Músicas Personalizadas' : comboDaMusica ? ('4 Músicas + ' + pacote.nome) : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '');
       const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
         method: 'PUT', token,
         body: {
