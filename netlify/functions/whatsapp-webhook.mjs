@@ -43,7 +43,7 @@ async function processar(corpo) {
           // a mensagem vem com o código "t.<id>" → manda o link da música dele.
           try {
             await marcarConversa(msg.from);
-            const cod = /\bt\.([A-Za-z0-9_-]{6,80})/.exec(String(txt || ''));
+            const cod = /(?:\bt\.|ID do pedido:\s*)([A-Za-z0-9_-]{6,80})/i.exec(String(txt || ''));
             if (cod) {
               const tid = cod[1];
             await registrar('pediu_site', { numero: String(msg.from), taskId: tid });
