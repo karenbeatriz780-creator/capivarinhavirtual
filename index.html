@@ -1616,6 +1616,21 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .pnl-liberar button{flex:1;font-size:.72rem;font-weight:800;padding:.4rem .6rem;border-radius:8px;
   border:0;background:#1F9D5C;color:#fff;}
 .pnl-liberar.feito{color:#6BE8AB;font-size:.74rem;font-weight:700;}
+.zap-ev{display:flex;gap:.6rem;padding:.55rem 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.8rem;color:#E9DCE2;}
+.zap-ev:last-child{border-bottom:0;}
+.zap-ev .h{color:#B99BA8;font-size:.72rem;min-width:4.6rem;flex-shrink:0;}
+.zap-ev.falha{color:#FF9B93;}
+.zap-conv{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:.8rem;margin-bottom:.8rem;}
+.zap-conv.atd{border-color:#F0C987;box-shadow:0 0 0 1px rgba(240,201,135,.35);}
+.zap-conv .top{display:flex;justify-content:space-between;gap:.5rem;font-size:.82rem;color:#fff;font-weight:800;margin-bottom:.5rem;flex-wrap:wrap;}
+.zap-conv .top small{color:#B99BA8;font-weight:600;}
+.zap-b{max-width:88%;padding:.45rem .65rem;border-radius:12px;font-size:.78rem;line-height:1.4;margin:.25rem 0;white-space:pre-wrap;word-break:break-word;}
+.zap-b.cli{background:rgba(255,255,255,.1);color:#fff;}
+.zap-b.nos{background:rgba(31,157,92,.28);color:#E8FFF1;margin-left:auto;}
+.zap-b i{display:block;font-style:normal;font-size:.64rem;color:#B99BA8;margin-top:.15rem;}
+.zap-resp{display:flex;gap:.4rem;margin-top:.5rem;}
+.zap-resp textarea{flex:1;min-height:2.4rem;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:#fff;padding:.45rem .6rem;font:inherit;font-size:.8rem;}
+.zap-resp button{border:0;border-radius:10px;background:#1F9D5C;color:#fff;font-weight:800;font-size:.78rem;padding:0 .8rem;}
 .pnl-dia{display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;
   border-bottom:1px solid rgba(255,255,255,.08);font-size:.82rem;}
 .pnl-dia:last-child{border-bottom:0;}
@@ -6674,6 +6689,74 @@ function pnlPixSemPedidoHtml(){
     '<div class="sub">Pix que caiu na conta nas últimas 48 h mas não está ligado a nenhum pedido (ex.: a pessoa copiou a chave e pagou direto). Ache o cliente pelo valor e horário e use "Marcar como pago" ou "Liberar de presente".</div>'+
     itens.map(function(x){ return '<div class="pnl-dia"><span class="dt">'+(x.horario?new Date(x.horario).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—')+'</span><span class="ct">'+esc(x.pagador||x.info||'sem nome')+'</span><span class="vl">R$ '+esc(String(x.valor||''))+'</span></div>'; }).join('')+'</div>';
 }
+/* ===== aba 🤖 WhatsApp: o que o robô fez, falhas e conversas ===== */
+var _pnlZap=null, _pnlZapCarregando=false;
+function pnlZapCarregar(){
+  if(_pnlZapCarregando) return; _pnlZapCarregando=true;
+  fetch('/.netlify/functions/admin-whatsapp').then(function(r){ return r.json(); })
+    .then(function(d){ _pnlZap=d; }).catch(function(){ _pnlZap={erro:1}; })
+    .then(function(){ _pnlZapCarregando=false; if(_pnlAba==='zap') desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); });
+}
+function pnlZapHtml(){
+  if(!_pnlZap) return '<div class="pnl-sec"><div class="sub">Carregando o WhatsApp...</div></div>';
+  if(_pnlZap.erro) return '<div class="pnl-sec"><div class="sub">Não consegui carregar agora. <a href="#" id="zapRecarregar" style="color:#F0C987">Tentar de novo</a></div></div>';
+  var ev=_pnlZap.eventos||[], conv=_pnlZap.conversas||[], agora=_pnlZap.agora||Date.now();
+  function hora(t){ return t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''; }
+  function tel(n){ n=String(n||'').replace(/\D/g,''); return n.length>=12?'('+n.slice(2,4)+') '+n.slice(4,-4)+'-'+n.slice(-4):n; }
+  function linkMus(t){ return t?' · <a target="_blank" href="/#/ouvir/t.'+esc(t)+'" style="color:#F0C987">ouvir</a>':''; }
+  var hoje0=new Date(); hoje0.setHours(0,0,0,0);
+  function conta(tp,desde){ return ev.filter(function(e){ return e.t===tp && e.em>=desde; }).length; }
+  var falhas=ev.filter(function(e){ return e.t==='falha' || e.t==='naoenviou' || e.t==='pago_sem_aviso'; });
+  var h='<div class="pnl-sec"><h2>🤖 Robô do WhatsApp</h2>'+
+    '<div class="sub">Tudo que o robô fez nos últimos 7 dias. <a href="#" id="zapRecarregar" style="color:#F0C987">Atualizar</a></div>'+
+    '<div class="pnl-cards">'+
+      '<div class="pnl-card"><b>'+conv.length+'</b><span>pessoas conversaram (48 h)</span></div>'+
+      '<div class="pnl-card"><b>'+conta('criou',+hoje0)+'</b><span>músicas criadas pelo robô hoje · '+conta('criou',0)+' na semana</span></div>'+
+      '<div class="pnl-card"><b>'+conta('enviou',+hoje0)+'</b><span>links de música enviados hoje · '+conta('enviou',0)+' na semana</span></div>'+
+      '<div class="pnl-card"><b style="color:'+(falhas.length?'#FF9B93':'#6BE8AB')+'">'+falhas.length+'</b><span>falhas na semana</span></div>'+
+    '</div></div>';
+  if(falhas.length) h+='<div class="pnl-sec"><h2>⚠️ Falhas</h2><div class="sub">O que deu errado. Se repetir muito, me manda print.</div>'+
+    falhas.slice(0,30).map(function(e){ return '<div class="zap-ev falha"><span class="h">'+hora(e.em)+'</span><span>'+
+      (e.t==='naoenviou' ? 'Música de '+tel(e.numero)+' ficou pronta mas não deu pra enviar (a pessoa não abriu conversa nas 24 h)'+linkMus(e.taskId) : e.t==='pago_sem_aviso' ? esc(e.nome||'Cliente')+' pagou mas não recebeu no WhatsApp: '+esc(e.motivo||'')+' · '+tel(e.para) : esc(e.erro||'erro')+(e.para?' · '+tel(e.para):''))+'</span></div>'; }).join('')+'</div>';
+  var atd=conv.filter(function(c){ return c.atendimento; });
+  function htmlConv(c){
+    return '<div class="zap-conv'+(c.atendimento?' atd':'')+'"><div class="top"><span>'+(c.atendimento?'💬 ':'')+esc(c.nome||'Cliente')+' · '+tel(c.numero)+'</span>'+
+      '<small>'+(c.janelaAberta?'🟢 dá pra responder':'⚪ janela de 24 h fechada')+(c.atendimento?' · robô pausado <a href="#" data-zaplib="'+esc(c.numero)+'" style="color:#F0C987">religar robô</a>':'')+'</small></div>'+
+      c.msgs.map(function(m){ return '<div class="zap-b '+(m.de==='cliente'?'cli':'nos')+'">'+esc(m.txt)+'<i>'+(m.de==='cliente'?'cliente':'enviado')+' · '+hora(m.em)+'</i></div>'; }).join('')+
+      (c.janelaAberta?'<div class="zap-resp"><textarea data-zapt="'+esc(c.numero)+'" placeholder="Responder '+esc((c.nome||'').split(' ')[0]||'cliente')+'..."></textarea><button type="button" data-zapenv="'+esc(c.numero)+'">Enviar</button></div>':'')+
+    '</div>';
+  }
+  if(atd.length) h+='<div class="pnl-sec"><h2>💬 Pediram atendimento</h2><div class="sub">Essas pessoas tocaram em "Atendimento". O robô fica quieto com elas por 12 h. Responda aqui (dá até 24 h depois da última mensagem delas).</div>'+atd.map(htmlConv).join('')+'</div>';
+  var outras=conv.filter(function(c){ return !c.atendimento; });
+  h+='<div class="pnl-sec"><h2>Conversas (últimas 48 h)</h2>'+(outras.length?outras.map(htmlConv).join(''):'<div class="sub">Ninguém conversou ainda.</div>')+'</div>';
+  var nomes={conversa:'🎵 Começou a criar música pelo robô',criou:'✅ Robô criou a música',enviou:'📨 Link da música enviado',pediu_site:'📲 Tocou em "Receber no WhatsApp" no site',
+    atendimento:'💬 Pediu atendimento',cancelou:'✖️ Cancelou a criação',limite:'🚫 Bateu o limite de 3 músicas no dia',respondeu:'💬 Você respondeu pelo painel',pago_enviado:'💰 Pagou → recebeu link + áudios',reenviou:'🔁 Pediu a música de novo e recebeu',pago_audios:'🎧 Respondeu o aviso → recebeu os áudios',pago_sem_aviso:'⚠️ Pagou mas não recebeu aviso no WhatsApp',falha:'⚠️ Falha',naoenviou:'⚠️ Não deu pra enviar'};
+  h+='<div class="pnl-sec"><h2>📜 Tudo que aconteceu</h2>'+(ev.length?ev.slice(0,120).map(function(e){
+    var info=e.t==='criou'?(e.nome?' pra <b>'+esc(e.nome)+'</b>':'')+(e.estilo?' · '+esc(nomeGenero(e.estilo)):'')+linkMus(e.taskId)
+      :e.t==='enviou'?(e.nome?' · '+esc(e.nome):'')+' · '+esc(e.via||'')+linkMus(e.taskId)
+      :e.t==='falha'?': '+esc(e.erro||''):e.t==='pediu_site'?linkMus(e.taskId):(e.t==='pago_enviado'||e.t==='pago_sem_aviso')?(e.nome?' · '+esc(e.nome):'')+(e.via?' · '+esc(e.via):'')+(e.motivo?' · '+esc(e.motivo):''):'';
+    return '<div class="zap-ev'+(e.t==='falha'||e.t==='naoenviou'||e.t==='pago_sem_aviso'?' falha':'')+'"><span class="h">'+hora(e.em)+'</span><span>'+(nomes[e.t]||e.t)+info+' · '+tel(e.numero||e.para)+'</span></div>';
+  }).join(''):'<div class="sub">Nada ainda.</div>')+'</div>';
+  return h;
+}
+function pnlZapLigar(body){
+  var rec=body.querySelector('#zapRecarregar'); if(rec) rec.onclick=function(ev){ ev.preventDefault(); _pnlZap=null; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); pnlZapCarregar(); };
+  body.querySelectorAll('[data-zapenv]').forEach(function(b){ b.onclick=function(){
+    var n=b.dataset.zapenv, ta=body.querySelector('[data-zapt="'+n+'"]'), t=(ta&&ta.value||'').trim();
+    if(!t){ toast('Escreva a mensagem.'); return; }
+    if(!pedirSenhaAdmin()) return;
+    b.disabled=true; b.textContent='...';
+    fetch('/.netlify/functions/admin-whatsapp',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({para:n,texto:t})})
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+      .then(function(res){ if(res.ok){ toast('Enviado ✓'); pnlZapCarregar(); } else { if(res.d&&/Senha/.test(res.d.erro||'')){ _pnlChave=''; Store.set('cl_admin_key',''); } toast((res.d&&res.d.erro)||'Não enviou.'); b.disabled=false; b.textContent='Enviar'; } })
+      .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent='Enviar'; });
+  }; });
+  body.querySelectorAll('[data-zaplib]').forEach(function(a){ a.onclick=function(ev){ ev.preventDefault();
+    if(!pedirSenhaAdmin()) return;
+    fetch('/.netlify/functions/admin-whatsapp',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({para:a.dataset.zaplib,acao:'liberar'})})
+      .then(function(){ toast('Robô religado pra essa pessoa ✓'); pnlZapCarregar(); });
+  }; });
+}
 function pnlQueryPedidos(){
   if(_pnlTel) return '&tel='+encodeURIComponent(_pnlTel);
   if(_pnlModo==='30p') return '&dias=31&pagos=1';
@@ -7368,6 +7451,7 @@ function desenharPainel(pedidos, visitas, musicas){
       '<button type="button" class="pnl-aba'+(_pnlAba==='musicas'?' on':'')+'" data-aba="musicas">🎵 Músicas</button>'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='clientes'?' on':'')+'" data-aba="clientes">👥 Clientes</button>'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='dados'?' on':'')+'" data-aba="dados">📊 Dados</button>'+
+      '<button type="button" class="pnl-aba'+(_pnlAba==='zap'?' on':'')+'" data-aba="zap">🤖 WhatsApp</button>'+
     '</div>'+
     '<div class="pnl-periodo">'+
       '<div class="pnl-per-l">'+(_pnlTel?'🔎 Mostrando tudo do número <b>'+esc(_pnlTel)+'</b>':'📅 Mostrando: <b>'+({'8':'últimos 8 dias','30p':'pagos dos últimos 30 dias','90p':'pagos dos últimos 90 dias','tudo':'todo o histórico'}[_pnlModo]||'')+'</b>')+'</div>'+
@@ -7389,6 +7473,7 @@ function desenharPainel(pedidos, visitas, musicas){
         '<div class="pnl-lista">'+musicasHtml+'</div></div>'
       : '')+
     (_pnlAba==='clientes' ? pnlClientesHtml(pedidos) : '')+
+    (_pnlAba==='zap' ? pnlZapHtml() : '')+
     (_pnlAba==='dados'
       ? '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
         '<div class="pnl-sec"><h2>Vendas por hora</h2>'+
@@ -7423,8 +7508,10 @@ function desenharPainel(pedidos, visitas, musicas){
   };
   ligarHoje(body);
   body.querySelectorAll('[data-expandir]').forEach(function(b){ b.onclick=function(){ var m=b.closest('.pc').querySelector('.pc-mais'); m.hidden=!m.hidden; b.innerHTML=b.innerHTML.replace(m.hidden?'▴':'▾', m.hidden?'▾':'▴'); }; });
+  if(_pnlAba==='zap'){ pnlZapLigar(body); if(!_pnlZap && !_pnlZapCarregando) pnlZapCarregar(); }
   body.querySelectorAll('[data-aba]').forEach(function(b){
     b.onclick=function(){ _pnlAba=b.dataset.aba; _pnlLimite=30; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas);
+      if(_pnlAba==='zap') pnlZapCarregar();
       if(_pnlAba==='dados' && !_pnlFunilOk){
         fetch('/.netlify/functions/admin-funil',{headers:{'x-admin-key':_pnlChave}}).then(function(r){ return r.json(); })
           .then(function(d){ if(d && d.visitas){ _pnlFunilOk=true; if(_pnlAba==='dados') desenharPainel(_pnlCache.pedidos,d.visitas,_pnlCache.musicas); } }).catch(function(){});
