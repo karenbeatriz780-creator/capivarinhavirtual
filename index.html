@@ -2907,6 +2907,18 @@ function precoTotal(W){
 }
 var PRECO_PACOTE6 = 19.99; /* 6 músicas (3 letras × 2 versões) — tem que bater com criar-pagamento.mjs */
 function numMusicaAtual(){ return W.ofertaM2 ? 3 : (W.ofertaM1 ? 2 : 1); }
+var ZAP_API='5511924826268';
+function htmlBotaoZap(tid, esperando){
+  tid = tid || (W && W.musicaPreviewId);
+  if(!W || !tid || W.bonusDe || W.dobroDe) return '';
+  var txt='Oi! Quero receber minha música 🎵 (código t.'+tid+')';
+  return '<a class="mp-zap" target="_blank" rel="noopener" href="https://wa.me/'+ZAP_API+'?text='+encodeURIComponent(txt)+'" '+
+    'style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:.8rem;padding:.85rem 1rem;border-radius:14px;background:#25D366;color:#fff;font-weight:800;text-decoration:none;font-size:1rem;box-shadow:0 4px 14px rgba(37,211,102,.35)">'+
+    (esperando?'📲 Receber no WhatsApp quando ficar pronta':'📲 Receber minha música no WhatsApp')+'</a>'+
+    '<div class="hint" style="text-align:center;margin-top:.35rem">'+(esperando
+      ? 'Não quer esperar? Toque, aperte <b>enviar</b> no WhatsApp e pode sair. A gente te manda a música assim que ficar pronta.'
+      : 'Toque, e depois é só apertar <b>enviar</b> no WhatsApp. A gente te manda o link na hora.')+'</div>';
+}
 function htmlMusicaPlayer(url, url2, letra){
   var n=numMusicaAtual(), base=(n-1)*2;
   function card(u, k){
@@ -2956,7 +2968,7 @@ function htmlMusicaPlayer(url, url2, letra){
   return '<div class="musica-pronta">'+
     '<div class="mp-topo">🎉<b>'+(qtd>1?'Suas 2 músicas ficaram prontas':'Sua música ficou pronta')+'</b>'+
     '<span>'+(qtd>1?'Você leva as duas! Quando uma acaba, a outra começa sozinha.':'Dá o play e sente.')+'</span></div>'+
-    card(url,1)+card(url2,2)+htmlLetra+oferta+
+    card(url,1)+card(url2,2)+htmlLetra+oferta+htmlBotaoZap()+
   '</div>';
 }
 /* guarda a música atual e volta pro gênero pra criar a próxima */
@@ -3026,7 +3038,7 @@ function htmlMusicaCompondo(){
     '<div class="mc-fase" id="mcFase">Lendo a história de vocês...</div>'+
     '<div class="mc-bar"><i id="mcBarFill" style="width:0%"></i></div>'+
     '<div class="mc-pct" id="mcPct">0%</div>'+
-    '<div class="mc-fica"><b>Espere aqui, leva menos de 1 minuto.</b> Não feche esta página.<br>'+
+    '<div class="mc-fica"><b>Leva menos de 1 minuto.</b> Se preferir, receba no WhatsApp pelo botão verde.<br>'+
     '<b>Você vai receber 2 versões diferentes</b> pra escolher a que mais emocionar.</div>'+
   '</div>';
 }
@@ -4721,6 +4733,9 @@ function dispararGeracao(gerarBtn){
           return;
         }
         gerarBtn.textContent='Compondo...';
+        W.musicaGerandoId=res.d.taskId;
+        var _rz=el('musicaResultado');
+        if(_rz && !el('zapEspera')) _rz.insertAdjacentHTML('beforeend','<div id="zapEspera" style="margin-top:.9rem">'+htmlBotaoZap(res.d.taskId,true)+'</div>');
         var tentativas=0, MAX_TENTATIVAS=200; // ~200 x 3s = 10 minutos
         (function checar(){
           fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(res.d.taskId))
