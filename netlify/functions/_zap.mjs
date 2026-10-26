@@ -13,6 +13,11 @@ export function chaveNum(n) {
   return d.slice(0, 2) + d.slice(-8);
 }
 
+// Registro pro painel (aba 🤖 WhatsApp)
+export async function registrar(tipo, dados) {
+  try { await getStore('whatsapp').setJSON('ev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), Object.assign({ t: tipo, em: Date.now() }, dados || {})); } catch (e) {}
+}
+
 async function chamar(corpo) {
   const token = (process.env.WHATSAPP_TOKEN || '').trim();
   const phoneId = (process.env.WHATSAPP_PHONE_ID || '').trim();
@@ -23,9 +28,20 @@ async function chamar(corpo) {
       headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify(Object.assign({ messaging_product: 'whatsapp', recipient_type: 'individual' }, corpo))
     });
-    if (!r.ok) { console.error('whatsapp envio:', r.status, (await r.text()).slice(0, 400)); return false; }
+    if (!r.ok) {
+      const erro = (await r.text()).slice(0, 400);
+      console.error('whatsapp envio:', r.status, erro);
+      let msg = erro; try { const j = JSON.parse(erro); msg = (j.error && (j.error.error_data && j.error.error_data.details || j.error.message)) || erro; } catch (e) {}
+      await registrar('falha', { para: corpo.to, erro: 'Envio recusado pela Meta: ' + String(msg).slice(0, 200) });
+      return false;
+    }
+    // guarda o que foi enviado pra aparecer na conversa do painel
+    try {
+      const resumo = corpo.type === 'text' ? corpo.text.body : corpo.type === 'interactive' ? corpo.interactive.body.text + ' [botões]' : corpo.type === 'audio' ? '[áudio]' : '[' + corpo.type + ']';
+      await getStore('whatsapp').setJSON('out_' + chaveNum(corpo.to) + '_' + Date.now(), { para: String(corpo.to), txt: String(resumo).slice(0, 1000), em: Date.now() });
+    } catch (e) {}
     return true;
-  } catch (e) { console.error('whatsapp envio (rede):', e && e.message); return false; }
+  } catch (e) { console.error('whatsapp envio (rede):', e && e.message); await registrar('falha', { para: corpo.to, erro: 'Sem conexão com a Meta' }); return false; }
 }
 
 export const enviarTexto = (para, texto) => chamar({ to: para, type: 'text', text: { preview_url: true, body: texto } });
@@ -45,6 +61,15 @@ export const enviarLista = (para, texto, botao, linhas) => chamar({
 
 // Modelo aprovado na Meta (pago) — só pra quem NÃO chamou no WhatsApp.
 // Nome do modelo no Netlify: WHATSAPP_MODELO_PREVIA. Texto com {{1}} = nome e {{2}} = link.
+// Modelo genérico: nome do modelo + lista de textos das variáveis {{1}}, {{2}}...
+export function enviarModeloTextos(para, modelo, textos) {
+  if (!modelo) return Promise.resolve(false);
+  return chamar({
+    to: para, type: 'template',
+    template: { name: modelo, language: { code: (process.env.WHATSAPP_MODELO_IDIOMA || 'pt_BR').trim() },
+      components: [{ type: 'body', parameters: textos.map((t) => ({ type: 'text', text: String(t || '-').slice(0, 900) })) }] }
+  });
+}
 function enviarModelo(para, nome, link) {
   const modelo = (process.env.WHATSAPP_MODELO_PREVIA || '').trim();
   if (!modelo) return Promise.resolve(false);
@@ -62,7 +87,7 @@ export async function marcarConversa(numeroZap) {
   const k = chaveNum(numeroZap); if (!k) return;
   await getStore('whatsapp').setJSON('ult_' + k, { numero: String(numeroZap), em: Date.now() }).catch(() => {});
 }
-async function conversaAberta(numero) {
+export async function conversaAberta(numero) {
   const k = chaveNum(numero); if (!k) return null;
   const u = await getStore('whatsapp').get('ult_' + k, { type: 'json' }).catch(() => null);
   return u && Date.now() - (u.em || 0) < H23 ? u.numero : null;
@@ -83,7 +108,7 @@ export async function entregarMusica(taskId, numeroPedido) {
   let para = (opt && Date.now() - (opt.em || 0) < H23 && opt.numero) ||
     await conversaAberta(numeroPedido || m.whatsapp) ||
     (opt && await conversaAberta(opt.numero));
-  let ok = false;
+  let ok = false, via = 'grátis';
   if (para) {
     ok = await enviarTexto(para,
       '🎶 *Sua música ficou pronta!*' + (nome ? '\nFeita pra *' + nome + '* 💗' : '') + '\n\n' +
@@ -95,13 +120,31 @@ export async function entregarMusica(taskId, numeroPedido) {
     let d = String(numeroPedido || m.whatsapp || '').replace(/\D/g, '');
     if (d.length < 10) return 'semjanela';
     if (!d.startsWith('55') || d.length <= 11) d = '55' + d;
+    via = 'modelo pago';
     ok = await enviarModelo(d, nome, link);
     if (!ok) return 'semjanela';
     para = d;
   }
   if (!ok) return 'erro';
   await loja.setJSON('env_' + taskId, { para, em: Date.now() }).catch(() => {});
+  await registrar('enviou', { para, taskId, nome, via });
   await loja.delete('bot_' + chaveNum(para)).catch(() => {}); // conversa do robô terminou
   await loja.setJSON('bv_' + String(para).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});
   return 'enviado';
 }
+
+// ===== pedidos PAGOS =====
+export const temMusica = (g) => !!(g.musicaPreviewUrl || (g.ofertaM1 && g.ofertaM1.url));
+const versoes = (g) => [[g.musicaPreviewUrl, 1], [g.musicaPreviewUrl2, 2], [g.ofertaM1 && g.ofertaM1.url, 3], [g.ofertaM1 && g.ofertaM1.url2, 4],
+  [g.ofertaM2 && g.ofertaM2.url, 5], [g.ofertaM2 && g.ofertaM2.url2, 6]].filter((x) => x[0]).map((x) => x[1]);
+export const linkPedido = (g) => SITE + '/#/p/' + g.id + (g.produto === 'musica' || temMusica(g) ? '/c' : '');
+
+// manda os áudios completos (até 6) — usado aqui e quando a pessoa responde o modelo
+export async function entregarAudiosPagos(para, g, comTexto = true) {
+  const vs = versoes(g);
+  if (!vs.length) return false;
+  if (comTexto) await enviarTexto(para, '🎧 Aqui estão suas músicas completas pra ouvir e guardar! 💗\n\nTambém ficam salvas no link:\n' + linkPedido(g));
+  for (const v of vs) await enviarAudio(para, SITE + '/.netlify/functions/baixar-musica?id=' + encodeURIComponent(g.id) + '&v=' + v);
+  return true;
+}
+
