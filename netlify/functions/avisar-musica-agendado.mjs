@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { entregarMusica, registrar, SITE } from './_zap.mjs';
+import { entregarMusica, SITE } from './_zap.mjs';
 
 // A CADA MINUTO: confere as músicas que estão sendo criadas e, quando ficam
 // prontas, manda no WhatsApp do cliente (mesmo que ele tenha fechado o site).
@@ -16,8 +16,6 @@ export default async () => {
     try {
       const p = await loja.get(b.key, { type: 'json' }).catch(() => null);
       if (!p || !p.taskId || Date.now() - (p.em || 0) > LIMITE) {
-        if (p && p.taskId && !(await loja.get('env_' + p.taskId, { type: 'json' }).catch(() => null)))
-          await registrar('naoenviou', { numero: p.numero, taskId: p.taskId });
         await loja.delete(b.key); return;
       }
       let r = await entregarMusica(p.taskId, p.numero);

@@ -59,29 +59,6 @@ export const enviarLista = (para, texto, botao, linhas) => chamar({
     action: { button: botao.slice(0, 20), sections: [{ title: 'Opções', rows: linhas.slice(0, 10).map(([id, t, d]) => Object.assign({ id, title: t.slice(0, 24) }, d ? { description: d.slice(0, 72) } : {})) }] } }
 });
 
-// Modelo aprovado na Meta (pago) — só pra quem NÃO chamou no WhatsApp.
-// Nome do modelo no Netlify: WHATSAPP_MODELO_PREVIA. Texto com {{1}} = nome e {{2}} = link.
-// Modelo genérico: nome do modelo + lista de textos das variáveis {{1}}, {{2}}...
-export function enviarModeloTextos(para, modelo, textos) {
-  if (!modelo) return Promise.resolve(false);
-  return chamar({
-    to: para, type: 'template',
-    template: { name: modelo, language: { code: (process.env.WHATSAPP_MODELO_IDIOMA || 'pt_BR').trim() },
-      components: [{ type: 'body', parameters: textos.map((t) => ({ type: 'text', text: String(t || '-').slice(0, 900) })) }] }
-  });
-}
-function enviarModelo(para, nome, link) {
-  const modelo = (process.env.WHATSAPP_MODELO_PREVIA || '').trim();
-  if (!modelo) return Promise.resolve(false);
-  return chamar({
-    to: para, type: 'template',
-    template: {
-      name: modelo, language: { code: (process.env.WHATSAPP_MODELO_IDIOMA || 'pt_BR').trim() },
-      components: [{ type: 'body', parameters: [{ type: 'text', text: nome || 'você' }, { type: 'text', text: link }] }]
-    }
-  });
-}
-
 // Guarda que esse número mandou mensagem agora (abre a janela grátis de 24 h)
 export async function marcarConversa(numeroZap) {
   const k = chaveNum(numeroZap); if (!k) return;
@@ -117,13 +94,7 @@ export async function entregarMusica(taskId, numeroPedido) {
       'Guarde esta conversa: o link fica salvo aqui pra você voltar quando quiser. 💗');
     // só o link (sem áudio no WhatsApp, pra pessoa ouvir no site e comprar)
   } else {
-    let d = String(numeroPedido || m.whatsapp || '').replace(/\D/g, '');
-    if (d.length < 10) return 'semjanela';
-    if (!d.startsWith('55') || d.length <= 11) d = '55' + d;
-    via = 'modelo pago';
-    ok = await enviarModelo(d, nome, link);
-    if (!ok) return 'semjanela';
-    para = d;
+    return 'semjanela'; // só manda pra quem abriu conversa (sem modelo pago)
   }
   if (!ok) return 'erro';
   await loja.setJSON('env_' + taskId, { para, em: Date.now() }).catch(() => {});
@@ -145,6 +116,20 @@ export async function entregarAudiosPagos(para, g, comTexto = true) {
   if (!vs.length) return false;
   if (comTexto) await enviarTexto(para, '🎧 Aqui estão suas músicas completas pra ouvir e guardar! 💗\n\nTambém ficam salvas no link:\n' + linkPedido(g));
   for (const v of vs) await enviarAudio(para, SITE + '/.netlify/functions/baixar-musica?id=' + encodeURIComponent(g.id) + '&v=' + v);
+  await oferecerPromo(para, g);
   return true;
+}
+
+// Depois de entregar a música paga: pergunta se quer as promoções (1 vez por pedido)
+async function oferecerPromo(para, g) {
+  try {
+    const loja = getStore('whatsapp'), k = 'promo_' + chaveNum(para);
+    const ant = await loja.get(k, { type: 'json' }).catch(() => null);
+    if (ant && ant.pedido === g.id) return;
+    await loja.setJSON(k, { pedido: g.id, em: Date.now() });
+    await new Promise((r) => setTimeout(r, 6000)); // deixa os áudios chegarem antes
+    await enviarBotoes(para, '💗 Esperamos que você ame a sua música!\n\n🎁 Quer conhecer as *promoções* pra quem já é cliente?',
+      [['promo:sim', '🎁 Quero ver!'], ['promo:nao', 'Agora não']]);
+  } catch (e) {}
 }
 

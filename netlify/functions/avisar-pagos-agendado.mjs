@@ -1,11 +1,10 @@
 import { getStore } from '@netlify/blobs';
 import { idsDoDia, diaBR } from './_indice.mjs';
-import { enviarTexto, enviarModeloTextos, conversaAberta, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos } from './_zap.mjs';
+import { enviarTexto, conversaAberta, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos } from './_zap.mjs';
 
 // A CADA MINUTO: quem PAGOU recebe no WhatsApp o link das músicas + os áudios completos.
-// - Se a pessoa conversou com o número nas últimas 24 h → manda tudo grátis (texto + áudios).
-// - Se não → manda o modelo aprovado (WHATSAPP_MODELO_PAGO, ex: musica_pronta) com o link.
-//   Quando ela responder, os áudios saem na hora (whatsapp-webhook → entregarAudiosPagos).
+// - Só pra quem conversou com o número nas últimas 24 h → manda grátis (texto + áudios).
+// - Quem não conversou NÃO recebe nada agora; se mandar mensagem em até 7 dias, recebe na hora.
 export const config = { schedule: '* * * * *' };
 
 const JANELA = 6 * 3600 * 1000; // só pedidos pagos nas últimas 6 h (não dispara pra pedidos antigos)
@@ -36,15 +35,9 @@ export default async () => {
         await entregarAudiosPagos(aberta, g, false);
         await registrar('pago_enviado', { para: aberta, pedido: id, nome: g.musicaParaNome || nome, via: 'grátis' });
       } else {
-        const modelo = (process.env.WHATSAPP_MODELO_PAGO || '').trim();
-        const ok = modelo ? await enviarModeloTextos(num, modelo, [nome || 'tudo bem', linkPedido(g)]) : false;
-        // quando a pessoa mandar qualquer mensagem (até 7 dias), recebe os áudios na hora
+        // não conversou com o número: NÃO manda nada (sem modelo pago).
+        // Se ela mandar mensagem em até 7 dias, recebe a música na hora (whatsapp-webhook).
         await loja.setJSON('pagoaud_' + chaveNum(num), { id, em: agora });
-        if (ok) {
-          await registrar('pago_enviado', { para: num, pedido: id, nome: g.musicaParaNome || nome, via: 'modelo ' + modelo });
-        } else {
-          await registrar('pago_sem_aviso', { para: num, pedido: id, nome: g.musicaParaNome || nome, motivo: modelo ? 'modelo recusado' : 'cliente não abriu conversa e o modelo ainda não está configurado' });
-        }
       }
     } catch (e) { console.error('avisar-pagos:', id, e && e.message); }
   }
