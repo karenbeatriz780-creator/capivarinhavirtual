@@ -16,6 +16,21 @@ function json(obj, status = 200) {
 // sanfona" no sertanejo entrega modão/raiz (Leonardo), não o sertanejo
 // universitário moderno (Zé Neto, Luan Santana) que o cliente espera.
 const GENERO_PT = {
+  sertanejosofrencia:'sertanejo sofrência, de coração partido e emocionante, com violão, sanfona e teclado',
+  sertanejoagro:'agronejo, sertanejo animado de festa, com sanfona, guitarra e bateria',
+  pagoderomantico:'pagode romântico, com cavaquinho, teclado e banjo, voz suave',
+  infantileducativa:'música infantil educativa, refrão repetitivo e fácil, alegre, ensina algo simples',
+  infantilninar:'canção de ninar, suave e calma, com caixinha de música e piano',
+  infantilpeq:'música infantil cantada por uma criança pequena, voz fofa e aguda, melodia simples',
+  infantilcrianca:'música infantil cantada por uma criança, alegre e animada',
+  romanticapop:'pop romântico brasileiro de rádio, com piano, violão e cordas',
+  romanticavv:'música romântica só de voz e violão, intimista e leve',
+  romanticasoul:'R&B/soul romântico, suave e envolvente, com piano elétrico e baixo',
+  piseiroromantico:'piseiro romântico, com teclado de sanfona e batida dançante, voz apaixonada',
+  piseiroparedao:'piseiro de paredão, grave forte, batida rápida e dançante',
+  arrochaatual:'arrocha atual, sofrência dançante com teclado e guitarra',
+  raproma:'rap romântico brasileiro, batida suave e refrão melódico',
+  forroromantico:'forró romântico, com sanfona, zabumba e triângulo, voz emocionada',
   romantica:'balada romântica pop, com piano, cordas orquestrais e violão suave de estúdio, produção pop moderna',
   sertanejo:'sertanejo universitário moderno, com violão, guitarra elétrica limpa, baixo, bateria e teclado, produção de estúdio atual e polida, estilo romântico de rádio e arena',
   pop:'pop moderno, com sintetizadores, baixo marcado e batida eletrônica de rádio',
@@ -145,6 +160,21 @@ const VOZ_PT = {
   dueto:'A música deve ser um dueto: uma voz masculina e uma voz feminina cantando junto ou se revezando.'
 };
 const GENEROS = {
+  sertanejosofrencia: 'sertanejo sofrencia, heartbreak sertanejo, emotional powerful vocals, acoustic guitar, accordion, keyboard, slow ballad',
+  sertanejoagro: 'agronejo, upbeat modern sertanejo, country pop, accordion, electric guitar, punchy drums, party',
+  pagoderomantico: 'romantic pagode, smooth soulful vocals, cavaquinho, keyboard, banjo, soft percussion, love ballad',
+  infantileducativa: 'educational children\'s song, catchy repetitive chorus, cheerful, ukulele, xylophone, hand claps, simple lyrics',
+  infantilninar: 'lullaby, gentle soft vocals, music box, soft piano, slow, soothing',
+  infantilpeq: 'children\'s song sung by a little kid, cute high-pitched toddler voice, child vocals, playful xylophone, simple melody',
+  infantilcrianca: 'children\'s song sung by a child, young kid singer, child vocals, upbeat pop for kids, bright arrangement',
+  romanticapop: 'romantic pop ballad, brazilian pop, emotional vocals, piano, acoustic guitar, strings, radio hit',
+  romanticavv: 'acoustic love song, voice and acoustic guitar only, intimate, soft vocals, indie folk pop',
+  romanticasoul: 'romantic r&b soul, smooth groove, electric piano, warm bass, soft drums, silky vocals',
+  piseiroromantico: 'piseiro romantico, forro pisadinha, electronic accordion, keyboard, heartfelt vocals, danceable',
+  piseiroparedao: 'piseiro paredao, heavy sub bass, electronic accordion, fast programmed beat, party',
+  arrochaatual: 'modern arrocha, sofrencia, keyboard, electric guitar, programmed beat, emotional vocals',
+  raproma: 'romantic brazilian rap, chill beat, melodic hook, piano, love rap',
+  forroromantico: 'forro romantico, accordion, zabumba, triangle, emotional vocals, slow dance',
   romantica:  'romantic ballad, acoustic guitar, soft piano, strings, tender vocals',
   sertanejo:  'sertanejo universitario, modern sertanejo, acoustic guitar, clean electric guitar, bass, drums, keyboard, polished contemporary production, romantic radio arena anthem',
   pop:        'pop, synth, punchy drums, catchy hook, radio production',
@@ -314,7 +344,7 @@ export default async (req) => {
     const gen = (estilo === 'outro' && estiloOutro) ? estiloOutro : (GENEROS[estilo] || GENEROS.romantica);
     const tagsPartes = [gen, gen.split(',')[0], 'portuguese vocals'];
     if (CLIMAS[clima]) tagsPartes.push(CLIMAS[clima]);
-    if (VOZES[voz]) tagsPartes.push(VOZES[voz]);
+    if (VOZES[voz] && !/^infantil(peq|crianca)$/.test(estilo)) tagsPartes.push(VOZES[voz]); // voz de criança: não força voz adulta
     tagsPartes.push(gen.split(',')[0]); // terceiro reforço do gênero
     const tagsEstilo = tagsPartes.join(', ');
 

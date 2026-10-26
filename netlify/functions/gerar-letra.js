@@ -10,6 +10,21 @@ function json(obj, status = 200) {
 // pro modelo de texto entender o estilo. Quem decide o SOM é a Suno, não
 // esta função: esta função só escreve a letra que a pessoa vai aprovar.
 const GENERO_PT = {
+  sertanejosofrencia:'sertanejo sofrência (coração partido, saudade, emoção forte)',
+  sertanejoagro:'agronejo (sertanejo animado de festa, roça, chapéu, alegria)',
+  pagoderomantico:'pagode romântico (declaração de amor suave)',
+  infantileducativa:'música infantil educativa (refrão repetitivo, ensina algo simples, linguagem bem fácil)',
+  infantilninar:'canção de ninar (calma, carinhosa, frases curtas e suaves)',
+  infantilpeq:'música infantil para criança pequena cantar (frases bem curtas e simples, palavras fáceis, repetição)',
+  infantilcrianca:'música infantil cantada por criança (alegre, linguagem simples)',
+  romanticapop:'pop romântico de rádio',
+  romanticavv:'romântica de voz e violão (intimista, delicada)',
+  romanticasoul:'R&B/soul romântico (suave e envolvente)',
+  piseiroromantico:'piseiro romântico (apaixonado e dançante)',
+  piseiroparedao:'piseiro de paredão (animado, de festa)',
+  arrochaatual:'arrocha atual (sofrência dançante)',
+  raproma:'rap romântico (rimas de declaração, refrão melódico)',
+  forroromantico:'forró romântico (apaixonado, pra dançar agarradinho)',
   romantica:'balada romântica pop', sertanejo:'sertanejo universitário moderno',
   pop:'pop moderno', rock:'rock', mpb:'MPB', bossa:'bossa nova', gospel:'louvor de adoração ao vivo, gospel brasileiro atual (intimidade com Deus, fé, entrega e gratidão, pode citar versículos e linguagem bíblica, frases que se alongam no fim, refrão de adoração fácil de cantar junto)',
   gospelvv:'gospel voz e violão (adoração intimista e suave, intimidade com Deus, fé e gratidão, linguagem bíblica)',
