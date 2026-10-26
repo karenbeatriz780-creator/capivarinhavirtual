@@ -4425,39 +4425,69 @@ function pedirWhatsapp(aoConfirmar){
 
 /* estilos musicais — os que mais tocam primeiro */
 var GENEROS_LISTA=[
-  ['sertanejo','🤠','Sertanejo moderno','o que toca hoje'], ['sertanejoraiz','🪕','Sertanejo raiz','viola e modão'],
-  ['pagode','🪘','Pagode','descontraído e alegre'], ['infantil','🧸','Infantil','para criança'],
+  /* '@grupo' = cartão que abre os estilos do grupo (os itens com o grupo na 6ª posição) */
+  ['@sertanejo','🤠','Sertanejo','toque e escolha o estilo'], ['@pagode','🪘','Pagode','toque e escolha o estilo'],
+  ['@infantil','🧸','Infantil','toque e escolha o estilo',1], ['@gospel','🙏','Gospel / Louvor','toque e escolha o estilo'],
+  ['@romantica','💗','Romântica','toque e escolha o estilo'], ['@piseiro','🎹','Piseiro','toque e escolha o estilo'],
+  ['@forro','🪗','Forró','toque e escolha o estilo'], ['@arrocha','🌙','Arrocha / Sofrência','toque e escolha o estilo'],
+  ['@melody','💜','Melody / Brega','toque e escolha o estilo'], ['@rap','🎧','Rap / Trap','toque e escolha o estilo'],
   ['natal','🎄','Natalina','música de Natal'], ['outro','✍️','Outro estilo','eu escrevo qual'],
-  ['romantica','💗','Romântica','violão e piano'], ['gospelmenu','🙏','Gospel / Louvor','toque e escolha o estilo'],
   ['rock','🎸','Rock','guitarras marcantes'], ['eletronica','🎛️','Eletrônica','synths modernos'],
-  ['samba','🥁','Samba','ginga brasileira'], ['piseiro','🎹','Piseiro','nordestino dançante'],
-  ['arrocha','🌙','Arrocha','sofrência dançante'], ['melody','💜','Melody','melody do Pará'],
-  ['mpb','☕','MPB','clássico e intimista'], ['anos90','💿','Anos 90','hits dos anos 90'],
+  ['samba','🥁','Samba','ginga brasileira'], ['mpb','☕','MPB','clássico e intimista'],
   ['funk','🔊','Funk atual','batida de hoje'], ['funkantigo','📻','Funk antigo','anos 2000, tamborzão'],
-  ['rapnacional','🎧','Rap nacional','rima e batida'], ['jingle','📣','Comercial / Chiclete','jingle que gruda'],
-  ['bregafunk','💃','Brega funk','batidão de Recife'], ['pagodao','🔥','Pagodão baiano','swingueira'],
-  ['forro','🪗','Forró','ritmo nordestino'], ['forroeletronico','🎛️','Forró eletrônico','vaquejada e paredão'],
-  ['bregamarcante','🎸','Brega marcante','brega do Pará'], ['batidao','🔉','Batidão','grave de paredão'],
-  ['tecnobrega','💿','Tecnobrega','aparelhagem do Pará'], ['carimbo','🥁','Carimbó','raiz do Pará'],
-  ['seresta','🌹','Seresta / Sofrência','pra sofrer junto'], ['bregaromantico','💔','Brega romântico','anos 80 e 90'],
-  ['pagode90','📼','Pagode anos 90','romântico das antigas'], ['sambaraiz','🪇','Samba de raiz','roda de samba'],
+  ['anos90','💿','Anos 90','hits dos anos 90'], ['jingle','📣','Comercial / Chiclete','jingle que gruda'],
+  ['bregafunk','💃','Brega funk','batidão de Recife'], ['carimbo','🥁','Carimbó','raiz do Pará'],
+  ['bregaromantico','💔','Brega romântico','anos 80 e 90'], ['sambaraiz','🪇','Samba de raiz','roda de samba'],
   ['sambaenredo','🎭','Samba-enredo','escola de samba'], ['choro','🪈','Choro','instrumental brasileiro'],
-  ['xote','🌾','Xote / Baião','forró das antigas'], ['vanera','🐎','Vanerão gaúcho','música gaúcha'],
-  ['frevo','☂️','Frevo','carnaval de Recife'], ['lambada','🌺','Lambada','dançante e quente'],
-  ['boibumba','🐂','Boi-bumbá','toada de Parintins'], ['axe','🌞','Axé','festa e verão'],
-  ['funkcria','🧢','Funk de cria','baile de favela'], ['eletrofunk','⚡','Eletrofunk','funk + eletrônica'],
-  ['jovemguarda','🎙️','Jovem Guarda','anos 60 do Brasil'], ['bossa','🌊','Bossa Nova','suave e elegante'],
-  ['anos80','📼','Anos 80','synth pop internacional'], ['anos70','🪩','Anos 70','disco e soul internacional'],
-  ['anos60','🕺','Anos 60','rock e twist internacional'], ['pop','✨','Pop','moderno e dançante'],
-  ['trap','🎤','Trap / Rap','batidas urbanas'], ['reggae','🌴','Reggae','vibe relaxada'],
+  ['vanera','🐎','Vanerão gaúcho','música gaúcha'], ['frevo','☂️','Frevo','carnaval de Recife'],
+  ['lambada','🌺','Lambada','dançante e quente'], ['boibumba','🐂','Boi-bumbá','toada de Parintins'],
+  ['axe','🌞','Axé','festa e verão'], ['funkcria','🧢','Funk de cria','baile de favela'],
+  ['eletrofunk','⚡','Eletrofunk','funk + eletrônica'], ['jovemguarda','🎙️','Jovem Guarda','anos 60 do Brasil'],
+  ['bossa','🌊','Bossa Nova','suave e elegante'], ['anos80','📼','Anos 80','synth pop internacional'],
+  ['anos70','🪩','Anos 70','disco e soul internacional'], ['anos60','🕺','Anos 60','rock e twist internacional'],
+  ['pop','✨','Pop','moderno e dançante'], ['reggae','🌴','Reggae','vibe relaxada'],
   ['lofi','🎧','Lo-Fi','suave e tranquila'], ['jazz','🎷','Jazz','sofisticado e swing'],
   ['blues','🎺','Blues','melancólico e cru'], ['zoeira','🤪','Modo trollagem','zoeira e deboche'],
-  /* subestilos do Gospel: só aparecem quando a pessoa toca em "Gospel / Louvor" */
-  ['gospel','🙌','Adoração ao vivo','violão, bateria e guitarra · vibe Isadora Pompeu, Fernandinho',0,'g'],
-  ['gospelvv','🎸','Voz e violão','gospel intimista e suave',0,'g'],
-  ['gospelcelebra','🎉','Louvor animado','celebração, pra cantar junto',0,'g'],
-  ['gospeltrad','⛪','Assembleia / Hino','tradicional, com teclado e coral',0,'g'],
-  ['catolica','✝️','Católica','música de igreja católica',0,'g']
+  /* ---- estilos dentro de cada grupo ---- */
+  ['sertanejo','🤠','Sertanejo moderno','de rádio e arena · vibe Zé Neto & Cristiano, Hugo & Guilherme',0,'sertanejo'],
+  ['sertanejosofrencia','💔','Sofrência','pra chorar junto · vibe Henrique & Juliano, Marília Mendonça',0,'sertanejo'],
+  ['sertanejoagro','🐂','Agronejo animado','festa e chapéu · vibe Ana Castela, Luan Pereira',0,'sertanejo'],
+  ['sertanejoraiz','🪕','Sertanejo raiz','viola e modão · vibe Tião Carreiro, Chitãozinho & Xororó',0,'sertanejo'],
+  ['pagode','🪘','Pagode atual','descontraído · vibe Menos é Mais, Ferrugem',0,'pagode'],
+  ['pagoderomantico','🌹','Pagode romântico','pra declarar · vibe Thiaguinho, Dilsinho',0,'pagode'],
+  ['pagode90','📼','Pagode anos 90','das antigas · vibe Raça Negra, Só Pra Contrariar',0,'pagode'],
+  ['pagodao','🔥','Pagodão baiano','swingueira · vibe Harmonia do Samba, Parangolé',0,'pagode'],
+  ['infantil','🎈','Infantil animada','voz adulta, alegre pra dançar · vibe Galinha Pintadinha',0,'infantil'],
+  ['infantileducativa','📚','Educativa','cores, números, escovar os dentes · vibe Mundo Bita',0,'infantil'],
+  ['infantilpeq','🍼','Voz de criança pequena','como se cantada por criança de 3 a 5 anos',0,'infantil'],
+  ['infantilcrianca','🧒','Voz de criança','como se cantada por criança de 6 a 10 anos',0,'infantil'],
+  ['infantilninar','🌙','Canção de ninar','suave pra dormir',0,'infantil'],
+  ['gospel','🙌','Adoração ao vivo','violão, bateria e guitarra · vibe Isadora Pompeu, Fernandinho',0,'gospel'],
+  ['gospelvv','🎸','Voz e violão','gospel intimista e suave',0,'gospel'],
+  ['gospelcelebra','🎉','Louvor animado','celebração, pra cantar junto',0,'gospel'],
+  ['gospeltrad','⛪','Assembleia / Hino','tradicional, com teclado e coral',0,'gospel'],
+  ['catolica','✝️','Católica','música de igreja católica',0,'gospel'],
+  ['romantica','🎹','Piano e cordas','emocionante, de casamento',0,'romantica'],
+  ['romanticapop','💗','Pop romântico','de rádio · vibe Luan Santana, Tiago Iorc',0,'romantica'],
+  ['romanticavv','🎸','Voz e violão','leve e intimista · vibe Anavitória, Vitor Kley',0,'romantica'],
+  ['romanticasoul','🌙','R&B / Soul','suave e envolvente · vibe Melim, Iza',0,'romantica'],
+  ['piseiro','🎹','Piseiro / Pisadinha','pra dançar · vibe Barões da Pisadinha',0,'piseiro'],
+  ['piseiroromantico','💘','Piseiro apaixonado','vibe João Gomes, Tarcísio do Acordeon',0,'piseiro'],
+  ['piseiroparedao','🔊','Piseiro de paredão','grave forte · vibe Zé Vaqueiro, Vitor Fernandes',0,'piseiro'],
+  ['forroromantico','💞','Forró romântico','vibe Tarcísio do Acordeon, João Gomes',0,'forro'],
+  ['forroeletronico','🎛️','Forró eletrônico','vaquejada · vibe Wesley Safadão, Xand Avião',0,'forro'],
+  ['forro','🪗','Forró pé de serra','sanfona, zabumba e triângulo · vibe Luiz Gonzaga',0,'forro'],
+  ['xote','🌾','Xote / Baião','das antigas · vibe Falamansa',0,'forro'],
+  ['arrocha','🌙','Arrocha','sofrência dançante · vibe Pablo',0,'arrocha'],
+  ['arrochaatual','🔥','Arrocha atual','vibe Nadson O Ferinha, Thiago Aquino',0,'arrocha'],
+  ['seresta','🌹','Seresta','pra sofrer junto · vibe Silvanno Salles',0,'arrocha'],
+  ['melody','💜','Melody atual','romântico do Pará · vibe Viviane Batidão',0,'melody'],
+  ['bregamarcante','🎸','Melody marcante / Brega','vibe Banda Calypso, Joelma',0,'melody'],
+  ['tecnobrega','💿','Tecnobrega','aparelhagem · vibe Gaby Amarantos',0,'melody'],
+  ['batidao','🔉','Batidão','grave de paredão',0,'melody'],
+  ['raproma','💗','Rap romântico','pra declarar · vibe Projota, Filipe Ret',0,'rap'],
+  ['rapnacional','🎧','Rap nacional','rima e batida · vibe Racionais, Emicida',0,'rap'],
+  ['trap','🎤','Trap','batida atual · vibe Matuê, Veigh',0,'rap']
 ];
 var LOUVOR_VERSICULOS=[
   ['Salmos 23','Meu versículo é Salmos 23: "O Senhor é o meu pastor, nada me faltará".'],
@@ -4482,7 +4512,9 @@ function htmlInspiraLouvor(){
     '<div class="il-sub">Versículos</div><div class="il-chips">'+LOUVOR_VERSICULOS.map(function(v){ return '<button type="button" class="il-chip" data-insp="'+esc(v[1])+'">'+esc(v[0])+'</button>'; }).join('')+'</div>'+
     '<div class="il-sub">Histórias da Bíblia</div><div class="il-chips">'+LOUVOR_HISTORIAS.map(function(v){ return '<button type="button" class="il-chip" data-insp="'+esc(v[1])+'">'+esc(v[0])+'</button>'; }).join('')+'</div></details>';
 }
-function ehGospel(k){ for(var i=0;i<GENEROS_LISTA.length;i++) if(GENEROS_LISTA[i][0]===k) return GENEROS_LISTA[i][5]==='g'; return false; }
+function grupoDe(k){ for(var i=0;i<GENEROS_LISTA.length;i++) if(GENEROS_LISTA[i][0]===k) return GENEROS_LISTA[i][5]||''; return ''; }
+function ehGospel(k){ return grupoDe(k)==='gospel'; }
+function ehLouvor(){ return W.musicaPara==='louvor' || ehGospel(W.musicaEstilo); }
 function nomeGeneroDe(k,outro){ return k==='outro' && outro ? outro : nomeGenero(k); }
 function nomeGenero(k){ for(var i=0;i<GENEROS_LISTA.length;i++) if(GENEROS_LISTA[i][0]===k && k!=='#') return GENEROS_LISTA[i][2]; return k||''; }
 /* cartão junto (namorada/namorado...) → ao tocar, pergunta pra quem é e quem está dando */
@@ -5113,9 +5145,6 @@ function htmlPasso(k){
       '<div class="wz-t">Quem vai receber</div>'+
       '<button type="button" class="link-amostra dentro" id="passoAmostra">🎧 Ouvir exemplos antes de começar</button>'+
       '<div class="cards2" id="musicaParaChips">'+
-      '<button type="button" class="card-louvor'+(W.musicaPara==='louvor'?' on':'')+'" data-para="louvor">'+
-        '<span class="cl-tx"><b>🙏 Louvor a Deus</b><small>Música gospel de adoração, com seu versículo ou testemunho</small></span>'+
-        '<span class="cl-go">'+(W.musicaPara==='louvor'?'✓':'›')+'</span></button>'+
       relacoes.map(function(r){
         return '<button type="button" class="card2'+(W.musicaPara===r[0]?' on':'')+'" data-para="'+r[0]+'">'+
           '<span class="c2-ic">'+r[1]+'</span><span class="c2-lb">'+r[2]+'</span></button>';
@@ -5179,7 +5208,7 @@ function htmlPasso(k){
     var ROMANTICOS=['namorada','namorado','esposa','marido'];
     var ehRomantico=ROMANTICOS.indexOf(W.musicaPara)!==-1;
     var sugestoes=['Como nos conhecemos','Qualidades e virtudes', ehRomantico?'Declaração de amor':'Um momento marcante'];
-    var LOUVOR=W.musicaPara==='louvor';
+    var LOUVOR=ehLouvor();
     if(LOUVOR){
       exemplo='Meu versículo é Isaías 41:10: "Não temas, porque eu sou contigo". Em 2023 eu perdi o emprego e achei que não ia aguentar, mas Deus abriu uma porta na minha cidade, Parauapebas. Hoje eu quero agradecer por cada livramento e dizer que sem Ele eu não sou nada.';
       sugestoes=['Meu versículo','Meu testemunho','Gratidão a Deus','O que Deus fez por mim'];
@@ -5218,26 +5247,27 @@ function htmlPasso(k){
 
   case 'musicaGenero': {
     var generos=GENEROS_LISTA;
-    var vis=generos.filter(function(g){ return g[5]!=='g'; });
-    var gospelAberto = W._gospelAberto || ehGospel(W.musicaEstilo);
-    var subGospel=generos.filter(function(g){ return g[5]==='g'; });
+    var vis=generos.filter(function(g){ return !g[5]; });
+    var aberto = W._grupoAberto!=null ? W._grupoAberto : grupoDe(W.musicaEstilo);
+    var subGospel=generos.filter(function(g){ return g[5]==='gospel'; });
+    function cardSub(s2,i){
+      return '<button type="button" class="card2'+(i===0?' destaque':'')+(W.musicaEstilo===s2[0]?' on':'')+'" data-genero="'+s2[0]+'">'+(i===0?'<span class="c2-selo">⭐ Mais pedido</span>':'')+
+        '<span class="c2-ic">'+s2[1]+'</span><span class="c2-lb">'+s2[2]+'</span><small class="c2-sub">'+s2[3]+'</small></button>';
+    }
     if(W.musicaPara==='louvor') return guia("Qual estilo de louvor combina com você?")+
-      '<div class="louvor-topo"><span>✝️ Louvor a Deus</span></div>'+
       '<div class="wz-t">Estilo do louvor</div>'+
-      '<div class="cards2" id="musicaGeneroChips">'+subGospel.map(function(s,i){
-        return '<button type="button" class="card2'+(i===0?' destaque':'')+(W.musicaEstilo===s[0]?' on':'')+'" data-genero="'+s[0]+'">'+(i===0?'<span class="c2-selo">⭐ Mais pedido</span>':'')+
-          '<span class="c2-ic">'+s[1]+'</span><span class="c2-lb">'+s[2]+'</span><small class="c2-sub">'+s[3]+'</small></button>';
-      }).join('')+'</div>';
+      '<div class="cards2" id="musicaGeneroChips">'+subGospel.map(cardSub).join('')+'</div>';
     return guia("Qual estilo combina mais com vocês?")+
       '<div class="wz-t">Gênero musical</div>'+
       '<div class="cards2" id="musicaGeneroChips">'+vis.map(function(g){
-        if(g[0]==='gospelmenu') return '<button type="button" class="card2'+(gospelAberto?' on':'')+'" data-genero="gospelmenu">'+
-          '<span class="c2-ic">'+g[1]+'</span><span class="c2-lb">'+g[2]+'</span><small class="c2-sub">'+(gospelAberto?'escolha abaixo 👇':g[3])+'</small></button>'+
-          (gospelAberto ? '<div class="gen-sub" id="genSubGospel"><div class="gen-sub-t">Qual estilo de louvor?</div><div class="cards2">'+subGospel.map(function(s,i){
-            return '<button type="button" class="card2'+(i===0?' destaque':'')+(W.musicaEstilo===s[0]?' on':'')+'" data-genero="'+s[0]+'">'+(i===0?'<span class="c2-selo">⭐ Mais pedido</span>':'')+
-              '<span class="c2-ic">'+s[1]+'</span><span class="c2-lb">'+s[2]+'</span><small class="c2-sub">'+s[3]+'</small></button>';
-          }).join('')+'</div></div>' : '');
-        return '<button type="button" class="card2'+(g[4]?' destaque':'')+(W.musicaEstilo===g[0]?' on':'')+'" data-genero="'+g[0]+'">'+(g[4]?'<span class="c2-selo">👶 Pra criança</span>':'')+
+        if(g[0].charAt(0)==='@'){
+          var gid=g[0].slice(1), ab=(aberto===gid), escolhido=(grupoDe(W.musicaEstilo)===gid);
+          var subs=generos.filter(function(x){ return x[5]===gid; });
+          return '<button type="button" class="card2'+(g[4]&&!ab?' destaque':'')+((ab||escolhido)?' on':'')+'" data-grupo="'+gid+'">'+(g[4]&&!ab?'<span class="c2-selo">👶 Pra criança</span>':'')+
+            '<span class="c2-ic">'+g[1]+'</span><span class="c2-lb">'+g[2]+'</span><small class="c2-sub">'+(ab?'escolha abaixo 👇':(escolhido?esc(nomeGenero(W.musicaEstilo)):g[3]))+'</small></button>'+
+            (ab ? '<div class="gen-sub" id="genSub_'+gid+'"><div class="gen-sub-t">Qual estilo de '+esc(g[2].split(' /')[0].toLowerCase())+'?</div><div class="cards2">'+subs.map(cardSub).join('')+'</div></div>' : '');
+        }
+        return '<button type="button" class="card2'+(W.musicaEstilo===g[0]?' on':'')+'" data-genero="'+g[0]+'">'+
           '<span class="c2-ic">'+g[1]+'</span><span class="c2-lb">'+g[2]+'</span><small class="c2-sub">'+g[3]+'</small></button>'+
           (g[0]==='outro' && W.musicaEstilo==='outro'
             ? '<div class="gen-outro"><label for="musicaEstiloOutro">Qual estilo você quer?</label>'+
@@ -5255,8 +5285,8 @@ function htmlPasso(k){
       ['inspiradora','✨','Inspiradora','superação e motivação'],['melancolica','🕊️','Melancólica','saudade e homenagem'],
       ['triste','😢','Triste','pra chorar junto'],['zoeira','🤪','Modo trollagem','zoeira e deboche']
     ];
-    if(W.musicaPara==='louvor') climas=climas.filter(function(c){ return c[0]!=='zoeira' && c[0]!=='divertida' && c[0]!=='romantica'; });
-    return guia(W.musicaPara==='louvor'?"E o clima do louvor? Como você quer se sentir na presença de Deus?":"E o clima? Como você quer que ela faça vocês se sentirem?")+
+    if(ehLouvor()) climas=climas.filter(function(c){ return c[0]!=='zoeira' && c[0]!=='divertida' && c[0]!=='romantica'; });
+    return guia(ehLouvor()?"E o clima do louvor? Como você quer se sentir na presença de Deus?":"E o clima? Como você quer que ela faça vocês se sentirem?")+
       '<div class="wz-t">Clima da música</div>'+
       '<div class="cards2" id="musicaClimaChips">'+climas.map(function(c){
         return '<button type="button" class="card2'+(W.musicaClima===c[0]?' on':'')+'" data-clima="'+c[0]+'">'+
@@ -5737,7 +5767,7 @@ function ligarPasso(k){
       var temData=/\b(19|20)\d{2}\b|\bjaneiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro\b/i.test(t);
       var temLugar=/\bem [A-ZÀ-Ú]/.test(t) || /praia|cidade|escola|faculdade|trabalho|festa|igreja|viagem|bar|parque/i.test(t);
       var bom=n>=160;
-      if(W.musicaPara==='louvor'){
+      if(ehLouvor()){
         var itensL=[
           ['Versículo ou passagem', /\b\d{1,3}\s*[:.]\s*\d{1,3}\b|salmo|salmos|prov[ée]rbios|isa[íi]as|jo[ãa]o|mateus|romanos|filipenses|josu[ée]|jeremias|g[êe]nesis|b[íi]blia|vers[íi]culo/i.test(t)],
           ['Seu testemunho', /deus (me|nos)|livramento|cura|curou|milagre|vit[óo]ria|passei|perdi|consegui|aben[çc]o/i.test(t)],
@@ -5825,16 +5855,15 @@ function ligarPasso(k){
     }
   }
   if(k==='musicaGenero'){
+    on('[data-grupo]','onclick',function(e){
+      var gid=e.dataset.grupo, atual=(W._grupoAberto!=null?W._grupoAberto:grupoDe(W.musicaEstilo));
+      W._grupoAberto = (atual===gid) ? '' : gid;
+      redesenharSemPular();
+      if(W._grupoAberto) setTimeout(function(){ var s2=el('genSub_'+gid); if(s2) s2.scrollIntoView({behavior:'smooth',block:'center'}); },80);
+    });
     on('[data-genero]','onclick',function(e){
-      if(e.dataset.genero==='gospelmenu'){
-        W._gospelAberto=!(W._gospelAberto || ehGospel(W.musicaEstilo));
-        if(!W._gospelAberto && ehGospel(W.musicaEstilo)) W.musicaEstilo='';
-        redesenharSemPular();
-        if(W._gospelAberto) setTimeout(function(){ var s=el('genSubGospel'); if(s) s.scrollIntoView({behavior:'smooth',block:'center'}); },80);
-        return;
-      }
       W.musicaEstilo=e.dataset.genero;
-      W._gospelAberto=ehGospel(W.musicaEstilo);
+      W._grupoAberto=null;
       redesenharSemPular();
       if(W.musicaEstilo==='outro'){ setTimeout(function(){ var o=el('musicaEstiloOutro'); if(o){ o.focus(); o.scrollIntoView({behavior:'smooth',block:'center'}); } },80); return; }
       setTimeout(function(){ proximoPasso(); },300);
