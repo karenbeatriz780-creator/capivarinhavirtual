@@ -5405,6 +5405,7 @@ function htmlPasso(k){
     else if(W.ofertaM1) linhas='<div class="sum-r"><span>🎁 Oferta de cliente</span><span>4 músicas</span></div>'+
       '<div class="sum-r"><span>Música 1 ('+esc(W.ofertaM1.estilo||'')+')</span><span>2 versões</span></div>'+
       '<div class="sum-r"><span>Música 2 ('+esc(W.musicaEstilo||'')+')</span><span>2 versões</span></div>';
+    if(W.comboDaMusica && W.produto!=='musica' && !W.ofertaM1 && !W.pacote6) linhas+='<div class="sum-r"><span>🎁 Mais 2 músicas (outra letra e estilo)</span><span>liberadas após o Pix</span></div>';
     linhas+='<div class="sum-r tot"><span>Total</span><span>R$ '+fmtPreco(precoTotal(W))+'</span></div>';
     if(quatroAtivo(W)) linhas+='<div class="of-claro">Você leva <b>4 músicas</b>: estas 2 + mais 2 que você cria logo depois de pagar. Fica tudo salvo no seu WhatsApp, em <b>Meus presentes</b>.</div>';
     if(W.ofertaM1) linhas+='<div class="of-claro">Você vai receber <b>'+(W.pacote6&&W.ofertaM2?6:4)+' músicas completas</b> pra ouvir, baixar e enviar.</div>';
@@ -6113,12 +6114,12 @@ function combosDisponiveis(){
     });
   }
   // quem está só na Música: o presente entra com desconto e VITALÍCIO
-  if(W.produto==='musica' && false){ /* foco só em música: combo com carta/retrospectiva desligado */
+  if(W.produto==='musica'){ /* depois de criar a música: oferece a carta ou a retrospectiva (as 4 músicas continuam inclusas) */
     var prMus=PACOTES.musica.preco;
     combos.push({
       produto:'carta', comboMusica:true,
-      titulo:'Música + Carta Virtual',
-      desc:'Sua música mais uma carta com envelope, foto colada e sua assinatura. O link fica no ar pra sempre.',
+      titulo:'4 Músicas + Carta Virtual',
+      desc:'Suas 4 músicas + uma carta com envelope, foto colada e sua assinatura. O link fica no ar pra sempre.',
       preco:prMus+COMBO_DA_MUSICA.carta,
       extra:COMBO_DA_MUSICA.carta,
       de:PACOTES.carta.preco,
@@ -6126,8 +6127,8 @@ function combosDisponiveis(){
     });
     combos.push({
       produto:'completo', comboMusica:true,
-      titulo:'Música + Retrospectiva Completa',
-      desc:'Sua música tocando numa página só de vocês: fotos, linha do tempo, contador ao vivo, jogos e a carta. Pra sempre no ar.',
+      titulo:'4 Músicas + Retrospectiva Completa',
+      desc:'Suas 4 músicas tocando numa página só de vocês: fotos, linha do tempo, contador ao vivo, jogos e a carta. Pra sempre no ar.',
       preco:prMus+COMBO_DA_MUSICA.completo,
       extra:COMBO_DA_MUSICA.completo,
       de:PACOTES.completo.preco,
@@ -6155,7 +6156,7 @@ function abrirUpsell(aoFechar){
             ? '<em>+ R$ '+fmtPreco(c.extra)+' <s>R$ '+fmtPreco(c.de)+'</s></em>'
             : (c.extra>0?'<em>só R$ '+fmtPreco(c.extra)+' a mais</em>':''))+'</div></button>';
     }).join('')+
-    '<button type="button" class="upsell-op atual"><div class="uo-tx"><b>Seguir com '+esc(PACOTES[W.produto].nome)+'</b>'+
+    '<button type="button" class="upsell-op atual"><div class="uo-tx"><b>Seguir com '+esc(quatroAtivo(W)?'as 4 músicas':PACOTES[W.produto].nome)+'</b>'+
       '<span>O que você montou</span></div>'+
       '<div class="uo-pr">R$ '+fmtPreco(atual)+'</div></button>'+
     '<button type="button" class="upsell-nao" id="upsellNao">Agora não, obrigado</button>'+
@@ -6259,6 +6260,7 @@ function finalizarDeVerdade(){
    (#/pagar/<id>) em vez de voltar pro começo. */
 function infoPixPedido(){
   if(W && W.produto==='musica' && (W.quatro || quatroAtivo(W))) return {titulo:'4 Músicas Personalizadas', itens:['2 músicas prontas pra ouvir agora','+ 2 músicas com outra letra e outro estilo','MP3 pra baixar e mandar no WhatsApp']};
+  if(W && W.comboDaMusica && W.produto!=='musica' && PACOTES[W.produto]) return {titulo:'4 Músicas + '+PACOTES[W.produto].nome, itens:['Suas 4 músicas personalizadas',PACOTES[W.produto].nome+' pra sempre no ar','Liberado assim que o Pix cair']};
   if(W && W.pacote6) return {titulo:'6 Músicas Personalizadas', itens:['3 letras diferentes, 2 versões de cada','MP3 pra baixar e mandar no WhatsApp']};
   if(W && W.ofertaM1) return {titulo:'4 Músicas Personalizadas', itens:['2 letras diferentes, 2 versões de cada','MP3 pra baixar e mandar no WhatsApp']};
   var nome=(W && PACOTES[W.produto] && PACOTES[W.produto].nome)||'Música Personalizada';
@@ -6546,7 +6548,7 @@ function carregarPainel(chave, cb){
     if(cb) cb(false);
     if(fRes.ok) _pnlFunilOk=true;
     _pnlCache.custos=pRes.d.custos||{}; _pnlCache.resumo=pRes.d.resumo||null; _pnlParcial=!!pRes.d.parcial;
-    _pnlCache.pixSemPedido=pRes.d.pixSemPedido||null; _pnlCache.conferenciaAuto=pRes.d.conferenciaAuto||null;
+    _pnlCache.pixSemPedido=pRes.d.pixSemPedido||null; _pnlCache.conferenciaAuto=pRes.d.conferenciaAuto||null; _pnlCache.audiosBackup=pRes.d.audiosBackup||null;
     desenharPainel(pRes.d.pedidos||[], (fRes.ok && fRes.d.visitas) || _pnlCache.visitas || [], (mRes.ok && mRes.d.musicas) || []);
     pnlConferirBanco(hdr);
   }).catch(function(){ if(cb) cb(true); });
@@ -6608,6 +6610,18 @@ var RELACAO_NOME={
 };
 /* período do painel: '8' (padrão), '30p' / '90p' (só pagos), 'tudo', ou busca por número */
 var _pnlModo='8', _pnlTel='';
+function pnlAudiosHtml(){
+  var bk=_pnlCache.audiosBackup; if(!bk || !bk.em) return '';
+  var lista=bk.semAudio||[], vistos={}, uniq=[];
+  lista.forEach(function(x){ if(!vistos[x.id]){ vistos[x.id]=1; uniq.push(x); } });
+  var h='<div class="pnl-sec"><h2>🎵 Cópia das músicas dos clientes</h2>'+
+    '<div class="sub">Guardamos uma cópia de cada música paga pra o link do cliente funcionar pra sempre (o serviço de música apaga o arquivo em ~7 dias). Roda sozinho a cada 15 min. Última: '+
+    new Date(bk.em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(bk.novos?' · '+bk.novos+' nova(s) guardada(s)':'')+(bk.completo?'':' · ainda conferindo o histórico')+'.</div>';
+  if(!uniq.length) return h+'<div class="sub" style="color:#13914F;font-weight:800">✓ Todas as músicas pagas conferidas estão guardadas.</div></div>';
+  return h+'<div class="sub" style="color:#B3261E;font-weight:800">⚠️ '+uniq.length+' pedido(s) pago(s) sem a música: o serviço já tinha apagado antes da cópia. Gere a música de novo (mesma letra) e use "Colocar no pedido do cliente" na aba Músicas, ou fale com o cliente.</div>'+
+    uniq.slice(0,60).map(function(x){ var z=String(x.whatsapp||'').replace(/\D/g,'');
+      return '<div class="pnl-dia"><span class="dt">'+(x.pagoEm?new Date(x.pagoEm).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—')+'</span><span class="ct">'+esc(x.nome||'(sem nome)')+(z?' · <a href="https://wa.me/55'+esc(z)+'" target="_blank" rel="noopener">📱 '+esc(x.whatsapp)+'</a>':'')+'</span></div>'; }).join('')+'</div>';
+}
 function pnlPixSemPedidoHtml(){
   var ca=_pnlCache.conferenciaAuto, ps=_pnlCache.pixSemPedido, itens=(ps&&ps.itens)||[];
   var nota=ca&&ca.em ? '<div class="sub">🤖 Conferência automática do banco: última às '+new Date(ca.em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(ca.liberados?' · liberou '+ca.liberados+' pedido(s)':'')+'. Roda sozinha a cada 5 minutos.</div>' : '';
@@ -7130,6 +7144,7 @@ function desenharPainel(pedidos, visitas, musicas){
         '<div class="meta">'+(p.pago?'💸 Pix às <b>'+esc(quando)+'</b>':'Criado '+esc(quando))+' · '+esc(temMusicaCombo(p)?('Música + '+(nomeProd[p.produto]||p.produto)):(p.quatro?'4 músicas':(nomeProd[p.produto]||p.produto||'')))+'</div>'+
         (p.whatsapp?'<div class="meta">📱 '+esc(p.whatsapp)+'</div>':'')+
         (extras.length?'<div class="meta">🎁 Já criou as 2 músicas extras</div>':'')+
+        (((_pnlCache.audiosBackup&&_pnlCache.audiosBackup.semAudio)||[]).some(function(x){ return x.id===p.id; })?'<div class="meta" style="color:#B3261E;font-weight:800">⚠️ Música apagada pelo serviço: gere de novo</div>':'')+
       '</div><div class="vl">'+(p.cortesia?'cortesia':'R$ '+fmtPreco(p.valor||0))+'</div></div>'+
       '<div class="pc-acts">'+
         (zap?'<a class="pc-bt zap" href="https://wa.me/55'+esc(zap)+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar</a>':'')+
@@ -7320,6 +7335,7 @@ function desenharPainel(pedidos, visitas, musicas){
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+
         '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
         pnlPixSemPedidoHtml()+
+        pnlAudiosHtml()+
         '<div class="pnl-sec"><h2>Pedidos pagos</h2><div class="sub">Mais recentes primeiro.</div>'+
         '<div class="pnl-lista">'+pagosHtml+'</div></div>'
       : '')+
