@@ -124,8 +124,10 @@ export default async (req) => {
       }
     } catch (e) {}
     // cópia de segurança das músicas pagas: roda a cada 3 h
+    let audiosBackup = null;
     try {
       const bk = await getStore('indices').get('audios-backup', { type: 'json' }).catch(() => null);
+      audiosBackup = bk;
       if (!bk || Date.now() - (bk.em || 0) > 3 * 3600 * 1000) {
         const base = new URL(req.url).origin;
         await Promise.race([fetch(base + '/.netlify/functions/guardar-audios-background', { method: 'POST' }).catch(() => null), new Promise((r) => setTimeout(r, 1200))]);
@@ -191,7 +193,7 @@ export default async (req) => {
     try { resumo = await getStore('indices').get('receita', { type: 'json' }); } catch (e) {}
     try { pixSemPedido = await getStore('indices').get('pix-sem-pedido', { type: 'json' }); } catch (e) {}
     try { conferenciaAuto = await getStore('indices').get('pix-conferencia', { type: 'json' }); } catch (e) {}
-    return json({ ok: true, pedidos, liberadosAgora, faltamConferir, parcial, custos, resumo, pixSemPedido, conferenciaAuto, indiceEm: idxDias && idxDias.montadoEm || 0 });
+    return json({ ok: true, pedidos, liberadosAgora, faltamConferir, parcial, custos, resumo, pixSemPedido, conferenciaAuto, audiosBackup, indiceEm: idxDias && idxDias.montadoEm || 0 });
   } catch (e) {
     console.error('admin-pedidos (inesperado):', e && e.stack || e);
     return json({ erro: 'Erro inesperado no servidor: ' + (e && e.message ? e.message : String(e)) }, 500);

@@ -66,6 +66,18 @@ async function urlsNovas(taskId, n) {
   return out;
 }
 
+// Links da Suno a partir de qualquer id de faixa que apareça no link salvo
+// (ex.: o link de "streaming" traz o id da faixa: audiopipe.suno.ai/?item_id=<id>).
+// O arquivo original da Suno continua no ar mesmo depois que o serviço apaga o dele.
+function linksSunoDe(texto, taskId) {
+  const out = [];
+  const m = String(texto || '').match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/ig) || [];
+  m.map((x) => x.toLowerCase()).filter((x) => x !== String(taskId || '').toLowerCase()).forEach((id) => {
+    ['https://cdn1.suno.ai/' + id + '.mp3', 'https://cdn2.suno.ai/' + id + '.mp3', 'https://audiopipe.suno.ai/?item_id=' + id].forEach((u) => { if (out.indexOf(u) === -1) out.push(u); });
+  });
+  return out;
+}
+
 async function baixarInteira(url) {
   try {
     const r = await fetch(url);
@@ -88,9 +100,18 @@ export async function pegarAudio(g, v) {
   // Música terminada no serviço → usa o link final dela e guarda a cópia.
   // Ainda terminando (streaming) → toca o que tiver, mas NÃO guarda (podia ser um pedaço).
   const novo = f.taskId ? await urlsNovas(f.taskId, f.n) : { urls: [], pronta: true };
-  const tentativas = novo.pronta ? novo.urls.concat(f.url ? [f.url] : []) : (f.url ? [f.url] : []).concat(novo.urls);
+  let tentativas = novo.pronta ? novo.urls.concat(f.url ? [f.url] : []) : (f.url ? [f.url] : []).concat(novo.urls);
+  // reserva: id da faixa escondido no link salvo do pedido e no registro da música
+  let extraTxt = String(f.url || '');
+  try {
+    if (f.taskId) {
+      const reg = await getStore('musicas').get(String(f.taskId), { type: 'json' });
+      if (reg) extraTxt += ' ' + (f.n === 2 ? (reg.url2 || '') : (reg.url || '')) + ' ' + JSON.stringify(reg.clips || reg.ids || '');
+    }
+  } catch (e) {}
+  linksSunoDe(extraTxt, f.taskId).forEach((u) => { if (tentativas.indexOf(u) === -1) tentativas.push(u); });
   let buf = null, veio = '';
-  for (const u of tentativas.slice(0, 12)) { buf = await baixarInteira(u); if (buf) { veio = u; break; } }
+  for (const u of tentativas.slice(0, 16)) { buf = await baixarInteira(u); if (buf) { veio = u; break; } }
   if (buf && (novo.pronta || /suno\.ai/.test(veio))) { try { await loja.set(k, buf); } catch (e) { console.error('audio: não guardou', k, e && e.message); } }
   return buf;
 }
@@ -99,7 +120,8 @@ export async function pegarAudio(g, v) {
 export async function baixarPorTask(taskId, n, urlSalva) {
   const novo = taskId ? await urlsNovas(taskId, n) : { urls: [] };
   const tentativas = (urlSalva ? [urlSalva] : []).concat(novo.urls);
-  for (const u of tentativas.slice(0, 12)) {
+  linksSunoDe(urlSalva, taskId).forEach((u) => { if (tentativas.indexOf(u) === -1) tentativas.push(u); });
+  for (const u of tentativas.slice(0, 16)) {
     try { const r = await fetch(u); if (r.ok) { const b = Buffer.from(await r.arrayBuffer()); if (b.length > 50 * 1024) return b; } } catch (e) {}
   }
   return null;

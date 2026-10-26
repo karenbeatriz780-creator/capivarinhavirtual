@@ -93,11 +93,13 @@ export default async (req) => {
       try {
         const store = getStore('musicas');
         const reg = await store.get(taskId, { type: 'json' });
-        if (reg && !reg.url) {
-          reg.url = audioUrl;
-          reg.url2 = conteudo.audio_url2 || null;
-          reg.letra = letra || null;
-          reg.prontoEm = Date.now();
+        // ids das faixas da Suno (servem pra recuperar a música se o serviço apagar o arquivo)
+        const ids = (JSON.stringify(conteudo).match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/ig) || [])
+          .map((x) => x.toLowerCase()).filter((x, i, arr) => x !== String(taskId).toLowerCase() && arr.indexOf(x) === i).slice(0, 8);
+        if (reg && (!reg.url || (ids.length && !(reg.ids && reg.ids.length)) || (conteudo.audio_url2 && !reg.url2))) {
+          if (!reg.url) { reg.url = audioUrl; reg.letra = letra || null; reg.prontoEm = Date.now(); }
+          if (!reg.url2) reg.url2 = conteudo.audio_url2 || null;
+          if (ids.length) reg.ids = ids;
           await store.setJSON(taskId, reg);
         }
       } catch (e) {
