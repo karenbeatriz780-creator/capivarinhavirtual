@@ -462,6 +462,12 @@ export default async (req) => {
       });
       if ((body && body.origem) !== 'painel') await indexar(body && body.whatsapp, 't', taskId);
       await indexarDia('t', taskId);
+      // fila do WhatsApp: quando a música ficar pronta, o robô avisa o cliente
+      // (avisar-musica-agendado.mjs confere a cada minuto)
+      const zap = String((body && body.whatsapp) || '').replace(/\D/g, '');
+      if ((body && body.origem) !== 'painel' && zap.length >= 10) {
+        await getStore('whatsapp').setJSON('pend_' + taskId, { taskId, numero: zap, em: Date.now() }).catch(() => {});
+      }
     } catch (e) {
       // se o registro falhar, a música ainda deve ser gerada normalmente
       console.error('Falha ao registrar música:', e && e.message);

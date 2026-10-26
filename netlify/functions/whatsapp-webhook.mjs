@@ -1,4 +1,5 @@
 import { getStore } from '@netlify/blobs';
+import { enviarTexto, marcarConversa, entregarMusica, SITE } from './_zap.mjs';
 
 // WEBHOOK DO WHATSAPP (Meta Cloud API)
 // URL de callback:  https://capivarinhalove.com.br/.netlify/functions/whatsapp-webhook
@@ -10,8 +11,6 @@ import { getStore } from '@netlify/blobs';
 //        por pessoa, pra não ficar repetindo numa conversa).
 //        Resposta a quem chamou primeiro é conversa de serviço: não usa modelo.
 
-const VERSAO = 'v25.0';
-const SITE = 'https://capivarinhalove.com.br';
 
 const BOAS_VINDAS =
   '🎵 Olá! Seja bem-vindo(a) à *Capivarinha Love*! 💗\n\n' +
@@ -21,21 +20,6 @@ const BOAS_VINDAS =
   '🎤 *Quer criar uma música personalizada?*\nAcesse:\n' + SITE + '/#/criar/musica\n\n' +
   '💬 *Precisa de atendimento?*\nEnvie sua dúvida por aqui que nossa equipe responderá assim que possível.\n\n' +
   'A Capivarinha Love agradece seu contato! 💗';
-
-async function enviarTexto(para, texto) {
-  const token = (process.env.WHATSAPP_TOKEN || '').trim();
-  const phoneId = (process.env.WHATSAPP_PHONE_ID || '').trim();
-  if (!token || !phoneId) { console.log('whatsapp: falta WHATSAPP_TOKEN ou WHATSAPP_PHONE_ID'); return false; }
-  try {
-    const r = await fetch('https://graph.facebook.com/' + VERSAO + '/' + phoneId + '/messages', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to: para, type: 'text', text: { preview_url: false, body: texto } })
-    });
-    if (!r.ok) { console.error('whatsapp envio:', r.status, (await r.text()).slice(0, 400)); return false; }
-    return true;
-  } catch (e) { console.error('whatsapp envio (rede):', e && e.message); return false; }
-}
 
 export default async (req) => {
   const u = new URL(req.url);
@@ -65,6 +49,27 @@ export default async (req) => {
               (msg.interactive && JSON.stringify(msg.interactive).slice(0, 200)) || msg.type;
             console.log('WHATSAPP MSG de ' + msg.from + ': ' + String(txt).slice(0, 300));
             await loja.setJSON('msg_' + msg.id, { de: msg.from, em: Date.now(), msg });
+            // Cliente apertou "Receber minha música no WhatsApp" no site:
+            // a mensagem vem com o código "t.<id>" → manda o link da música dele.
+            try {
+              await marcarConversa(msg.from);
+              const cod = /\bt\.([A-Za-z0-9_-]{6,80})/.exec(String(txt || ''));
+              if (cod) {
+                const tid = cod[1];
+                await loja.setJSON('optin_' + tid, { numero: String(msg.from), em: Date.now() });
+                const r = await entregarMusica(tid, msg.from);
+                if (r === 'esperando') {
+                  await loja.setJSON('pend_' + tid, { taskId: tid, numero: String(msg.from), em: Date.now() });
+                  await enviarTexto(msg.from, '✅ Recebi! Sua música está sendo criada agora 🎶\n\nPode ficar tranquilo(a): assim que ficar pronta eu te mando aqui mesmo, em instantes. 💗');
+                } else if (r === 'naoachei') {
+                  await enviarTexto(msg.from, 'Não achei essa música 😕\nCrie a sua aqui: ' + SITE + '/#/criar/musica');
+                } else if (r === 'ja') {
+                  await enviarTexto(msg.from, '🎶 Sua música está aqui:\n' + SITE + '/#/ouvir/t.' + tid + '\n\nSe já pagou, ela também fica em: ' + SITE + '/#/meus');
+                }
+                await loja.setJSON('bv_' + String(msg.from).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});
+                continue;
+              }
+            } catch (e) { console.error('enviar música:', e && e.message); }
             // boas-vindas automática: no máximo 1 vez a cada 12 h por número
             try {
               const chave = 'bv_' + String(msg.from).replace(/\D/g, '');
