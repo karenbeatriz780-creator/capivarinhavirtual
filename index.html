@@ -1684,6 +1684,43 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .av-start{position:absolute;inset:0;background:rgba(18,9,16,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2vh;z-index:5;}
 .av-start button{font-size:2.2vh;font-weight:800;border:0;border-radius:99px;padding:1.6vh 3vh;background:linear-gradient(90deg,#E32B6D,#D89B4A);color:#fff;cursor:pointer;}
 .av-start small{font-size:1.4vh;color:#E8B9CB;}
+/* tela ao vivo — escolha de tema (só aparece antes de iniciar) */
+.av-temas{display:flex;flex-direction:column;align-items:center;gap:1vh;margin-bottom:2vh;}
+.av-temas span{font-size:1.6vh;color:#E8B9CB;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.av-temas div{display:flex;gap:1vh;}
+.av-start .av-temas button{font-size:1.9vh;padding:1.1vh 2.2vh;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);color:#fff;}
+.av-start .av-temas button.on{background:#fff;color:#2A0D1F;border-color:#fff;}
+/* modo claro */
+.av-fundo.av-claro{background:#FBEFF3;}
+.av-tela.av-claro{background:radial-gradient(90% 70% at 30% 0%,#FFE1EC 0%,#FFF6F9 55%,#FFFFFF 100%) !important;color:#2A0D1F;}
+.av-claro .av-topo span{color:#9B5C75;}
+.av-claro .av-topo img{box-shadow:0 .6vh 1.6vh rgba(227,43,109,.25);}
+.av-claro .av-agora{background:#fff;border-color:#F3D3DF;box-shadow:0 2vh 5vh rgba(227,43,109,.12);}
+.av-claro .av-tocando{color:#C2185B;}
+.av-claro .av-capa{border-color:#fff;box-shadow:0 2vh 5vh rgba(227,43,109,.3);}
+.av-claro .av-dedic{color:#9B5C75;}
+.av-claro .av-para{background:linear-gradient(90deg,#C2185B,#D8892B);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.av-claro .av-quem{color:#2A0D1F;}
+.av-claro .av-chips span{background:#FFF0F5;border-color:#F3C7D7;color:#7A2E4C;}
+.av-claro .av-barra{background:#F6DCE6;}
+.av-claro .av-tempo{color:#9B5C75;}
+.av-claro .av-fila-box{background:#fff;border-color:#F3D3DF;box-shadow:0 1.4vh 4vh rgba(227,43,109,.08);}
+.av-claro .av-fila-t{color:#C2185B;}
+.av-claro .av-fila-t span{color:#9B5C75;}
+.av-claro .av-item{background:#FFF7FA;border-color:#F3D3DF;}
+.av-claro .av-item.nova{background:#FFF4E2;border-color:#EBC27E;}
+.av-claro .av-i-tx small{color:#9B5C75;}
+.av-claro .av-fila-vazia{color:#9B5C75;}
+.av-claro .av-cta{background:linear-gradient(135deg,#E32B6D,#C2185B);color:#fff;}
+.av-claro .av-cta span{color:#FFE1EC;}
+.av-claro .av-cta em{background:#fff;color:#C2185B;}
+.av-claro .av-vazio span{color:#9B5C75;}
+.av-claro .av-disco{box-shadow:0 2vh 5vh rgba(0,0,0,.25);}
+.av-claro .av-notas i{color:rgba(227,43,109,.16);}
+.av-claro .av-eq{background:rgba(42,13,31,.55);}
+.av-claro .av-live{color:#fff;}
+@media (max-aspect-ratio:1/1){ .av-claro .av-agora{background:transparent;border:0;box-shadow:none;} }
+
 /* tela ao vivo: corpo responsivo (celular em pé / notebook deitado) */
 .av-tela{width:100vw !important;}
 .av-corpo{flex:1;display:flex;flex-direction:column;gap:1.6vh;min-height:0;position:relative;z-index:1;}
@@ -6816,8 +6853,20 @@ function telaAoVivo(){
     '<div class="av-cta"><b>🎵 Peça a sua agora!</b><span>4 músicas por R$ 9,99 · ouça a prévia antes de pagar</span><em>capivarinhalove.com.br</em></div></div></div>'+
     '<div id="avBanner" class="av-banner"></div>'+
     '<div class="av-notas" aria-hidden="true"><i>♪</i><i>♫</i><i>♥</i><i>♪</i><i>♫</i><i>♥</i></div>'+
-    '<div class="av-start" id="avStart"><button type="button" id="avStartBtn">▶️ Iniciar tela ao vivo</button><small>Toque uma vez pra liberar o som.</small></div>'+
+    '<div class="av-start" id="avStart"><div class="av-temas"><span>Aparência da tela</span>'+
+      '<div><button type="button" data-avtema="escuro">🌙 Escuro</button><button type="button" data-avtema="claro">☀️ Claro</button></div></div>'+
+      '<button type="button" id="avStartBtn">▶️ Iniciar tela ao vivo</button><small>Toque uma vez pra liberar o som.</small></div>'+
   '</div></div>';
+  function aplicarTema(t){
+    t=(t==='claro')?'claro':'escuro';
+    try{ Store.set('cl_av_tema', t); }catch(e){}
+    var tela=el('avTela'); if(tela) tela.classList.toggle('av-claro', t==='claro');
+    var fu=document.querySelector('.av-fundo'); if(fu) fu.classList.toggle('av-claro', t==='claro');
+    document.querySelectorAll('[data-avtema]').forEach(function(b){ b.classList.toggle('on', b.dataset.avtema===t); });
+  }
+  var temaSalvo='escuro'; try{ temaSalvo=Store.get('cl_av_tema')||'escuro'; }catch(e){}
+  aplicarTema(temaSalvo);
+  document.querySelectorAll('[data-avtema]').forEach(function(b){ b.onclick=function(){ aplicarTema(b.dataset.avtema); }; });
   var audio=new Audio(); audio.preload='auto'; _av.audio=audio;
   audio.onended=function(){ proxima(); };
   audio.onerror=function(){ setTimeout(proxima, 1500); };
