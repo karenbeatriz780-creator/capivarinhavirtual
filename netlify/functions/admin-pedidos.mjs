@@ -147,6 +147,7 @@ export default async (req) => {
         pago: !!g.pago,
         trafego: (g.trafego && g.trafego.fonte) || null,
         cortesia: !!g.cortesia,
+        live: !!g.live, liveNome: g.liveNome || '',
         comboDaMusica: !!g.comboDaMusica, quatro: !!g.quatro, dobroDe: g.dobroDe || null, dobroUsado: g.dobroUsado || null,
         cancelado: !!g.cancelado,
         criadoEm: g.criadoEm || null,

@@ -71,6 +71,13 @@ async function acharPedido(id, t, criarSeFaltar) {
   return g;
 }
 
+// Oferta de recuperação do WhatsApp: "4 músicas por R$ 9,99" (vale 1 dia)
+async function ofertaRec(t) {
+  if (!t) return false;
+  const m = await getStore('musicas').get(t, { type: 'json' }).catch(() => null);
+  return !!(m && m.ofertaRec && Date.now() - m.ofertaRec < 24 * 3600 * 1000);
+}
+
 export default async (req) => {
   try {
     const u = new URL(req.url);
@@ -91,7 +98,8 @@ export default async (req) => {
         url4: g.ofertaM1 && g.ofertaM1.url2 ? previa(g, t, 4) : null,
         url5: g.ofertaM2 && g.ofertaM2.url ? previa(g, t, 5) : null,
         url6: g.ofertaM2 && g.ofertaM2.url2 ? previa(g, t, 6) : null,
-        valor: (g.pagamento && g.pagamento.valor) || PRECO_MUSICA
+        valor: (g.pagamento && g.pagamento.valor) || PRECO_MUSICA,
+        oferta4: !g.pago && await ofertaRec(t)
       });
     }
 
@@ -106,6 +114,7 @@ export default async (req) => {
     if (!chavePix) return json({ erro: 'Servidor sem EFI_PIX_KEY configurada.' }, 500);
 
     const valor = Number((g.pagamento && g.pagamento.valor) || PRECO_MUSICA);
+    const oferta4 = await ofertaRec(String(body.t || ''));
     const txid = criarTxid(g.id);
     const token = await obterToken();
     const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
@@ -114,7 +123,7 @@ export default async (req) => {
         calendario: { expiracao: 7200 },
         valor: { original: valor.toFixed(2) },
         chave: chavePix,
-        solicitacaoPagador: 'Música Personalizada - Capivarinha Love',
+        solicitacaoPagador: (oferta4 ? '4 Músicas Personalizadas' : 'Música Personalizada') + ' - Capivarinha Love',
         infoAdicionais: [{ nome: 'Pedido', valor: String(g.id).slice(0, 50) }]
       }
     });
@@ -130,6 +139,8 @@ export default async (req) => {
     const atualizado = Object.assign({}, g, {
       criadoEm: agora,
       recuperadoEm: agora,
+      // 4 músicas: estas 2 + mais 2 (liberadas depois do Pix)
+      ...(oferta4 ? { quatro: true } : {}),
       pagamento: Object.assign({}, g.pagamento || {}, {
         provedor: 'efi', txid, status: 'ATIVA', valor,
         duracao: (g.pagamento && g.pagamento.duracao) || 'vitalicio',
