@@ -1684,6 +1684,75 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .av-start{position:absolute;inset:0;background:rgba(18,9,16,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2vh;z-index:5;}
 .av-start button{font-size:2.2vh;font-weight:800;border:0;border-radius:99px;padding:1.6vh 3vh;background:linear-gradient(90deg,#E32B6D,#D89B4A);color:#fff;cursor:pointer;}
 .av-start small{font-size:1.4vh;color:#E8B9CB;}
+/* tela ao vivo: corpo responsivo (celular em pé / notebook deitado) */
+.av-tela{width:100vw !important;}
+.av-corpo{flex:1;display:flex;flex-direction:column;gap:1.6vh;min-height:0;position:relative;z-index:1;}
+.av-lado{display:flex;flex-direction:column;gap:1.4vh;min-width:0;}
+.av-fila-box{display:flex;flex-direction:column;gap:1vh;}
+.av-ag{display:flex;flex-direction:column;align-items:center;width:100%;}
+.av-info{display:flex;flex-direction:column;align-items:center;width:100%;}
+.av-topo{position:relative;z-index:2;}
+.av-notas{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.av-notas i{position:absolute;bottom:-8vh;font-style:normal;color:rgba(240,201,135,.18);font-size:5vh;animation:avSobe 14s linear infinite;}
+.av-notas i:nth-child(1){left:6%;animation-delay:0s}.av-notas i:nth-child(2){left:22%;animation-delay:3s;font-size:3.6vh}
+.av-notas i:nth-child(3){left:41%;animation-delay:7s;color:rgba(227,43,109,.22)}.av-notas i:nth-child(4){left:63%;animation-delay:1.5s;font-size:4vh}
+.av-notas i:nth-child(5){left:80%;animation-delay:5s}.av-notas i:nth-child(6){left:93%;animation-delay:9s;color:rgba(227,43,109,.22);font-size:3.4vh}
+@keyframes avSobe{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-115vh) rotate(25deg);opacity:0}}
+@media (max-aspect-ratio:1/1){
+  .av-tela{padding:max(2.4vh,env(safe-area-inset-top)) 4vw 2.4vh;}
+  .av-tela{gap:1.2vh;}
+  .av-corpo{gap:1.2vh;}
+  .av-tocando{margin-bottom:1vh;}
+  .av-capa{width:min(26vh,62vw);height:min(26vh,62vw);}
+  .av-dedic{margin-top:1.4vh;}
+  .av-para{font-size:min(4.4vh,9vw);}
+  .av-barra{margin-top:1.4vh;}
+  .av-fila .av-item:nth-child(n+3){display:none;}
+  .av-item{padding:.8vh 1.2vh;}
+}
+@media (min-aspect-ratio:1/1){
+  .av-tela{padding:3.4vh 3.4vw;gap:3vh;background:radial-gradient(70% 90% at 30% 10%,#5A1438 0%,#2A0D1F 55%,#170812 100%);}
+  .av-topo img{width:7vh;height:7vh;}
+  .av-topo b{font-size:3.2vh;}
+  .av-topo span{font-size:1.8vh;}
+  .av-live{font-size:2vh;padding:.8vh 1.8vh;}
+  .av-corpo{flex-direction:row;gap:2.6vw;}
+  .av-agora{flex:1.6;min-width:0;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:3.4vh;padding:4vh 3vw;align-items:stretch;}
+  .av-tocando{font-size:2vh;text-align:left;margin-bottom:3vh;}
+  .av-ag{flex-direction:row;align-items:center;gap:3.4vw;flex:1;min-height:0;}
+  .av-capa{width:min(52vh,24vw);height:min(52vh,24vw);flex-shrink:0;border-radius:3vh;}
+  .av-info{align-items:flex-start;text-align:left;min-width:0;}
+  .av-dedic{margin-top:0;font-size:2.4vh;}
+  .av-para{font-size:min(9vh,5vw);margin:.8vh 0 1.4vh;word-break:break-word;}
+  .av-quem{font-size:2.6vh;}
+  .av-chips{justify-content:flex-start;gap:1vh;margin-top:2vh;}
+  .av-chips span{font-size:1.8vh;padding:.7vh 1.5vh;}
+  .av-barra{width:100%;height:1vh;margin-top:3.4vh;}
+  .av-tempo{width:100%;font-size:1.8vh;margin-top:.8vh;}
+  .av-lado{flex:1;justify-content:space-between;gap:2.4vh;}
+  .av-fila-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:3vh;padding:2.6vh 1.6vw;flex:1;min-height:0;overflow:hidden;gap:1.4vh;}
+  .av-fila-t{font-size:2vh;}
+  .av-fila{gap:1.2vh;}
+  .av-item{padding:1.3vh 1.2vw;border-radius:1.8vh;gap:1.2vw;}
+  .av-i-ic{font-size:2.6vh;}
+  .av-i-tx b{font-size:2.2vh;}
+  .av-i-tx small{font-size:1.7vh;}
+  .av-item em{font-size:1.5vh;padding:.4vh 1vh;}
+  .av-fila-vazia{font-size:2.2vh;padding:3vh 1vh;}
+  .av-cta{padding:2.4vh 1.6vw;border-radius:2.6vh;}
+  .av-cta b{font-size:3vh;}
+  .av-cta span{font-size:1.8vh;}
+  .av-cta em{font-size:2.6vh;padding:.9vh 2.2vh;margin-top:1.2vh;}
+  .av-banner{left:28vw;right:28vw;top:3vh;font-size:2.3vh;padding:1.8vh 2vh;z-index:4;}
+  .av-vazio{margin:auto;}
+  .av-disco{width:30vh;height:30vh;}
+  .av-disco img{width:12vh;height:12vh;}
+  .av-vazio b{font-size:3.4vh;}
+  .av-vazio span{font-size:2.2vh;}
+  .av-start button{font-size:3vh;padding:2vh 4vh;}
+  .av-start small{font-size:1.9vh;}
+}
+
 .cprev{margin-top:1rem;background:#fff;border:1px solid var(--rose-soft,#F3C9D6);border-radius:18px;padding:.9rem;}
 .cprev-t{font-weight:800;color:var(--plum,#3B2A33);font-size:.95rem;margin-bottom:.6rem;}
 .cprev-op{position:relative;display:flex;align-items:center;gap:.7rem;border:1.5px solid #EADDE3;border-radius:14px;padding:.75rem .8rem;margin-top:.55rem;cursor:pointer;background:#FFFBFC;transition:border-color .15s,background .15s;}
@@ -4111,7 +4180,7 @@ var W = null, wStep = 0;
 function origemTrafego(){ var o=jget('cl_origem',null); return o && (Date.now()-o.em<7*864e5) ? o : {fonte:'organico', em:Date.now()}; }
 function novoEstado(prod){
   return { trafego:origemTrafego(),
-    id:uid(), produto:prod||null, perfil:null, meuNome:'', parceiroNome:'',
+    id:uid(), produto:prod||null, perfil:null, perfilOutro:'', meuNome:'', parceiroNome:'',
     dataEspecial:'', horaEspecial:'', cidade:'', titulo:'', carta:'',
     fotos:[], capa:null, musica:null, musicaBusca:'', trilhaOn:false, trilhaId:null,
     duracao:'vitalicio',
@@ -4138,7 +4207,8 @@ var PERFIS = {
   amigo:{lb:'Amigo(a)', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.6"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15.5 14.6c2.9.4 5.1 2.8 5.1 5.4"/></svg>'},
   mae:{lb:'Mãe', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="7" r="3.4"/><path d="M5.5 21c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/><path d="M15.6 17.4c1.4-1.4 1.4-3 0-3.9"/></svg>'},
   pai:{lb:'Pai', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="7" r="3.4"/><path d="M5.5 21c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/></svg>'},
-  filho:{lb:'Filho(a)', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 21c0-4.1 3.4-7.5 7.5-7.5s7.5 3.4 7.5 7.5"/></svg>'}
+  filho:{lb:'Filho(a)', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 21c0-4.1 3.4-7.5 7.5-7.5s7.5 3.4 7.5 7.5"/></svg>'},
+  outro:{lb:'Outro', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>'}
 };
 
 var TITULOS = ["Eu te amo","Você e eu, sempre","A nossa história","Pra sempre com você",
@@ -4177,6 +4247,12 @@ var CARTAS = {
     "Desde o dia em que você chegou, o mundo ficou maior e mais bonito. Ser sua mãe ou seu pai é a coisa mais séria e mais alegre que já me aconteceu. Te amo mais do que cabe aqui.",
     "Você ainda vai entender o tamanho do amor que a gente sente por você. Enquanto isso, guarda este presente — é um pedacinho da nossa história junto.",
     "Meu maior orgulho não é nada que eu fiz. É você."
+  ],
+  outro:[
+    "Tem gente que passa pela nossa vida e deixa tudo mais leve. Você é uma dessas pessoas. Obrigado por cada conversa, cada risada e por estar sempre por perto quando eu mais preciso.",
+    "Nem sempre eu falo, mas eu sinto: você é muito importante pra mim. Este presente é só um jeitinho de dizer o quanto eu sou grato por ter você na minha vida.",
+    "Você faz parte das minhas melhores lembranças. Que a gente continue criando muitas outras juntos, com muito carinho e muita alegria.",
+    "Obrigado por tudo que você já fez por mim, até as coisas pequenas que você nem imagina que fizeram diferença. Você é especial demais."
   ]
 };
 
@@ -5131,7 +5207,10 @@ function htmlPasso(k){
       return '<button class="chip '+(W.perfil===p?'on':'')+'" data-v="'+p+'">'+PERFIS[p].ic+'<div class="lb">'+PERFIS[p].lb+'</div></button>';
     }).join('');
     return guia("Legal! Agora me conta: pra quem é esse presente? Assim eu escolho as palavras certas.")+
-      '<div class="wz-t">Pra quem é</div><div class="chips">'+ch+'</div>';
+      '<div class="wz-t">Pra quem é</div><div class="chips">'+ch+'</div>'+
+      (W.perfil==='outro'
+        ? '<div class="field" style="margin-top:1rem"><label>Pra quem é?</label><input class="inp" id="fPerfilOutro" value="'+esc(W.perfilOutro||'')+'" placeholder="Ex.: minha irmã, minha sogra, minha avó"></div>'
+        : '');
   }
 
   case 'nomes': {
@@ -5699,8 +5778,11 @@ function ligarPasso(k){
     on('[data-v]','onclick',function(e){
       W.perfil=e.dataset.v;
       redesenharSemPular();
+      if(W.perfil==='outro'){ var fo=el('fPerfilOutro'); if(fo) fo.focus(); return; }
       setTimeout(function(){ proximoPasso(); },380);
     });
+    var fpo=el('fPerfilOutro');
+    if(fpo) fpo.oninput=function(e){ W.perfilOutro=e.target.value; };
   }
   if(k==='nomes'){
     var fn=el('fNome');
@@ -6147,6 +6229,7 @@ function erro(msg, campo){ return {msg:msg, campo:campo||null}; }
 function validar(k){
   if(k==='produto' && !W.produto) return erro('Escolha um pacote pra continuar.');
   if(k==='perfil' && !W.perfil) return erro('Escolha pra quem é o presente.');
+  if(k==='perfil' && W.perfil==='outro' && !(W.perfilOutro||'').trim()) return erro('Escreva pra quem é o presente.', 'fPerfilOutro');
   if(k==='nomes'){
     if(!W.anonimo && !W.meuNome.trim()) return erro('Campo obrigatório', 'fNome');
     if(!W.parceiroNome.trim()) return erro('Campo obrigatório', 'fPar');
@@ -6224,7 +6307,18 @@ function proximoPasso(pular){
   wStep++; desenharPasso();
   gaPasso();
 }
+var _comboEntrada=-1;
+function voltarParaPrevia(){
+  W.produto='musica'; W.comboDaMusica=false;
+  wStep=Math.max(0,passos().indexOf('musicaFinal'));
+  desenharPasso(); ligarPreviasLimitadas();
+  toast('Voltou pra sua prévia 🎵');
+}
 function voltarPasso(){
+  if(W.comboDaMusica && W.musicaPreviewUrl && W.produto!=='musica'){
+    var ps=passos();
+    if(wStep<=1 || ps[wStep-1]==='produto' || wStep<=_comboEntrada){ voltarParaPrevia(); return; }
+  }
   if(wStep<=0){ ir(''); return; }
   wStep--; desenharPasso();
   gaPasso();
@@ -6287,7 +6381,10 @@ function exemploCarta(){
 function htmlCombosPrevia(){
   if(!W || !(quatroAtivo(W) || W.comboDaMusica) || W.ofertaM1 || W.bonusDe || W.dobroDe) return '';
   _upsellVisto=true; /* já mostrou as opções aqui: não abre o pop-up de novo no pagamento */
-  var pm=PACOTES.musica.preco, esc1=W.comboDaMusica?W.produto:'musica';
+  return htmlOpcoesCombo(W.comboDaMusica?W.produto:'musica');
+}
+function htmlOpcoesCombo(esc1){
+  var pm=PACOTES.musica.preco;
   var ops=[
     ['musica','🎵','4 Músicas Personalizadas','Estas 2 completas, sem corte + mais 2 liberadas depois do pagamento, com outra letra e outro estilo.',pm,'',''],
     ['carta','💌','4 Músicas + Carta Virtual','Suas 4 músicas + uma carta com envelope, foto colada e sua assinatura.',pm+COMBO_DA_MUSICA.carta,'','carta'],
@@ -6312,7 +6409,15 @@ function escolherComboPrevia(prod){
   }
   gaEvento('aceitou_upsell',{de:'musica', para:prod, onde:'previa'});
   W.produto=prod; W.comboDaMusica=true; W.musicaOn=true; W.musicaPersonalizar=true; W.duracao='vitalicio';
+  if(!W.perfil){
+    var mp=W.musicaPara||'', mapa={namorada:'namorado',namorado:'namorado',esposa:'esposo',marido:'esposo',mae:'mae',pai:'pai',amiga:'amigo',amigo:'amigo',filho:'filho'};
+    if(mapa[mp]) W.perfil=mapa[mp];
+    else if(mp==='outro' && (W.musicaParaOutro||'').trim()){ W.perfil='outro'; W.perfilOutro=W.musicaParaOutro.trim(); }
+    else if(RELACAO_NOME[mp] && ['ninguem','comercial','louvor','outro'].indexOf(mp)<0){ W.perfil='outro'; W.perfilOutro=RELACAO_NOME[mp].replace(/^Pra /,''); }
+  }
+  if(!W.parceiroNome && W.musicaParaNome) W.parceiroNome=W.musicaParaNome;
   var falta=primeiroPassoIncompleto();
+  _comboEntrada=falta;
   if(falta>=0){ wStep=falta; desenharPasso(); toast(prod==='carta'?'Agora é só montar a sua carta 💌':'Agora é só montar a sua retrospectiva 💝'); }
   else { redesenharSemPular(); ligarPreviasLimitadas(); }
 }
@@ -6343,7 +6448,7 @@ function abrirExemploRetro(){
 document.addEventListener('click',function(ev){
   var t=ev.target; if(!t || !t.closest) return;
   var exb=t.closest('[data-cprevex]'); if(exb){ ev.preventDefault(); ev.stopPropagation(); if(exb.dataset.cprevex==='carta') abrirExemploCarta(); else abrirExemploRetro(); return; }
-  var op=t.closest('[data-cprev]'); if(op){ escolherComboPrevia(op.dataset.cprev); }
+  var op=t.closest('[data-cprev]'); if(op){ if(op.closest('#ouvirCombos')) ouvirEscolher(op.dataset.cprev); else escolherComboPrevia(op.dataset.cprev); }
 });
 function abrirUpsell(aoFechar){
   var combos=combosDisponiveis();
@@ -6395,7 +6500,7 @@ function primeiroPassoIncompleto(){
   var ps=passos();
   for(var i=0;i<ps.length;i++){
     var k=ps[i];
-    if(k==='perfil' && !W.perfil) return i;
+    if(k==='perfil' && (!W.perfil || (W.perfil==='outro' && !(W.perfilOutro||'').trim()))) return i;
     if(k==='nomes' && !W.parceiroNome.trim()) return i;
     if(k==='fotos' && !W.fotos.filter(Boolean).length) return i;
     if(k==='carta' && W.carta.trim().length<10) return i;
@@ -6705,11 +6810,12 @@ function telaAoVivo(){
   var DUR=110; /* 1:50 de cada música */
   el('app').innerHTML='<div class="av-fundo"><div class="av-tela" id="avTela">'+
     '<div class="av-topo"><img src="'+MASCOTE+'" alt=""><div><b>Capivarinha Love</b><span>Músicas personalizadas</span></div><i class="av-live">● AO VIVO</i></div>'+
-    '<div id="avAgora" class="av-agora"></div>'+
+    '<div class="av-corpo"><div id="avAgora" class="av-agora"></div>'+
+    '<div class="av-lado"><div class="av-fila-box"><div class="av-fila-t">Próximas na fila <span id="avConta"></span></div>'+
+    '<div id="avFila" class="av-fila"></div></div>'+
+    '<div class="av-cta"><b>🎵 Peça a sua agora!</b><span>4 músicas por R$ 9,99 · ouça a prévia antes de pagar</span><em>capivarinhalove.com.br</em></div></div></div>'+
     '<div id="avBanner" class="av-banner"></div>'+
-    '<div class="av-fila-t">Próximas na fila <span id="avConta"></span></div>'+
-    '<div id="avFila" class="av-fila"></div>'+
-    '<div class="av-cta"><b>🎵 Peça a sua agora!</b><span>4 músicas por R$ 9,99 · ouça a prévia antes de pagar</span><em>capivarinhalove.com.br</em></div>'+
+    '<div class="av-notas" aria-hidden="true"><i>♪</i><i>♫</i><i>♥</i><i>♪</i><i>♫</i><i>♥</i></div>'+
     '<div class="av-start" id="avStart"><button type="button" id="avStartBtn">▶️ Iniciar tela ao vivo</button><small>Toque uma vez pra liberar o som.</small></div>'+
   '</div></div>';
   var audio=new Audio(); audio.preload='auto'; _av.audio=audio;
@@ -6730,17 +6836,17 @@ function telaAoVivo(){
       ag.innerHTML='<div class="av-vazio"><div class="av-disco"><img src="'+MASCOTE+'" alt=""></div>'+
         '<b>Esperando a primeira música da live…</b><span>Peça a sua no link da live e ela toca aqui com o seu nome! 🎵</span></div>';
     } else {
-      ag.innerHTML='<div class="av-tocando">🎶 TOCANDO AGORA</div>'+
+      ag.innerHTML='<div class="av-tocando">🎶 TOCANDO AGORA</div><div class="av-ag">'+
         '<div class="av-capa'+(a.capa?'':' sem')+'">'+(a.capa?'<img src="/.netlify/functions/live-fila?capa='+encodeURIComponent(a.id)+'" alt="">':'<img src="'+MASCOTE+'" alt="">')+
           '<div class="av-eq"><i></i><i></i><i></i><i></i><i></i></div></div>'+
-        '<div class="av-dedic">Música dedicada para</div>'+
+        '<div class="av-info"><div class="av-dedic">Música dedicada para</div>'+
         '<div class="av-para">'+esc(a.para||'alguém especial')+'</div>'+
         '<div class="av-quem">💗 Pedido por <b>'+esc(nomeDe(a))+'</b></div>'+
         '<div class="av-chips"><span>'+esc(nomeGeneroDe(a.estilo,a.estiloOutro)||'Música personalizada')+'</span><span>'+(a.versoes>1?'2 versões · tocando a 1ª':'1 versão')+'</span></div>'+
-        '<div class="av-barra"><i id="avBarra"></i></div><div class="av-tempo"><span id="avT1">0:00</span><span>1:50</span></div>';
+        '<div class="av-barra"><i id="avBarra"></i></div><div class="av-tempo"><span id="avT1">0:00</span><span>1:50</span></div></div></div>';
     }
     var fila=ordemFila(), f=el('avFila');
-    f.innerHTML=fila.length ? fila.slice(0,5).map(function(x){
+    f.innerHTML=fila.length ? fila.slice(0,6).map(function(x){
       var nova=!_av.tocadas[x.id];
       return '<div class="av-item'+(nova?' nova':'')+'"><span class="av-i-ic">'+(nova?'🆕':'🔁')+'</span>'+
         '<span class="av-i-tx"><b>Para '+esc(x.para||'alguém especial')+'</b><small>de '+esc(nomeDe(x))+'</small></span>'+
@@ -8244,6 +8350,33 @@ function ligarQuadroOferta(id, alvoId){
 }
 /* ---------- RECUPERAÇÃO: link que o painel manda no WhatsApp de quem quase comprou ----------
    #/ouvir/<idDoPedido>  ou  #/ouvir/t.<taskIdDaMusica>  → ouve a prévia e paga no Pix ali mesmo */
+var _ouvir=null;
+function ouvirEscolher(prod){
+  if(!_ouvir) return;
+  _ouvir.sel=prod;
+  document.querySelectorAll('#ouvirCombos [data-cprev]').forEach(function(x){ x.classList.toggle('on', x.dataset.cprev===prod); });
+  var b=el('ouvirPagar'); if(!b) return;
+  var pm=PACOTES.musica.preco;
+  b.textContent = prod==='carta' ? ('Montar minha carta 💌 — R$ '+fmtPreco(pm+COMBO_DA_MUSICA.carta))
+    : prod==='completo' ? ('Montar minha retrospectiva 💝 — R$ '+fmtPreco(pm+COMBO_DA_MUSICA.completo))
+    : ('Quero as 4 músicas — pagar R$ '+fmtPreco(_ouvir.valor)+' no Pix');
+}
+/* link do WhatsApp → leva a música pro criador e já abre a carta/retrospectiva */
+function ouvirMontarCombo(){
+  var d=_ouvir.d, m=d.musica||{}, prod=_ouvir.sel;
+  if(!d.t){ toast('Não consegui abrir agora. Tenta de novo.'); return; }
+  gaEvento('aceitou_upsell',{de:'musica', para:prod, onde:'ouvir'});
+  W=novoEstado('musica');
+  Object.assign(W,{
+    musicaPara:m.relacao||'', musicaParaNome:m.nomes||d.para||'', musicaOcasiao:m.ocasiao||'',
+    musicaEstilo:m.estilo||'', musicaClima:m.clima||'', musicaTexto:m.historia||'',
+    musicaLetra:m.letra||null, musicaLetraTexto:m.letra||'', musicaWhatsapp:m.whatsapp||'',
+    musicaPreviewUrl:d.url, musicaPreviewUrl2:d.url2||null, musicaPreviewId:d.t
+  });
+  wStep=Math.max(0,passos().indexOf('musicaFinal'));
+  location.hash='#/criar/musica';
+  setTimeout(function(){ if(W && W.musicaPreviewId===d.t) escolherComboPrevia(prod); },350);
+}
 function telaOuvir(arg){
   var q = arg.indexOf('t.')===0 ? ('t='+encodeURIComponent(arg.slice(2))) : ('id='+encodeURIComponent(arg));
   var corpo = arg.indexOf('t.')===0 ? {t:arg.slice(2)} : {id:arg};
@@ -8271,18 +8404,21 @@ function telaOuvir(arg){
           '<div class="musica-pronta">'+(d.url5?versao(d.url3,'Música 1')+versao(d.url4,'Música 2')+versao(d.url5,'Música 3')+versao(d.url6,'Música 4')+versao(d.url,'Música 5')+versao(d.url2,'Música 6')
             : d.url3?versao(d.url3,'Música 1 · Versão 1')+versao(d.url4,'Música 1 · Versão 2')+versao(d.url,'Música 2 · Versão 1')+versao(d.url2,'Música 2 · Versão 2')
             : versao(d.url,'Versão 1')+versao(d.url2,'Versão 2'))+
-            (d.oferta4
+            (d.oferta4 ? '' : false
               ? '<div class="mp-oferta mp-quatro"><div class="mp-of-tx"><b>🎁 Oferta especial: 4 músicas por R$ '+fmtPreco(valor)+'</b>'+
                 '<span>Estas 2 completas + <b>mais 2 músicas</b> com outra letra e outro estilo, que você cria logo depois do Pix.</span></div>'
               : '<div class="mp-oferta"><div class="mp-of-tx"><b>'+(d.url5?'Leve as 6 músicas completas':d.url3?'Leve as 4 músicas completas':(d.url2?'Leve as 2 versões completas':'Leve a versão completa'))+'</b>'+
                 '<span>Sem corte, em MP3, com link pra enviar e guardar pra sempre.</span></div>')+
-            '<div class="mp-of-pr">R$ '+fmtPreco(valor)+'</div></div>'+
+            (d.oferta4?'':'<div class="mp-of-pr">R$ '+fmtPreco(valor)+'</div></div>')+
           '</div>'+
+          (d.oferta4 ? '<div id="ouvirCombos">'+htmlOpcoesCombo('musica')+'</div>' : '')+
           '<button class="btn btn-primary btn-block" id="ouvirPagar" style="margin-top:1rem">'+(d.oferta4?'Quero as 4 músicas — pagar R$ ':'Quero minha música — pagar R$ ')+fmtPreco(valor)+' no Pix</button>'+
           '<div id="ouvirPix" style="display:none;margin-top:1rem"></div>'+
         '</div>';
       ligarPreviasLimitadas();
+      _ouvir={d:d, sel:'musica', valor:valor};
       el('ouvirPagar').onclick=function(){
+        if(_ouvir && _ouvir.sel!=='musica'){ ouvirMontarCombo(); return; }
         var b=el('ouvirPagar'); b.disabled=true; b.textContent='Gerando o Pix...';
         fbEvento('InitiateCheckout',{value:valor, currency:'BRL', content_name:'musica', content_type:'product'});
         fetch('/.netlify/functions/recuperar-pix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo)})
