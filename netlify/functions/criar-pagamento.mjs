@@ -123,6 +123,13 @@ export default async (req) => {
       try { await registrarIndicado(String(presente.refDe), presente.id); } catch (e) {}
     }
 
+    // veio do link do WhatsApp: o navegador só tem a prévia cortada → usa a música original guardada
+    if (presente.musicaPreviewId && /previa-musica/.test(String(presente.musicaPreviewUrl || ''))) {
+      try {
+        const mo = await getStore('musicas').get(String(presente.musicaPreviewId), { type: 'json' });
+        if (mo && mo.url) { presente.musicaPreviewUrl = mo.url; presente.musicaPreviewUrl2 = mo.url2 || null; }
+      } catch (e) {}
+    }
     // música + carta/retrospectiva: a música que a pessoa fez vai junto, sempre
     if (presente.comboDaMusica && presente.musicaPreviewUrl) { presente.musicaOn = true; presente.musicaPersonalizar = true; }
     const pacote = PACOTES[presente.produto];

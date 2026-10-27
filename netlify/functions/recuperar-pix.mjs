@@ -71,6 +71,27 @@ async function acharPedido(id, t, criarSeFaltar) {
   return g;
 }
 
+// Pedido de música simples = 4 músicas por R$ 9,99 (estas 2 + mais 2 liberadas depois do Pix)
+function quatroOk(g) {
+  return !!g && (g.produto || 'musica') === 'musica' && !g.ofertaM1 && !g.ofertaDe && !g.pacote6 && !g.dobroDe && !g.bonusDe;
+}
+// Dados da música (sem o MP3 completo) pra montar Carta/Retrospectiva a partir do link
+async function dadosMusica(g, t) {
+  const tid = t || g.musicaPreviewId || '';
+  let m = null;
+  if (tid) m = await getStore('musicas').get(tid, { type: 'json' }).catch(() => null);
+  m = m || {};
+  return {
+    t: tid,
+    musica: {
+      relacao: g.musicaPara || m.relacao || '', nomes: g.musicaParaNome || m.nomes || '',
+      ocasiao: g.musicaOcasiao || m.ocasiao || '', estilo: g.musicaEstilo || m.estilo || '',
+      clima: g.musicaClima || m.clima || '', historia: g.musicaTexto || m.historia || '',
+      letra: g.musicaLetraTexto || m.letraAprovada || m.letra || '', whatsapp: g.musicaWhatsapp || m.whatsapp || ''
+    }
+  };
+}
+
 // Oferta de recuperação do WhatsApp: "4 músicas por R$ 9,99" (vale 1 dia)
 async function ofertaRec(t) {
   if (!t) return false;
@@ -99,7 +120,8 @@ export default async (req) => {
         url5: g.ofertaM2 && g.ofertaM2.url ? previa(g, t, 5) : null,
         url6: g.ofertaM2 && g.ofertaM2.url2 ? previa(g, t, 6) : null,
         valor: (g.pagamento && g.pagamento.valor) || PRECO_MUSICA,
-        oferta4: !g.pago && await ofertaRec(t)
+        oferta4: !g.pago && (quatroOk(g) || await ofertaRec(t)),
+        ...(await dadosMusica(g, t))
       });
     }
 
@@ -114,7 +136,7 @@ export default async (req) => {
     if (!chavePix) return json({ erro: 'Servidor sem EFI_PIX_KEY configurada.' }, 500);
 
     const valor = Number((g.pagamento && g.pagamento.valor) || PRECO_MUSICA);
-    const oferta4 = await ofertaRec(String(body.t || ''));
+    const oferta4 = quatroOk(g) || await ofertaRec(String(body.t || ''));
     const txid = criarTxid(g.id);
     const token = await obterToken();
     const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
