@@ -3354,16 +3354,22 @@ function gaPasso(){
   }catch(e){}
 }
 function gaCompraUnica(id, g){
+  /* Compra só conta quando teve Pix de verdade. As 2 músicas liberadas depois
+     (dobroDe), a música grátis de indicação (bonusDe) e qualquer pedido de valor 0
+     NÃO são vendas — antes disparavam outro "Purchase" e inflavam o pixel. */
+  var pg=(g && g.pagamento) || {};
+  var valor=Number(pg.valor);
+  if(!g || !g.pago || g.dobroDe || g.bonusDe || pg.provedor==='bonus' || !(valor>0)) return;
   var feitas=jget('cl_ga_compras',{});
   if(feitas[id]) return;
   feitas[id]=1; jset('cl_ga_compras',feitas);
-  var valor=precoDe(g.produto,g.duracao);
   gaEvento('purchase',{
     transaction_id:id, value:valor, currency:'BRL',
     produto:g.produto, duracao:g.duracao
   });
-  fbEvento('Purchase',{value:valor, currency:'BRL', content_name:g.produto, content_type:'product'});
-  ttqEvento('CompletePayment',{value:valor, currency:'BRL', content_name:g.produto, content_type:'product'});
+  /* eventID fixo por pedido: se o mesmo pedido for aberto em outro aparelho, a Meta descarta a repetição */
+  try{ if(typeof fbq==='function') fbq('track','Purchase',{value:valor, currency:'BRL', content_name:g.produto, content_type:'product'},{eventID:'compra_'+id}); }catch(e){}
+  try{ if(typeof ttq!=='undefined' && ttq && typeof ttq.track==='function') ttq.track('CompletePayment',{value:valor, currency:'BRL', content_name:g.produto, content_type:'product'},{event_id:'compra_'+id}); }catch(e){}
 }
 function fmtRelativo(ts){
   var diffMin=Math.max(1, Math.round((Date.now()-ts)/60000));
