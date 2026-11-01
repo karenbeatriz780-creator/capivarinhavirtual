@@ -1234,6 +1234,7 @@ function desenharLvp(){
   var c=el('lvpCaixa'); if(!c) return;
   if(_lvp.ed!=null) return desenharEditor();
   c.innerHTML='<div class="pnl-nota">📚 <b>Livro Mágico</b>: crie e aprove as histórias. Só as <b>publicadas</b> aparecem no site. Link da página de venda: <b>'+esc(location.origin)+'/#/livro</b> <button class="pnl-link" id="lvpCop">Copiar</button></div>'+
+    '<div class="lvp-it" style="display:block" id="lvpRel"></div>'+
     (_lvp.temas||[]).map(function(t,i){
       var img=t.vitrineEm?'<img src="/.netlify/functions/livro-img?k='+encodeURIComponent('img/tema/'+t.id)+'&v='+t.vitrineEm+'" alt="">':'<div class="sem">'+esc(t.emoji||'📖')+'</div>';
       return '<div class="lvp-it">'+img+'<div class="tx"><b>'+esc((t.emoji||'')+' '+t.nome)+'</b><small>'+esc(t.titulo)+'</small><br>'+
@@ -1250,7 +1251,7 @@ function desenharLvp(){
     '<div class="lvp-it" style="display:block"><b>📚 Histórias novas prontas</b><p style="margin:.3rem 0 .2rem;font-size:.85rem;color:#666">Davi e Golias com Jesus, Um Dia com Jesus, Fazenda, Craque, Mundo das Cores, Dinossauros, Ateliê dos Sonhos, Natal Mágico, Astronauta da Galáxia e ABC Encantado. Cada uma com 5 ilustrações e páginas extras só de texto. <b>Não apaga as suas.</b> Fazenda, Craque e Galáxia são atualizadas; as outras entram como rascunho pra você revisar e publicar.</p>'+
       '<div class="lvp-bts"><button class="ouro" id="lvpImp">Adicionar as histórias novas</button></div></div>';
   el('lvpCop').onclick=function(){ copiar(location.origin+'/#/livro','Link copiado!'); };
-  ligarVitrinePnl();
+  ligarVitrinePnl(); ligarRelatorioLivros();
   el('lvpCod').onclick=function(){
     var b=el('lvpCod'); b.disabled=true;
     lvpPost({acao:'codigo'}).then(function(r){ b.disabled=false; if(!r.ok){ toast(r.d.erro||'Erro'); return; }
@@ -1370,6 +1371,51 @@ function ligarVitrinePnl(){
       _lvp.exemplos=r.d.exemplos; _lvTemas=null; box.innerHTML=htmlVitrinePnl(); ligarVitrinePnl(); toast('Foto adicionada na vitrine! 📷');
     }).catch(function(){ toast('Não consegui abrir essa foto.'); });
   };
+}
+/* RELATÓRIO SÓ DO LIVRO: prévias, quem pagou, entregues, com problema e quanto tempo levou */
+_lvp.relDias=_lvp.relDias||30;
+function lvTempo(ms){ if(ms==null||ms<0) return '—'; var s=Math.round(ms/1000); if(s<90) return s+' s'; var m=Math.round(s/60); if(m<90) return m+' min'; return (m/60).toFixed(1).replace('.',',')+' h'; }
+function lvMedia(l){ l=l.filter(function(x){ return x!=null&&x>=0; }); if(!l.length) return null; l.sort(function(a,b){ return a-b; }); return l[Math.floor(l.length/2)]; }
+function ligarRelatorioLivros(){
+  var box=el('lvpRel'); if(!box) return;
+  box.innerHTML='<b>📊 Relatório do Livro Mágico</b><div style="font-size:.85rem;color:#888;margin-top:.3rem">Carregando…</div>';
+  lvpPost({acao:'relatorio',dias:_lvp.relDias}).then(function(r){
+    if(!r.ok){ box.innerHTML='<b>📊 Relatório do Livro Mágico</b><div style="color:#B4380A">'+esc(r.d.erro||'Não carregou.')+'</div>'; return; }
+    var d=r.d, ls=d.livros||[], vendas=ls.filter(function(l){ return l.tipo==='venda'; });
+    var prontos=ls.filter(function(l){ return l.status==='pronto'; }), problemas=ls.filter(function(l){ return l.status!=='pronto' && (l.status==='problema' || Date.now()-(l.pagoEm||0)>15*60000); });
+    var fazendo=ls.filter(function(l){ return l.status!=='pronto' && problemas.indexOf(l)<0; });
+    var fat=vendas.reduce(function(a,l){ return a+(+l.valor||0); },0), conv=d.previas?Math.round(vendas.length/d.previas*1000)/10:0;
+    var tLivro=lvMedia(prontos.map(function(l){ return l.prontoEm&&l.pagoEm?l.prontoEm-l.pagoEm:null; })), tPrev=lvMedia(d.temposPrevia||[]);
+    function kpi(n,t,cor){ return '<div style="flex:1 1 7.5rem;background:'+(cor||'#F6F2FB')+';border-radius:12px;padding:.55rem .65rem"><div style="font:800 1.25rem Inter,sans-serif">'+n+'</div><div style="font-size:.75rem;color:#555">'+t+'</div></div>'; }
+    var dias=Object.keys(d.porDia||{}).sort(), mx=1; dias.forEach(function(k){ mx=Math.max(mx,d.porDia[k].previas,d.porDia[k].pagos); });
+    var graf='<div style="display:flex;align-items:flex-end;gap:4px;height:110px;margin:.8rem 0 .2rem;padding-bottom:1.1rem;position:relative">'+dias.map(function(k){ var x=d.porDia[k];
+      return '<div style="flex:1;display:flex;align-items:flex-end;gap:1px;height:100%;position:relative" title="'+k.slice(8)+'/'+k.slice(5,7)+': '+x.previas+' prévias, '+x.pagos+' pagos">'+
+        '<div style="flex:1;background:#C9B6F2;border-radius:3px 3px 0 0;height:'+(x.previas/mx*100)+'%"></div><div style="flex:1;background:#2FA36B;border-radius:3px 3px 0 0;height:'+(x.pagos/mx*100)+'%"></div>'+
+        '<span style="position:absolute;bottom:-1.1rem;left:0;right:0;text-align:center;font-size:.6rem;color:#999">'+k.slice(8)+'</span></div>'; }).join('')+'</div>'+
+      '<div style="font-size:.75rem;color:#666"><span style="display:inline-block;width:.7rem;height:.7rem;background:#C9B6F2;border-radius:2px;vertical-align:-1px"></span> prévias &nbsp; <span style="display:inline-block;width:.7rem;height:.7rem;background:#2FA36B;border-radius:2px;vertical-align:-1px"></span> pagos (últimos 14 dias)</div>';
+    function linha(l,prob){
+      var tp=l.prontoEm&&l.pagoEm?lvTempo(l.prontoEm-l.pagoEm):(l.pagoEm?'há '+lvTempo(Date.now()-l.pagoEm):'—');
+      return '<div style="border-top:1px solid #f0f0f0;padding:.5rem 0;font-size:.85rem">'+
+        '<div style="display:flex;gap:.5rem;align-items:baseline"><b style="flex:1;min-width:0">'+esc(l.nome||'')+' · '+esc(l.tema||'')+'</b><span>'+(l.tipo==='venda'?'R$ '+(+l.valor).toFixed(2).replace('.',','):l.tipo==='pacote'?'do pacote':'teste')+'</span></div>'+
+        '<div style="color:#666">Pago '+(l.pagoEm?new Date(l.pagoEm).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—')+
+          ' · ilustrações '+l.ilus+'/'+l.ilusTotal+' · '+(l.status==='pronto'?'pronto em <b>'+tp+'</b>':'<b>'+tp+'</b>')+
+          ' · WhatsApp '+(l.entregueEm?'✅ entregue':'⏳ não entregue')+(l.whatsapp?' ('+esc(l.whatsapp)+')':'')+'</div>'+
+        (prob&&l.motivo?'<div style="color:#B4380A">Motivo: '+esc(l.motivo)+'</div>':'')+
+        (prob?'<div style="margin-top:.3rem;display:flex;gap:.4rem;flex-wrap:wrap"><button class="pnl-link" data-relref="'+esc(l.id)+'">🔄 Refazer imagens</button><a class="pnl-link" href="#/livro/'+esc(l.id)+'" target="_blank" rel="noopener">Abrir</a></div>':'')+'</div>';
+    }
+    box.innerHTML='<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap"><b style="flex:1">📊 Relatório do Livro Mágico</b>'+
+        '<select id="lvpRelDias" style="padding:.35rem;border-radius:8px;border:1px solid #ddd">'+[7,30,90].map(function(n){ return '<option value="'+n+'"'+(n===_lvp.relDias?' selected':'')+'>'+n+' dias</option>'; }).join('')+'</select><button class="pnl-link" id="lvpRelAt">↻</button></div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.6rem">'+
+        kpi(d.previas,'prévias criadas')+kpi(vendas.length,'livros pagos','#E7F7EE')+kpi(conv.toString().replace('.',',')+'%','das prévias viraram venda')+kpi('R$ '+fat.toFixed(2).replace('.',','),'faturado no livro','#E7F7EE')+
+        kpi(prontos.length,'prontos (entregues no site)')+kpi(ls.filter(function(l){ return l.entregueEm; }).length,'entregues no WhatsApp')+kpi(fazendo.length,'sendo feitos agora')+kpi(problemas.length,'com problema / atrasados',problemas.length?'#FFE9E2':'')+
+        kpi(lvTempo(tPrev),'tempo da prévia (mediana)')+kpi(lvTempo(tLivro),'pago → livro pronto (mediana)')+'</div>'+graf+
+      (problemas.length?'<div style="margin-top:1rem"><b style="color:#B4380A">⚠️ Com problema ou atrasados ('+problemas.length+')</b>'+problemas.map(function(l){ return linha(l,true); }).join('')+'</div>':'')+
+      (fazendo.length?'<div style="margin-top:1rem"><b>⏳ Sendo feitos agora ('+fazendo.length+')</b>'+fazendo.map(function(l){ return linha(l,false); }).join('')+'</div>':'')+
+      '<details style="margin-top:1rem"><summary style="cursor:pointer;font-weight:700">✅ Prontos ('+prontos.length+')</summary>'+(prontos.map(function(l){ return linha(l,false); }).join('')||'<div style="font-size:.85rem;color:#999">Nenhum ainda.</div>')+'</details>';
+    el('lvpRelDias').onchange=function(){ _lvp.relDias=+this.value; ligarRelatorioLivros(); };
+    el('lvpRelAt').onclick=ligarRelatorioLivros;
+    box.querySelectorAll('[data-relref]').forEach(function(b){ b.onclick=function(){ b.disabled=true; lvpPost({acao:'livro-refazer',id:b.dataset.relref}).then(function(x){ toast(x.ok?'Recomeçou! Aguarde uns minutos.':(x.d.erro||'Erro')); b.disabled=false; }); }; });
+  }).catch(function(){ box.innerHTML='<b>📊 Relatório do Livro Mágico</b><div style="color:#B4380A">Sem conexão.</div>'; });
 }
 /* cria um livro de exemplo direto do painel: prévia (sem trava) → liberado sem pagar → entra sozinho na vitrine */
 _lvp.fazendo=_lvp.fazendo||[];
