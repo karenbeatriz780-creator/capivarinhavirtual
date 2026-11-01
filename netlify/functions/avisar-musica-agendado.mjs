@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { entregarMusica, SITE } from './_zap.mjs';
+import { entregarPreviaLivro } from './_livros.mjs';
 
 // A CADA MINUTO: confere as músicas que estão sendo criadas e, quando ficam
 // prontas, manda no WhatsApp do cliente (mesmo que ele tenha fechado o site).
@@ -9,6 +10,18 @@ const LIMITE = 3 * 3600 * 1000; // depois de 3 h desiste
 
 export default async () => {
   const loja = getStore('whatsapp');
+  // LIVRO MÁGICO: prévias que o cliente pediu pra receber no WhatsApp
+  try {
+    const lv = ((await loja.list({ prefix: 'lvpend_' })).blobs || []).slice(0, 20);
+    await Promise.all(lv.map(async (b) => {
+      try {
+        const p = await loja.get(b.key, { type: 'json' }).catch(() => null);
+        if (!p || !p.id || Date.now() - (p.em || 0) > LIMITE) { await loja.delete(b.key); return; }
+        const r = await entregarPreviaLivro(p.id, p.t, p.numero, process.env.URL || SITE);
+        if (r !== 'esperando' && r !== 'erro') await loja.delete(b.key);
+      } catch (e) { console.error('avisar-livro:', b.key, e && e.message); }
+    }));
+  } catch (e) {}
   let lista = [];
   try { lista = ((await loja.list({ prefix: 'pend_' })).blobs || []).slice(0, 40); } catch (e) { return; }
   if (!lista.length) return;

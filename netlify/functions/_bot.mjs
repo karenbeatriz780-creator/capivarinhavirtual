@@ -52,6 +52,8 @@ async function mandarMusicasDoNumero(para, tel) {
     await enviarTexto(para, '🎵 Achei a sua prévia' + (m.nomes ? ' pra *' + m.nomes + '*' : '') + '! Pra liberar a música completa, é só finalizar o pagamento:\n' + SITE + '/#/ouvir/t.' + m.t +
       '\n\nAssim que o pagamento cair, eu te mando a música completa aqui. 💗');
     await registrar('reenviou', { para, tel: String(tel), previa: m.t });
+    if (!(await loja().get('recfeito_' + m.t, { type: 'json' }).catch(() => null)) && !(await loja().get('rec_' + m.t, { type: 'json' }).catch(() => null)))
+      await loja().setJSON('rec_' + m.t, { taskId: m.t, numero: para, em: Date.now() });
     return 1;
   }
   return 0;

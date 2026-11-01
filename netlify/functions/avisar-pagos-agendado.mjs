@@ -1,6 +1,7 @@
 import { getStore } from '@netlify/blobs';
 import { idsDoDia, diaBR } from './_indice.mjs';
-import { enviarTexto, conversaAberta, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos } from './_zap.mjs';
+import { enviarTexto, conversaAberta, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE } from './_zap.mjs';
+import { avancarLivro } from './_livros.mjs';
 
 // A CADA MINUTO: quem PAGOU recebe no WhatsApp o link das músicas + os áudios completos.
 // - Só pra quem conversou com o número nas últimas 24 h → manda grátis (texto + áudios).
@@ -22,6 +23,23 @@ export default async () => {
       const g = await presentes.get(id, { type: 'json' }).catch(() => null);
       if (!g || !g.pago || g.cancelado) continue;
       if (agora - (g.pagoEm || 0) > JANELA) { await loja.setJSON('pago_' + id, { pulado: 'antigo', em: agora }); continue; }
+      // LIVRO MÁGICO: termina de gerar as ilustrações (mesmo que a pessoa tenha fechado a tela)
+      if (g.produto === 'livro') {
+        let gl = g;
+        try { gl = (await avancarLivro(id, process.env.URL || SITE)) || g; } catch (e) { console.error('avisar-pagos livro', id, e && e.message); }
+        if (!gl.livro || gl.livro.status !== 'pronto') continue; // volta daqui a 3 min
+        let numL = String(gl.whatsapp || '').replace(/\D/g, '');
+        await loja.setJSON('pago_' + id, { em: agora, livro: true });
+        if (numL.length >= 10) {
+          if (!numL.startsWith('55') || numL.length <= 11) numL = '55' + numL;
+          const abertaL = await conversaAberta(numL);
+          if (abertaL) {
+            await enviarTexto(abertaL, '📖✨ *O Livro Mágico de ' + gl.livro.nome + ' ficou pronto!*\n\nToque pra ler, ouvir a música e baixar o PDF pra imprimir:\n' + SITE + '/#/livro/' + id);
+            await registrar('pago_enviado', { para: abertaL, pedido: id, nome: gl.livro.nome, via: 'livro' });
+          }
+        }
+        continue;
+      }
       if (!temMusica(g)) { await loja.setJSON('pago_' + id, { pulado: 'sem música', em: agora }); continue; }
       let num = String(g.musicaWhatsapp || g.whatsapp || '').replace(/\D/g, '');
       if (num.length < 10) { await loja.setJSON('pago_' + id, { pulado: 'sem whatsapp', em: agora }); continue; }
