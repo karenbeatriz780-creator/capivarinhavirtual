@@ -19,11 +19,32 @@ export default async (req) => {
     if (!chaveApi()) return json({ erro: 'O Livro Mágico ainda está sendo configurado. Volta em breve!' }, 503);
     let b = {}; try { b = await req.json(); } catch (e) { return json({ erro: 'Dados inválidos.' }, 400); }
 
+    // TROCAR A FOTO: a IA recusou a foto (acontece com foto escura, de longe, com filtro, sem camiseta…).
+    // O cliente manda outra e a capa recomeça, sem gastar uma prévia nova.
+    if (b.trocarFoto) {
+      const id = String(b.trocarFoto), pres = getStore('presentes');
+      const g = /^L[0-9a-f]{14}$/.test(id) ? await pres.get(id, { type: 'json' }).catch(() => null) : null;
+      if (!g || !g.livro || String(b.t || '') !== g.livro.token) return json({ erro: 'Livro não encontrado.' }, 404);
+      const mf = /^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/.exec(String(b.foto || ''));
+      if (!mf) return json({ erro: 'Envie uma foto JPG ou PNG.' }, 400);
+      const bf = Buffer.from(mf[2], 'base64');
+      if (bf.length < 8000 || bf.length > 4.5 * 1024 * 1024) return json({ erro: 'Essa foto não serve. Tente outra.' }, 400);
+      await loja().set('foto/' + id, bf, { metadata: { tipo: 'image/jpeg' } });
+      const L = g.livro;
+      L.capa = { trocouFoto: (L.capa && L.capa.trocouFoto || 0) + 1 };
+      (L.paginas || []).forEach((p) => { if (p && !p.ok) { p.tent = 0; p.erro = false; p.task = null; p.msg = ''; p.recusas = 0; } });
+      L.fotoApagada = false; if (L.status === 'problema') L.status = g.pago ? 'gerando' : 'criando';
+      await pres.setJSON(id, g);
+      try { await avancarLivro(id, baseSite(req)); } catch (e) {}
+      return json({ ok: true });
+    }
     const senhaAdm0 = (process.env.ADMIN_SENHA || '').trim();
     const ehAdm = !!senhaAdm0 && (req.headers.get('x-admin-key') || '') === senhaAdm0;
     const tema = await acharTema(String(b.tema || ''));
     if (!tema || (tema.status !== 'publicado' && !ehAdm)) return json({ erro: 'Escolha uma história.' }, 400);
-    const nome = String(b.nome || '').trim().replace(/\s+/g, ' ').slice(0, 30);
+    let nome = String(b.nome || '').trim().replace(/\s+/g, ' ').slice(0, 30);
+    // tudo maiúsculo ou tudo minúsculo → "Felipe" (fica mais bonito na capa e no livro)
+    if (nome === nome.toUpperCase() || nome === nome.toLowerCase()) nome = nome.toLowerCase().replace(/(^|[\s-])(\S)/g, (m, a, l) => a + l.toUpperCase()).replace(/\b(Da|De|Do|Das|Dos|E)\b/g, (x) => x.toLowerCase());
     if (nome.length < 2) return json({ erro: 'Escreva o nome da criança.' }, 400);
     const genero = b.genero === 'menina' ? 'menina' : 'menino';
     const idade = Math.max(0, Math.min(10, parseInt(b.idade, 10) || 0));

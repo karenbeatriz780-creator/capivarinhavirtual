@@ -142,7 +142,7 @@ export default async (req) => {
       pedidos.push({
         id: g.id,
         produto: g.produto,
-        livro: g.livro ? (() => { const L = g.livro, ps = L.paginas || [], msgs = [L.capa && !L.capa.ok && L.capa.msg].concat(ps.map((p) => p && !p.ok && p.msg)).filter(Boolean);
+        livro: g.livro ? (() => { const L = g.livro, ps = (L.paginas || []).filter((p) => p && !p.so && p.usa == null), msgs = [L.capa && !L.capa.ok && L.capa.msg].concat(ps.map((p) => p && !p.ok && p.msg)).filter(Boolean);
           return { nome: L.nome || '', tema: L.tema || '', status: L.status || '', token: L.token || '', genero: L.genero || '',
             capaOk: !!(L.capa && L.capa.ok), capaErro: !!(L.capa && L.capa.erro), pagOk: ps.filter((p) => p && p.ok).length, pagTotal: ps.length,
             pagErro: ps.filter((p) => p && p.erro).length, tentativas: (L.capa && L.capa.tent || 0) + ps.reduce((n, p) => n + (p && p.tent || 0), 0),
