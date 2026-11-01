@@ -7202,6 +7202,46 @@ function pnlQueryMusicas(){
   return '?dias=8';
 }
 var _pnlCompleto=false, _pnlParcial=false, _pnlFunilOk=false, _pnlLimite=30, _pnlAba='hoje', _pnlFiltro='todos', _pnlItens=[], _pnlLetraAberta={};
+function abrirTentativasLivro(id){
+  var velho=document.getElementById('lvTentM'); if(velho) velho.remove();
+  var m=document.createElement('div'); m.id='lvTentM';
+  m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:14px';
+  m.innerHTML='<div style="background:#16131f;color:#eee;border:1px solid #3a3350;border-radius:16px;max-width:44rem;width:100%;padding:14px 14px 18px;font:500 .9rem Inter,system-ui,sans-serif">'+
+    '<div style="display:flex;align-items:center;gap:8px"><b style="flex:1;font-size:1.05rem">🔍 Tentativas do livro</b><button type="button" id="lvTentX" class="pc-bt">Fechar</button></div><div id="lvTentC" style="margin-top:10px">Carregando…</div></div>';
+  document.body.appendChild(m);
+  var vivo=true, iv=null;
+  function fechar(){ vivo=false; clearInterval(iv); m.remove(); }
+  document.getElementById('lvTentX').onclick=fechar; m.onclick=function(e){ if(e.target===m) fechar(); };
+  function hora(t){ return t?new Date(t).toLocaleTimeString('pt-BR'):'—'; }
+  function ha(t){ if(!t) return ''; var s=Math.max(0,Math.round((Date.now()-t)/1000)); return s<120?s+' s':Math.round(s/60)+' min'; }
+  var EV={pediu:'🟡 pediu ao Google',falhou:'🔴 falhou',erro:'🔴 erro ao pedir',ok:'🟢 ficou pronta',recomecou:'🔄 recomeçou (você apertou)'};
+  function bloco(nome,x){
+    var st=x.ok?'<span style="color:#7CE0A3">✅ pronta</span>':(x.rodando?'<span style="color:#FFD27A">🟢 gerando agora</span>':'<span style="color:#BFE3FF">⏳ vai tentar de novo</span>');
+    var h=(x.hist||[]).slice().reverse().map(function(e){ return '<div style="display:flex;gap:8px;padding:3px 0;border-top:1px solid #2a2438"><span style="color:#999;min-width:5.2rem">'+hora(e.em)+'</span><span style="min-width:2.4rem;color:#aaa">'+(e.n?e.n+'ª':'')+'</span><span style="flex:1">'+(EV[e.ev]||e.ev)+(e.msg?'<br><small style="color:#FFB4A8">'+esc(e.msg)+'</small>':'')+'</span></div>'; }).join('');
+    return '<details'+(x.ok?'':' open')+' style="background:#1e1a2b;border-radius:12px;padding:8px 10px;margin-top:8px"><summary style="cursor:pointer"><b>'+nome+'</b> · '+st+' · '+x.tent+' tentativa'+(x.tent===1?'':'s')+(x.recusas?' · '+x.recusas+' recusas do Google':'')+(x.em&&!x.ok?' · última há '+ha(x.em):'')+'</summary>'+
+      (h||'<div style="color:#999;padding:4px 0">Ainda não tentou.</div>')+'</details>';
+  }
+  function carregar(){
+    fetch('/.netlify/functions/livro-temas',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'livro-diag',id:id})})
+      .then(function(r){ return r.json(); }).then(function(d){
+        if(!vivo) return; var c=document.getElementById('lvTentC'); if(!c) return;
+        if(!d||!d.ok){ c.textContent=(d&&d.erro)||'Não carregou.'; return; }
+        var g=d.diag, ps=g.paginas||[], todas=[g.capa].concat(ps), rodando=todas.some(function(x){ return x&&!x.ok&&x.rodando; }), falta=todas.some(function(x){ return x&&!x.ok; });
+        c.innerHTML='<div style="background:#221d33;border-radius:12px;padding:8px 10px">'+
+            '<b>'+esc(g.nome||'')+'</b> · '+esc(g.status||'')+' · '+(g.pago?'pago':'prévia')+'<br>'+
+            (falta?(g.motor?'⚙️ <b style="color:#7CE0A3">Sistema tentando sozinho agora</b> (confere a cada 2 s)':'⚙️ Sistema confere de novo em até 3 min')+' · atualiza esta tela a cada 3 s':'✅ Todas as imagens prontas')+
+            (g.fotoApagada?'<br><span style="color:#FFB4A8">A foto da criança já foi apagada.</span>':'')+'</div>'+
+          bloco('Capa',g.capa)+ps.map(function(x,i){ return bloco('Ilustração '+(i+1),x); }).join('')+
+          (falta?'<div style="margin-top:12px">'+(rodando?'<button type="button" class="pc-bt" disabled style="opacity:.5">🔄 Recomeçar (bloqueado: tem imagem sendo gerada agora)</button><div style="color:#999;font-size:.8rem;margin-top:4px">Não precisa apertar: o sistema tenta sozinho até sair.</div>':'<button type="button" class="pc-bt" id="lvTentR">🔄 Recomeçar do zero</button><div style="color:#999;font-size:.8rem;margin-top:4px">Só use se travou. Normalmente não precisa: o sistema tenta sozinho até sair.</div>')+'</div>':'');
+        var rb=document.getElementById('lvTentR');
+        if(rb) rb.onclick=function(){ rb.disabled=true;
+          fetch('/.netlify/functions/livro-temas',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'livro-refazer',id:id})})
+            .then(function(r){ return r.json(); }).then(function(x){ toast(x&&x.ok?'Recomeçou.':((x&&x.erro)||'Não deu.')); carregar(); }).catch(function(){ toast('Sem conexão.'); rb.disabled=false; });
+        };
+      }).catch(function(){});
+  }
+  carregar(); iv=setInterval(function(){ if(!document.getElementById('lvTentM')){ clearInterval(iv); return; } carregar(); },3000);
+}
 function pedirSenhaAdmin(){
   if(_pnlChave) return true;
   var k=(prompt('Pra mexer em pedidos, digite a senha de administrador:')||'').trim();
@@ -7732,7 +7772,7 @@ function desenharPainel(pedidos, visitas, musicas){
         '<button type="button" class="pc-bt" data-copiar-link="'+esc(link)+'">Copiar link</button>'+
         (nMus?'<button type="button" class="pc-bt" data-expandir>🎵 Músicas ('+nMus+') ▾</button>':'')+
         (p.produto==='livro'&&p.pago&&!p.cancelado&&p.livro&&p.livro.status==='pronto'?'<button type="button" class="pc-bt" data-livro-exemplo="'+esc(p.id)+'">⭐ Usar como exemplo</button>':'')+
-        (p.produto==='livro'&&!p.cancelado&&p.livro&&p.livro.status!=='pronto'&&(!p.livro.capaOk||p.livro.pagErro||p.livro.status==='problema'||p.livro.msg)?'<button type="button" class="pc-bt" data-livro-refazer="'+esc(p.id)+'">🔄 Refazer imagens</button>':'')+
+        (p.produto==='livro'&&!p.cancelado&&p.livro?'<button type="button" class="pc-bt" data-livro-tent="'+esc(p.id)+'">🔍 Ver tentativas</button>':'')+
       '</div>'+
       '<div class="pc-mais" hidden>'+
         '<div class="pnl-musica">'+htmlMusicasPedido(p)+
@@ -8050,6 +8090,10 @@ function desenharPainel(pedidos, visitas, musicas){
   });
   body.querySelectorAll('[data-copiar-link]').forEach(function(btn){
     btn.onclick=function(){ copiar(btn.dataset.copiarLink, 'Link copiado!'); };
+  });
+  /* LIVRO: painel das tentativas (só você vê). Atualiza sozinho a cada 3 s. */
+  body.querySelectorAll('[data-livro-tent]').forEach(function(btn){
+    btn.onclick=function(){ if(!pedirSenhaAdmin()) return; abrirTentativasLivro(btn.dataset.livroTent); };
   });
   /* livro com imagem que não saiu → tenta de novo */
   body.querySelectorAll('[data-livro-refazer]').forEach(function(btn){
