@@ -5,7 +5,7 @@
 //  img/<pedido>/p1..p5    → ilustrações (só com o livro PAGO)
 //  foto/<pedido>          → foto enviada (só com o token; é o que a IA usa de referência)
 import { getStore } from '@netlify/blobs';
-import { loja } from './_livros.mjs';
+import { loja, tipoImagem } from './_livros.mjs';
 
 function nao(status) { return new Response('não encontrado', { status: status || 404, headers: { 'Cache-Control': 'no-store' } }); }
 
@@ -25,10 +25,12 @@ export default async (req) => {
     }
     const r = await loja().getWithMetadata(k, { type: 'arrayBuffer' }).catch(() => null);
     if (!r || !r.data) return nao();
-    return new Response(r.data, {
+    const buf = Buffer.from(r.data);
+    return new Response(buf, {
       status: 200,
       headers: {
-        'Content-Type': (r.metadata && r.metadata.tipo) || 'image/png',
+        'Content-Type': tipoImagem(buf, (r.metadata && r.metadata.tipo) || 'image/png'),
+        'Content-Length': String(buf.length),
         'Cache-Control': publico ? 'public, max-age=86400' : 'private, max-age=86400'
       }
     });

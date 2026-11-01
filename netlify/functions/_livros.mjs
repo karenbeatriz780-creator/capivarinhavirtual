@@ -272,11 +272,22 @@ export async function verTarefa(taskId, tipo) {
   } catch (e) { return { estado: 'rodando', urls: [] }; }
 }
 
+// descobre o tipo real pelos primeiros bytes (o servidor de origem às vezes manda "octet-stream",
+// e aí o Google não consegue ler a imagem quando ela volta como referência)
+export function tipoImagem(buf, padrao) {
+  if (buf && buf.length > 12) {
+    if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'image/png';
+    if (buf[0] === 0xff && buf[1] === 0xd8) return 'image/jpeg';
+    if (buf.toString('latin1', 0, 4) === 'RIFF' && buf.toString('latin1', 8, 12) === 'WEBP') return 'image/webp';
+    if (buf.toString('latin1', 0, 3) === 'GIF') return 'image/gif';
+  }
+  return padrao || 'image/png';
+}
 export async function guardarImagem(url, chave) {
   const r = await fetch(url);
   if (!r.ok) throw new Error('baixar imagem ' + r.status);
-  const tipo = r.headers.get('content-type') || 'image/png';
   const buf = Buffer.from(await r.arrayBuffer());
+  const tipo = tipoImagem(buf, (r.headers.get('content-type') || '').startsWith('image/') ? r.headers.get('content-type') : 'image/png');
   if (buf.length < 2000) throw new Error('imagem vazia');
   await loja().set(chave, buf, { metadata: { tipo } });
   return true;
@@ -290,6 +301,14 @@ const MAX_IMG = 8;             // imagem: 3 tentativas seguidas, depois 1 a cada
 const ESPERA_IMG = 10 * 60 * 1000;
 
 function linkFoto(base, g) { return base + '/.netlify/functions/livro-img?k=' + encodeURIComponent('foto/' + g.id) + '&t=' + g.livro.token; }
+// referências pra ilustração: foto + capa (pra manter o mesmo personagem). Se o Google recusar
+// uma referência, a próxima tentativa vai só com a foto (que é o que importa pro rosto).
+function refsPagina(base, g, p) {
+  const L = g.livro, foto = linkFoto(base, g);
+  const recusou = /refused|cannot read|upload/i.test((p && p.msg) || '');
+  if (!L.capa.ok || recusou || ((p && p.tent) || 0) >= 2) return [foto];
+  return [foto, L.capa.url || linkImg(base, g, 'capa')];
+}
 function linkImg(base, g, nome) { return base + '/.netlify/functions/livro-img?k=' + encodeURIComponent('img/' + g.id + '/' + nome) + '&t=' + g.livro.token; }
 
 async function andarImagem(item, chave, criar, limite) {
@@ -298,7 +317,8 @@ async function andarImagem(item, chave, criar, limite) {
   if (!item.task) {
     const tent = item.tent || 0;
     if (tent >= MAX_IMG) { if (!item.erro) { item.erro = true; return true; } return false; }
-    if (tent >= 3 && Date.now() - (item.em || 0) < ESPERA_IMG) return false; // dá um tempo antes de tentar de novo
+    const recusada = /refused|cannot read|upload/i.test(item.msg || '');
+    if (tent >= (recusada ? 5 : 3) && Date.now() - (item.em || 0) < ESPERA_IMG) return false; // dá um tempo antes de tentar de novo
     item.erro = false;
     try { item.task = await criar(); }
     catch (e) { item.msg = String(e && e.message || e).slice(0, 300); item.tent = tent + 1; item.em = Date.now(); console.error('livro imagem (criar):', chave, item.msg); return true; }
@@ -314,7 +334,7 @@ async function andarImagem(item, chave, criar, limite) {
   }
   if (st.estado === 'pronto') {
     limite.downloads--;
-    try { await guardarImagem(st.urls[0], chave); item.ok = true; item.task = null; return true; }
+    try { await guardarImagem(st.urls[0], chave); item.ok = true; item.url = st.urls[0]; item.task = null; return true; }
     catch (e) { console.error('guardar imagem', chave, e.message); item.msg = 'não consegui baixar a imagem: ' + e.message; item.task = null; return true; }
   }
   return false;
@@ -377,7 +397,7 @@ export async function avancarLivro(id, base) {
       if (p.usa != null) continue;
       try {
         mudou = (await andarImagem(p, 'img/' + g.id + '/p' + (i + 1), () =>
-          criarImagem(promptImagem(tema, L, tema.paginas[i].cena, false), L.capa.ok ? [linkFoto(base, g), linkImg(base, g, 'capa')] : [linkFoto(base, g)], '3:4', '2K'), limite)) || mudou;
+          criarImagem(promptImagem(tema, L, tema.paginas[i].cena, false), refsPagina(base, g, p), '3:4', '2K'), limite)) || mudou;
       } catch (e) { console.error('livro página', id, i + 1, e.message); }
     }
     const okTodas = L.capa.ok && L.paginas.every((p) => p.usa != null || p.ok);
