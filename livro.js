@@ -816,10 +816,20 @@ window.pnlLivrosHtml=function(){ return '<div class="lvp" id="lvpCaixa"><div cla
 window.pnlLivrosLigar=function(){
   if(_lvp.temas){ desenharLvp(); return; }
   fetch('/.netlify/functions/livro-temas?admin=1',{headers:{'x-admin-key':_pnlChave}}).then(function(r){ return r.json(); }).then(function(d){
-    if(!d.temas){ el('lvpCaixa').innerHTML='<div class="pnl-nota">'+esc(d.erro||'Não consegui carregar.')+' Toque em "Link de acesso" e entre com a senha.</div>'; return; }
+    if(!d.temas){ lvpPedirSenha(!!_pnlChave); return; }
     _lvp.temas=d.temas; desenharLvp();
   }).catch(function(){ var c=el('lvpCaixa'); if(c) c.innerHTML='<div class="pnl-nota">Sem conexão.</div>'; });
 };
+function lvpPedirSenha(errou){
+  var c=el('lvpCaixa'); if(!c) return;
+  c.innerHTML='<div class="pnl-nota">🔒 Pra criar e aprovar as histórias, digite a <b>senha de administrador</b> (a mesma de cancelar ou marcar pedido como pago). Só precisa uma vez neste aparelho.'+
+    (errou?'<br><b style="color:#ff8a8a">Senha incorreta, tenta de novo.</b>':'')+'</div>'+
+    '<div style="display:flex;gap:.5rem;margin-top:.7rem"><input id="lvpSenha" type="password" autocomplete="current-password" placeholder="Senha" style="flex:1;min-width:0;padding:.75rem .9rem;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:inherit;font-size:1rem">'+
+    '<button class="pnl-att" id="lvpEntrar">Entrar</button></div>';
+  function ir(){ var k=(el('lvpSenha').value||'').trim(); if(!k) return; _pnlChave=k; try{ Store.set('cl_admin_key',k); }catch(e){} _lvp.temas=null; c.innerHTML='<div class="pnl-nota">Carregando as histórias…</div>'; window.pnlLivrosLigar(); }
+  el('lvpEntrar').onclick=ir;
+  el('lvpSenha').onkeydown=function(e){ if(e.key==='Enter') ir(); };
+}
 function lvpPost(corpo){ return fetch('/.netlify/functions/livro-temas',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify(corpo)}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); }); }
 function desenharLvp(){
   var c=el('lvpCaixa'); if(!c) return;
