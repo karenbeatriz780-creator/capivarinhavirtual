@@ -285,7 +285,9 @@ export async function guardarImagem(url, chave) {
 // ---------------------------------------------------------------------------
 // Andamento de um pedido de livro (chamado pela tela do cliente e pelo agendador)
 // ---------------------------------------------------------------------------
-const MAX_TENTATIVAS = 3;
+const MAX_TENTATIVAS = 3;      // música
+const MAX_IMG = 8;             // imagem: 3 tentativas seguidas, depois 1 a cada 10 min, até 8
+const ESPERA_IMG = 10 * 60 * 1000;
 
 function linkFoto(base, g) { return base + '/.netlify/functions/livro-img?k=' + encodeURIComponent('foto/' + g.id) + '&t=' + g.livro.token; }
 function linkImg(base, g, nome) { return base + '/.netlify/functions/livro-img?k=' + encodeURIComponent('img/' + g.id + '/' + nome) + '&t=' + g.livro.token; }
@@ -294,19 +296,26 @@ async function andarImagem(item, chave, criar, limite) {
   // item: { task, ok, tent }
   if (item.ok) return false;
   if (!item.task) {
-    if ((item.tent || 0) >= MAX_TENTATIVAS) { item.erro = true; return true; }
-    item.task = await criar(); item.tent = (item.tent || 0) + 1; item.em = Date.now();
+    const tent = item.tent || 0;
+    if (tent >= MAX_IMG) { if (!item.erro) { item.erro = true; return true; } return false; }
+    if (tent >= 3 && Date.now() - (item.em || 0) < ESPERA_IMG) return false; // dá um tempo antes de tentar de novo
+    item.erro = false;
+    try { item.task = await criar(); }
+    catch (e) { item.msg = String(e && e.message || e).slice(0, 300); item.tent = tent + 1; item.em = Date.now(); console.error('livro imagem (criar):', chave, item.msg); return true; }
+    item.tent = tent + 1; item.em = Date.now();
     return true;
   }
   if (limite.downloads <= 0) return false;
   const st = await verTarefa(item.task, 'imagem');
   if (st.estado === 'falhou' || (st.estado === 'rodando' && Date.now() - (item.em || 0) > 6 * 60 * 1000)) {
+    item.msg = st.estado === 'falhou' ? (st.msg || 'a IA recusou ou falhou ao gerar') : 'demorou demais (mais de 6 min)';
+    console.error('livro imagem falhou:', chave, item.msg);
     item.task = null; return true; // tenta de novo na próxima volta
   }
   if (st.estado === 'pronto') {
     limite.downloads--;
     try { await guardarImagem(st.urls[0], chave); item.ok = true; item.task = null; return true; }
-    catch (e) { console.error('guardar imagem', chave, e.message); item.task = null; return true; }
+    catch (e) { console.error('guardar imagem', chave, e.message); item.msg = 'não consegui baixar a imagem: ' + e.message; item.task = null; return true; }
   }
   return false;
 }
@@ -359,20 +368,26 @@ export async function avancarLivro(id, base) {
   } catch (e) { console.error('livro música', id, e.message); }
 
   // 3) depois do Pix: as 5 ilustrações
-  if (g.pago && L.capa.ok) {
-    L.paginas = L.paginas && L.paginas.length ? L.paginas : (tema.paginas || []).map(() => ({}));
+  if (g.pago && (L.capa.ok || L.capa.erro || (L.capa.tent || 0) >= 3)) {
+    // página com "usa": repete a ilustração de outra cena (não gera imagem nova)
+    L.paginas = L.paginas && L.paginas.length ? L.paginas : (tema.paginas || []).map((tp) => (usaDe(tp) != null ? { usa: usaDe(tp) } : {}));
     if (L.status !== 'gerando' && L.status !== 'pronto') { L.status = 'gerando'; L.gerandoEm = Date.now(); mudou = true; }
     for (let i = 0; i < L.paginas.length; i++) {
       const p = L.paginas[i];
+      if (p.usa != null) continue;
       try {
         mudou = (await andarImagem(p, 'img/' + g.id + '/p' + (i + 1), () =>
-          criarImagem(promptImagem(tema, L, tema.paginas[i].cena, false), [linkFoto(base, g), linkImg(base, g, 'capa')], '3:4', '2K'), limite)) || mudou;
+          criarImagem(promptImagem(tema, L, tema.paginas[i].cena, false), L.capa.ok ? [linkFoto(base, g), linkImg(base, g, 'capa')] : [linkFoto(base, g)], '3:4', '2K'), limite)) || mudou;
       } catch (e) { console.error('livro página', id, i + 1, e.message); }
     }
-    const todas = L.paginas.every((p) => p.ok || p.erro);
-    if (todas && g.musicaPreviewUrl) {
+    const okTodas = L.capa.ok && L.paginas.every((p) => p.usa != null || p.ok);
+    const acabou = L.paginas.every((p) => p.usa != null || p.ok || p.erro) && (L.capa.ok || L.capa.erro);
+    if (okTodas && g.musicaPreviewUrl) {
       L.status = 'pronto'; L.prontoEm = Date.now(); mudou = true;
       try { await loja().delete('foto/' + g.id); L.fotoApagada = true; } catch (e) {}
+    } else if (acabou && L.status !== 'problema') {
+      // alguma imagem não saiu depois de todas as tentativas: guarda a foto e avisa no painel (botão "Refazer imagens")
+      L.status = 'problema'; mudou = true;
     }
   } else if (!g.pago && L.capa.ok && g.musicaPreviewUrl && L.status !== 'previa') {
     L.status = 'previa'; mudou = true;
@@ -380,6 +395,14 @@ export async function avancarLivro(id, base) {
 
   if (mudou) await presentes.setJSON(g.id, g);
   return g;
+}
+
+// índice da cena cuja ilustração esta página repete (ou null = ilustração nova)
+export function usaDe(tp) { const n = tp && tp.usa; return (n === 0 || (n && Number.isInteger(+n))) && +n >= 0 ? +n : null; }
+// diagnóstico (só o administrador vê)
+export function diagLivro(g) {
+  const L = g.livro || {}, it = (x) => ({ ok: !!(x && x.ok), tent: (x && x.tent) || 0, erro: !!(x && x.erro), msg: (x && x.msg) || '', rodando: !!(x && x.task) });
+  return { capa: it(L.capa), musica: { ok: !!g.musicaPreviewUrl, tent: (L.musica && L.musica.tent) || 0, rodando: !!(L.musica && L.musica.task) }, paginas: (L.paginas || []).map(it), fotoApagada: !!L.fotoApagada, status: L.status };
 }
 
 // O que o site pode ver (sem dados internos)
@@ -392,7 +415,10 @@ export function resumoPublico(g, base) {
     capa: L.capa && L.capa.ok ? img('capa') : null,
     capaErro: !!(L.capa && L.capa.erro),
     musica: !!g.musicaPreviewUrl, musica2: !!g.musicaPreviewUrl2,
-    paginas: g.pago ? (L.paginas || []).map((p, i) => (p.ok ? img('p' + (i + 1)) : null)) : [],
+    paginas: g.pago ? (L.paginas || []).map((p, i) => {
+      if (p.usa != null) { const o = (L.paginas || [])[p.usa]; return o && o.ok ? img('p' + (p.usa + 1)) : null; }
+      return p.ok ? img('p' + (i + 1)) : null;
+    }) : [],
     valor: (g.pagamento && g.pagamento.valor) || PRECO_LIVRO
   };
 }
@@ -435,4 +461,19 @@ export async function entregarPreviaLivro(id, token, numero, base) {
   if (!ok) return 'erro';
   await registrar('enviou', { para, pedido: id, nome, via: 'livro' }).catch(() => {});
   return 'enviado';
+}
+
+// PAINEL: refaz as imagens que falharam (zera as tentativas). A foto precisa ainda existir.
+export async function refazerImagens(id) {
+  const presentes = getStore('presentes');
+  const g = await presentes.get(id, { type: 'json' }).catch(() => null);
+  if (!g || !g.livro) return { erro: 'Livro não encontrado.' };
+  const foto = loja().getMetadata ? await loja().getMetadata('foto/' + id).catch(() => null) : await loja().get('foto/' + id, { type: 'arrayBuffer' }).catch(() => null);
+  if (!foto) return { erro: 'A foto da criança já foi apagada. Peça uma foto nova pro cliente e crie o livro de novo.' };
+  const L = g.livro, zera = (it) => { if (it && !it.ok) { it.tent = 0; it.erro = false; it.task = null; it.msg = ''; it.em = 0; } };
+  zera(L.capa); (L.paginas || []).forEach(zera);
+  if (L.musica && !g.musicaPreviewUrl) { L.musica.tent = 0; L.musica.task = null; }
+  if (L.status === 'problema') L.status = g.pago ? 'gerando' : 'criando';
+  await presentes.setJSON(id, g);
+  return { ok: true };
 }

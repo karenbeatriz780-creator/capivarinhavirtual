@@ -10,7 +10,7 @@
 //                    { acao: 'exemplos-salvar', exemplos:[{id,mostrar}] } → ordem / mostrar / tirar
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
-import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex } from './_livros.mjs';
+import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro } from './_livros.mjs';
 
 // ---------- exemplos (vitrine da página) ----------
 async function lerExemplos() { try { return (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) { return []; } }
@@ -19,7 +19,7 @@ function exPublico(x) {
   const o = { id: x.id, tipo: x.tipo, mostrar: x.mostrar !== false, capa: urlEx(x.id, 'capa', x.em), legenda: x.legenda || '' };
   if (x.tipo === 'livro') {
     Object.assign(o, { nome: x.nome, genero: x.genero, tema: x.tema, titulo: x.titulo, textos: x.textos || [], pedido: x.pedido,
-      paginas: Array.from({ length: x.n || 0 }, (_, i) => urlEx(x.id, 'p' + (i + 1), x.em)) });
+      paginas: Array.from({ length: x.n || 0 }, (_, i) => urlEx(x.id, 'p' + (((x.mapa && x.mapa[i] != null) ? x.mapa[i] : i) + 1), x.em)) });
   }
   return o;
 }
@@ -43,9 +43,17 @@ function publico(t) {
 function limparTema(t) {
   const id = String(t.id || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30);
   if (!id) return null;
-  const paginas = (Array.isArray(t.paginas) ? t.paginas : []).slice(0, 10).map((p) => ({
-    texto: String(p.texto || '').slice(0, 900), cena: String(p.cena || '').slice(0, 900)
-  })).filter((p) => p.texto && p.cena);
+  const brutas = (Array.isArray(t.paginas) ? t.paginas : []).slice(0, 16).map((p) => ({
+    texto: String((p && p.texto) || '').slice(0, 900), cena: String((p && p.cena) || '').slice(0, 900), usa: usaDe(p)
+  }));
+  // tira páginas vazias, mas mantém as referências de "repete a ilustração da cena N" certas
+  const novoIndice = []; const paginas = [];
+  brutas.forEach((p, i) => { if (p.texto && (p.cena || p.usa != null)) { novoIndice[i] = paginas.length; paginas.push(p); } });
+  paginas.forEach((p) => {
+    if (p.usa == null) { delete p.usa; return; }
+    const alvo = novoIndice[p.usa];
+    if (alvo == null || alvo === paginas.indexOf(p) || paginas[alvo].usa != null) { delete p.usa; if (!p.cena) p.cena = paginas[0] ? paginas[0].cena : ''; } else p.usa = alvo;
+  });
   if (paginas.length < 3) return null;
   return {
     id, emoji: String(t.emoji || '📖').slice(0, 4), status: t.status === 'publicado' ? 'publicado' : 'rascunho',
@@ -108,11 +116,49 @@ export default async (req) => {
     let b = {}; try { b = await req.json(); } catch (e) {}
 
     if (b.acao === 'salvar') {
+      // avisa direitinho o que falta, em vez de sumir com a história
+      for (const t of (Array.isArray(b.temas) ? b.temas : [])) {
+        const nm = '"' + String(t.nome || t.id || 'sem nome') + '"';
+        const pags = Array.isArray(t.paginas) ? t.paginas : [];
+        for (let i = 0; i < pags.length; i++) {
+          const tx = String((pags[i] && pags[i].texto) || '').trim(), ce = String((pags[i] && pags[i].cena) || '').trim();
+          const repete = usaDe(pags[i]) != null;
+          if (tx && !ce && !repete) return json({ erro: 'Na história ' + nm + ', a página ' + (i + 1) + ' está sem o campo "O que aparece na ilustração". Preencha (pode ser em português) ou escolha repetir a ilustração de outra página.' }, 400);
+          if (!tx && (ce || repete)) return json({ erro: 'Na história ' + nm + ', a página ' + (i + 1) + ' está sem o texto.' }, 400);
+        }
+        const novas = pags.filter((p) => p && String(p.texto || '').trim() && String(p.cena || '').trim() && usaDe(p) == null).length;
+        if (novas < 3) return json({ erro: 'A história ' + nm + ' precisa de pelo menos 3 páginas com ilustração nova.' }, 400);
+        if (novas > 10) return json({ erro: 'A história ' + nm + ' tem ' + novas + ' ilustrações novas. O máximo é 10 (as outras podem repetir uma ilustração).' }, 400);
+        if (!String(t.titulo || '').trim()) return json({ erro: 'A história ' + nm + ' está sem o título da capa.' }, 400);
+      }
       const lista = (Array.isArray(b.temas) ? b.temas : []).map(limparTema).filter(Boolean);
       if (!lista.length) return json({ erro: 'Nenhuma história válida (cada uma precisa de pelo menos 3 cenas com texto e ilustração).' }, 400);
       const ids = {}; for (const t of lista) { if (ids[t.id]) return json({ erro: 'Duas histórias com o mesmo id: ' + t.id }, 400); ids[t.id] = 1; }
       await loja().setJSON('temas', lista);
       return json({ ok: true, temas: lista });
+    }
+    if (b.acao === 'livro-liberar') {
+      // você libera um livro seu sem pagar (pra testar ou pra usar de exemplo). Não conta como venda.
+      const id = String(b.id || '').trim();
+      if (!/^L[0-9a-f]{14}$/.test(id)) return json({ erro: 'Código do livro inválido.' }, 400);
+      const pres = getStore('presentes'), g = await pres.get(id, { type: 'json' }).catch(() => null);
+      if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
+      if (!g.pago) { g.pago = true; g.cortesia = true; g.pagoEm = Date.now(); g.pagamento = Object.assign({}, g.pagamento, { valor: 0, provedor: 'admin' }); await pres.setJSON(id, g); }
+      try { await avancarLivro(id, process.env.URL || new URL(req.url).origin); } catch (e) {}
+      return json({ ok: true });
+    }
+    if (b.acao === 'livro-diag') {
+      const g = await getStore('presentes').get(String(b.id || ''), { type: 'json' }).catch(() => null);
+      if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
+      return json({ ok: true, diag: diagLivro(g) });
+    }
+    if (b.acao === 'livro-refazer') {
+      const id = String(b.id || '').trim();
+      if (!/^L[0-9a-f]{14}$/.test(id)) return json({ erro: 'Código do livro inválido.' }, 400);
+      const r = await refazerImagens(id);
+      if (r.erro) return json({ erro: r.erro }, 400);
+      try { await avancarLivro(id, process.env.URL || new URL(req.url).origin); } catch (e) {}
+      return json({ ok: true });
     }
     if (b.acao === 'exemplo-add') {
       const id = String(b.id || '').trim();
@@ -121,12 +167,13 @@ export default async (req) => {
       if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
       if (!g.pago) return json({ erro: 'Só dá pra usar como exemplo um livro pago (com todas as ilustrações).' }, 400);
       const L = g.livro, pags = L.paginas || [];
-      if (!(L.capa && L.capa.ok) || !pags.length || pags.some((p) => !p || !p.ok)) return json({ erro: 'Esse livro ainda não terminou de ficar pronto. Tente daqui a pouco.' }, 400);
+      if (!(L.capa && L.capa.ok) || !pags.length || pags.some((p) => !p || (p.usa == null && !p.ok))) return json({ erro: 'Esse livro ainda não terminou de ficar pronto. Tente daqui a pouco.' }, 400);
       if (!(await copiarBlob('img/' + id + '/capa', 'ex/' + id + '/capa'))) return json({ erro: 'Não achei a capa desse livro.' }, 404);
-      for (let i = 1; i <= pags.length; i++) await copiarBlob('img/' + id + '/p' + i, 'ex/' + id + '/p' + i);
+      for (let i = 1; i <= pags.length; i++) if (pags[i - 1].usa == null) await copiarBlob('img/' + id + '/p' + i, 'ex/' + id + '/p' + i);
       const temas = await lerTemas(), t = temas.find((x) => x.id === L.tema) || {};
       const ex = {
         id, tipo: 'livro', pedido: id, nome: L.nome, genero: L.genero, tema: L.tema, n: pags.length, em: Date.now(), mostrar: true,
+        mapa: pags.map((p, i) => (p.usa != null ? p.usa : i)),
         titulo: flex(t.titulo || '{nome}', L.nome, L.genero), textos: (t.paginas || []).map((p) => flex(p.texto || '', L.nome, L.genero))
       };
       const lista = (await lerExemplos()).filter((x) => x.id !== id); lista.unshift(ex);

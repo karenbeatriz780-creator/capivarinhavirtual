@@ -4,11 +4,14 @@ import { getStore } from '@netlify/blobs';
 import { json, loja, novoId, novoToken, acharTema, avancarLivro, baseSite, chaveApi, PRECO_LIVRO } from './_livros.mjs';
 import { indexar, indexarDia } from './_indice.mjs';
 
-// UMA prévia por pessoa (por aparelho). Depois de PAGAR, pode criar outra.
-// Pela internet (IP) o limite é mais solto (3 por dia): operadora de celular coloca
+// ATÉ 2 prévias grátis por pessoa (por aparelho). Depois de PAGAR, libera de novo.
+// Pela internet (IP) o limite é mais solto (5 por dia): operadora de celular coloca
 // muita gente diferente no mesmo IP, e não dá pra bloquear cliente novo por isso.
 // Pra liberar mais uma sem pagar: o suporte gera um código no painel (aba Livros).
+// Você (com a senha de administrador salva no aparelho) cria quantas quiser, pra testar.
 const DIAS_TRAVA = 30;
+const MAX_PREVIAS = 2;
+const MAX_IP_DIA = 5;
 
 export default async (req) => {
   try {
@@ -30,19 +33,27 @@ export default async (req) => {
     if (buf.length < 8000) return json({ erro: 'A foto ficou muito pequena. Tente outra, com o rostinho bem visível.' }, 400);
     if (buf.length > 4.5 * 1024 * 1024) return json({ erro: 'A foto é muito grande. Tente outra.' }, 400);
 
-    // 1 prévia por pessoa: confere o aparelho e a internet (IP)
+    const senhaAdm = (process.env.ADMIN_SENHA || '').trim();
+    const admin = !!senhaAdm && (req.headers.get('x-admin-key') || '') === senhaAdm;
+    // até 2 prévias por pessoa: confere o aparelho e a internet (IP)
     const ip = (req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim().replace(/[^0-9a-f:.]/gi, '');
     const aparelho = String(b.aparelho || '').replace(/[^a-z0-9]/gi, '').slice(0, 40);
     const chaves = aparelho ? ['trava/ap/' + aparelho] : ['trava/ip/' + ip];
     const presentes0 = getStore('presentes');
     let jaTem = null, jaPagou = false;
+    const travas = {};
     for (const k of chaves) {
       const tv = await loja().get(k, { type: 'json' }).catch(() => null);
-      if (!tv || Date.now() - (tv.em || 0) > DIAS_TRAVA * 86400000) continue;
-      const anterior = await presentes0.get(tv.id, { type: 'json' }).catch(() => null);
-      if (anterior && anterior.pago) jaPagou = true;
-      if (anterior && !anterior.pago && !anterior.cancelado) { jaTem = anterior; break; }
+      // formato antigo: { id, em } → lista { ids:[{id,em}] }
+      const lista = !tv ? [] : (Array.isArray(tv.ids) ? tv.ids : (tv.id ? [{ id: tv.id, em: tv.em }] : []))
+        .filter((x) => x && x.id && Date.now() - (x.em || 0) <= DIAS_TRAVA * 86400000);
+      travas[k] = lista;
+      const anteriores = (await Promise.all(lista.map((x) => presentes0.get(x.id, { type: 'json' }).catch(() => null)))).filter(Boolean);
+      if (anteriores.some((a) => a.pago)) jaPagou = true;
+      const abertas = anteriores.filter((a) => !a.pago && !a.cancelado);
+      if (abertas.length >= MAX_PREVIAS) { jaTem = abertas.sort((a, b2) => (b2.criadoEm || 0) - (a.criadoEm || 0))[0]; break; }
     }
+    if (admin) jaTem = null;
     const codigo = String(b.codigo || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
     let usouCodigo = false;
     if (jaTem && codigo) {
@@ -53,11 +64,11 @@ export default async (req) => {
     const dia = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
     const chaveIp = 'ipdia/' + dia + '/' + ip;
     const porIp = (await loja().get(chaveIp, { type: 'json' }).catch(() => null)) || { n: 0 };
-    if (!jaTem && !usouCodigo && !jaPagou && porIp.n >= 3) {
+    if (!admin && !jaTem && !usouCodigo && !jaPagou && porIp.n >= MAX_IP_DIA) {
       return json({ jaTem: true, erro: 'Muitas prévias criadas nesta internet hoje. Desbloqueie a sua ou fale com o suporte.' }, 409);
     }
     if (jaTem && !usouCodigo) {
-      return json({ jaTem: true, nome: jaTem.livro && jaTem.livro.nome, erro: 'Você já criou a prévia do seu livro. Pra criar outra, desbloqueie a sua ou fale com o suporte.' }, 409);
+      return json({ jaTem: true, nome: jaTem.livro && jaTem.livro.nome, erro: 'Você já usou as 2 prévias grátis. Pra criar outra, desbloqueie um livro ou fale com o suporte.' }, 409);
     }
 
     const id = novoId();
@@ -75,7 +86,7 @@ export default async (req) => {
     await getStore('presentes').setJSON(id, g);
     try { await indexarDia('p', id); if (zap) await indexar(zap, 'p', id); } catch (e) {}
 
-    for (const k of chaves) await loja().setJSON(k, { id, em: Date.now() });
+    if (!admin) for (const k of chaves) await loja().setJSON(k, { ids: (travas[k] || []).concat([{ id, em: Date.now() }]).slice(-10) });
     await loja().setJSON(chaveIp, { n: porIp.n + 1 });
     if (usouCodigo) await loja().setJSON('codigo/' + codigo, { usado: true, em: Date.now(), livro: id });
 
