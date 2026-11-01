@@ -52,7 +52,7 @@ src="https://www.facebook.com/tr?id=2102013347063288&ev=PageView&noscript=1"
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Grand+Hotel&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Grand+Hotel&family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --white:#FFFFFF; --paper:#FFF7F9; --tint:#FFF1F6; --line:#F1E4E8;
@@ -2934,6 +2934,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
+<script src="/livro.js?v=3"></script>
 <script>
 /* =========================================================
    CAPIVARINHA LOVE — aplicação completa (single file)
@@ -3894,6 +3895,7 @@ function navegar(){
   if(r.nome==='oferta' && r.arg){ telaOferta(r.arg); return; }
   if(r.nome==='live'){ try{ Store.set('cl_live', String(Date.now())); }catch(e){} ir('criar/musica'); return; }
   if(r.nome==='tela-aovivo'){ telaAoVivo(); return; }
+  if(r.nome==='livro' && typeof telaLivro==='function'){ telaLivro(r.arg); return; }
   if(r.nome==='exemplo' && r.arg==='carta'){ abrirPresenteChecado(exemploCarta()); return; }
   if(r.nome==='painel-capivarinha'){ telaPainel(r.arg); return; }
   if(r.nome==='sou-eu'){ telaMarcarDev(); return; }
@@ -7880,6 +7882,7 @@ function desenharPainel(pedidos, visitas, musicas){
       '<button type="button" class="pnl-aba'+(_pnlAba==='dados'?' on':'')+'" data-aba="dados">📊 Dados</button>'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='zap'?' on':'')+'" data-aba="zap">🤖 WhatsApp</button>'+
       '<button type="button" class="pnl-aba'+(_pnlAba==='aovivo'?' on':'')+'" data-aba="aovivo">🔴 Ao vivo</button>'+
+      '<button type="button" class="pnl-aba'+(_pnlAba==='livros'?' on':'')+'" data-aba="livros">📚 Livros</button>'+
     '</div>'+
     '<div class="pnl-periodo">'+
       '<div class="pnl-per-l">'+(_pnlTel?'🔎 Mostrando tudo do número <b>'+esc(_pnlTel)+'</b>':'📅 Mostrando: <b>'+({'8':'últimos 8 dias','30p':'pagos dos últimos 30 dias','90p':'pagos dos últimos 90 dias','tudo':'todo o histórico'}[_pnlModo]||'')+'</b>')+'</div>'+
@@ -7903,6 +7906,7 @@ function desenharPainel(pedidos, visitas, musicas){
     (_pnlAba==='clientes' ? pnlClientesHtml(pedidos) : '')+
     (_pnlAba==='zap' ? pnlZapHtml() : '')+
     (_pnlAba==='aovivo' ? pnlAoVivoHtml(pedidos) : '')+
+    (_pnlAba==='livros' && typeof pnlLivrosHtml==='function' ? pnlLivrosHtml() : '')+
     (_pnlAba==='dados'
       ? '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
         '<div class="pnl-sec"><h2>Vendas por hora</h2>'+
@@ -7938,6 +7942,7 @@ function desenharPainel(pedidos, visitas, musicas){
   ligarHoje(body);
   body.querySelectorAll('[data-expandir]').forEach(function(b){ b.onclick=function(){ var m=b.closest('.pc').querySelector('.pc-mais'); m.hidden=!m.hidden; b.innerHTML=b.innerHTML.replace(m.hidden?'▴':'▾', m.hidden?'▾':'▴'); }; });
   if(_pnlAba==='zap'){ pnlZapLigar(body); if(!_pnlZap && !_pnlZapCarregando) pnlZapCarregar(); }
+  if(_pnlAba==='livros' && typeof pnlLivrosLigar==='function') pnlLivrosLigar();
   if(_pnlAba==='aovivo'){ var avc=body.querySelector('#avCopiar'); if(avc) avc.onclick=function(){ copiar(location.origin+'/#/live','Link da live copiado!'); }; }
   body.querySelectorAll('[data-aba]').forEach(function(b){
     b.onclick=function(){ _pnlAba=b.dataset.aba; _pnlLimite=30; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas);
