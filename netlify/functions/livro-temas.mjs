@@ -10,7 +10,7 @@
 //                    { acao: 'exemplos-salvar', exemplos:[{id,mostrar}] } → ordem / mostrar / tirar
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
-import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, adicionarExemplo } from './_livros.mjs';
+import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, adicionarExemplo, linkPdf, lerVendas } from './_livros.mjs';
 
 // ---------- exemplos (vitrine da página) ----------
 async function lerExemplos() { try { return (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) { return []; } }
@@ -340,7 +340,8 @@ function limparTema(t) {
     cores: Array.isArray(t.cores) && t.cores.length === 3 ? t.cores.map((c) => String(c).slice(0, 9)) : ['#FFE8F0', '#E86A9E', '#6B4BC4'],
     roupa: String(t.roupa || '').slice(0, 300), capa: String(t.capa || '').slice(0, 900), paginas,
     letra: String(t.letra || '').slice(0, 2500), estiloMusica: String(t.estiloMusica || "children's song, cheerful, catchy chorus, portuguese vocals").slice(0, 300),
-    vitrineEm: t.vitrineEm || null, vitrineGenero: t.vitrineGenero === 'menina' ? 'menina' : 'menino'
+    vitrineEm: t.vitrineEm || null, vitrineGenero: t.vitrineGenero === 'menina' ? 'menina' : 'menino',
+    vendasFora: Math.max(0, Math.min(1000000, parseInt(t.vendasFora, 10) || 0))
   };
 }
 
@@ -382,9 +383,14 @@ export default async (req) => {
       const temas = await lerTemas();
       if (u.searchParams.get('admin') === '1') {
         if (!admin) return json({ erro: 'Senha incorreta.' }, 401);
-        return json({ temas, exemplos: (await lerExemplos()).map(exPublico) });
+        return json({ temas, exemplos: (await lerExemplos()).map(exPublico), vendasSite: await lerVendas() });
       }
-      const pubs = temas.filter((t) => t.status === 'publicado').sort((a, b) => (a.ordem || 99) - (b.ordem || 99)).map(publico);
+      // mais vendidos primeiro (vendas do site + vendas de fora que você colocou no painel); empate: ordem do painel
+      const vendas = await lerVendas();
+      const total = (t) => (vendas[t.id] || 0) + (t.vendasFora || 0);
+      const pubs = temas.filter((t) => t.status === 'publicado')
+        .sort((a, b) => (total(b) - total(a)) || ((a.ordem || 99) - (b.ordem || 99)))
+        .map((t) => Object.assign(publico(t), { vendidos: total(t) }));
       const exemplos = (await lerExemplos()).filter((x) => x.mostrar !== false).map(exPublico);
       return new Response(JSON.stringify({ temas: pubs, exemplos }), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' } });
     }
@@ -434,6 +440,16 @@ export default async (req) => {
       if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
       return json({ ok: true, diag: diagLivro(g) });
     }
+    if (b.acao === 'pdf-links') {
+      // PDFs em alta de um livro (ex.: exemplo da vitrine) pra você baixar e usar nos anúncios
+      const g = await getStore('presentes').get(String(b.id || ''), { type: 'json' }).catch(() => null);
+      if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
+      if (!g.pago) return json({ erro: 'Esse livro ainda não foi liberado.' }, 400);
+      if (g.livro.pdf && !b.refazer) return json({ ok: true, links: { ler: linkPdf(g, 'ler'), folhas: linkPdf(g, 'folhas'), livreto: linkPdf(g, 'livreto') } });
+      const base = process.env.URL || new URL(req.url).origin;
+      await fetch(base + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: g.id, refazer: !!b.refazer }) }).catch(() => {});
+      return json({ ok: true, gerando: true });
+    }
     if (b.acao === 'livro-refazer') {
       const id = String(b.id || '').trim();
       if (!/^L[0-9a-f]{14}$/.test(id)) return json({ erro: 'Código do livro inválido.' }, 400);
@@ -479,7 +495,7 @@ export default async (req) => {
       let novas = 0, atualizadas = 0;
       for (const n of NOVAS_HISTORIAS) {
         const v = porId[n.id];
-        const t = limparTema(Object.assign({}, n, v ? { status: v.status, vitrineEm: v.vitrineEm, vitrineGenero: v.vitrineGenero } : { status: 'rascunho' }));
+        const t = limparTema(Object.assign({}, n, v ? { status: v.status, vitrineEm: v.vitrineEm, vitrineGenero: v.vitrineGenero, vendasFora: v.vendasFora } : { status: 'rascunho' }));
         if (!t) continue;
         if (v) { atuais[atuais.indexOf(v)] = t; atualizadas++; } else { atuais.push(t); novas++; }
       }

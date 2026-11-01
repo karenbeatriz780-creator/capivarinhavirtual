@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 import { indexar, indexarDia } from './_indice.mjs';
-import { json, acharTema, PRECO_LIVRO } from './_livros.mjs';
+import { json, acharTema, lerTemas, PACOTES_LIVRO } from './_livros.mjs';
 
 const EXPIRA_SEG = 20 * 60;
 
@@ -26,14 +26,24 @@ export default async (req) => {
     const chavePix = (process.env.EFI_PIX_KEY || '').trim();
     if (!chavePix) return json({ erro: 'Servidor sem EFI_PIX_KEY configurada.' }, 500);
 
-    // Pix ainda válido? devolve o mesmo (não cria cobrança nova a cada clique)
+    // pacote escolhido: 'um' (R$ 37), 'dois' (R$ 49, + uma aventura à escolha) ou 'todos' (coleção completa)
+    const tipo = PACOTES_LIVRO[b.pacote] ? b.pacote : 'um';
+    let tema2 = null;
+    if (tipo === 'dois') {
+      const t2 = await acharTema(String(b.tema2 || ''));
+      if (!t2 || t2.status !== 'publicado' || t2.id === g.livro.tema) return json({ erro: 'Escolha a segunda aventura.' }, 400);
+      tema2 = t2.id;
+    }
+    // Pix ainda válido e do mesmo pacote? devolve o mesmo (não cria cobrança nova a cada clique)
     const pg = g.pagamento || {};
-    if (pg.txid && pg.payload && pg.expiraEm && pg.expiraEm - Date.now() > 60 * 1000) {
+    const mesmo = (pg.pacote || 'um') === tipo && (pg.tema2 || null) === tema2;
+    if (mesmo && pg.txid && pg.payload && pg.expiraEm && pg.expiraEm - Date.now() > 60 * 1000) {
       return json({ payload: pg.payload, id, valor: pg.valor, expiraEm: pg.expiraEm, teste: modoTeste() });
     }
 
     const tema = await acharTema(g.livro.tema);
-    const valor = PRECO_LIVRO;
+    const valor = PACOTES_LIVRO[tipo].valor;
+    const nTodos = tipo === 'todos' ? (await lerTemas()).filter((t) => t.status === 'publicado').length : 0;
     const txid = criarTxid(id);
     const token = await obterToken();
     const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
@@ -42,7 +52,7 @@ export default async (req) => {
         calendario: { expiracao: EXPIRA_SEG },
         valor: { original: valor.toFixed(2) },
         chave: chavePix,
-        solicitacaoPagador: ('Livro Mágico: ' + (tema ? tema.nome : 'história') + ' - Capivarinha Love').slice(0, 140),
+        solicitacaoPagador: ('Livro Mágico: ' + (tipo === 'todos' ? 'coleção completa (' + nTodos + ' livros)' : tipo === 'dois' ? '2 livros' : (tema ? tema.nome : 'história')) + ' - Capivarinha Love').slice(0, 140),
         infoAdicionais: [{ nome: 'Pedido', valor: id }, { nome: 'Produto', valor: 'livro' }]
       }
     });
@@ -57,7 +67,8 @@ export default async (req) => {
     const agora = Date.now();
     const expiraEm = agora + EXPIRA_SEG * 1000;
     g.criadoEm = g.criadoEm || agora;
-    g.pagamento = { provedor: 'efi', txid, status: 'ATIVA', valor, duracao: 'vitalicio', efiConferidoEm: 0, payload: qr.data.qrcode, expiraEm };
+    g.pagamento = { provedor: 'efi', txid, status: 'ATIVA', valor, duracao: 'vitalicio', efiConferidoEm: 0, payload: qr.data.qrcode, expiraEm, pacote: tipo, tema2 };
+    g.pacote = { tipo, tema2 };
     await presentes.setJSON(id, g);
     await getStore('efi-txid').setJSON(txid, { giftId: id, produto: 'livro', valor, duracao: 'vitalicio', criadoEm: agora });
     try { await indexarDia('p', id); if (g.whatsapp) await indexar(g.whatsapp, 'p', id); } catch (e) {}

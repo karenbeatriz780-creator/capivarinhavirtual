@@ -1,6 +1,7 @@
 import { getStore } from '@netlify/blobs';
 import { enviarTexto, enviarBotoes, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE } from './_zap.mjs';
 import { lerIndice, idsDoTel } from './_indice.mjs';
+import { entregarLivroZap } from './_livros.mjs';
 
 // ROBÔ DE ATENDIMENTO (não cria música):
 // - "Oi" → "Como podemos te ajudar?" [Receber minha música] [Criar uma música]
@@ -15,10 +16,43 @@ const salvar = async (n, c) => { c.em = Date.now(); await loja().setJSON(chaveCo
 const limpar = async (n) => { await loja().delete(chaveConv(n)).catch(() => {}); };
 const LINK_CRIAR = SITE + '/#/criar/musica';
 
+const LINK_LIVRO = SITE + '/#/livro';
+
 export async function boasVindas(para) {
   return enviarBotoes(para,
-    'Oi! 💗 Seja bem-vindo(a) à *Capivarinha Love*!\n\nComo podemos te ajudar?',
-    [['ini:minha', '🎶 Receber minha música'], ['ini:criar', '🎵 Criar uma música']]);
+    'Oi! 💗 Seja bem-vindo(a) à *Capivarinha Love*!\n\nO que você procura?\n\n' +
+    '🎵 *Música personalizada*: com o nome e a história de quem você ama\n' +
+    '📖 *Livro Mágico*: um livro ilustrado com o rostinho do seu filho + 2 músicas com o nome dele\n' +
+    '✅ *Já comprei*: receber o que você comprou',
+    [['ini:musica', '🎵 Música'], ['ini:livro', '📖 Livro Mágico'], ['ini:minha', '✅ Já comprei']]);
+}
+
+async function mandarLinkLivro(para) {
+  await enviarTexto(para, '📖✨ O *Livro Mágico* é um livro ilustrado em que seu filho é o protagonista: o rostinho dele nas ilustrações, o nome em toda a história e *2 músicas* cantando o nome dele.\n\n' +
+    'Você escolhe a aventura, manda uma foto e já vê a *capa e a música antes de pagar*:\n\n' + LINK_LIVRO +
+    '\n\n💡 Quando a prévia ficar pronta, toque em *"Receber no WhatsApp"* que eu te mando aqui. 💛');
+  await registrar('pediu_livro', { numero: para });
+}
+
+// Livros do número: pronto e pago → link + PDFs; pago fazendo → avisa; prévia → link da prévia
+async function mandarLivrosDoNumero(para, tel, ent) {
+  const presentes = getStore('presentes');
+  const ids = (ent.p || []).filter((id) => /^L[0-9a-f]{14}$/.test(id)).slice(-10);
+  const gs = (await Promise.all(ids.map((id) => presentes.get(id, { type: 'json' }).catch(() => null)))).filter((g) => g && g.livro && !g.cancelado)
+    .sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
+  if (!gs.length) return 0;
+  const pagos = gs.filter((g) => g.pago);
+  if (pagos.length) {
+    for (const g of pagos.slice(0, 2)) {
+      if (g.livro.status === 'pronto') await entregarLivroZap(para, g);
+      else await enviarTexto(para, '📖 O Livro Mágico de *' + g.livro.nome + '* está sendo ilustrado agora 🎨\nAssim que ficar pronto eu te mando aqui, com os PDFs pra imprimir. 💛');
+    }
+    await registrar('reenviou', { para, tel: String(tel), livros: pagos.slice(0, 2).map((g) => g.id).join(',') });
+    return pagos.length;
+  }
+  const g = gs[0];
+  await enviarTexto(para, '📖 Achei a prévia do Livro Mágico de *' + g.livro.nome + '*! Lá você vê a capa, ouve a música e desbloqueia a história completa:\n' + SITE + '/#/livro/' + g.id + '.' + g.livro.token);
+  return 1;
 }
 
 async function mandarLinkCriar(para) {
@@ -33,7 +67,7 @@ async function mandarMusicasDoNumero(para, tel) {
   try { ent = await idsDoTel(tel, await lerIndice()); } catch (e) {}
   const presentes = getStore('presentes');
   const peds = (await Promise.all(ent.p.slice(-15).map((id) => presentes.get(id, { type: 'json' }).catch(() => null)))).filter(Boolean);
-  const pagos = peds.filter((g) => g.pago && !g.cancelado && temMusica(g)).sort((a, b) => (b.pagoEm || 0) - (a.pagoEm || 0)).slice(0, 2);
+  const pagos = peds.filter((g) => g.pago && !g.cancelado && g.produto !== 'livro' && temMusica(g)).sort((a, b) => (b.pagoEm || 0) - (a.pagoEm || 0)).slice(0, 2);
   if (pagos.length) {
     for (const g of pagos) {
       const quando = new Date(g.pagoEm || g.criadoEm || Date.now()).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' });
@@ -59,9 +93,18 @@ async function mandarMusicasDoNumero(para, tel) {
   return 0;
 }
 
+// procura músicas E livros do número
+async function mandarTudoDoNumero(para, tel) {
+  let ent = { p: [], t: [] };
+  try { ent = await idsDoTel(tel, await lerIndice()); } catch (e) {}
+  const nl = await mandarLivrosDoNumero(para, tel, ent).catch((e) => { console.error('bot livros', e && e.message); return 0; });
+  const nm = await mandarMusicasDoNumero(para, tel);
+  return nl + nm;
+}
+
 async function procurar(de) {
-  await enviarTexto(de, '🔎 Procurando suas músicas...');
-  if (await mandarMusicasDoNumero(de, de)) return;
+  await enviarTexto(de, '🔎 Procurando seus pedidos...');
+  if (await mandarTudoDoNumero(de, de)) return;
   await salvar(de, { etapa: 'tel', d: { tentativas: 0 } });
   await enviarTexto(de, 'Não achei pedidos neste número 🤔\n\nQual o *número de WhatsApp que você usou no pedido*? (com DDD, ex: 91 98888-7777)');
 }
@@ -94,7 +137,8 @@ export async function tratarBot(msg) {
   if (id === 'promo:sim') { await mandarPromocoes(de); return true; }
   if (id === 'promo:nao') { await enviarTexto(de, 'Tudo bem! 💗 Aproveite sua música. Qualquer coisa é só chamar.'); await registrar('promo_nao', { numero: de }); return true; }
   if (id === 'ini:minha') { await limpar(de); await procurar(de); return true; }
-  if (id === 'ini:criar' || id === 'ini:zap') { await limpar(de); await mandarLinkCriar(de); return true; }
+  if (id === 'ini:criar' || id === 'ini:zap' || id === 'ini:musica') { await limpar(de); await mandarLinkCriar(de); return true; }
+  if (id === 'ini:livro') { await limpar(de); await mandarLinkLivro(de); return true; }
   if (id) return true; // botão antigo/desconhecido: ignora
 
   // esperando o número do pedido
@@ -103,18 +147,20 @@ export async function tratarBot(msg) {
     const dig = texto.replace(/\D/g, '');
     if (dig.length < 10) { await enviarTexto(de, 'Me manda o número com DDD, por favor (ex: 91 98888-7777) 😊'); return true; }
     await enviarTexto(de, '🔎 Procurando...');
-    if (await mandarMusicasDoNumero(de, dig)) { await limpar(de); return true; }
+    if (await mandarTudoDoNumero(de, dig)) { await limpar(de); return true; }
     c.d.tentativas = (c.d.tentativas || 0) + 1; await salvar(de, c);
     if (c.d.tentativas >= 2) {
       await limpar(de);
       await enviarBotoes(de, 'Não encontrei nenhum pedido nesse número 😕 Pode ser que o pedido tenha sido feito com outro número.',
-        [['ini:minha', '🔎 Tentar outro número'], ['ini:criar', '🎵 Criar uma música']]);
+        [['ini:minha', '🔎 Tentar outro número'], ['ini:musica', '🎵 Criar uma música'], ['ini:livro', '📖 Livro Mágico']]);
     } else await enviarTexto(de, 'Não achei nada nesse número 🤔 Confere e me manda de novo (com DDD).');
     return true;
   }
 
   // texto livre: entende os pedidos mais comuns
   if (/(minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}m[uú]sica|j[aá] (comprei|paguei)|^paguei|fiz o pix|fiz o pagamento/.test(baixo)) { await procurar(de); return true; }
+  if (/(meu|minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}(livro|hist[oó]ria|pdf)/.test(baixo)) { await procurar(de); return true; }
+  if (/\b(livro|livrinho|hist[oó]ria|historinha)\b/.test(baixo)) { await mandarLinkLivro(de); return true; }
   if (/\b(criar|cria|fazer|faz|quero|gerar|comprar)\b.{0,25}\bm[uú]sica\b|^criar$/.test(baixo)) { await mandarLinkCriar(de); return true; }
   if (/promo[cç][aã]o|promo[cç][oõ]es|desconto|indica/.test(baixo)) {
     const pr = await loja().get('promo_' + chaveNum(de), { type: 'json' }).catch(() => null);

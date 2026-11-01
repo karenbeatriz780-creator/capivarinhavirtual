@@ -1,7 +1,7 @@
 import { getStore } from '@netlify/blobs';
 import { idsDoDia, diaBR } from './_indice.mjs';
 import { enviarTexto, conversaAberta, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE } from './_zap.mjs';
-import { avancarLivro } from './_livros.mjs';
+import { avancarLivro, entregarLivroZap } from './_livros.mjs';
 
 // A CADA MINUTO: quem PAGOU recebe no WhatsApp o link das músicas + os áudios completos.
 // - Só pra quem conversou com o número nas últimas 24 h → manda grátis (texto + áudios).
@@ -28,16 +28,22 @@ export default async () => {
         let gl = g;
         try { gl = (await avancarLivro(id, process.env.URL || SITE)) || g; } catch (e) { console.error('avisar-pagos livro', id, e && e.message); }
         if (!gl.livro || gl.livro.status !== 'pronto') continue; // volta daqui a 3 min
-        let numL = String(gl.whatsapp || '').replace(/\D/g, '');
+        // número de entrega: o que tocou em "Receber no WhatsApp" (deste livro ou do principal do pacote), senão o do formulário
+        let zapEnt = gl.livro.zapEntrega || '';
+        if (!zapEnt && gl.pacoteDe) { const gp = await presentes.get(gl.pacoteDe, { type: 'json' }).catch(() => null); zapEnt = (gp && gp.livro && gp.livro.zapEntrega) || ''; }
+        let numL = String(zapEnt || gl.whatsapp || '').replace(/\D/g, '');
         await loja.setJSON('pago_' + id, { em: agora, livro: true });
+        let entregou = false;
         if (numL.length >= 10) {
           if (!numL.startsWith('55') || numL.length <= 11) numL = '55' + numL;
           const abertaL = await conversaAberta(numL);
           if (abertaL) {
-            await enviarTexto(abertaL, '📖✨ *O Livro Mágico de ' + gl.livro.nome + ' ficou pronto!*\n\nToque pra ler, ouvir a música e baixar o PDF pra imprimir:\n' + SITE + '/#/livro/' + id);
+            await entregarLivroZap(abertaL, gl, process.env.URL || SITE); entregou = true;
             await registrar('pago_enviado', { para: abertaL, pedido: id, nome: gl.livro.nome, via: 'livro' });
           }
         }
+        // sem conversa aberta: já deixa os PDFs prontos pra quando o cliente pedir no WhatsApp
+        if (!entregou && !gl.livro.pdf) await fetch((process.env.URL || SITE) + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => {});
         continue;
       }
       if (!temMusica(g)) { await loja.setJSON('pago_' + id, { pulado: 'sem música', em: agora }); continue; }

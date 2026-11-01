@@ -37,7 +37,7 @@ async function chamar(corpo) {
     }
     // guarda o que foi enviado pra aparecer na conversa do painel
     try {
-      const resumo = corpo.type === 'text' ? corpo.text.body : corpo.type === 'interactive' ? corpo.interactive.body.text + ' [botões]' : corpo.type === 'audio' ? '[áudio]' : corpo.type === 'image' ? '[imagem] ' + ((corpo.image && corpo.image.caption) || '') : '[' + corpo.type + ']';
+      const resumo = corpo.type === 'text' ? corpo.text.body : corpo.type === 'interactive' ? corpo.interactive.body.text + ' [botões]' : corpo.type === 'audio' ? '[áudio]' : corpo.type === 'image' ? '[imagem] ' + ((corpo.image && corpo.image.caption) || '') : corpo.type === 'document' ? '[PDF] ' + ((corpo.document && corpo.document.filename) || '') : '[' + corpo.type + ']';
       await getStore('whatsapp').setJSON('out_' + chaveNum(corpo.to) + '_' + Date.now(), { para: String(corpo.to), txt: String(resumo).slice(0, 1000), em: Date.now() });
     } catch (e) {}
     return true;
@@ -46,6 +46,7 @@ async function chamar(corpo) {
 
 export const enviarTexto = (para, texto) => chamar({ to: para, type: 'text', text: { preview_url: true, body: texto } });
 export const enviarAudio = (para, link) => chamar({ to: para, type: 'audio', audio: { link } });
+export const enviarDocumento = (para, link, nomeArquivo, legenda) => chamar({ to: para, type: 'document', document: legenda ? { link, filename: nomeArquivo, caption: legenda } : { link, filename: nomeArquivo } });
 export const enviarImagem = (para, link, legenda) => chamar({ to: para, type: 'image', image: legenda ? { link, caption: legenda } : { link } });
 // Botões (até 3, título até 20 letras)
 export const enviarBotoes = (para, texto, botoes) => chamar({

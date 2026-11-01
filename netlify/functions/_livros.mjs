@@ -13,11 +13,13 @@
 //   mus/<tema>/<nome>     → música já gerada pra esse nome + tema (reaproveita, custo zero)
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
-import { enviarTexto, enviarImagem, conversaAberta, registrar, SITE } from './_zap.mjs';
+import { enviarTexto, enviarImagem, enviarDocumento, conversaAberta, registrar, SITE } from './_zap.mjs';
 import { indexar } from './_indice.mjs';
 
 export const PRECO_LIVRO = 37;
 export const PRECO_LIVRO_PROPRIO = 67;
+// pacotes na hora de desbloquear: 1 livro, 2 livros (a criança em mais uma aventura) ou a coleção completa
+export const PACOTES_LIVRO = { um: { valor: 37, nome: '1 livro' }, dois: { valor: 49, nome: '2 livros' }, todos: { valor: 129, nome: 'coleção completa' } };
 // modelos de imagem, em ordem. Dá pra trocar sem mexer no código: variável LIVRO_MODELOS_IMAGEM no Netlify
 // (separados por vírgula, ex.: google/nano-banana-2.1,google/nano-banana-2)
 // Só o Nano Banana 2.1 (Google): o mais barato (US$ 0,03 a imagem em 2K) e ótimo pra manter o rosto.
@@ -326,10 +328,13 @@ async function andarImagem(item, chave, criar, limite) {
   if (item.ok) return false;
   if (!item.task) {
     const tent = item.tent || 0;
-    if (tent >= MAX_IMG) { if (!item.erro) { item.erro = true; return true; } return false; }
     const recusada = /refused|cannot read|upload/i.test(item.msg || '');
     // foto recusada: tenta logo de novo (outro modelo / outro link); outros erros: dá um tempo
-    if (tent >= 3 && Date.now() - (item.em || 0) < (recusada ? 60 * 1000 : ESPERA_IMG)) return false;
+    // erro passageiro (Google sobrecarregado, sistema de cobrança da Unifically fora do ar…):
+    // tenta de novo a cada 1 minuto e não desiste rápido (até ~30 tentativas, uns 30 min)
+    const passageiro = /unavailable|overload|try again|timeout|demorou|503|502|500|429|rate|pricing|internal/i.test(item.msg || '');
+    if (tent >= (passageiro ? 30 : MAX_IMG)) { if (!item.erro) { item.erro = true; return true; } return false; }
+    if (tent >= 3 && Date.now() - (item.em || 0) < (recusada || passageiro ? 60 * 1000 : ESPERA_IMG)) return false;
     item.erro = false;
     try { item.task = await criar(item); }
     catch (e) { item.msg = String(e && e.message || e).slice(0, 300); item.tent = tent + 1; item.em = Date.now(); console.error('livro imagem (criar):', chave, item.msg); return true; }
@@ -362,7 +367,7 @@ export async function avancarLivro(id, base) {
   if (!tema) return g;
   const nome = L.nome;
   let mudou = false;
-  const limite = { downloads: 2 };
+  const limite = { downloads: 5 };
   L.capa = L.capa || {};
   L.musica = L.musica || {};
 
@@ -399,24 +404,32 @@ export async function avancarLivro(id, base) {
     }
   } catch (e) { console.error('livro música', id, e.message); }
 
+  // 2b) pacote (2 livros ou coleção): cria os outros livros da mesma criança, já pagos, com a mesma foto
+  if (g.pago && g.pacote && g.pacote.tipo !== 'um' && !g.pacote.criados) {
+    try { await criarLivrosDoPacote(g); mudou = true; } catch (e) { console.error('pacote livro', id, e && e.message); }
+  }
+
   // 3) depois do Pix: as 5 ilustrações
   if (g.pago && (L.capa.ok || L.capa.erro || (L.capa.tent || 0) >= 3)) {
     // página com "usa": repete a ilustração de outra cena (não gera imagem nova)
     // "so": página só de texto (sem ilustração, custo zero)
     L.paginas = L.paginas && L.paginas.length ? L.paginas : (tema.paginas || []).map((tp) => (tp && tp.so ? { so: true } : usaDe(tp) != null ? { usa: usaDe(tp) } : {}));
     if (L.status !== 'gerando' && L.status !== 'pronto') { L.status = 'gerando'; L.gerandoEm = Date.now(); mudou = true; }
-    for (let i = 0; i < L.paginas.length; i++) {
-      const p = L.paginas[i];
-      if (p.usa != null || p.so) continue;
+    // as ilustrações andam todas ao mesmo tempo (antes era uma de cada vez e a tela pulava de 2 pra 4)
+    const res = await Promise.all(L.paginas.map(async (p, i) => {
+      if (p.usa != null || p.so) return false;
       try {
-        mudou = (await andarImagem(p, 'img/' + g.id + '/p' + (i + 1), (it) =>
-          criarImagem(promptImagem(tema, L, tema.paginas[i].cena, false), refsPagina(base, g, it), '3:4', '2K', it.recusas || 0), limite)) || mudou;
-      } catch (e) { console.error('livro página', id, i + 1, e.message); }
-    }
+        return await andarImagem(p, 'img/' + g.id + '/p' + (i + 1), (it) =>
+          criarImagem(promptImagem(tema, L, tema.paginas[i].cena, false), refsPagina(base, g, it), '3:4', '2K', it.recusas || 0), limite);
+      } catch (e) { console.error('livro página', id, i + 1, e.message); return false; }
+    }));
+    if (res.some(Boolean)) mudou = true;
     const okTodas = L.capa.ok && L.paginas.every((p) => p.usa != null || p.so || p.ok);
     const acabou = L.paginas.every((p) => p.usa != null || p.so || p.ok || p.erro) && (L.capa.ok || L.capa.erro);
     if (okTodas && g.musicaPreviewUrl) {
       L.status = 'pronto'; L.prontoEm = Date.now(); mudou = true;
+      // conta a venda dessa história (livros liberados por você no painel não contam)
+      if (!L.contado && !(g.pagamento && g.pagamento.provedor === 'admin')) { L.contado = true; await somarVenda(L.tema); }
       try { await loja().delete('foto/' + g.id); L.fotoApagada = true; } catch (e) {}
       if (L.autoExemplo) { L.autoExemplo = false; await presentes.setJSON(g.id, g); try { await adicionarExemplo(g.id); L.virouExemplo = true; } catch (e) { console.error('exemplo automático', e && e.message); } }
     } else if (acabou && L.status !== 'problema') {
@@ -456,7 +469,9 @@ export function resumoPublico(g, base) {
       if (p.usa != null) { const o = (L.paginas || [])[p.usa]; return o && o.ok ? img('p' + (p.usa + 1)) : null; }
       return p.ok ? img('p' + (i + 1)) : null;
     }) : [],
-    valor: (g.pagamento && g.pagamento.valor) || PRECO_LIVRO
+    valor: (g.pagamento && g.pagamento.valor) || PRECO_LIVRO,
+    pacote: g.pacote ? { tipo: g.pacote.tipo, livros: g.pacote.criados || [] } : null,
+    pacoteDe: g.pacoteDe || null
   };
 }
 
@@ -478,7 +493,20 @@ export async function entregarPreviaLivro(id, token, numero, base) {
   if (g.pago) {
     const para = await conversaAberta(num);
     if (!para) return 'semjanela';
-    await enviarTexto(para, '🎉 O Livro Mágico de *' + g.livro.nome + '* já está pago!\n\nÉ só abrir aqui:\n' + SITE + '/#/livro/' + id);
+    // guarda este número pra entrega (vale também pros outros livros do pacote)
+    const atual = await presentes.get(id, { type: 'json' }).catch(() => null) || g;
+    atual.livro.zapEntrega = num; await presentes.setJSON(id, atual).catch(() => {});
+    for (const x of ((atual.pacote && atual.pacote.criados) || [])) {
+      const gx = await presentes.get(x.id, { type: 'json' }).catch(() => null);
+      if (gx && gx.livro) { gx.livro.zapEntrega = num; await presentes.setJSON(x.id, gx).catch(() => {}); }
+    }
+    const extra = ((atual.pacote && atual.pacote.criados) || []).length;
+    if (atual.livro.status === 'pronto') {
+      await entregarLivroZap(para, atual, base);
+      await getStore('whatsapp').setJSON('pago_' + id, { em: Date.now(), livro: true, via: 'botao' }).catch(() => {}); // o agendador não manda de novo
+    }
+    else await enviarTexto(para, '✅ Recebi! O Livro Mágico de *' + atual.livro.nome + '* está sendo ilustrado agora 🎨\n\nAssim que ficar pronto eu te mando aqui o link e os PDFs pra imprimir. Pode fechar o site tranquilo(a). 💛');
+    if (extra) await enviarTexto(para, '📚 Os outros ' + extra + ' livro' + (extra > 1 ? 's' : '') + ' do seu pacote também chegam aqui, um por um, conforme ficarem prontos.');
     return 'pago';
   }
   const pronto = (x) => !!(x && x.livro && x.livro.capa && x.livro.capa.ok && x.musicaPreviewUrl);
@@ -497,7 +525,28 @@ export async function entregarPreviaLivro(id, token, numero, base) {
   if (!ok) ok = await enviarTexto(para, texto);
   if (!ok) return 'erro';
   await registrar('enviou', { para, pedido: id, nome, via: 'livro' }).catch(() => {});
+  // junto com a prévia: 2 exemplos de livros prontos (um de menino e um de menina), só na primeira vez
+  try {
+    const atual = await presentes.get(id, { type: 'json' }).catch(() => null) || g;
+    if (!atual.livro.exemplosZap) { await enviarExemplosZap(para, g.livro.tema); atual.livro.exemplosZap = Date.now(); await presentes.setJSON(id, atual); }
+  } catch (e) { console.error('exemplos zap', e && e.message); }
   return 'enviado';
+}
+export async function enviarExemplosZap(para, temaPreferido) {
+  let lista = []; try { lista = (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) {}
+  lista = lista.filter((x) => x && x.tipo === 'livro' && x.mostrar !== false);
+  if (!lista.length) return 0;
+  const ordem = lista.filter((x) => x.tema === temaPreferido).concat(lista.filter((x) => x.tema !== temaPreferido));
+  const esc = [];
+  const menino = ordem.find((x) => x.genero === 'menino'), menina = ordem.find((x) => x.genero === 'menina');
+  if (menino) esc.push(menino); if (menina) esc.push(menina);
+  if (!esc.length) esc.push(ordem[0]);
+  for (const x of esc.slice(0, 2)) {
+    const capa = SITE + '/.netlify/functions/livro-img?k=' + encodeURIComponent('ex/' + x.id + '/capa') + '&v=' + (x.em || 1);
+    await enviarImagem(para, capa, '✨ Exemplo de livro pronto: *' + (x.titulo || 'Livro Mágico') + '*');
+  }
+  await enviarTexto(para, '👆 Assim fica o livro completo, com o rostinho da criança em cada aventura.\n\nQuer ver por dentro? Abra ' + SITE + '/#/livro e toque em *"Folhear um livro de exemplo"*. 📖');
+  return esc.length;
 }
 
 // PAINEL: refaz as imagens que falharam (zera as tentativas). A foto precisa ainda existir.
@@ -543,4 +592,72 @@ export async function adicionarExemplo(id) {
   lista = lista.filter((x) => x.id !== id); lista.unshift(ex);
   await loja().setJSON('exemplos', lista);
   return { ok: true, lista };
+}
+
+// ---------------------------------------------------------------------------
+// WHATSAPP: livro pronto → link do livro + os 3 PDFs (com legenda explicando cada um, sem link)
+// ---------------------------------------------------------------------------
+export function linkPdf(g, tipo) { return SITE + '/lv-pdf/' + g.id + '/' + tipo + '-' + g.livro.token + '.pdf'; }
+function nomePdf(g, tipo) {
+  const n = String(g.livro.nome || 'Livro').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return 'Livro-Magico-' + n + ({ ler: '', folhas: '-imprimir-folhas', livreto: '-imprimir-livreto' }[tipo]) + '.pdf';
+}
+const LEGENDA_PDF = {
+  ler: '📱 *Para ler no celular*\nO livro inteiro, uma página por vez, com as ilustrações em alta qualidade. É só abrir e ir passando. 💛',
+  folhas: '🖨️ *Para imprimir (o jeito mais fácil)*\nImprima só a frente, em folha A4 deitada. Cada folha vira duas páginas do livro. Depois é só empilhar na ordem e grampear do lado esquerdo.',
+  livreto: '📖 *Para imprimir como livrinho*\nImprima frente e verso, escolhendo "virar pela borda curta". Empilhe as folhas, dobre ao meio e grampeie na dobra: vira um livrinho de verdade! Dica: papel A4 de 150 a 180 g fica lindo.'
+};
+// manda só os PDFs (os arquivos precisam já existir)
+export async function enviarPdfsLivro(para, g) {
+  let ok = 0;
+  for (const tipo of ['ler', 'folhas', 'livreto']) {
+    if (await enviarDocumento(para, linkPdf(g, tipo), nomePdf(g, tipo), LEGENDA_PDF[tipo])) ok++;
+  }
+  if (ok) await registrar('livro_pdf', { para, pedido: g.id, n: ok }).catch(() => {});
+  return ok;
+}
+export async function pdfsProntos(g) {
+  const atual = await getStore('presentes').get(g.id, { type: 'json' }).catch(() => null);
+  return !!((atual && atual.livro && atual.livro.pdf) || (g.livro && g.livro.pdf));
+}
+// texto com o link + PDFs. Se os PDFs ainda não existem, pede pra fazer (segundo plano) e eles chegam logo depois.
+export async function entregarLivroZap(para, g, base) {
+  const nome = g.livro.nome;
+  await enviarTexto(para, '📖✨ *O Livro Mágico de ' + nome + ' ficou pronto!*\n\nAqui você lê virando as páginas e ouve as 2 músicas com o nome de ' + nome + ':\n' + SITE + '/#/livro/' + g.id +
+    '\n\nAbaixo vão os arquivos em PDF, pra guardar e imprimir do jeito que preferir 👇');
+  if (await pdfsProntos(g)) return enviarPdfsLivro(para, g);
+  await fetch((base || process.env.URL || SITE) + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: g.id, para }) }).catch(() => {});
+  return 0;
+}
+
+// ---------------------------------------------------------------------------
+// PACOTE: depois do Pix, cria os outros livros (mesma criança, mesma foto), já pagos
+// ---------------------------------------------------------------------------
+export async function criarLivrosDoPacote(g) {
+  const L = g.livro, temas = (await lerTemas()).filter((t) => t.status === 'publicado' && t.id !== L.tema);
+  const escolhidos = g.pacote.tipo === 'todos' ? temas : temas.filter((t) => t.id === g.pacote.tema2).slice(0, 1);
+  const foto = await loja().getWithMetadata('foto/' + g.id, { type: 'arrayBuffer' }).catch(() => null);
+  const criados = [];
+  const { indexar, indexarDia } = await import('./_indice.mjs');
+  for (const t of escolhidos) {
+    const id = novoId(), token = novoToken();
+    if (foto && foto.data) await loja().set('foto/' + id, foto.data, { metadata: foto.metadata || { tipo: 'image/jpeg' } });
+    const n = {
+      id, produto: 'livro', duracao: 'vitalicio', criadoEm: Date.now(), pago: true, pagoEm: Date.now(), cortesia: true, pacoteDe: g.id,
+      meuNome: '', parceiroNome: L.nome, musicaParaNome: L.nome, musicaWhatsapp: g.musicaWhatsapp || g.whatsapp || '', whatsapp: g.whatsapp || '',
+      livro: { tema: t.id, nome: L.nome, genero: L.genero, idade: L.idade, idadeMeses: L.idadeMeses, token, status: 'criando', capa: {}, musica: {}, paginas: [], zapEntrega: L.zapEntrega || '' },
+      pagamento: { valor: 0, provedor: 'pacote', pacoteDe: g.id }
+    };
+    await getStore('presentes').setJSON(id, n);
+    try { await indexarDia('p', id); await indexarDia('pg', id); if (n.whatsapp) await indexar(n.whatsapp, 'p', id); } catch (e) {}
+    criados.push({ id, t: token, tema: t.id });
+  }
+  g.pacote.criados = criados;
+  return criados;
+}
+
+// vendas por história (contadas pelo site). O painel soma as vendas feitas fora do site.
+export async function lerVendas() { try { return (await loja().get('vendas', { type: 'json' })) || {}; } catch (e) { return {}; } }
+export async function somarVenda(tema) {
+  try { const v = await lerVendas(); v[tema] = (v[tema] || 0) + 1; await loja().setJSON('vendas', v); } catch (e) {}
 }
