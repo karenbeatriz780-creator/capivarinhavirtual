@@ -32,7 +32,7 @@ export default async (req) => {
       await loja().set('foto/' + id, bf, { metadata: { tipo: 'image/jpeg' } });
       const L = g.livro;
       L.capa = { trocouFoto: (L.capa && L.capa.trocouFoto || 0) + 1 };
-      (L.paginas || []).forEach((p) => { if (p && !p.ok) { p.tent = 0; p.erro = false; p.task = null; p.msg = ''; p.recusas = 0; } });
+      (L.paginas || []).forEach((p) => { if (p && !p.ok) { p.tent = 0; p.erro = false; p.task = null; p.msg = ''; p.recusas = 0; p.ini = 0; } });
       L.fotoApagada = false; if (L.status === 'problema') L.status = g.pago ? 'gerando' : 'criando';
       await pres.setJSON(id, g);
       try { await avancarLivro(id, baseSite(req)); } catch (e) {}

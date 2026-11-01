@@ -10,6 +10,7 @@
 //                    { acao: 'exemplos-salvar', exemplos:[{id,mostrar}] } → ordem / mostrar / tirar
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
+import { lerDias, idsDosDiasTudo, diaBR } from './_indice.mjs';
 import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, adicionarExemplo, linkPdf, lerVendas } from './_livros.mjs';
 
 // ---------- exemplos (vitrine da página) ----------
@@ -435,6 +436,38 @@ export default async (req) => {
       try { await avancarLivro(id, process.env.URL || new URL(req.url).origin); } catch (e) {}
       return json({ ok: true });
     }
+    if (b.acao === 'relatorio') {
+      // RELATÓRIO SÓ DO LIVRO: prévias, quem pagou, entregues, com problema e quanto tempo levou
+      const dias = Math.max(1, Math.min(90, parseInt(b.dias, 10) || 30));
+      const idx = await lerDias().catch(() => null);
+      const soLivro = (l) => (l || []).filter((x) => /^L[0-9a-f]{14}$/.test(x));
+      const [criados, pagosIdx] = await Promise.all([idsDosDiasTudo(idx, dias, 'p').then(soLivro), idsDosDiasTudo(idx, dias, 'pg').then(soLivro)]);
+      const ids = [...new Set(criados.concat(pagosIdx))].slice(-1500);
+      const pres = getStore('presentes'), zl = getStore('whatsapp');
+      const gs = (await Promise.all(ids.map((id) => pres.get(id, { type: 'json' }).catch(() => null)))).filter((g) => g && g.livro && !g.cancelado);
+      const pagos = gs.filter((g) => g.pago);
+      const ent = await Promise.all(pagos.map((g) => zl.get('lvent_' + g.id, { type: 'json' }).catch(() => null)));
+      const temas = await lerTemas(), nomeTema = (id) => { const t = temas.find((x) => x.id === id); return t ? (t.emoji || '📖') + ' ' + t.nome : id; };
+      const prov = (g) => (g.pagamento && g.pagamento.provedor) || '';
+      const livros = pagos.map((g, i) => {
+        const L = g.livro, ps = (L.paginas || []).filter((p) => p && !p.so && p.usa == null);
+        const erros = [L.capa].concat(ps).filter((p) => p && !p.ok && p.msg).map((p) => p.msg);
+        return {
+          id: g.id, nome: L.nome, tema: nomeTema(L.tema), whatsapp: g.whatsapp || '',
+          tipo: g.pacoteDe ? 'pacote' : prov(g) === 'admin' ? 'teste' : 'venda',
+          pacote: g.pacote ? g.pacote.tipo : null, valor: g.pacoteDe || prov(g) === 'admin' ? 0 : ((g.pagamento && g.pagamento.valor) || 0),
+          criadoEm: g.criadoEm || null, previaEm: L.previaEm || null, pagoEm: g.pagoEm || null, prontoEm: L.prontoEm || null,
+          entregueEm: (ent[i] && ent[i].em) || null, status: L.status || '', ilus: ps.filter((p) => p.ok).length, ilusTotal: ps.length,
+          capaOk: !!(L.capa && L.capa.ok), motivo: L.status === 'pronto' ? '' : (erros[erros.length - 1] || '')
+        };
+      }).sort((a, b) => (b.pagoEm || 0) - (a.pagoEm || 0));
+      const porDia = {};
+      for (let i = 0; i < Math.min(dias, 14); i++) porDia[diaBR(Date.now() - i * 86400000)] = { previas: 0, pagos: 0 };
+      gs.forEach((g) => { const d = g.criadoEm ? diaBR(g.criadoEm) : ''; if (porDia[d] && !g.pacoteDe && prov(g) !== 'admin') porDia[d].previas++; });
+      livros.forEach((l) => { const d = l.pagoEm ? diaBR(l.pagoEm) : ''; if (porDia[d] && l.tipo === 'venda') porDia[d].pagos++; });
+      const tPrev = gs.filter((g) => g.livro.previaEm && g.criadoEm && !g.pacoteDe).map((g) => g.livro.previaEm - g.criadoEm);
+      return json({ ok: true, dias, previas: gs.filter((g) => !g.pacoteDe && prov(g) !== 'admin').length, livros, porDia, temposPrevia: tPrev });
+    }
     if (b.acao === 'livro-diag') {
       const g = await getStore('presentes').get(String(b.id || ''), { type: 'json' }).catch(() => null);
       if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
@@ -481,6 +514,13 @@ export default async (req) => {
       (Array.isArray(b.exemplos) ? b.exemplos : []).forEach((e) => { const x = porId[e && e.id]; if (x && nova.indexOf(x) === -1) { x.mostrar = e.mostrar !== false; x.zap = !!e.zap && x.tipo === 'livro'; nova.push(x); } });
       // no máximo 2 vão junto com a prévia no WhatsApp
       let nz = 0; nova.forEach((x) => { if (x.zap && ++nz > 2) x.zap = false; });
+      // os marcados pro WhatsApp vão como PDF: já deixa o PDF pronto
+      const baseP = process.env.URL || new URL(req.url).origin;
+      for (const x of nova) {
+        if (!x.zap || !x.pedido) continue;
+        const ge = await getStore('presentes').get(x.pedido, { type: 'json' }).catch(() => null);
+        if (ge && ge.pago && ge.livro && !ge.livro.pdf) await fetch(baseP + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.pedido }) }).catch(() => {});
+      }
       // os que saíram da lista: apaga as imagens
       for (const x of atual) {
         if (nova.indexOf(x) !== -1) continue;

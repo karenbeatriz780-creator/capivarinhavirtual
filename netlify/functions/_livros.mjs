@@ -328,14 +328,17 @@ async function andarImagem(item, chave, criar, limite) {
   if (item.ok) return false;
   if (!item.task) {
     const tent = item.tent || 0;
-    const recusada = /refused|cannot read|upload/i.test(item.msg || '');
-    // foto recusada: tenta logo de novo (outro modelo / outro link); outros erros: dá um tempo
-    // erro passageiro (Google sobrecarregado, sistema de cobrança da Unifically fora do ar…):
-    // tenta de novo a cada 1 minuto e não desiste rápido (até ~30 tentativas, uns 30 min)
-    const passageiro = /unavailable|overload|try again|timeout|demorou|503|502|500|429|rate|pricing|internal/i.test(item.msg || '');
-    if (tent >= (passageiro ? 30 : MAX_IMG)) { if (!item.erro) { item.erro = true; return true; } return false; }
-    if (tent >= 3 && Date.now() - (item.em || 0) < (recusada || passageiro ? 60 * 1000 : ESPERA_IMG)) return false;
-    item.erro = false;
+    // NUNCA DESISTE (cliente pagou, o livro tem que sair):
+    //  - as 3 primeiras tentativas são na hora;
+    //  - depois, tenta de novo a cada 30 s durante 30 min (troca de modelo/link quando o Google recusa a foto);
+    //  - passou de 30 min: marca no painel como "com problema", mas CONTINUA tentando a cada 5 min (até 24 h).
+    item.ini = item.ini || Date.now();
+    const idade = Date.now() - item.ini;
+    if (idade > 24 * 3600 * 1000) { if (!item.erro) { item.erro = true; return true; } return false; }
+    let marcou = false;
+    if (idade > 30 * 60 * 1000 && !item.erro) { item.erro = true; marcou = true; }
+    const espera = tent < 3 ? 0 : idade < 30 * 60 * 1000 ? 30 * 1000 : 5 * 60 * 1000;
+    if (Date.now() - (item.em || 0) < espera) return marcou;
     try { item.task = await criar(item); }
     catch (e) { item.msg = String(e && e.message || e).slice(0, 300); item.tent = tent + 1; item.em = Date.now(); console.error('livro imagem (criar):', chave, item.msg); return true; }
     item.tent = tent + 1; item.em = Date.now();
@@ -351,7 +354,7 @@ async function andarImagem(item, chave, criar, limite) {
   }
   if (st.estado === 'pronto') {
     limite.downloads--;
-    try { await guardarImagem(st.urls[0], chave); item.ok = true; item.url = st.urls[0]; item.task = null; return true; }
+    try { await guardarImagem(st.urls[0], chave); item.ok = true; item.erro = false; item.url = st.urls[0]; item.task = null; item.okEm = Date.now(); return true; }
     catch (e) { console.error('guardar imagem', chave, e.message); item.msg = 'não consegui baixar a imagem: ' + e.message; item.task = null; return true; }
   }
   return false;
@@ -461,6 +464,9 @@ export async function avancarLivro(id, base, opts) {
   } else if (!g.pago && L.capa.ok && g.musicaPreviewUrl && L.status !== 'previa') {
     L.status = 'previa'; mudou = true;
   }
+  // relatório: quando a prévia ficou pronta (capa + 1ª ilustração)
+  if (!g.pago && !L.previaEm && previaPronta(g)) { L.previaEm = Date.now(); mudou = true;
+  }
 
   if (mudou) await presentes.setJSON(g.id, g);
   return g;
@@ -473,7 +479,8 @@ export function previaPronta(x) {
   const ps = x.livro.paginas || [];
   if (!ps.length) return false;
   const i0 = indiceAmostra(ps);
-  if (i0 >= 0 && !(ps[i0].ok || ps[i0].erro)) return false;
+  // a 1ª ilustração: espera ela, mas se travar mais de 3 min manda a prévia sem ela (ela continua sendo feita e aparece no link)
+  if (i0 >= 0 && !(ps[i0].ok || ps[i0].erro) && Date.now() - (x.criadoEm || 0) < 3 * 60 * 1000) return false;
   return !!x.musicaPreviewUrl || Date.now() - (x.criadoEm || 0) > 40 * 1000;
 }
 // liga o "motor" rápido do livro (segundo plano). Se já tiver um rodando, ele mesmo ignora.
@@ -595,7 +602,12 @@ export async function enviarInfoPrevia(para, g) {
   await enviarTexto(para,
     '👆 Essa é só uma *amostra*: você está vendo *1 ilustração* do que vai receber.\n\n' +
     '🎵 A prévia da música toca *70 segundos*, mas cada música completa passa de *2 minutos*. E são *2 músicas* com o nome de ' + nome + '.\n\n' +
-    '🔓 *Depois do pagamento você recebe o livro completo:* a história inteira ilustrada com o rostinho de ' + nome + ', as 2 músicas completas pra ouvir e baixar e os PDFs pra imprimir. Chega tudo aqui no WhatsApp.\n\n' +
+    '🔓 *Depois do pagamento você recebe o livro completo*, com a história inteira ilustrada com o rostinho de ' + nome + ':\n' +
+    '📱 Versão digital pra ler no celular\n' +
+    '📄 PDF pra ler\n' +
+    '🖨️ PDF pra imprimir (folhas e livreto)\n' +
+    '🎶 As 2 músicas completas pra ouvir e baixar\n' +
+    'Tudo enviado aqui no WhatsApp logo após o pagamento.\n\n' +
     '💛 *Valores:*\n' +
     '• 1 livro: R$ ' + P.um.valor + '\n' +
     '• 2 livros: R$ ' + P.dois.valor + '\n' +
@@ -607,11 +619,8 @@ export async function enviarInfoPrevia(para, g) {
 export function linkPdfPrevia(g, tipo) { return SITE + '/lv-pdf/' + g.id + '/' + (tipo || 'previa') + '-' + g.livro.token + '.pdf'; }
 export async function enviarPdfPrevia(para, g) {
   const n = String(g.livro.nome || 'Livro').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const a = await enviarDocumento(para, linkPdfPrevia(g, 'previa'), 'Previa-Livro-Magico-' + n + '.pdf',
-    '📱 *Prévia pra ler no celular*\nA capa, o começo da história e a primeira ilustração de ' + g.livro.nome + '. ✨');
-  const b = await enviarDocumento(para, linkPdfPrevia(g, 'previa-livreto'), 'Previa-Livro-Magico-' + n + '-imprimir-livreto.pdf',
-    '🖨️ *Prévia no jeito de imprimir (livreto)*\nAssim fica a impressão: frente e verso, dobra ao meio e vira um livrinho. No livro completo vem a história inteira.');
-  return a || b;
+  return enviarDocumento(para, linkPdfPrevia(g, 'previa'), 'Previa-Livro-Magico-' + n + '.pdf',
+    '📖 *Prévia do livro de ' + g.livro.nome + '*\nA capa, o começo da história e a primeira ilustração. ✨');
 }
 export async function enviarExemplosZap(para, temaPreferido) {
   let lista = []; try { lista = (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) {}
@@ -625,11 +634,25 @@ export async function enviarExemplosZap(para, temaPreferido) {
     if (menino) esc.push(menino); if (menina) esc.push(menina);
     if (!esc.length) esc.push(ordem[0]);
   }
+  await enviarTexto(para, '✨ *Exemplos de como vai ficar* 👇\n2 livros completos de outras crianças, com a história inteira ilustrada.');
   for (const x of esc.slice(0, 2)) {
-    const capa = SITE + '/.netlify/functions/livro-img?k=' + encodeURIComponent('ex/' + x.id + '/capa') + '&v=' + (x.em || 1);
-    await enviarImagem(para, capa, '✨ Exemplo de como fica: *' + (x.titulo || 'Livro Mágico') + '*');
+    // manda o PDF do livro completo (se ainda não existir, manda a capa e já prepara o PDF pra próxima vez)
+    let foi = false;
+    if (x.pedido) {
+      const ge = await getStore('presentes').get(x.pedido, { type: 'json' }).catch(() => null);
+      if (ge && ge.pago && ge.livro && ge.livro.pdf) {
+        const n = String(ge.livro.nome || 'Livro').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        foi = await enviarDocumento(para, linkPdf(ge, 'ler'), 'Exemplo-Livro-Magico-' + n + '.pdf', '📖 *Exemplo de livro completo:* ' + (x.titulo || 'Livro Mágico'));
+      } else if (ge && ge.pago) {
+        await fetch(SITE + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.pedido }) }).catch(() => {});
+      }
+    }
+    if (!foi) {
+      const capa = SITE + '/.netlify/functions/livro-img?k=' + encodeURIComponent('ex/' + x.id + '/capa') + '&v=' + (x.em || 1);
+      await enviarImagem(para, capa, '✨ Exemplo de livro pronto: *' + (x.titulo || 'Livro Mágico') + '*');
+    }
   }
-  await enviarTexto(para, '👆 Assim fica o livro pronto, com o rostinho da criança em cada página ilustrada.\n\nQuer ver um por dentro? Abra ' + SITE + '/#/livro e toque em *"Folhear um livro de exemplo"*. 📖');
+  await enviarTexto(para, '👆 Assim vai ficar o seu: a história inteira com o rostinho da criança em cada ilustração. Pra liberar, é só abrir o link da prévia e tocar em *Desbloquear*. 💛');
   return esc.length;
 }
 
@@ -640,7 +663,7 @@ export async function refazerImagens(id) {
   if (!g || !g.livro) return { erro: 'Livro não encontrado.' };
   const foto = loja().getMetadata ? await loja().getMetadata('foto/' + id).catch(() => null) : await loja().get('foto/' + id, { type: 'arrayBuffer' }).catch(() => null);
   if (!foto) return { erro: 'A foto da criança já foi apagada. Peça uma foto nova pro cliente e crie o livro de novo.' };
-  const L = g.livro, zera = (it) => { if (it && !it.ok) { it.tent = 0; it.erro = false; it.task = null; it.msg = ''; it.em = 0; it.recusas = 0; } };
+  const L = g.livro, zera = (it) => { if (it && !it.ok) { it.tent = 0; it.erro = false; it.task = null; it.msg = ''; it.em = 0; it.recusas = 0; it.ini = 0; } };
   zera(L.capa); (L.paginas || []).forEach(zera);
   if (L.musica && !g.musicaPreviewUrl) { L.musica.tent = 0; L.musica.task = null; }
   if (L.status === 'problema') L.status = g.pago ? 'gerando' : 'criando';
@@ -707,6 +730,7 @@ export async function pdfsProntos(g) {
 // texto com o link + PDFs. Se os PDFs ainda não existem, pede pra fazer (segundo plano) e eles chegam logo depois.
 export async function entregarLivroZap(para, g, base) {
   const nome = g.livro.nome;
+  await getStore('whatsapp').setJSON('lvent_' + g.id, { em: Date.now(), para }).catch(() => {}); // relatório: entregue
   await enviarTexto(para, '📖✨ *O Livro Mágico de ' + nome + ' ficou pronto!*\n\nAqui você lê virando as páginas e ouve as 2 músicas com o nome de ' + nome + ':\n' + SITE + '/#/livro/' + g.id +
     '\n\nAbaixo vão os arquivos em PDF, pra guardar e imprimir do jeito que preferir 👇');
   if (await pdfsProntos(g)) return enviarPdfsLivro(para, g);
