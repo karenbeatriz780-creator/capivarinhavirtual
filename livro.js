@@ -12,7 +12,8 @@ var css = `
 .lv{min-height:100vh;background:var(--lv-creme);color:var(--lv-tinta);font-family:'Inter',system-ui,sans-serif;}
 .lv *{box-sizing:border-box}
 .lv-h{font-family:'Baloo 2','Inter',sans-serif;font-weight:800;line-height:1.05;letter-spacing:-.01em;text-wrap:balance}
-.lv-eb{font-family:'Grand Hotel',cursive;color:#E39A2B;font-size:1.45rem;line-height:1}
+.lv-eb{font-family:'Grand Hotel',cursive;color:#C27612;font-size:1.5rem;line-height:1}
+.lv-hero .lv-eb{color:#FFD27A}
 .lv-wrap{max-width:30rem;margin:0 auto;padding:0 max(18px,env(safe-area-inset-left,0px)) 7rem max(18px,env(safe-area-inset-right,0px))}
 .lv-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;border:0;border-radius:18px;padding:1.05rem 1.2rem;font:800 1.12rem 'Baloo 2','Inter',sans-serif;cursor:pointer;
   color:#2A1B3D;background:linear-gradient(180deg,#FFE29A,#F4C35A 55%,#E5A93A);box-shadow:0 10px 26px rgba(229,169,58,.4),inset 0 1px 0 rgba(255,255,255,.7)}
@@ -26,8 +27,8 @@ var css = `
 .lv-rodape .lv-btn{max-width:30rem;margin:0 auto}
 
 /* ---------- hero ---------- */
-.lv-hero{position:relative;overflow:hidden;color:#fff;padding:calc(1.2rem + env(safe-area-inset-top,0px)) 0 2.6rem;
-  background:radial-gradient(90% 60% at 50% 0%,#4B2E7A 0%,#2C1D4A 45%,#1E1433 100%)}
+.lv-hero{position:relative;overflow:hidden;color:#fff;padding:calc(1.2rem + env(safe-area-inset-top,0px)) 0 3rem;
+  background:radial-gradient(70% 45% at 50% 22%,rgba(255,210,122,.22) 0%,rgba(255,210,122,0) 70%),radial-gradient(100% 70% at 50% 0%,#5A3796 0%,#2E1A58 48%,#170C2F 100%)}
 .lv-hero:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:46px;background:var(--lv-creme);border-radius:50% 50% 0 0/100% 100% 0 0}
 .lv-estrelas{position:absolute;inset:0;pointer-events:none}
 .lv-estrelas i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;opacity:.7;animation:lvPisca 2.6s ease-in-out infinite}
@@ -39,9 +40,9 @@ var css = `
 .lv-palco .lv-livro3d.on{opacity:1;transform:translateX(-50%) rotateY(-8deg) rotateX(2deg)}
 .lv-palco .lv-livro3d.sai{opacity:0;transform:translateX(-80%) rotateY(-40deg)}
 .lv-brilho-chao{position:absolute;left:50%;bottom:0;width:70%;height:30px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(244,195,90,.55),transparent);filter:blur(6px)}
-.lv-hero .lv-h{color:#fff;font-size:clamp(2rem,8.6vw,2.6rem);text-align:center;margin:.6rem 0 .5rem;position:relative;z-index:2}
-.lv-hero .lv-h em{font-style:normal;color:var(--lv-ouro)}
-.lv-hero p{text-align:center;color:#E6DBF5;font-size:1.02rem;line-height:1.55;margin:0 auto 1.3rem;max-width:26rem;position:relative;z-index:2}
+.lv-hero .lv-h{color:#fff;font-size:clamp(2.1rem,9vw,2.75rem);text-align:center;margin:.5rem 0 .6rem;position:relative;z-index:2;text-shadow:0 4px 18px rgba(0,0,0,.35)}
+.lv-hero .lv-h em{font-style:normal;color:#FFD27A}
+.lv-hero p{text-align:center;color:#F3ECFF;font-size:1.06rem;line-height:1.6;margin:0 auto 1.3rem;max-width:25rem;position:relative;z-index:2}
 .lv-selos{display:flex;flex-wrap:wrap;justify-content:center;gap:.45rem;margin:0 0 1.3rem;position:relative;z-index:2}
 .lv-selos span{font:700 .82rem 'Inter';padding:.45rem .75rem;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18)}
 .lv-hero .lv-btn{position:relative;z-index:2}
@@ -63,12 +64,12 @@ var css = `
 
 /* ---------- seções ---------- */
 .lv-sec{padding:1.6rem 0 .4rem}
-.lv-sec h2{color:var(--lv-tinta);font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.7rem;line-height:1.08;margin:.3rem 0 .9rem;text-wrap:balance}
+.lv-sec h2{color:#24163A;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.8rem;line-height:1.08;margin:.3rem 0 1rem;text-wrap:balance}
 .lv-passos{display:grid;gap:.7rem}
-.lv-passo{display:flex;gap:.85rem;align-items:flex-start;background:#fff;border:1px solid var(--lv-borda);border-radius:18px;padding:.95rem}
+.lv-passo{display:flex;gap:.85rem;align-items:flex-start;background:#fff;border:1px solid var(--lv-borda);border-radius:18px;padding:.95rem;box-shadow:0 6px 18px rgba(42,27,61,.06)}
 .lv-passo b{flex:none;width:2.2rem;height:2.2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#FFF0CC;font-size:1.15rem}
 .lv-passo h4{margin:0 0 .15rem;font:800 1.02rem 'Baloo 2',sans-serif}
-.lv-passo p{margin:0;font-size:.92rem;line-height:1.5;color:var(--lv-suave)}
+.lv-passo p{margin:0;font-size:.93rem;line-height:1.5;color:#5B4B70}
 .lv-galeria{display:flex;gap:.8rem;overflow-x:auto;padding:.3rem .2rem 1rem;scroll-snap-type:x mandatory;margin:0 -.2rem}
 .lv-galeria>div{flex:none;width:9.5rem;scroll-snap-align:start}
 .lv-galeria small{display:block;font:800 .88rem 'Baloo 2';margin-top:.5rem;line-height:1.15}
@@ -195,6 +196,7 @@ var css = `
 .lv-pag .moldura img{width:100%;height:100%;object-fit:cover;display:block}
 .lv-pag .grande{font-family:'Baloo 2';font-weight:800;font-size:2.2em;line-height:1;color:var(--cor2)}
 .lv-pag .script{font-family:'Grand Hotel',cursive;font-size:2.6em;line-height:1;color:var(--cor2)}
+.lv-pag .nomeDono{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:2.3em;line-height:1.05;color:var(--cor2);margin:.15em 0;letter-spacing:.01em;text-wrap:balance}
 .lv-pag .peq{font-size:.75em;opacity:.75;line-height:1.5}
 .lv-pag .qr{width:48%;background:#fff;padding:3%;border-radius:8%}
 .lv-pag .qr svg{width:100%;height:auto;display:block}
@@ -239,18 +241,18 @@ var css = `
 .lv-pontos{display:flex;justify-content:center;gap:.4rem;margin:.2rem 0 1rem;position:relative;z-index:2}
 .lv-pontos i{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.3);transition:all .3s}
 .lv-pontos i.on{width:20px;background:var(--lv-ouro)}
-.lv-musicas-faixa{display:flex;align-items:center;gap:.75rem;margin:0 auto 1.2rem;max-width:24rem;padding:.75rem .95rem;border-radius:18px;position:relative;z-index:2;
-  background:linear-gradient(135deg,rgba(255,111,161,.22),rgba(244,195,90,.18));border:1px solid rgba(255,230,166,.35);text-align:left}
+.lv-musicas-faixa{display:flex;align-items:center;gap:.75rem;margin:0 auto 1.3rem;max-width:24rem;padding:.8rem 1rem;border-radius:18px;position:relative;z-index:2;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,210,122,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);text-align:left;backdrop-filter:blur(4px)}
 .lv-musicas-faixa .ic{flex:none;width:2.6rem;height:2.6rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:linear-gradient(180deg,#FF8DB8,#E23C7E);box-shadow:0 6px 16px rgba(226,60,126,.45)}
-.lv-musicas-faixa b{display:block;font:800 1.05rem 'Baloo 2';color:#FFE6A6;line-height:1.1}
-.lv-musicas-faixa small{color:#E6DBF5;font-size:.82rem;line-height:1.35}
+.lv-musicas-faixa b{display:block;font:800 1.08rem 'Baloo 2';color:#FFD27A;line-height:1.1}
+.lv-musicas-faixa small{color:#F3ECFF;font-size:.84rem;line-height:1.4}
 .lv-link-ex{display:block;margin:.8rem auto 0;background:none;border:0;color:#FFE6A6;font:800 1rem 'Baloo 2';cursor:pointer;text-decoration:underline;text-underline-offset:4px;position:relative;z-index:2}
 .lv-recebe{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
-.lv-recebe>div{background:#fff;border:1px solid var(--lv-borda);border-radius:20px;padding:1rem .9rem;position:relative;overflow:hidden}
+.lv-recebe>div{background:#fff;border:1px solid var(--lv-borda);border-radius:20px;padding:1rem .9rem;position:relative;overflow:hidden;box-shadow:0 6px 18px rgba(42,27,61,.06)}
 .lv-recebe>div.mus{grid-column:span 2;background:linear-gradient(135deg,#FFF0F6,#FFF6E0);border-color:#FFD2E3}
 .lv-recebe .ic{font-size:1.7rem;line-height:1}
 .lv-recebe h4{margin:.45rem 0 .2rem;font:800 1.05rem 'Baloo 2';line-height:1.1}
-.lv-recebe p{margin:0;color:var(--lv-suave);font-size:.86rem;line-height:1.45}
+.lv-recebe p{margin:0;color:#5B4B70;font-size:.88rem;line-height:1.5}
 .lv-recebe .tag{position:absolute;top:.75rem;right:.75rem;font:800 .7rem 'Inter';padding:.25rem .55rem;border-radius:99px;background:#E23C7E;color:#fff}
 .lv-aberto{position:relative;display:flex;justify-content:center;margin:.4rem auto 1rem;max-width:22rem;cursor:pointer;filter:drop-shadow(0 20px 30px rgba(42,27,61,.28))}
 .lv-aberto>div{width:50%;aspect-ratio:3/4;overflow:hidden;background:#FFF8EF;position:relative}
@@ -328,6 +330,8 @@ function htmlZapLivro(d,t,esperando){
     '<div class="lv-zap-dica">'+(esperando?'Não quer esperar? Toque, aperte <b>enviar</b> no WhatsApp e pode sair. A gente te manda a capa e a música assim que ficar pronta.':'Toque e depois é só apertar <b>enviar</b> no WhatsApp. A gente te manda o link na hora.')+'</div>';
 }
 function lvToken(id){ var x=lvGet().filter(function(o){ return o.id===id; })[0]; return x?x.t:''; }
+function nIlusTema(t){ return ((t&&t.paginas)||[]).filter(function(p){ return !p.so; }).length||5; }
+function nPagsTema(t){ var ps=(t&&t.paginas)||[]; return ps.length+ps.filter(function(p){ return !p.so; }).length||10; }
 function lvFmt(v){ return 'R$ '+Number(v).toFixed(2).replace('.',','); }
 var _lvTemas=null, _lvEx=[];
 function lvTemas(){
@@ -347,7 +351,7 @@ function abrirExemplo(ex, aoCriar){
   if(!ex) return;
   var base=lvTema(ex.tema)||{cores:['#FFE8B8','#F6B86B','#7BAE5A'],emoji:'📖'};
   var n=Math.min(ex.paginas.length, (ex.textos||[]).length||ex.paginas.length);
-  var tema=Object.assign({}, base, {titulo:ex.titulo, paginas:ex.paginas.slice(0,n).map(function(u,i){ return {texto:(ex.textos||[])[i]||''}; })});
+  var tema=Object.assign({}, base, {titulo:ex.titulo, paginas:ex.paginas.slice(0,n).map(function(u,i){ return u==='so'?{texto:(ex.textos||[])[i]||'',so:true}:{texto:(ex.textos||[])[i]||''}; })});
   var d={id:ex.pedido, nome:ex.nome, genero:ex.genero, tema:ex.tema, capa:ex.capa, paginas:ex.paginas.slice(0,n), musica:true, musica2:true, pago:true};
   try{ gaEvento('livro_exemplo',{tema:ex.tema}); }catch(e){}
   abrirPdfExemplo(d, tema, aoCriar);
@@ -427,13 +431,13 @@ function telaLivroHome(){
       '<div class="lv-wrap" style="padding-bottom:0">'+
         '<div class="lv-eb" style="text-align:center">✨ Livro Mágico</div>'+
         '<h1 class="lv-h">Seu filho como <em>protagonista</em> da própria aventura</h1>'+
-        '<p>Um livro ilustrado com o <b style="color:#fff">rostinho dele</b> em cada página e o <b style="color:#fff">nome dele</b> em toda a história.</p>'+
-        '<div class="lv-musicas-faixa"><span class="ic">🎵</span><div><b>+ 2 músicas personalizadas</b><small>Com o nome da criança, tocando enquanto vocês leem juntos.</small></div></div>'+
+        '<p>Um livro ilustrado feito só pra ele: o <b style="color:#fff">rostinho</b> desenhado em cada aventura e o <b style="color:#fff">nome</b> em toda a história.</p>'+
+        '<div class="lv-musicas-faixa"><span class="ic">🎵</span><div><b>+ 2 músicas com o nome dele</b><small>Tocam enquanto vocês leem juntos. Ele vai pedir de novo toda noite.</small></div></div>'+
         '<button class="lv-btn" id="lvCriar">Criar meu livro agora ✨</button>'+
         '<button class="lv-link-ex" id="lvVerEx" hidden>👀 Folhear um livro de exemplo</button>'+
       '</div></section>'+
     '<div class="lv-wrap">'+
-      '<div class="lv-sec"><div class="lv-eb">o que vem no livro</div><h2>Um presente que ele vai guardar pra sempre</h2><div class="lv-recebe">'+
+      '<div class="lv-sec"><div class="lv-eb">o que vem no livro</div><h2>Um presente pra guardar pra sempre</h2><div class="lv-recebe">'+
         '<div><div class="ic">📖</div><h4>História ilustrada</h4><p>O rostinho da criança desenhado em cada cena da aventura.</p></div>'+
         '<div><div class="ic">✨</div><h4>O nome em tudo</h4><p>Na capa, em cada página e na dedicatória.</p></div>'+
         '<div class="mus"><span class="tag">2 músicas</span><div class="ic">🎵🎵</div><h4>2 músicas personalizadas com o nome</h4><p>Duas versões da música da história, cantando o nome da criança. Tocam enquanto vocês viram as páginas.</p></div>'+
@@ -441,13 +445,13 @@ function telaLivroHome(){
         '<div><div class="ic">💌</div><h4>Link pra família</h4><p>Pros avós e padrinhos lerem e ouvirem também.</p></div>'+
       '</div></div>'+
       '<div class="lv-sec" id="lvSecEx" hidden><div class="lv-eb">por dentro do livro</div><h2>Veja como fica de verdade</h2><div id="lvAberto"></div></div>'+
-      '<div class="lv-sec"><div class="lv-eb">como funciona</div><h2>Pronto em poucos minutos</h2><div class="lv-passos">'+
+      '<div class="lv-sec"><div class="lv-eb">como funciona</div><h2>Pronto em poucos minutos, sem complicação</h2><div class="lv-passos">'+
         '<div class="lv-passo"><b>📚</b><div><h4>Escolha a aventura</h4><p>Fazenda, futebol, fundo do mar, espaço ou castelo encantado.</p></div></div>'+
         '<div class="lv-passo"><b>📸</b><div><h4>Conte quem é a criança</h4><p>Nome, idade e uma foto com o rostinho bem visível.</p></div></div>'+
         '<div class="lv-passo"><b>🎵</b><div><h4>Veja a capa e ouça a música</h4><p>A capa com o rosto dela e a música com o nome ficam prontas antes de você pagar.</p></div></div>'+
         '<div class="lv-passo"><b>🔓</b><div><h4>Desbloqueie o livro completo</h4><p>Todas as ilustrações, as 2 músicas completas e o PDF pra imprimir.</p></div></div>'+
       '</div></div>'+
-      '<div class="lv-sec"><div class="lv-eb">as aventuras</div><h2>Escolha o mundo dele</h2><div class="lv-galeria" id="lvGal"></div></div>'+
+      '<div class="lv-sec"><div class="lv-eb">as aventuras</div><h2>Qual aventura combina com ele?</h2><div class="lv-galeria" id="lvGal"></div></div>'+
       '<div class="lv-sec"><div class="lv-eb">como imprimir</div><h2>Do celular pro papel</h2><div class="lv-imp">'+
         '<div><h4>🖨️ Folhas abertas (mais fácil)</h4><p class="sub3">Cada folha A4 deitada vira uma página dupla do livro.</p>'+
           '<div class="lv-folha"><div class="a4"><i></i><i></i></div><span class="seta">→</span><div class="a4"><i></i><i></i></div></div>'+
@@ -489,8 +493,8 @@ function telaLivroHome(){
     var ex=lvExLivro();
     if(ex){
       el('lvVerEx').hidden=false; el('lvVerEx').onclick=function(){ abrirExemplo(ex, function(){ location.hash='#/livro/criar'; }); };
-      var tx=(ex.textos||[])[0]||'';
-      el('lvAberto').innerHTML='<div class="lv-aberto" id="lvAbertoBt" role="button" tabindex="0" aria-label="Folhear o livro de exemplo"><div><div class="tx">'+esc(tx)+'</div></div><div><img src="'+esc(ex.paginas[0])+'" alt="Ilustração do livro de exemplo"></div><span class="play">📖 Folhear o livro de '+esc(ex.nome)+'</span></div>'+
+      var i1=Math.max(0,ex.paginas.findIndex(function(u){ return u&&u!=='so'; })), tx=(ex.textos||[])[i1]||'';
+      el('lvAberto').innerHTML='<div class="lv-aberto" id="lvAbertoBt" role="button" tabindex="0" aria-label="Folhear o livro de exemplo"><div><div class="tx">'+esc(tx)+'</div></div><div><img src="'+esc(ex.paginas[i1])+'" alt="Ilustração do livro de exemplo"></div><span class="play">📖 Folhear o livro de '+esc(ex.nome)+'</span></div>'+
         '<p style="text-align:center;color:var(--lv-suave);font-size:.88rem;margin:1.6rem 0 0">Um livro de verdade, feito aqui. Toque pra virar as páginas e ouvir a música.</p>';
       el('lvSecEx').hidden=false;
       el('lvAbertoBt').onclick=function(){ abrirExemplo(ex, function(){ location.hash='#/livro/criar'; }); };
@@ -623,7 +627,8 @@ function desenharPasso(){
       '<p class="lv-sub">Uma foto com o rostinho bem visível, de frente e com boa luz.</p>'+
       '<label class="lv-foto" for="lvArq">'+(LV.foto?'<img src="'+LV.foto+'" alt="Foto escolhida"><b>Trocar foto</b>':'<div class="ic">📷</div><b>Toque para escolher a foto</b><small>JPG ou PNG</small>')+'</label>'+
       '<input type="file" id="lvArq" accept="image/*" hidden>'+
-      '<div class="lv-dica">💡<div>Fotos só de <b>'+nm+'</b>, sem boné nem óculos escuros, dão os melhores resultados.</div></div>'+
+      '<div class="lv-dica" style="background:#FFF0F3;color:#7A2440;border:1.5px solid #FFC2D1">⚠️<div><b>Atenção na foto:</b> a criança precisa estar <b>de roupa</b>. Foto <b>sem camisa, de fralda, de biquíni ou roupa de banho</b> é recusada pela inteligência artificial.</div></div>'+
+      '<div class="lv-dica">💡<div>Use uma foto só de <b>'+nm+'</b>, <b>de frente e com boa luz</b> (sem filtro, sem boné e sem óculos escuros). Assim a IA desenha certinho.</div></div>'+
       '<div class="lv-campo"><label for="lvZap">WhatsApp pra receber o livro <span style="font-weight:500;color:#8a7a96">(opcional)</span></label><input type="tel" id="lvZap" inputmode="tel" placeholder="(11) 91234-5678" value="'+esc(LV.zap)+'"></div>'+
       '<label class="lv-aceite"><input type="checkbox" id="lvAceite"'+(LV.aceite?' checked':'')+'><span>Sou responsável pela criança e autorizo usar a foto só para criar este livro. A foto é apagada automaticamente depois.</span></label>'+
       '<div class="lv-erro" id="lvErro"></div>';
@@ -656,12 +661,12 @@ function desenharPasso(){
 function folhaTema(id){
   var t=lvTema(id); if(!t) return;
   var i=(_lvTemas||[]).indexOf(t), gen=t.vitrineGenero||(i%2?'menina':'menino'), nome=NOMES_EX[gen][(i+1)%6];
-  var ex=lvExDoTema(id), n=(t.paginas||[]).length||5;
+  var ex=lvExDoTema(id), n=nIlusTema(t), np=nPagsTema(t);
   var m=document.createElement('div'); m.className='lv-modal';
   m.innerHTML='<div class="lv-folha-tema"><div class="lv-livro3d">'+capaTema(t,i,9)+'</div>'+
     '<h3>'+esc(t.emoji+' '+t.nome)+'</h3><p class="desc">'+esc(flexTxt(t.descricao,'',gen))+'</p>'+
     '<ul class="lv-inclui">'+
-      '<li>📖 <span><b>Uma história de '+(n*2)+' páginas</b> com o <b>rostinho da criança</b> em '+n+' ilustrações</span></li>'+
+      '<li>📖 <span><b>Uma história de '+np+' páginas</b> com o <b>rostinho da criança</b> em '+n+' ilustrações</span></li>'+
       '<li>🎵 <span><b>2 músicas personalizadas</b> cantando o nome da criança</span></li>'+
       '<li>👀 <span>Você vê a <b>capa</b> e ouve a <b>música</b> antes de pagar</span></li>'+
       '<li>🖨️ <span><b>PDF</b> pra ler no celular e pra imprimir</span></li>'+
@@ -725,7 +730,7 @@ function telaLivroPedido(id){
         var tema=lvTema(d.tema)||{cores:['#FFE8B8','#F6B86B','#7BAE5A'],titulo:'{nome}',paginas:[]};
         if(d.pago && d.status==='pronto'){ clearInterval(iv); if(tela!=='livro'){ tela='livro'; abrirLeitor(d,tema,t); } return; }
         if(d.pago){ if(tela!=='gerando'){ tela='gerando'; desenharEspera(d,tema,true); } else atualizarEspera(d,true); return; }
-        if(d.capa && d.musica){ clearInterval(iv); if(tela!=='previa'){ tela='previa'; desenharPrevia(d,tema,t); } return; }
+        if(d.capa){ if(tela!=='previa'){ tela='previa'; desenharPrevia(d,tema,t); } if(d.musica){ clearInterval(iv); lvMusicaPronta(); } return; }
         if(tela!=='espera'){ tela='espera'; desenharEspera(d,tema,false); } else atualizarEspera(d,false);
       });
     }).catch(function(){});
@@ -748,9 +753,19 @@ function telaLivroPedido(id){
     var c=el('lvCheck'); if(!c) return;
     function li(ok,txt){ return '<li><i>'+(ok?'✅':'<span class="lv-giro"></span>')+'</i>'+txt+'</li>'; }
     if(!pago) c.innerHTML=li(!!d.capa,'Capa com o rostinho de '+esc(d.nome))+li(!!d.musica,'Música com o nome '+esc(d.nome));
-    else { var prontas=(d.paginas||[]).filter(Boolean).length, tot=(d.paginas||[]).length||5;
+    else { var prontas=(d.paginas||[]).filter(function(u){ return u&&u!=='so'; }).length, tot=d.nIlus||(d.paginas||[]).filter(function(u){ return u!=='so'; }).length||5;
+      prontas=Math.min(prontas,tot);
       c.innerHTML=li(prontas>=tot,'Ilustrações: '+prontas+' de '+tot)+li(true,'Textos da história')+li(true,'Música completa'); }
-    if(d.status==='problema'||d.capaErro){ c.insertAdjacentHTML('beforeend','<li style="background:rgba(255,180,120,.14)"><i>⏳</i>Uma imagem está dando mais trabalho. Já estamos refazendo, pode deixar a tela aberta ou voltar depois.</li>'); }
+    if(d.fotoRecusada){
+      if(!el('lvTroca')){ c.insertAdjacentHTML('afterend','<div id="lvTroca" style="margin-top:1rem;background:#fff;color:#2A1B3D;border-radius:18px;padding:1rem;text-align:left;max-width:22rem;position:relative">'+
+        '<b style="font:800 1.1rem \'Baloo 2\'">📸 Essa foto não funcionou</b><p style="margin:.3rem 0 .7rem;font-size:.9rem;color:#6E5C82;line-height:1.45">A inteligência artificial não aceitou essa foto. Envie outra: <b>de frente, com boa luz, de roupa e sem filtro</b>. Não gasta outra prévia.</p>'+
+        '<label class="lv-btn rosa" style="cursor:pointer">Escolher outra foto<input type="file" id="lvTrocaArq" accept="image/*" hidden></label><div id="lvTrocaMsg" style="font-size:.85rem;margin-top:.5rem"></div></div>');
+        el('lvTrocaArq').onchange=function(){ var f=this.files&&this.files[0]; if(!f) return; var msg=el('lvTrocaMsg'); msg.textContent='Enviando…';
+          lerFoto(f).then(function(foto){ return fetch('/.netlify/functions/livro-previa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({trocarFoto:d.id,t:lvToken(d.id),foto:foto})}).then(function(r){ return r.json(); }); })
+            .then(function(x){ if(x&&x.ok){ var b=el('lvTroca'); if(b) b.remove(); toast('Foto nova recebida! Estamos desenhando de novo.'); } else msg.textContent=(x&&x.erro)||'Não deu certo. Tente outra foto.'; })
+            .catch(function(){ msg.textContent='Sem conexão. Tente de novo.'; }); };
+      }
+    } else if(d.status==='problema'||d.capaErro){ c.insertAdjacentHTML('beforeend','<li style="background:rgba(255,180,120,.14)"><i>⏳</i>Uma imagem está dando mais trabalho. Já estamos refazendo, pode deixar a tela aberta ou voltar depois.</li>'); }
   }
   iv=setInterval(ciclo,4000); ciclo();
   lvAdminBarra(id);
@@ -797,6 +812,7 @@ function tocarLivro(id,v){
 }
 function pararAudioLivro(){ if(_lvAudio){ try{ _lvAudio.pause(); }catch(e){} _lvAudio=null; } }
 
+function lvMusicaPronta(){ var b=el('lvAbrir'); if(b && b.disabled){ b.disabled=false; b.querySelector('span').textContent='▶ Abrir o livro'; } }
 function desenharPrevia(d,tema,t){
   var app=el('app'), titulo=flexTxt(tema.titulo,d.nome,d.genero);
   app.innerHTML='<div class="lv-prev"><div class="lv-wrap" style="padding-bottom:2rem">'+
@@ -804,7 +820,7 @@ function desenharPrevia(d,tema,t){
     '<h1 class="lv-h">O livro de '+esc(d.nome)+' está pronto pra abrir ✨</h1>'+
     '<p class="sub">Toque na capa e escute a música de '+esc(d.nome)+'.</p>'+
     '<div class="lv-livro3d" id="lvCapaPrev">'+htmlCapa({img:d.capa,cores:tema.cores,emoji:tema.emoji,titulo:titulo,nome:d.nome,fs:Math.min(17,window.innerWidth/22),
-      extra:'<button class="lv-abrir" id="lvAbrir" aria-label="Abrir o livro e tocar a música"><span>▶ Abrir o livro</span></button>'})+'</div>'+
+      extra:'<button class="lv-abrir" id="lvAbrir" aria-label="Abrir o livro e tocar a música"'+(d.musica?'':' disabled')+'><span>'+(d.musica?'▶ Abrir o livro':'<i class="lv-giro" style="width:14px;height:14px;vertical-align:-2px;border-top-color:#2A1B3D"></i> Afinando a música…')+'</span></button>'})+'</div>'+
     '<div id="lvDepois"></div>'+htmlZapLivro(d,t,false)+'</div></div>';
   el('lvAbrir').onclick=function(){
     tocarLivro(d.id,1);
@@ -815,13 +831,13 @@ function desenharPrevia(d,tema,t){
   };
 }
 function htmlDesbloquear(d,tema){
-  var n=(tema.paginas||[]).length||5;
+  var n=nIlusTema(tema), np=nPagsTema(tema);
   return '<div class="lv-tranca">'+
     '<h3>🔓 Desbloqueie a história completa</h3>'+
     '<p class="sub2">As próximas páginas da aventura de '+esc(d.nome)+' estão esperando…</p>'+
     '<div class="lv-paginas-bloq"><div></div><div></div><div></div><div></div><div></div></div>'+
     '<ul class="lv-inclui">'+
-      '<li>📖 <span><b>'+(n*2)+' páginas</b> de história, com <b>'+n+' ilustrações</b> com o rostinho de '+esc(d.nome)+'</span></li>'+
+      '<li>📖 <span><b>'+np+' páginas</b> de história, com <b>'+n+' ilustrações</b> com o rostinho de '+esc(d.nome)+'</span></li>'+
       '<li>🎵 <span><b>2 músicas completas</b> com o nome '+esc(d.nome)+', tocando enquanto lê</span></li>'+
       '<li>🖨️ <span><b>PDF em alta qualidade</b>: versão pra ler e versão pronta pra imprimir</span></li>'+
       '<li>💌 <span>Link pra mandar pros avós, padrinhos e toda a família</span></li>'+
@@ -844,7 +860,7 @@ function ligarDesbloquear(d,tema,t){
         bt.remove();
         var box=el('lvPix');
         box.innerHTML='<div class="lv-relogio">⏳ O Pix vale por <b id="lvRel">20:00</b></div>'+
-          htmlPixLimpo(res.d.payload, res.d.valor, res.d.teste, {titulo:'Livro Mágico de '+d.nome, itens:['Livro completo com '+((tema.paginas||[]).length||5)+' ilustrações','2 músicas completas','PDF pra ler e pra imprimir']});
+          htmlPixLimpo(res.d.payload, res.d.valor, res.d.teste, {titulo:'Livro Mágico de '+d.nome, itens:['Livro completo com '+nIlusTema(tema)+' ilustrações','2 músicas completas','PDF pra ler e pra imprimir']});
         var rod=box.querySelector('.pxc-rod'); if(rod) rod.textContent='O livro é liberado assim que o Pix for confirmado. A sua prévia continua salva se você fechar esta página.';
         var fim=res.d.expiraEm||(Date.now()+20*60000);
         relIv=setInterval(function(){
@@ -866,7 +882,7 @@ function ligarDesbloquear(d,tema,t){
 /* --------------------------------------------------------------- leitor */
 function paginasDoLivro(d,tema){
   var n=(tema.paginas||[]).length, ps=[{t:'capa'},{t:'pertence'},{t:'rosto'}];
-  for(var i=0;i<n;i++){ ps.push({t:'texto',i:i}); ps.push({t:'img',i:i}); }
+  for(var i=0;i<n;i++){ ps.push({t:'texto',i:i}); if(!(tema.paginas[i]&&tema.paginas[i].so)) ps.push({t:'img',i:i}); }
   ps.push({t:'fim'}); ps.push({t:'musica'});
   while((ps.length+1)%4) ps.push({t:'branco'});
   ps.push({t:'contra'});
@@ -881,7 +897,7 @@ function htmlPagina(p,d,tema,num){
   var orn='';
   if(p.t==='texto'){ var tx=((tema.paginas||[])[p.i]||{}).texto||''; return '<div class="lv-pag" style="'+est+'">'+fundo+
     '<div class="miolo"><div class="txt">'+esc(flexTxt(tx,d.nome,d.genero))+'</div>'+orn+'</div><div class="num">'+num+'</div></div>'; }
-  if(p.t==='pertence') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo">'+capaMini+'<div class="peq" style="margin-top:9%">Este livro pertence a</div><div class="script" style="margin:.15em 0">'+nome+'</div><div class="peq" style="margin-top:12%">com amor, ______________________</div></div></div>';
+  if(p.t==='pertence') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo">'+capaMini+'<div class="peq" style="margin-top:9%">Este livro pertence a</div><div class="nomeDono">'+nome+'</div><div class="peq" style="margin-top:12%">com amor, ______________________</div></div></div>';
   if(p.t==='rosto') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo">'+orn+'<div class="grande" style="margin:.3em 0">'+esc(flexTxt(tema.titulo,d.nome,d.genero))+'</div>'+orn+'<div class="peq">Uma aventura mágica criada especialmente para '+nome+'</div></div></div>';
   if(p.t==='fim') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div class="script">Fim</div>'+orn+'<div class="txt" style="font-size:.95em;text-align:center">'+nome+', que venham muitas outras aventuras!</div></div><div class="num">'+num+'</div></div>';
   if(p.t==='musica'){ var svg=''; try{ svg=QRCodeGen.toSVG(location.origin+'/#/livro/'+d.id,{ec:'M',quiet:1}); }catch(e){}
@@ -920,6 +936,7 @@ function abrirLeitor(d,tema,t,opts){
     vista.style.setProperty('--pw',pw+'px');
     vista.className='lv-l-vista'+(ids.length>1?' dupla':'')+(dir?(dir>0?' anima-prox':' anima-ant'):'');
     vista.innerHTML=ids.map(function(i){ return htmlPagina(ps[i],d,tema,i+1); }).join('');
+    vista.querySelectorAll('.lv-pag .txt').forEach(function(tx){ var m=tx.parentNode, f=1; while(m.scrollHeight>m.clientHeight+1 && f>0.55){ f-=0.05; tx.style.fontSize=f+'em'; } });
     el('lvCont').textContent=(pos+1)+' / '+vs.length;
     el('lvAnt').style.visibility=pos>0?'visible':'hidden';
     el('lvProx2').style.visibility=pos<vs.length-1?'visible':'hidden';
@@ -1052,7 +1069,7 @@ async function desenharPaginaCanvas(p,d,tema,num,W,H){
   } else if(p.t==='pertence'){
     await capaMiniCanvas(ctx,d,W*.29,H*.1,W*.42);
     textoCentro(ctx,'Este livro pertence a',W/2,H*.56,W*.8,'600 '+(u*4.4)+'px "Baloo 2"','#6E5C82',u*5);
-    textoCentro(ctx,nome,W/2,H*.62,W*.86,(u*15)+'px "Grand Hotel"',c[2],u*15);
+    textoCentro(ctx,nome,W/2,H*.62,W*.86,'800 '+(u*11)+'px "Baloo 2"',c[2],u*12);
     textoCentro(ctx,'com amor, ______________________',W/2,H*.84,W*.86,'500 '+(u*3.6)+'px Inter','#6E5C82',u*4);
   } else if(p.t==='rosto'){
     ornamento(ctx,W/2,H*.33,W*.42,c[2]);
@@ -1143,7 +1160,9 @@ function desenharLvp(){
       '<div class="lvp-bts"><button class="ouro" id="lvpCod">Gerar código</button><span id="lvpCodOut" style="font:800 1.1rem Inter;align-self:center"></span></div></div>'+
     '<div class="lvp-it" style="display:block"><b>✨ Nova história com IA</b><div class="lvp-ed"><label for="lvpIdeia">Descreva a ideia</label>'+
       '<textarea id="lvpIdeia" placeholder="Ex.: uma aventura no mundo dos dinossauros, com um dinossauro bebê que vira melhor amigo"></textarea></div>'+
-      '<div class="lvp-bts"><button class="ouro" id="lvpIA">Escrever com IA</button><button class="cl" id="lvpBranco">Criar em branco</button><button class="cl" id="lvpRest">Restaurar as 5 originais</button></div></div>';
+      '<div class="lvp-bts"><button class="ouro" id="lvpIA">Escrever com IA</button><button class="cl" id="lvpBranco">Criar em branco</button><button class="cl" id="lvpRest">Restaurar as 5 originais</button></div></div>'+
+    '<div class="lvp-it" style="display:block"><b>📚 Histórias novas prontas</b><p style="margin:.3rem 0 .2rem;font-size:.85rem;color:#666">Davi e Golias com Jesus, Um Dia com Jesus, Fazenda, Craque, Mundo das Cores, Dinossauros, Ateliê dos Sonhos, Natal Mágico, Astronauta da Galáxia e ABC Encantado. Cada uma com 5 ilustrações e páginas extras só de texto. <b>Não apaga as suas.</b> Fazenda, Craque e Galáxia são atualizadas; as outras entram como rascunho pra você revisar e publicar.</p>'+
+      '<div class="lvp-bts"><button class="ouro" id="lvpImp">Adicionar as histórias novas</button></div></div>';
   el('lvpCop').onclick=function(){ copiar(location.origin+'/#/livro','Link copiado!'); };
   ligarVitrinePnl();
   el('lvpCod').onclick=function(){
@@ -1153,6 +1172,12 @@ function desenharLvp(){
   };
   c.querySelectorAll('[data-lvped]').forEach(function(b){ b.onclick=function(){ _lvp.ed=+b.dataset.lvped; desenharLvp(); }; });
   el('lvpBranco').onclick=function(){ _lvp.temas.push({id:'nova-'+Date.now().toString(36),emoji:'📖',status:'rascunho',ordem:_lvp.temas.length+1,nome:'Nova história',titulo:'{nome} e …',descricao:'',cores:['#FFE8F0','#E86A9E','#6B4BC4'],roupa:'',capa:'',paginas:[{},{},{},{},{}],letra:'',estiloMusica:"children's song, cheerful, catchy chorus, portuguese vocals"}); _lvp.ed=_lvp.temas.length-1; desenharLvp(); };
+  el('lvpImp').onclick=function(){
+    var b=el('lvpImp'); b.disabled=true; b.textContent='Adicionando…';
+    lvpPost({acao:'importar'}).then(function(r){ b.disabled=false; b.textContent='Adicionar as histórias novas';
+      if(!r.ok){ toast(r.d.erro||'Erro'); return; }
+      _lvp.temas=r.d.temas; _lvTemas=null; toast(r.d.novas+' histórias novas e '+r.d.atualizadas+' atualizadas! Revise, crie um exemplo e publique.'); desenharLvp(); });
+  };
   el('lvpRest').onclick=function(){
     var b=el('lvpRest'); if(b.dataset.ok!=='1'){ b.dataset.ok='1'; b.textContent='Toque de novo pra confirmar (apaga as mudanças)'; return; }
     lvpPost({acao:'restaurar'}).then(function(r){ if(r.ok){ _lvp.temas=r.d.temas; toast('As 5 histórias originais foram restauradas.'); desenharLvp(); } else toast(r.d.erro||'Erro'); });
@@ -1276,14 +1301,14 @@ function desenharEditor(){
       campo('lvpCores','3 cores (claro, médio, escuro)',(t.cores||[]).join(', '))+
       campo('lvpRoupa','Roupa da criança nas ilustrações (inglês)',t.roupa,true)+
       campo('lvpCapa','Cena da capa (inglês)',t.capa,true)+
-      '<p style="font-size:.82rem;color:#7a6f86;margin:.8rem 0 0">Cada página tem um texto e uma ilustração. Pra deixar a história mais comprida <b>sem gastar mais</b>, adicione páginas que <b>repetem a ilustração</b> de outra página (só o texto é novo). Ilustrações novas: no máximo 10.</p>'+
+      '<p style="font-size:.82rem;color:#7a6f86;margin:.8rem 0 0">Cada página tem um texto e pode ter uma ilustração. Pra deixar a história mais comprida <b>sem gastar mais</b>, adicione páginas <b>📝 só texto</b> (grátis). Ilustrações novas: no máximo 5. Dica: no livro aberto, a página da esquerda é texto e a da direita é a ilustração; páginas só de texto ficam lado a lado, então use de 2 em 2.</p>'+
       t.paginas.map(function(p,i){
         var rep=(p.usa===0||p.usa)?+p.usa:-1;
-        var ops='<option value="-1">🎨 Ilustração nova (gerada pela IA)</option>'+t.paginas.map(function(q,j){ return (j===i||(q.usa===0||q.usa))?'':'<option value="'+j+'"'+(rep===j?' selected':'')+'>🔁 Repetir a ilustração da página '+(j+1)+'</option>'; }).join('');
+        var ops='<option value="-1">🎨 Ilustração nova (gerada pela IA)</option><option value="so"'+(p.so?' selected':'')+'>📝 Só texto (sem ilustração, grátis)</option>'+t.paginas.map(function(q,j){ return (j===i||(q.usa===0||q.usa)||q.so)?'':'<option value="'+j+'"'+(rep===j&&!p.so?' selected':'')+'>🔁 Repetir a ilustração da página '+(j+1)+'</option>'; }).join('');
         return '<div class="lvp-cena"><div style="display:flex;justify-content:space-between;align-items:center"><b>Página '+(i+1)+'</b>'+(t.paginas.length>3?'<button class="pnl-link" data-lvprm="'+i+'" style="padding:.25rem .6rem">Remover</button>':'')+'</div>'+
           campo('lvpTx'+i,'Texto da página (português)',p.texto,true)+
           '<label for="lvpUs'+i+'">Ilustração</label><select id="lvpUs'+i+'" data-lvpus="'+i+'">'+ops+'</select>'+
-          '<div id="lvpCeBox'+i+'"'+(rep>=0?' hidden':'')+'>'+campo('lvpCe'+i,'O que aparece na ilustração (inglês ou português)',p.cena,true)+'</div></div>';
+          '<div id="lvpCeBox'+i+'"'+(rep>=0||p.so?' hidden':'')+'>'+campo('lvpCe'+i,'O que aparece na ilustração (inglês ou português)',p.cena,true)+'</div></div>';
       }).join('')+
       (t.paginas.length<16?'<div class="lvp-bts"><button class="cl" id="lvpAddPg">+ Adicionar página</button></div>':'')+
       campo('lvpLetra','Letra da música',t.letra,true,'Comece com "Era uma vez… {nome}". Use {nome} no refrão.')+
@@ -1309,7 +1334,7 @@ function desenharEditor(){
     t.nome=el('lvpNome').value; t.titulo=el('lvpTit').value; t.emoji=el('lvpEmo').value; t.descricao=el('lvpDesc').value;
     t.cores=el('lvpCores').value.split(',').map(function(x){ return x.trim(); }).filter(Boolean).slice(0,3);
     t.roupa=el('lvpRoupa').value; t.capa=el('lvpCapa').value; t.letra=el('lvpLetra').value; t.estiloMusica=el('lvpEst').value; t.ordem=+el('lvpOrd').value||99;
-    t.paginas=t.paginas.map(function(p,i){ var u=+el('lvpUs'+i).value; var o={texto:el('lvpTx'+i).value, cena:el('lvpCe'+i).value}; if(u>=0) o.usa=u; return o; });
+    t.paginas=t.paginas.map(function(p,i){ var v=el('lvpUs'+i).value, o={texto:el('lvpTx'+i).value, cena:el('lvpCe'+i).value}; if(v==='so'){ o.so=true; o.cena=''; } else if(+v>=0) o.usa=+v; return o; });
     if(!t.id || /^nova-/.test(t.id)) t.id=(t.nome||'tema').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30)||t.id;
   }
   function salvar(msg){
@@ -1321,8 +1346,8 @@ function desenharEditor(){
   }
   el('lvpVolta').onclick=function(){ _lvp.ed=null; desenharLvp(); };
   ligarExemploEditor(t, salvar);
-  c.querySelectorAll('[data-lvpus]').forEach(function(sel){ sel.onchange=function(){ var b=el('lvpCeBox'+sel.dataset.lvpus); if(b) b.hidden=+sel.value>=0; }; });
-  var add=el('lvpAddPg'); if(add) add.onclick=function(){ ler(); var ult=-1; t.paginas.forEach(function(p,j){ if(!(p.usa===0||p.usa)) ult=j; }); t.paginas.push(ult>=0?{texto:'',cena:'',usa:ult}:{texto:'',cena:''}); desenharEditor(); var x=el('lvpTx'+(t.paginas.length-1)); if(x){ x.scrollIntoView({block:'center'}); x.focus(); } };
+  c.querySelectorAll('[data-lvpus]').forEach(function(sel){ sel.onchange=function(){ var b=el('lvpCeBox'+sel.dataset.lvpus); if(b) b.hidden=sel.value==='so'||+sel.value>=0; }; });
+  var add=el('lvpAddPg'); if(add) add.onclick=function(){ ler(); t.paginas.push({texto:'',cena:'',so:true}); desenharEditor(); var x=el('lvpTx'+(t.paginas.length-1)); if(x){ x.scrollIntoView({block:'center'}); x.focus(); } };
   c.querySelectorAll('[data-lvprm]').forEach(function(b){ b.onclick=function(){ ler(); var k=+b.dataset.lvprm; t.paginas.splice(k,1);
     t.paginas.forEach(function(p){ if(p.usa===0||p.usa){ if(+p.usa===k) delete p.usa; else if(+p.usa>k) p.usa=+p.usa-1; } }); desenharEditor(); }; });
   el('lvpSalvar').onclick=function(){ salvar().then(function(ok){ if(ok) desenharEditor(); }); };
