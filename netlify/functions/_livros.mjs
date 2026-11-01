@@ -324,6 +324,10 @@ function refsPagina(base, g, p) {
 }
 function linkImg(base, g, nome) { return base + '/.netlify/functions/livro-img?k=' + encodeURIComponent('img/' + g.id + '/' + nome) + '&t=' + g.livro.token; }
 
+// histórico de cada tentativa (só o painel vê): pediu / falhou / erro / ok / recomeçou
+function hist(item, ev, msg) {
+  item.hist = (item.hist || []).concat([{ em: Date.now(), ev, n: item.tent || 0, msg: msg ? String(msg).slice(0, 220) : undefined }]).slice(-60);
+}
 async function andarImagem(item, chave, criar, limite) {
   // item: { task, ok, tent }
   if (item.ok) return false;
@@ -343,8 +347,8 @@ async function andarImagem(item, chave, criar, limite) {
     const espera = tent < 3 ? 0 : idade < 30 * 60 * 1000 ? (recusou ? 5 * 1000 : 30 * 1000) : 5 * 60 * 1000;
     if (Date.now() - (item.em || 0) < espera) return marcou;
     try { item.task = await criar(item); }
-    catch (e) { item.msg = String(e && e.message || e).slice(0, 300); item.tent = tent + 1; item.em = Date.now(); console.error('livro imagem (criar):', chave, item.msg); return true; }
-    item.tent = tent + 1; item.em = Date.now();
+    catch (e) { item.msg = String(e && e.message || e).slice(0, 300); item.tent = tent + 1; item.em = Date.now(); hist(item, 'erro', item.msg); console.error('livro imagem (criar):', chave, item.msg); return true; }
+    item.tent = tent + 1; item.em = Date.now(); hist(item, 'pediu');
     return true;
   }
   if (limite.downloads <= 0) return false;
@@ -352,13 +356,14 @@ async function andarImagem(item, chave, criar, limite) {
   if (st.estado === 'falhou' || (st.estado === 'rodando' && Date.now() - (item.em || 0) > 2 * 60 * 1000)) {
     item.msg = st.estado === 'falhou' ? (st.msg || 'a IA recusou ou falhou ao gerar') : 'demorou demais (mais de 2 min)';
     if (/refused|cannot read|upload/i.test(item.msg)) { item.recusas = (item.recusas || 0) + 1; }
+    hist(item, 'falhou', item.msg);
     console.error('livro imagem falhou:', chave, item.msg);
     item.task = null; return true; // tenta de novo na próxima volta
   }
   if (st.estado === 'pronto') {
     limite.downloads--;
-    try { await guardarImagem(st.urls[0], chave); item.ok = true; item.erro = false; item.url = st.urls[0]; item.task = null; item.okEm = Date.now(); return true; }
-    catch (e) { console.error('guardar imagem', chave, e.message); item.msg = 'não consegui baixar a imagem: ' + e.message; item.task = null; return true; }
+    try { await guardarImagem(st.urls[0], chave); item.ok = true; item.erro = false; item.url = st.urls[0]; item.task = null; item.okEm = Date.now(); hist(item, 'ok'); return true; }
+    catch (e) { console.error('guardar imagem', chave, e.message); item.msg = 'não consegui baixar a imagem: ' + e.message; item.task = null; hist(item, 'falhou', item.msg); return true; }
   }
   return false;
 }
@@ -503,7 +508,8 @@ export function indiceAmostra(paginas) { const ps = paginas || []; for (let i = 
 export function usaDe(tp) { const n = tp && tp.usa; return (n === 0 || (n && Number.isInteger(+n))) && +n >= 0 ? +n : null; }
 // diagnóstico (só o administrador vê)
 export function diagLivro(g) {
-  const L = g.livro || {}, it = (x) => ({ ok: !!(x && x.ok), tent: (x && x.tent) || 0, erro: !!(x && x.erro), msg: (x && x.msg) || '', rodando: !!(x && x.task) });
+  const L = g.livro || {}, it = (x) => ({ ok: !!(x && x.ok), tent: (x && x.tent) || 0, erro: !!(x && x.erro), msg: (x && x.msg) || '', rodando: !!(x && x.task),
+    recusas: (x && x.recusas) || 0, em: (x && x.em) || 0, ini: (x && x.ini) || 0, okEm: (x && x.okEm) || 0, hist: (x && x.hist) || [] });
   return { capa: it(L.capa), musica: { ok: !!g.musicaPreviewUrl, tent: (L.musica && L.musica.tent) || 0, rodando: !!(L.musica && L.musica.task) }, paginas: (L.paginas || []).filter((p) => !p.so && p.usa == null).map(it), fotoApagada: !!L.fotoApagada, status: L.status };
 }
 
@@ -666,7 +672,11 @@ export async function refazerImagens(id) {
   if (!g || !g.livro) return { erro: 'Livro não encontrado.' };
   const foto = loja().getMetadata ? await loja().getMetadata('foto/' + id).catch(() => null) : await loja().get('foto/' + id, { type: 'arrayBuffer' }).catch(() => null);
   if (!foto) return { erro: 'A foto da criança já foi apagada. Peça uma foto nova pro cliente e crie o livro de novo.' };
-  const L = g.livro, zera = (it) => { if (it && !it.ok) { it.tent = 0; it.erro = false; it.task = null; it.msg = ''; it.em = 0; it.recusas = 0; it.ini = 0; } };
+  const L = g.livro;
+  // se alguma imagem está sendo pedida agora, NÃO recomeça (senão estraga a tentativa que está rodando)
+  const todas = [L.capa].concat((L.paginas || []).filter((p) => p && !p.so && p.usa == null));
+  if (todas.some((it) => it && !it.ok && it.task)) return { erro: 'Uma imagem está sendo gerada agora. O sistema já está tentando sozinho: espere essa tentativa terminar.' };
+  const zera = (it) => { if (it && !it.ok) { it.tent = 0; it.erro = false; it.task = null; it.msg = ''; it.em = 0; it.recusas = 0; it.ini = 0; hist(it, 'recomecou'); } };
   zera(L.capa); (L.paginas || []).forEach(zera);
   if (L.musica && !g.musicaPreviewUrl) { L.musica.tent = 0; L.musica.task = null; }
   if (L.status === 'problema') L.status = g.pago ? 'gerando' : 'criando';

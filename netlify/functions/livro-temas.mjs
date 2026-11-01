@@ -11,7 +11,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { lerDias, idsDosDiasTudo, diaBR } from './_indice.mjs';
-import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, adicionarExemplo, linkPdf, lerVendas } from './_livros.mjs';
+import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, motorRodando, adicionarExemplo, linkPdf, lerVendas } from './_livros.mjs';
 
 // ---------- exemplos (vitrine da página) ----------
 async function lerExemplos() { try { return (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) { return []; } }
@@ -471,7 +471,8 @@ export default async (req) => {
     if (b.acao === 'livro-diag') {
       const g = await getStore('presentes').get(String(b.id || ''), { type: 'json' }).catch(() => null);
       if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
-      return json({ ok: true, diag: diagLivro(g) });
+      const dg = diagLivro(g); dg.motor = await motorRodando(g.id).catch(() => false); dg.pago = !!g.pago; dg.nome = g.livro.nome;
+      return json({ ok: true, diag: dg });
     }
     if (b.acao === 'pdf-links') {
       // PDFs em alta de um livro (ex.: exemplo da vitrine) pra você baixar e usar nos anúncios
