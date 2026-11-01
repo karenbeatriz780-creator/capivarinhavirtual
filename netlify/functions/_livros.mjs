@@ -385,6 +385,7 @@ export async function avancarLivro(id, base) {
     if (okTodas && g.musicaPreviewUrl) {
       L.status = 'pronto'; L.prontoEm = Date.now(); mudou = true;
       try { await loja().delete('foto/' + g.id); L.fotoApagada = true; } catch (e) {}
+      if (L.autoExemplo) { L.autoExemplo = false; await presentes.setJSON(g.id, g); try { await adicionarExemplo(g.id); L.virouExemplo = true; } catch (e) { console.error('exemplo automático', e && e.message); } }
     } else if (acabou && L.status !== 'problema') {
       // alguma imagem não saiu depois de todas as tentativas: guarda a foto e avisa no painel (botão "Refazer imagens")
       L.status = 'problema'; mudou = true;
@@ -476,4 +477,34 @@ export async function refazerImagens(id) {
   if (L.status === 'problema') L.status = g.pago ? 'gerando' : 'criando';
   await presentes.setJSON(id, g);
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// EXEMPLOS da vitrine (página do livro): copia capa + ilustrações pra uma pasta pública
+// ---------------------------------------------------------------------------
+async function copiarBlobLv(de, para) {
+  const r = await loja().getWithMetadata(de, { type: 'arrayBuffer' }).catch(() => null);
+  if (!r || !r.data) return false;
+  await loja().set(para, r.data, { metadata: r.metadata || {} });
+  return true;
+}
+export async function adicionarExemplo(id) {
+  if (!/^L[0-9a-f]{14}$/.test(id)) return { erro: 'Código do livro inválido (começa com L).' };
+  const g = await getStore('presentes').get(id, { type: 'json' }).catch(() => null);
+  if (!g || !g.livro) return { erro: 'Livro não encontrado.' };
+  if (!g.pago) return { erro: 'Só dá pra usar como exemplo um livro liberado (pago ou liberado por você).' };
+  const L = g.livro, pags = L.paginas || [];
+  if (!(L.capa && L.capa.ok) || !pags.length || pags.some((p) => !p || (p.usa == null && !p.ok))) return { erro: 'Esse livro ainda não terminou de ficar pronto. Tente daqui a pouco.' };
+  if (!(await copiarBlobLv('img/' + id + '/capa', 'ex/' + id + '/capa'))) return { erro: 'Não achei a capa desse livro.' };
+  for (let i = 1; i <= pags.length; i++) if (pags[i - 1].usa == null) await copiarBlobLv('img/' + id + '/p' + i, 'ex/' + id + '/p' + i);
+  const temas = await lerTemas(), t = temas.find((x) => x.id === L.tema) || {};
+  const ex = {
+    id, tipo: 'livro', pedido: id, nome: L.nome, genero: L.genero, tema: L.tema, n: pags.length, em: Date.now(), mostrar: true,
+    mapa: pags.map((p, i) => (p.usa != null ? p.usa : i)),
+    titulo: flex(t.titulo || '{nome}', L.nome, L.genero), textos: (t.paginas || []).map((p) => flex(p.texto || '', L.nome, L.genero))
+  };
+  let lista = []; try { lista = (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) {}
+  lista = lista.filter((x) => x.id !== id); lista.unshift(ex);
+  await loja().setJSON('exemplos', lista);
+  return { ok: true, lista };
 }

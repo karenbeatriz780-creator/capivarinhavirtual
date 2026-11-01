@@ -19,8 +19,10 @@ export default async (req) => {
     if (!chaveApi()) return json({ erro: 'O Livro Mágico ainda está sendo configurado. Volta em breve!' }, 503);
     let b = {}; try { b = await req.json(); } catch (e) { return json({ erro: 'Dados inválidos.' }, 400); }
 
+    const senhaAdm0 = (process.env.ADMIN_SENHA || '').trim();
+    const ehAdm = !!senhaAdm0 && (req.headers.get('x-admin-key') || '') === senhaAdm0;
     const tema = await acharTema(String(b.tema || ''));
-    if (!tema || tema.status !== 'publicado') return json({ erro: 'Escolha uma história.' }, 400);
+    if (!tema || (tema.status !== 'publicado' && !ehAdm)) return json({ erro: 'Escolha uma história.' }, 400);
     const nome = String(b.nome || '').trim().replace(/\s+/g, ' ').slice(0, 30);
     if (nome.length < 2) return json({ erro: 'Escreva o nome da criança.' }, 400);
     const genero = b.genero === 'menina' ? 'menina' : 'menino';

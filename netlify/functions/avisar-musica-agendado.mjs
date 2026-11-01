@@ -1,6 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { entregarMusica, SITE } from './_zap.mjs';
-import { entregarPreviaLivro } from './_livros.mjs';
+import { entregarPreviaLivro, avancarLivro } from './_livros.mjs';
 
 // A CADA MINUTO: confere as músicas que estão sendo criadas e, quando ficam
 // prontas, manda no WhatsApp do cliente (mesmo que ele tenha fechado o site).
@@ -22,6 +22,16 @@ export default async () => {
       } catch (e) { console.error('avisar-livro:', b.key, e && e.message); }
     }));
   } catch (e) {}
+  // LIVROS que você liberou no painel (ex.: livro de exemplo): termina as imagens
+  try {
+    const adm = ((await loja.list({ prefix: 'lvadm_' })).blobs || []).slice(0, 10);
+    for (const b of adm) {
+      const p = await loja.get(b.key, { type: 'json' }).catch(() => null);
+      if (!p || !p.id || Date.now() - (p.em || 0) > 6 * 3600 * 1000) { await loja.delete(b.key); continue; }
+      const g = await avancarLivro(p.id, process.env.URL || SITE).catch(() => null);
+      if (!g || (g.livro && g.livro.status === 'pronto' && !g.livro.autoExemplo)) await loja.delete(b.key);
+    }
+  } catch (e) { console.error('avisar-livro-adm:', e && e.message); }
   let lista = [];
   try { lista = ((await loja.list({ prefix: 'pend_' })).blobs || []).slice(0, 40); } catch (e) { return; }
   if (!lista.length) return;

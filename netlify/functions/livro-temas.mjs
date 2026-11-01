@@ -10,7 +10,7 @@
 //                    { acao: 'exemplos-salvar', exemplos:[{id,mostrar}] } → ordem / mostrar / tirar
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
-import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro } from './_livros.mjs';
+import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, adicionarExemplo } from './_livros.mjs';
 
 // ---------- exemplos (vitrine da página) ----------
 async function lerExemplos() { try { return (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) { return []; } }
@@ -143,7 +143,11 @@ export default async (req) => {
       if (!/^L[0-9a-f]{14}$/.test(id)) return json({ erro: 'Código do livro inválido.' }, 400);
       const pres = getStore('presentes'), g = await pres.get(id, { type: 'json' }).catch(() => null);
       if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
-      if (!g.pago) { g.pago = true; g.cortesia = true; g.pagoEm = Date.now(); g.pagamento = Object.assign({}, g.pagamento, { valor: 0, provedor: 'admin' }); await pres.setJSON(id, g); }
+      if (!g.pago) { g.pago = true; g.cortesia = true; g.pagoEm = Date.now(); g.pagamento = Object.assign({}, g.pagamento, { valor: 0, provedor: 'admin' }); }
+      if (b.exemplo) g.livro.autoExemplo = true;
+      await pres.setJSON(id, g);
+      // o agendador continua fazendo as imagens mesmo com a tela fechada
+      await getStore('whatsapp').setJSON('lvadm_' + id, { id, em: Date.now() }).catch(() => {});
       try { await avancarLivro(id, process.env.URL || new URL(req.url).origin); } catch (e) {}
       return json({ ok: true });
     }
@@ -161,24 +165,9 @@ export default async (req) => {
       return json({ ok: true });
     }
     if (b.acao === 'exemplo-add') {
-      const id = String(b.id || '').trim();
-      if (!/^L[0-9a-f]{14}$/.test(id)) return json({ erro: 'Código do livro inválido (começa com L).' }, 400);
-      const g = await getStore('presentes').get(id, { type: 'json' }).catch(() => null);
-      if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
-      if (!g.pago) return json({ erro: 'Só dá pra usar como exemplo um livro pago (com todas as ilustrações).' }, 400);
-      const L = g.livro, pags = L.paginas || [];
-      if (!(L.capa && L.capa.ok) || !pags.length || pags.some((p) => !p || (p.usa == null && !p.ok))) return json({ erro: 'Esse livro ainda não terminou de ficar pronto. Tente daqui a pouco.' }, 400);
-      if (!(await copiarBlob('img/' + id + '/capa', 'ex/' + id + '/capa'))) return json({ erro: 'Não achei a capa desse livro.' }, 404);
-      for (let i = 1; i <= pags.length; i++) if (pags[i - 1].usa == null) await copiarBlob('img/' + id + '/p' + i, 'ex/' + id + '/p' + i);
-      const temas = await lerTemas(), t = temas.find((x) => x.id === L.tema) || {};
-      const ex = {
-        id, tipo: 'livro', pedido: id, nome: L.nome, genero: L.genero, tema: L.tema, n: pags.length, em: Date.now(), mostrar: true,
-        mapa: pags.map((p, i) => (p.usa != null ? p.usa : i)),
-        titulo: flex(t.titulo || '{nome}', L.nome, L.genero), textos: (t.paginas || []).map((p) => flex(p.texto || '', L.nome, L.genero))
-      };
-      const lista = (await lerExemplos()).filter((x) => x.id !== id); lista.unshift(ex);
-      await loja().setJSON('exemplos', lista);
-      return json({ ok: true, exemplos: lista.map(exPublico) });
+      const r = await adicionarExemplo(String(b.id || '').trim());
+      if (r.erro) return json({ erro: r.erro }, 400);
+      return json({ ok: true, exemplos: r.lista.map(exPublico) });
     }
     if (b.acao === 'exemplo-foto') {
       const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(String(b.foto || ''));
