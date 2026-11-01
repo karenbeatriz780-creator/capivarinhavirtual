@@ -360,6 +360,21 @@ function hist(item, ev, msg) {
 async function andarImagem(item, chave, criar, limite) {
   // item: { task, ok, tent }
   if (item.ok) return false;
+  // pedidos que demoraram e foram deixados de lado: o Google pode terminar depois. Continua conferindo
+  // (até 30 min) e, se algum ficar pronto, usa ele — nada do que o Google fez é jogado fora.
+  if ((item.velhas || []).length && limite.downloads > 0) {
+    const vivas = [];
+    for (const v of item.velhas) {
+      if (Date.now() - (v.em || 0) > 30 * 60 * 1000) continue;
+      const sv = await verTarefa(v.task, 'imagem');
+      if (sv.estado === 'pronto' && !item.ok) {
+        limite.downloads--;
+        try { await guardarImagem(sv.urls[0], chave); item.ok = true; item.erro = false; item.url = sv.urls[0]; item.task = null; item.okEm = Date.now(); item.velhas = []; hist(item, 'ok', 'saiu o pedido que tinha demorado'); return true; }
+        catch (e) { console.error('guardar imagem (velha)', chave, e.message); }
+      } else if (sv.estado === 'rodando') vivas.push(v);
+    }
+    item.velhas = vivas;
+  }
   if (!item.task) {
     const tent = item.tent || 0;
     // NUNCA DESISTE (cliente pagou, o livro tem que sair):
@@ -383,7 +398,9 @@ async function andarImagem(item, chave, criar, limite) {
   if (limite.downloads <= 0) return false;
   const st = await verTarefa(item.task, 'imagem');
   if (st.estado === 'falhou' || (st.estado === 'rodando' && Date.now() - (item.em || 0) > 5 * 60 * 1000)) {
-    item.msg = st.estado === 'falhou' ? (st.msg || 'a IA recusou ou falhou ao gerar') : 'demorou demais (mais de 5 min)';
+    item.msg = st.estado === 'falhou' ? (st.msg || 'a IA recusou ou falhou ao gerar') : 'demorou mais de 5 min: pedi outra, mas continuo esperando esta também';
+    // demorou: NÃO cancela. Guarda pra continuar conferindo e, ao mesmo tempo, pede outra.
+    if (st.estado === 'rodando') item.velhas = (item.velhas || []).concat([{ task: item.task, em: item.em }]).slice(-3);
     if (/refused|cannot read|upload/i.test(item.msg)) { item.recusas = (item.recusas || 0) + 1; }
     hist(item, 'falhou', item.msg);
     console.error('livro imagem falhou:', chave, item.msg);
