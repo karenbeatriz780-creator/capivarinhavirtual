@@ -2934,7 +2934,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
-<script src="/livro.js?v=9"></script>
+<script src="/livro.js?v=13"></script>
 <script>
 /* =========================================================
    CAPIVARINHA LOVE — aplicação completa (single file)
@@ -7718,13 +7718,19 @@ function desenharPainel(pedidos, visitas, musicas){
         '<div class="meta">'+(p.pago?'💸 Pix às <b>'+esc(quando)+'</b>':'Criado '+esc(quando))+' · '+esc(temMusicaCombo(p)?('Música + '+(nomeProd[p.produto]||p.produto)):(p.quatro?'4 músicas':(nomeProd[p.produto]||p.produto||'')))+'</div>'+
         (p.whatsapp?'<div class="meta">📱 '+esc(p.whatsapp)+'</div>':'')+
         (extras.length?'<div class="meta">🎁 Já criou as 2 músicas extras</div>':'')+
+        (p.produto==='livro'&&p.livro?(function(L){
+          var capa=L.capaOk?'✅':(L.capaErro?'⚠️':'⏳'), pags=L.pagTotal?(' · Ilustrações '+L.pagOk+'/'+L.pagTotal+(L.pagErro?' ⚠️':'')):(p.pago?' · Ilustrações: esperando a capa':'');
+          var st={criando:'criando a prévia',previa:'prévia pronta',gerando:'fazendo as ilustrações',pronto:'✅ livro pronto',problema:'⚠️ imagem não saiu'}[L.status]||L.status;
+          return '<div class="meta">🖼️ Capa '+capa+pags+' · '+esc(st)+'</div>'+(L.msg?'<div class="meta" style="color:#FFB4A8">Motivo: '+esc(L.msg)+'</div>':'');
+        })(p.livro):'')+
         (((_pnlCache.audiosBackup&&_pnlCache.audiosBackup.semAudio)||[]).some(function(x){ return x.id===p.id; })?'<div class="meta" style="color:#B3261E;font-weight:800">⚠️ Música apagada pelo serviço: gere de novo</div>':'')+
       '</div><div class="vl">'+(p.cortesia?'cortesia':'R$ '+fmtPreco(p.valor||0))+'</div></div>'+
       '<div class="pc-acts">'+
         (zap?'<a class="pc-bt zap" href="https://wa.me/55'+esc(zap)+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar</a>':'')+
         '<button type="button" class="pc-bt" data-copiar-link="'+esc(link)+'">Copiar link</button>'+
         (nMus?'<button type="button" class="pc-bt" data-expandir>🎵 Músicas ('+nMus+') ▾</button>':'')+
-        (p.produto==='livro'&&p.pago&&!p.cancelado?'<button type="button" class="pc-bt" data-livro-exemplo="'+esc(p.id)+'">⭐ Usar como exemplo</button>':'')+
+        (p.produto==='livro'&&p.pago&&!p.cancelado&&p.livro&&p.livro.status==='pronto'?'<button type="button" class="pc-bt" data-livro-exemplo="'+esc(p.id)+'">⭐ Usar como exemplo</button>':'')+
+        (p.produto==='livro'&&!p.cancelado&&p.livro&&p.livro.status!=='pronto'&&(!p.livro.capaOk||p.livro.pagErro||p.livro.status==='problema'||p.livro.msg)?'<button type="button" class="pc-bt" data-livro-refazer="'+esc(p.id)+'">🔄 Refazer imagens</button>':'')+
       '</div>'+
       '<div class="pc-mais" hidden>'+
         '<div class="pnl-musica">'+htmlMusicasPedido(p)+
@@ -8042,6 +8048,21 @@ function desenharPainel(pedidos, visitas, musicas){
   });
   body.querySelectorAll('[data-copiar-link]').forEach(function(btn){
     btn.onclick=function(){ copiar(btn.dataset.copiarLink, 'Link copiado!'); };
+  });
+  /* livro com imagem que não saiu → tenta de novo */
+  body.querySelectorAll('[data-livro-refazer]').forEach(function(btn){
+    btn.onclick=function(){
+      if(!pedirSenhaAdmin()) return;
+      btn.disabled=true; btn.textContent='Tentando de novo…';
+      fetch('/.netlify/functions/livro-temas',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'livro-refazer',id:btn.dataset.livroRefazer})})
+        .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+        .then(function(res){
+          btn.disabled=false;
+          if(res.ok){ btn.textContent='🔄 Recomeçou'; toast('Pronto! As imagens estão sendo feitas de novo. Em uns 3 a 5 minutos, toque em Atualizar.'); return; }
+          if(res.d && /senha/i.test(res.d.erro||'')){ _pnlChave=''; Store.del('cl_admin_key'); }
+          btn.textContent='🔄 Refazer imagens'; toast((res.d&&res.d.erro)||'Não deu certo.');
+        }).catch(function(){ btn.disabled=false; btn.textContent='🔄 Refazer imagens'; toast('Sem conexão.'); });
+    };
   });
   /* livro pago → vira exemplo na página do Livro Mágico (capas que giram + livro de exemplo) */
   body.querySelectorAll('[data-livro-exemplo]').forEach(function(btn){

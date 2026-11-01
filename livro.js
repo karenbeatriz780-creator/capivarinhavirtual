@@ -309,6 +309,8 @@ var css = `
 .lvp-ex .tx b{display:block}
 .lvp-ex button{border:0;border-radius:8px;padding:.4rem .55rem;font:700 .8rem 'Inter';cursor:pointer;background:#eee;color:#222}
 .lvp-ex.off{opacity:.5}
+#lvAdm button{background:#2A1B3D!important;color:#fff!important;border:0!important;border-radius:10px;padding:.45rem .7rem!important;font:700 .8rem Inter,sans-serif;cursor:pointer}
+#lvAdm button:disabled{opacity:.5}
 @media (prefers-reduced-motion:reduce){.lv *{animation:none!important;transition:none!important}}
 `;
 var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
@@ -553,14 +555,16 @@ function telaLivroMeus(){
 var LV={passo:0, tema:null, nome:'', idade:null, meses:null, genero:null, foto:null, zap:'', aceite:false, codigo:''};
 function lvAparelho(){ var a=''; try{ a=Store.get('cl_aparelho')||''; if(!a){ a=Math.random().toString(36).slice(2)+Date.now().toString(36); Store.set('cl_aparelho',a); } }catch(e){} return a; }
 function telaLivroCriar(){
-  /* 1 prévia por pessoa: se já tem uma (não paga), mostra ela em vez de criar outra */
-  var meu=lvGet()[0];
-  var conferir = meu && !LV.codigo
-    ? fetch('/.netlify/functions/livro-status?id='+meu.id+'&t='+encodeURIComponent(meu.t),{cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; })
-    : Promise.resolve(null);
+  /* até 2 prévias grátis por pessoa: se já tem 2 (não pagas), mostra a mais recente em vez de criar outra.
+     Com a senha de administrador salva no aparelho (você testando), não trava. */
+  var adm=''; try{ adm=Store.get('cl_admin_key')||''; }catch(e){}
+  var meus=lvGet().slice(0,2), meu=meus[0];
+  var conferir = meus.length>=2 && !LV.codigo && !adm
+    ? Promise.all(meus.map(function(o){ return fetch('/.netlify/functions/livro-status?id='+o.id+'&t='+encodeURIComponent(o.t),{cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; }); }))
+    : Promise.resolve([]);
   Promise.all([lvTemas(), conferir]).then(function(x){
-    var d=x[1];
-    if(d && !d.pago){ telaJaTemPrevia(meu, d); return; }
+    var ds=x[1]||[];
+    if(ds.length>=2 && ds.every(function(d){ return d && !d.pago; })){ telaJaTemPrevia(meu, ds[0]); return; }
     desenharPasso();
   }).catch(function(){ toast('Sem conexão. Tente de novo.'); });
 }
@@ -568,8 +572,8 @@ function telaJaTemPrevia(meu, d){
   var tema=d?lvTema(d.tema):null, zap=(window.CONFIG&&CONFIG.whatsapp)||'5511924826268';
   var capa=(d&&tema)?'<div class="lv-livro3d" style="width:min(56vw,210px);margin:1rem auto 1.4rem">'+htmlCapa({img:d.capa,cores:tema.cores,emoji:tema.emoji,titulo:flexTxt(tema.titulo,d.nome,d.genero),nome:d.nome,fs:11})+'</div>':'';
   el('app').innerHTML='<div class="lv"><div class="lv-wrap" style="padding-top:calc(1.4rem + env(safe-area-inset-top,0px));text-align:center">'+
-    '<div class="lv-eb">sua prévia</div><h1 class="lv-tit">Você já criou a prévia do seu livro 📖</h1>'+
-    '<p class="lv-sub">Cada pessoa tem direito a uma prévia grátis'+(meu&&meu.nome?' (a de <b>'+esc(meu.nome)+'</b>)':'')+'. Depois de desbloquear, você pode criar quantos livros quiser.</p>'+capa+
+    '<div class="lv-eb">suas prévias</div><h1 class="lv-tit">Você já criou suas 2 prévias grátis 📖</h1>'+
+    '<p class="lv-sub">Cada pessoa tem direito a 2 prévias grátis. Depois de desbloquear um livro, você pode criar quantos quiser.</p>'+capa+
     (meu?'<a class="lv-btn rosa" href="#/livro/'+esc(meu.id)+'">Ver minha prévia e desbloquear ✨</a>':'')+
     '<a class="lv-btn claro" style="margin-top:.7rem;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/'+esc(zap)+'?text='+encodeURIComponent('Oi! Quero criar outra prévia do Livro Mágico.')+'">💬 Falar com o suporte</a>'+
     '<div class="lv-campo" style="text-align:left;margin-top:1.4rem"><label for="lvCod">Tem um código do suporte?</label><input type="text" id="lvCod" placeholder="LIVRO-XXXXX" style="text-transform:uppercase"></div>'+
@@ -652,7 +656,7 @@ function desenharPasso(){
 function folhaTema(id){
   var t=lvTema(id); if(!t) return;
   var i=(_lvTemas||[]).indexOf(t), gen=t.vitrineGenero||(i%2?'menina':'menino'), nome=NOMES_EX[gen][(i+1)%6];
-  var ex=lvExLivro(id), n=(t.paginas||[]).length||5;
+  var ex=lvExDoTema(id), n=(t.paginas||[]).length||5;
   var m=document.createElement('div'); m.className='lv-modal';
   m.innerHTML='<div class="lv-folha-tema"><div class="lv-livro3d">'+capaTema(t,i,9)+'</div>'+
     '<h3>'+esc(t.emoji+' '+t.nome)+'</h3><p class="desc">'+esc(flexTxt(t.descricao,'',gen))+'</p>'+
@@ -688,7 +692,8 @@ function lerFoto(f){
 }
 function enviarLivro(){
   var b=el('lvProx'); b.disabled=true; b.innerHTML='<span class="lv-giro"></span> Enviando…';
-  fetch('/.netlify/functions/livro-previa',{method:'POST',headers:{'Content-Type':'application/json'},
+  var hd={'Content-Type':'application/json'}; try{ var ak=Store.get('cl_admin_key'); if(ak) hd['x-admin-key']=ak; }catch(e){}
+  fetch('/.netlify/functions/livro-previa',{method:'POST',headers:hd,
     body:JSON.stringify({tema:LV.tema,nome:LV.nome.trim(),idade:LV.idade,idadeMeses:LV.meses,genero:LV.genero,foto:LV.foto,whatsapp:LV.zap,aparelho:lvAparelho(),codigo:LV.codigo})})
   .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
   .then(function(res){
@@ -745,8 +750,41 @@ function telaLivroPedido(id){
     if(!pago) c.innerHTML=li(!!d.capa,'Capa com o rostinho de '+esc(d.nome))+li(!!d.musica,'Música com o nome '+esc(d.nome));
     else { var prontas=(d.paginas||[]).filter(Boolean).length, tot=(d.paginas||[]).length||5;
       c.innerHTML=li(prontas>=tot,'Ilustrações: '+prontas+' de '+tot)+li(true,'Textos da história')+li(true,'Música completa'); }
+    if(d.status==='problema'||d.capaErro){ c.insertAdjacentHTML('beforeend','<li style="background:rgba(255,180,120,.14)"><i>⏳</i>Uma imagem está dando mais trabalho. Já estamos refazendo, pode deixar a tela aberta ou voltar depois.</li>'); }
   }
   iv=setInterval(ciclo,4000); ciclo();
+  lvAdminBarra(id);
+}
+/* só aparece pra você (senha de administrador salva neste aparelho): mostra por que a imagem não sai e deixa refazer / liberar sem pagar / usar de exemplo */
+function lvAdminBarra(id){
+  var ak=''; try{ ak=Store.get('cl_admin_key')||''; }catch(e){}
+  if(!ak) return;
+  var b=document.createElement('div'); b.id='lvAdm';
+  b.style.cssText='position:fixed;left:10px;right:10px;bottom:10px;z-index:70;max-width:28rem;margin:0 auto;background:#fff;color:#2A1B3D;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:500 .82rem Inter,sans-serif;padding:.7rem .8rem';
+  document.body.appendChild(b); aoSair(function(){ b.remove(); });
+  var aberto=false;
+  function post(corpo){ return fetch('/.netlify/functions/livro-temas',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':ak},body:JSON.stringify(corpo)}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); }); }
+  function linha(nome,x){ var st=x.ok?'✅ pronta':(x.erro?'⚠️ desistiu':(x.rodando?'⏳ gerando':(x.tent?'⏳ esperando nova tentativa':'⏳ na fila'))); return '<div style="margin:.15rem 0"><b>'+nome+':</b> '+st+(x.tent?' · '+x.tent+' tentativa(s)':'')+(x.msg&&!x.ok?'<br><span style="color:#B3261E">Motivo: '+esc(x.msg)+'</span>':'')+'</div>'; }
+  function desenhar(dg){
+    var ps=(dg&&dg.paginas)||[];
+    b.innerHTML='<div style="display:flex;align-items:center;gap:.5rem"><b style="flex:1">🔧 Só você vê (administrador)</b><button id="lvAdmT" class="pnl-link" style="padding:.3rem .6rem">'+(aberto?'Fechar':'Abrir')+'</button></div>'+
+      (aberto&&dg?'<div style="margin-top:.5rem">'+linha('Capa',dg.capa)+'<div style="margin:.15rem 0"><b>Música:</b> '+(dg.musica.ok?'✅ pronta':'⏳ gerando')+'</div>'+
+        (ps.length?linha('Ilustrações',{ok:ps.every(function(p){ return p.ok; }),tent:0,msg:(ps.filter(function(p){ return p.msg&&!p.ok; })[0]||{}).msg,rodando:ps.some(function(p){ return p.rodando; })})+'<div>'+ps.filter(function(p){ return p.ok; }).length+' de '+ps.length+' prontas</div>':'')+
+        (dg.fotoApagada?'<div style="color:#B3261E">A foto já foi apagada.</div>':'')+
+        '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">'+
+          '<button class="pnl-link" id="lvAdmR">🔄 Refazer imagens</button>'+
+          (dg.status!=='pronto'?'<button class="pnl-link" id="lvAdmL">🔓 Liberar sem pagar</button>':'')+
+          (dg.status==='pronto'?'<button class="pnl-link" id="lvAdmE">⭐ Usar como exemplo</button>':'')+
+          '<button class="pnl-link" id="lvAdmA">↻</button></div></div>':'');
+    el('lvAdmT').onclick=function(){ aberto=!aberto; if(aberto) carregar(); else desenhar(null); };
+    var r=el('lvAdmR'); if(r) r.onclick=function(){ r.disabled=true; post({acao:'livro-refazer',id:id}).then(function(x){ toast(x.ok?'Recomeçou! Aguarde uns minutos.':(x.d.erro||'Erro')); carregar(); }); };
+    var l=el('lvAdmL'); if(l) l.onclick=function(){ if(l.dataset.ok!=='1'){ l.dataset.ok='1'; l.textContent='Toque de novo pra confirmar'; return; } l.disabled=true; post({acao:'livro-liberar',id:id}).then(function(x){ toast(x.ok?'Liberado! As ilustrações começam agora (não conta como venda).':(x.d.erro||'Erro')); carregar(); }); };
+    var e=el('lvAdmE'); if(e) e.onclick=function(){ e.disabled=true; post({acao:'exemplo-add',id:id}).then(function(x){ e.disabled=false; toast(x.ok?'Pronto! Já é exemplo na página e na aventura dele.':(x.d.erro||'Erro')); if(x.ok){ _lvTemas=null; } }); };
+    var a=el('lvAdmA'); if(a) a.onclick=carregar;
+  }
+  function carregar(){ post({acao:'livro-diag',id:id}).then(function(x){ if(!x.ok){ if(/senha/i.test(x.d.erro||'')) b.innerHTML='🔧 Senha de administrador errada neste aparelho.'; return; } desenhar(x.d.diag); }).catch(function(){}); }
+  desenhar(null);
+  var iv=setInterval(function(){ if(!document.body.contains(b)){ clearInterval(iv); return; } if(aberto) carregar(); },8000);
 }
 
 /* música (prévia de 70s antes de pagar; completa depois) */
@@ -1183,7 +1221,7 @@ function ligarVitrinePnl(){
 }
 function desenharEditor(){
   var c=el('lvpCaixa'), t=_lvp.temas[_lvp.ed]; if(!t){ _lvp.ed=null; return desenharLvp(); }
-  while((t.paginas||[]).length<5) (t.paginas=t.paginas||[]).push({texto:'',cena:''});
+  while((t.paginas||[]).length<3) (t.paginas=t.paginas||[]).push({texto:'',cena:''});
   function campo(id,lab,val,area,dica){ return '<label for="'+id+'">'+lab+'</label>'+(area?'<textarea id="'+id+'">'+esc(val||'')+'</textarea>':'<input id="'+id+'" value="'+esc(val||'')+'">')+(dica?'<small style="color:#888">'+dica+'</small>':''); }
   var img=t.vitrineEm?'<img src="/.netlify/functions/livro-img?k='+encodeURIComponent('img/tema/'+t.id)+'&v='+t.vitrineEm+'" alt="" style="width:120px;border-radius:8px;display:block;margin:.4rem 0">':'';
   c.innerHTML='<div class="lvp-it" style="display:block"><div class="lvp-bts" style="margin-top:0"><button class="cl" id="lvpVolta">← Voltar à lista</button></div>'+
@@ -1193,7 +1231,16 @@ function desenharEditor(){
       campo('lvpCores','3 cores (claro, médio, escuro)',(t.cores||[]).join(', '))+
       campo('lvpRoupa','Roupa da criança nas ilustrações (inglês)',t.roupa,true)+
       campo('lvpCapa','Cena da capa (inglês)',t.capa,true)+
-      t.paginas.map(function(p,i){ return '<div class="lvp-cena"><b>Cena '+(i+1)+'</b>'+campo('lvpTx'+i,'Texto da página (português)',p.texto,true)+campo('lvpCe'+i,'O que aparece na ilustração (inglês)',p.cena,true)+'</div>'; }).join('')+
+      '<p style="font-size:.82rem;color:#7a6f86;margin:.8rem 0 0">Cada página tem um texto e uma ilustração. Pra deixar a história mais comprida <b>sem gastar mais</b>, adicione páginas que <b>repetem a ilustração</b> de outra página (só o texto é novo). Ilustrações novas: no máximo 10.</p>'+
+      t.paginas.map(function(p,i){
+        var rep=(p.usa===0||p.usa)?+p.usa:-1;
+        var ops='<option value="-1">🎨 Ilustração nova (gerada pela IA)</option>'+t.paginas.map(function(q,j){ return (j===i||(q.usa===0||q.usa))?'':'<option value="'+j+'"'+(rep===j?' selected':'')+'>🔁 Repetir a ilustração da página '+(j+1)+'</option>'; }).join('');
+        return '<div class="lvp-cena"><div style="display:flex;justify-content:space-between;align-items:center"><b>Página '+(i+1)+'</b>'+(t.paginas.length>3?'<button class="pnl-link" data-lvprm="'+i+'" style="padding:.25rem .6rem">Remover</button>':'')+'</div>'+
+          campo('lvpTx'+i,'Texto da página (português)',p.texto,true)+
+          '<label for="lvpUs'+i+'">Ilustração</label><select id="lvpUs'+i+'" data-lvpus="'+i+'">'+ops+'</select>'+
+          '<div id="lvpCeBox'+i+'"'+(rep>=0?' hidden':'')+'>'+campo('lvpCe'+i,'O que aparece na ilustração (inglês ou português)',p.cena,true)+'</div></div>';
+      }).join('')+
+      (t.paginas.length<16?'<div class="lvp-bts"><button class="cl" id="lvpAddPg">+ Adicionar página</button></div>':'')+
       campo('lvpLetra','Letra da música',t.letra,true,'Comece com "Era uma vez… {nome}". Use {nome} no refrão.')+
       campo('lvpEst','Estilo da música',t.estiloMusica)+
       campo('lvpOrd','Ordem na página',t.ordem)+
@@ -1207,7 +1254,7 @@ function desenharEditor(){
     t.nome=el('lvpNome').value; t.titulo=el('lvpTit').value; t.emoji=el('lvpEmo').value; t.descricao=el('lvpDesc').value;
     t.cores=el('lvpCores').value.split(',').map(function(x){ return x.trim(); }).filter(Boolean).slice(0,3);
     t.roupa=el('lvpRoupa').value; t.capa=el('lvpCapa').value; t.letra=el('lvpLetra').value; t.estiloMusica=el('lvpEst').value; t.ordem=+el('lvpOrd').value||99;
-    t.paginas=t.paginas.map(function(p,i){ return {texto:el('lvpTx'+i).value, cena:el('lvpCe'+i).value}; });
+    t.paginas=t.paginas.map(function(p,i){ var u=+el('lvpUs'+i).value; var o={texto:el('lvpTx'+i).value, cena:el('lvpCe'+i).value}; if(u>=0) o.usa=u; return o; });
     if(!t.id || /^nova-/.test(t.id)) t.id=(t.nome||'tema').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30)||t.id;
   }
   function salvar(msg){
@@ -1218,6 +1265,10 @@ function desenharEditor(){
     });
   }
   el('lvpVolta').onclick=function(){ _lvp.ed=null; desenharLvp(); };
+  c.querySelectorAll('[data-lvpus]').forEach(function(sel){ sel.onchange=function(){ var b=el('lvpCeBox'+sel.dataset.lvpus); if(b) b.hidden=+sel.value>=0; }; });
+  var add=el('lvpAddPg'); if(add) add.onclick=function(){ ler(); var ult=-1; t.paginas.forEach(function(p,j){ if(!(p.usa===0||p.usa)) ult=j; }); t.paginas.push(ult>=0?{texto:'',cena:'',usa:ult}:{texto:'',cena:''}); desenharEditor(); var x=el('lvpTx'+(t.paginas.length-1)); if(x){ x.scrollIntoView({block:'center'}); x.focus(); } };
+  c.querySelectorAll('[data-lvprm]').forEach(function(b){ b.onclick=function(){ ler(); var k=+b.dataset.lvprm; t.paginas.splice(k,1);
+    t.paginas.forEach(function(p){ if(p.usa===0||p.usa){ if(+p.usa===k) delete p.usa; else if(+p.usa>k) p.usa=+p.usa-1; } }); desenharEditor(); }; });
   el('lvpSalvar').onclick=function(){ salvar().then(function(ok){ if(ok) desenharEditor(); }); };
   el('lvpPub').onclick=function(){ var pub=t.status!=='publicado'; t.status=pub?'publicado':'rascunho'; salvar(pub?'Publicada! Já aparece no site. ✅':'Tirada do site.').then(function(ok){ if(!ok) t.status=pub?'rascunho':'publicado'; desenharEditor(); }); };
   el('lvpDel').onclick=function(){ var nm=t.nome; _lvp.temas.splice(_lvp.ed,1); _lvp.ed=null; lvpPost({acao:'salvar',temas:_lvp.temas}).then(function(r){ if(r.ok){ _lvp.temas=r.d.temas; toast('"'+nm+'" excluída.'); } else toast(r.d.erro||'Erro'); desenharLvp(); }); };
