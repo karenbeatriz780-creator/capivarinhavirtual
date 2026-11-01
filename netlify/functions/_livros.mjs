@@ -203,13 +203,42 @@ const ESTILO_BASE =
   "Premium children's picture book illustration, soft 3D animated feature film style, warm cinematic lighting, " +
   'rich and detailed magical background, vibrant yet soft colors, cozy, joyful, high detail, professional quality. ';
 
+// FILTRO DO GOOGLE: com foto de criança, algumas palavras fazem o Google recusar a imagem
+// (pijama, cama, dormindo, abraço, ajoelhado, chorando, nadando…). Aqui elas são trocadas por
+// versões neutras SEMPRE, em todas as histórias (inclusive as que você cria no painel).
+// A partir da 3ª recusa da mesma imagem, troca também água/rio/mar e "fazendo carinho".
+const TROCAS_SEMPRE = [
+  [/\b(is |are )?asleep cuddled together\b/gi, 'is sitting together'], [/\bin a (sparkling )?(shallow )?stream with feet in the water\b/gi, 'on the dry bank of a small stream'],
+  [/\b(red |cozy |warm )?(christmas )?pajamas?\b/gi, 'cozy clothes'],
+  [/\btucked in bed\b/gi, 'sitting in a cozy armchair'], [/\bin bed\b/gi, 'in a cozy armchair'], [/\bbedroom\b/gi, 'room'], [/\bbed\b/gi, 'armchair'],
+  [/\bwaking up\b/gi, 'smiling'], [/\b(is |are )?(fast )?asleep\b/gi, 'resting'], [/\bsleeping\b/gi, 'resting'],
+  [/\bcuddled together\b/gi, 'sitting together'], [/\bcuddl\w*\b/gi, 'sitting close'], [/\bunder blankets?\b/gi, 'with soft cushions'], [/\bblankets?\b/gi, 'cushions'],
+  [/\bbath(tub|ing|e)?\b/gi, 'playtime'], [/\btowel\b/gi, 'scarf'], [/\bdiapers?\b/gi, 'clothes'], [/\b(shirtless|naked|undress\w*)\b/gi, 'dressed'],
+  [/\bhugging\b/gi, 'celebrating with'], [/\b(a |an )?(warm |big |tight )?(goodbye )?hugs?\b/gi, ' a warm goodbye wave'], [/\bembracing\b/gi, 'next to'], [/\bkiss(es|ing)?\b/gi, 'wave'],
+  [/\bkneels down\b/gi, 'bends down'], [/\bkneeling\b/gi, 'standing'], [/\bkneels?\b/gi, 'stands'],
+  [/\bcrying\b/gi, 'slightly sad'], [/\bcries\b|\bcry\b/gi, 'looks sad'], [/\btears?\b/gi, 'a sad face'],
+  [/\bscared|afraid|frightened\b/gi, 'surprised'], [/\b(hurt|injur\w*|wounded|blood\w*)\b/gi, 'tired'],
+  [/\bwith feet in the water\b/gi, 'on the dry bank'], [/\bswimming\b/gi, 'floating'], [/\bswims?\b/gi, 'floats'], [/\bwet\b/gi, 'sparkling'],
+  [/\blying\b/gi, 'sitting'], [/\blap\b/gi, 'side']
+];
+const TROCAS_DEPOIS = [
+  [/\b(sparkling |shallow |flowing |calm |blue )?(river|stream|lake|pond|waterfall)\b/gi, 'meadow'],
+  [/\b(sea|ocean|beach|shore|lakeshore|water edge|water)\b/gi, 'magical meadow'], [/\bunderwater\b/gi, 'in a magical world'],
+  [/gently petting its head|petting|stroking/gi, 'smiling kindly at']
+];
+export function cenaSegura(cena, recusas) {
+  let c = String(cena || '');
+  TROCAS_SEMPRE.forEach(([re, por]) => { c = c.replace(re, por); });
+  if ((recusas || 0) >= 3) TROCAS_DEPOIS.forEach(([re, por]) => { c = c.replace(re, por); });
+  return c.replace(/\s{2,}/g, ' ').replace(/\ba a\b/gi, 'a').trim();
+}
 export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
   return ESTILO_BASE +
     (semFoto ? 'The main character is an adorable, expressive Brazilian child with a big smile. '
       : 'The main character is the child from the FIRST reference photo: keep the exact same face, facial features, skin tone, eye color, hair color and hairstyle, so the parents instantly recognize their child. ') +
     'The child is ' + idadeIA(livro) + ', wearing ' + (tema.roupa || 'colorful comfortable clothes') + '. ' +
     (ehCapa ? '' : 'If a SECOND reference image is given, keep the same character design and outfit as in it. ') +
-    'The child is the clear hero of the scene, happy and expressive. ' +
+    'The child is fully dressed in the outfit described and is the clear hero of the scene, happy and expressive. ' +
     'Scene: the child ' + cena + '. ' +
     (ehCapa ? 'Book cover composition: keep the top quarter of the image calm and uncluttered (sky or soft background) because the title will be placed there. ' : '') +
     'Absolutely no text, letters, words, numbers on clothing except as described, logos or watermarks. Safe, wholesome, age-appropriate.';
@@ -353,8 +382,8 @@ async function andarImagem(item, chave, criar, limite) {
   }
   if (limite.downloads <= 0) return false;
   const st = await verTarefa(item.task, 'imagem');
-  if (st.estado === 'falhou' || (st.estado === 'rodando' && Date.now() - (item.em || 0) > 2 * 60 * 1000)) {
-    item.msg = st.estado === 'falhou' ? (st.msg || 'a IA recusou ou falhou ao gerar') : 'demorou demais (mais de 2 min)';
+  if (st.estado === 'falhou' || (st.estado === 'rodando' && Date.now() - (item.em || 0) > 5 * 60 * 1000)) {
+    item.msg = st.estado === 'falhou' ? (st.msg || 'a IA recusou ou falhou ao gerar') : 'demorou demais (mais de 5 min)';
     if (/refused|cannot read|upload/i.test(item.msg)) { item.recusas = (item.recusas || 0) + 1; }
     hist(item, 'falhou', item.msg);
     console.error('livro imagem falhou:', chave, item.msg);
@@ -392,7 +421,7 @@ export async function avancarLivro(id, base, opts) {
   // 1) capa (prévia)
   try {
     mudou = (await andarImagem(L.capa, 'img/' + g.id + '/capa',
-      (it) => criarImagem(promptImagem(tema, L, tema.capa, true), [linkFoto(base, g, Math.floor((it.recusas || 0) / 3) % 2 === 1)], '3:4', '2K', it.recusas || 0), limite)) || mudou;
+      (it) => criarImagem(promptImagem(tema, L, cenaSegura(tema.capa, it.recusas), true), [linkFoto(base, g, Math.floor((it.recusas || 0) / 3) % 2 === 1)], '3:4', '2K', it.recusas || 0), limite)) || mudou;
   } catch (e) { console.error('livro capa', id, e.message); }
 
   // 2) música (prévia) — reaproveita se já existir pra esse nome + tema
@@ -439,7 +468,7 @@ export async function avancarLivro(id, base, opts) {
     if (i0 >= 0) {
       try {
         mudou = (await andarImagem(L.paginas[i0], 'img/' + g.id + '/p' + (i0 + 1), (it) =>
-          criarImagem(promptImagem(tema, L, tema.paginas[i0].cena, false), refsPagina(base, g, it), '3:4', '2K', it.recusas || 0), limite)) || mudou;
+          criarImagem(promptImagem(tema, L, cenaSegura(tema.paginas[i0].cena, it.recusas), false), refsPagina(base, g, it), '3:4', '2K', it.recusas || 0), limite)) || mudou;
       } catch (e) { console.error('livro amostra', id, e.message); }
     }
   }
@@ -453,7 +482,7 @@ export async function avancarLivro(id, base, opts) {
       if (p.usa != null || p.so) return false;
       try {
         return await andarImagem(p, 'img/' + g.id + '/p' + (i + 1), (it) =>
-          criarImagem(promptImagem(tema, L, tema.paginas[i].cena, false), refsPagina(base, g, it), '3:4', '2K', it.recusas || 0), limite);
+          criarImagem(promptImagem(tema, L, cenaSegura(tema.paginas[i].cena, it.recusas), false), refsPagina(base, g, it), '3:4', '2K', it.recusas || 0), limite);
       } catch (e) { console.error('livro página', id, i + 1, e.message); return false; }
     }));
     if (res.some(Boolean)) mudou = true;
