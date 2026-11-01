@@ -1401,7 +1401,7 @@ function ligarRelatorioLivros(){
           ' · ilustrações '+l.ilus+'/'+l.ilusTotal+' · '+(l.status==='pronto'?'pronto em <b>'+tp+'</b>':'<b>'+tp+'</b>')+
           ' · WhatsApp '+(l.entregueEm?'✅ entregue':'⏳ não entregue')+(l.whatsapp?' ('+esc(l.whatsapp)+')':'')+'</div>'+
         (prob&&l.motivo?'<div style="color:#B4380A">Motivo: '+esc(l.motivo)+'</div>':'')+
-        (prob?'<div style="margin-top:.3rem;display:flex;gap:.4rem;flex-wrap:wrap"><button class="pnl-link" data-relref="'+esc(l.id)+'">🔄 Refazer imagens</button><a class="pnl-link" href="#/livro/'+esc(l.id)+'" target="_blank" rel="noopener">Abrir</a></div>':'')+'</div>';
+        (l.status!=='pronto'?'<div style="margin-top:.3rem;display:flex;gap:.4rem;flex-wrap:wrap"><button class="pnl-link" data-reltent="'+esc(l.id)+'">🔍 Ver tentativas</button><a class="pnl-link" href="#/livro/'+esc(l.id)+'" target="_blank" rel="noopener">Abrir o livro</a></div>':'')+'</div>';
     }
     box.innerHTML='<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap"><b style="flex:1">📊 Relatório do Livro Mágico</b>'+
         '<select id="lvpRelDias" style="padding:.35rem;border-radius:8px;border:1px solid #ddd">'+[7,30,90].map(function(n){ return '<option value="'+n+'"'+(n===_lvp.relDias?' selected':'')+'>'+n+' dias</option>'; }).join('')+'</select><button class="pnl-link" id="lvpRelAt">↻</button></div>'+
@@ -1414,7 +1414,7 @@ function ligarRelatorioLivros(){
       '<details style="margin-top:1rem"><summary style="cursor:pointer;font-weight:700">✅ Prontos ('+prontos.length+')</summary>'+(prontos.map(function(l){ return linha(l,false); }).join('')||'<div style="font-size:.85rem;color:#999">Nenhum ainda.</div>')+'</details>';
     el('lvpRelDias').onchange=function(){ _lvp.relDias=+this.value; ligarRelatorioLivros(); };
     el('lvpRelAt').onclick=ligarRelatorioLivros;
-    box.querySelectorAll('[data-relref]').forEach(function(b){ b.onclick=function(){ b.disabled=true; lvpPost({acao:'livro-refazer',id:b.dataset.relref}).then(function(x){ toast(x.ok?'Recomeçou! Aguarde uns minutos.':(x.d.erro||'Erro')); b.disabled=false; }); }; });
+    box.querySelectorAll('[data-reltent]').forEach(function(b){ b.onclick=function(){ if(typeof window.abrirTentativasLivro==='function') window.abrirTentativasLivro(b.dataset.reltent); else toast('Recarregue o painel (Ctrl+Shift+R).'); }; });
   }).catch(function(){ box.innerHTML='<b>📊 Relatório do Livro Mágico</b><div style="color:#B4380A">Sem conexão.</div>'; });
 }
 /* cria um livro de exemplo direto do painel: prévia (sem trava) → liberado sem pagar → entra sozinho na vitrine */

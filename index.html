@@ -2934,7 +2934,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
-<script src="/livro.js?v=25"></script>
+<script src="/livro.js?v=26"></script>
 <script>
 /* =========================================================
    CAPIVARINHA LOVE — aplicação completa (single file)
@@ -7202,6 +7202,7 @@ function pnlQueryMusicas(){
   return '?dias=8';
 }
 var _pnlCompleto=false, _pnlParcial=false, _pnlFunilOk=false, _pnlLimite=30, _pnlAba='hoje', _pnlFiltro='todos', _pnlItens=[], _pnlLetraAberta={};
+window.abrirTentativasLivro=function(id){ return abrirTentativasLivro(id); };
 function abrirTentativasLivro(id){
   var velho=document.getElementById('lvTentM'); if(velho) velho.remove();
   var m=document.createElement('div'); m.id='lvTentM';
