@@ -1,6 +1,7 @@
 import { getStore } from '@netlify/blobs';
 import { enviarTexto, marcarConversa, entregarMusica, entregarAudiosPagos, chaveNum, registrar, SITE } from './_zap.mjs';
 import { tratarBot, boasVindas } from './_bot.mjs';
+import { entregarPreviaLivro } from './_livros.mjs';
 
 // WEBHOOK DO WHATSAPP (Meta Cloud API)
 // URL de callback:  https://capivarinhalove.com.br/.netlify/functions/whatsapp-webhook
@@ -41,6 +42,23 @@ async function processar(corpo) {
           await loja.setJSON('in_' + chaveNum(msg.from) + '_' + Date.now(), { de: String(msg.from), nome: (v.contacts && v.contacts[0] && v.contacts[0].profile && v.contacts[0].profile.name) || '', txt: String(ir ? '👆 ' + ir.title : txt).slice(0, 1000), em: Date.now() }).catch(() => {});
           // Cliente apertou "Receber minha música no WhatsApp" no site:
           // a mensagem vem com o código "t.<id>" → manda o link da música dele.
+          // LIVRO MÁGICO: tocou em "Receber minha prévia no WhatsApp" → código "L.<pedido>.<token>"
+          try {
+            const lcod = /\bL\.(L[0-9a-f]{14})\.([0-9a-f]{24})\b/i.exec(String(txt || ''));
+            if (lcod) {
+              await marcarConversa(msg.from);
+              await registrar('pediu_site', { numero: String(msg.from), pedido: lcod[1], via: 'livro' });
+              const r = await entregarPreviaLivro(lcod[1], lcod[2].toLowerCase(), msg.from, SITE);
+              if (r === 'esperando') {
+                await loja.setJSON('lvpend_' + lcod[1], { id: lcod[1], t: lcod[2].toLowerCase(), numero: String(msg.from), em: Date.now() });
+                await enviarTexto(msg.from, '✅ Recebi! A prévia do Livro Mágico está ficando pronta agora 📖✨\n\nPode ficar tranquilo(a): em uns minutinhos eu te mando aqui a capa e a música. 💛');
+              } else if (r === 'naoachei') {
+                await enviarTexto(msg.from, 'Não achei esse livro 😕\nCrie o seu aqui: ' + SITE + '/#/livro');
+              }
+              await loja.setJSON('bv_' + String(msg.from).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});
+              continue;
+            }
+          } catch (e) { console.error('prévia do livro:', e && e.message); }
           try {
             await marcarConversa(msg.from);
             const cod = /(?:\bt\.|ID do pedido:\s*)([A-Za-z0-9_-]{6,80})/i.exec(String(txt || ''));
