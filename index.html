@@ -7721,7 +7721,9 @@ function desenharPainel(pedidos, visitas, musicas){
         (p.produto==='livro'&&p.livro?(function(L){
           var capa=L.capaOk?'✅':(L.capaErro?'⚠️':'⏳'), pags=L.pagTotal?(' · Ilustrações '+L.pagOk+'/'+L.pagTotal+(L.pagErro?' ⚠️':'')):(p.pago?' · Ilustrações: esperando a capa':'');
           var st={criando:'criando a prévia',previa:'prévia pronta',gerando:'fazendo as ilustrações',pronto:'✅ livro pronto',problema:'⚠️ imagem não saiu'}[L.status]||L.status;
-          return '<div class="meta">🖼️ Capa '+capa+pags+' · '+esc(st)+'</div>'+(L.msg?'<div class="meta" style="color:#FFB4A8">Motivo: '+esc(L.msg)+'</div>':'');
+          var tt=(p.pago||L.status==='criando')&&L.status!=='pronto'?(L.tentando||[]).map(function(x){ var ha=x.em?Math.max(0,Math.round((Date.now()-x.em)/1000)):null;
+              return '<div class="meta" style="color:#BFE3FF">🔁 '+esc(x.n)+': '+x.tent+'ª tentativa'+(x.recusas?' ('+x.recusas+' recusas do Google)':'')+(ha!=null?' · última há '+(ha<120?ha+' s':Math.round(ha/60)+' min'):'')+' · '+(x.pedindo?'🟢 gerando agora':'⏳ vai tentar de novo')+'</div>'; }).join(''):'';
+          return '<div class="meta">🖼️ Capa '+capa+pags+' · '+esc(st)+'</div>'+tt+(L.msg?'<div class="meta" style="color:#FFB4A8">Último erro: '+esc(L.msg)+'</div>':'');
         })(p.livro):'')+
         (((_pnlCache.audiosBackup&&_pnlCache.audiosBackup.semAudio)||[]).some(function(x){ return x.id===p.id; })?'<div class="meta" style="color:#B3261E;font-weight:800">⚠️ Música apagada pelo serviço: gere de novo</div>':'')+
       '</div><div class="vl">'+(p.cortesia?'cortesia':'R$ '+fmtPreco(p.valor||0))+'</div></div>'+
