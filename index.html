@@ -2934,7 +2934,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
-<script src="/livro.js?v=4"></script>
+<script src="/livro.js?v=6"></script>
 <script>
 /* =========================================================
    CAPIVARINHA LOVE — aplicação completa (single file)
@@ -6764,7 +6764,10 @@ function telaConfirmandoDemorado(id){
 /* link de download real (passa pelo nosso servidor, só funciona com pedido pago) */
 function linkAudio(id, v){ return '/.netlify/functions/audio?id='+encodeURIComponent(id)+'&v='+(v||1); }
 function temMusicaCombo(g){ return !!(g && g.produto!=='musica' && (g.musicaOn || g.comboDaMusica) && g.musicaPreviewUrl); }
-function linkCliente(p){ return location.origin+'/#/p/'+p.id+((p.produto==='musica'||temMusicaCombo(p))?'/c':''); }
+function linkCliente(p){ if(p.produto==='livro') return location.origin+'/#/livro/'+p.id+(!p.pago&&p.livro&&p.livro.token?'.'+p.livro.token:''); return location.origin+'/#/p/'+p.id+((p.produto==='musica'||temMusicaCombo(p))?'/c':''); }
+function msgLivroZap(p, link){ var n=(p.livro&&p.livro.nome)||''; return p.pago
+  ? 'Oi! Aqui está o Livro Mágico'+(n?' de '+n:'')+' 📖✨\n\n'+link+'\n\nNesse link você lê o livro virando as páginas, ouve as 2 músicas com o nome'+(n?' de '+n:'')+' e baixa o PDF pra imprimir 😊'
+  : 'Oi! A prévia do Livro Mágico'+(n?' de '+n:'')+' ficou pronta 📖✨\n\n'+link+'\n\nToque pra ver a capa e ouvir a música. Lá mesmo você desbloqueia a história completa 💛'; }
 function linkBaixarMusica(id, v){ return '/.netlify/functions/baixar-musica?id='+encodeURIComponent(id)+'&v='+(v||1); }
 var DICA_BAIXAR='<div class="hint dica-baixar">Não baixou? Se abriu pelo WhatsApp ou Instagram, toque nos 3 pontinhos ⋮ e escolha <b>"Abrir no navegador"</b>.</div>';
 function htmlMusicasCombo(g){
@@ -7217,8 +7220,8 @@ function pnlVersaoMusica(p, url, rotulo, soOuvir, v){
     .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.mp3';
   var zap=String(p.whatsapp||'').replace(/\D/g,'');
   /* pedido com id → manda a página do presente (as 2 versões + baixar/compartilhar), não o arquivo solto */
-  var linkEnvio = p.id ? (location.origin+'/#/p/'+p.id+'/c') : url;
-  var msgZap='Oi! Aqui está a sua música do Capivarinha Love 🎵\n\n'+linkEnvio+'\n\nNesse link você ouve as 2 versões e baixa no celular 😊';
+  var linkEnvio = p.id ? (p.produto==='livro' ? linkCliente(p) : (location.origin+'/#/p/'+p.id+'/c')) : url;
+  var msgZap=p.produto==='livro' ? msgLivroZap(p, linkEnvio) : 'Oi! Aqui está a sua música do Capivarinha Love 🎵\n\n'+linkEnvio+'\n\nNesse link você ouve as 2 versões e baixa no celular 😊';
   return '<div class="pnl-mv"><div class="pnl-mv-tit">🎵 '+esc(rotulo)+'</div>'+
     '<button type="button" class="pnl-play" data-tocar="'+esc(url)+'">▶ Ouvir</button>'+
     '<div class="pnl-mv-acoes">'+
@@ -7388,7 +7391,18 @@ function pnlClientesHtml(pedidos){
       (uma.length>_pnlLimite?'<button type="button" class="pnl-mais" data-mais>Ver mais ('+(uma.length-_pnlLimite)+' restantes)</button>':'')+'</div></div>';
 }
 /* ===== PAINEL HOJE: faturamento, projeção, custos e lucro ===== */
-function custosCfg(){ var c=jget('cl_custos',null)||{}; return {musica:Number(c.musica)||0, letra:Number(c.letra)||0, pix:Number(c.pix)||0}; }
+function custosCfg(){ var c=jget('cl_custos',null)||{}; return {musica:Number(c.musica)||0, letra:Number(c.letra)||0, pix:Number(c.pix)||0, livro:Number(c.livro)||0}; }
+/* separa a receita por produto: Livro Mágico × Música (e o resto) */
+function pnlSplitHtml(lista7, hoje){
+  function grupo(l,k){ return l.filter(function(p){ return k==='livro' ? p.produto==='livro' : p.produto!=='livro'; }); }
+  function vl(l){ return l.reduce(function(s,p){ return s+(Number(p.valor)||0); },0); }
+  var cfg=custosCfg();
+  function col(rot,ic,k){ var h=grupo(hoje,k), s7=grupo(lista7,k), lu=vl(h)-(k==='livro'?h.length*cfg.livro:0);
+    return '<div class="dsh-k" style="min-width:0"><span>'+ic+' '+rot+'</span><b>R$ '+fmtPreco(vl(h))+'</b><small>'+h.length+' venda'+(h.length===1?'':'s')+' hoje</small>'+
+      '<small style="display:block;margin-top:.35rem">7 dias: <b style="font-size:inherit">R$ '+fmtPreco(vl(s7))+'</b> · '+s7.length+' vendas</small>'+
+      (k==='livro'?'<small style="display:block;margin-top:.2rem">'+(cfg.livro?'Lucro hoje (− R$ '+fmtPreco(cfg.livro)+' por livro): <b style="font-size:inherit">R$ '+fmtPreco(lu)+'</b>':'Coloque o custo por livro em ⚙️ Ajustar custos')+'</small>':'')+'</div>'; }
+  return '<div class="dsh-card"><div class="dsh-t">Música × Livro Mágico</div><div class="dsh-hero" style="margin:0">'+col('Músicas e outros','🎵','musica')+col('Livro Mágico','📖','livro')+'</div></div>';
+}
 function pnlDiasTodos(pagos){
   var porDia={};
   pagos.forEach(function(p){
@@ -7447,7 +7461,8 @@ function pnlHojeHtml(pedidos, custos){
   if(proj<rec) proj=rec;
   /* custos */
   var cfg=custosCfg(), kHoje=pnlKeyMs(agora), ch=custos[kHoje]||{m:0,l:0};
-  var custoIA=ch.m*cfg.musica+ch.l*cfg.letra, taxa=vendas*cfg.pix, ads=pnlGastoGet(kHoje);
+  var livrosHoje=hoje.filter(function(p){ return p.produto==='livro'; }).length;
+  var custoIA=ch.m*cfg.musica+ch.l*cfg.letra+livrosHoje*cfg.livro, taxa=vendas*cfg.pix, ads=pnlGastoGet(kHoje);
   var lucro=rec-custoIA-taxa-ads;
   var escala = rec>0 ? proj/rec : (frac>0?1/frac:1);
   var lucroProj=proj-custoIA*escala-(vendas*escala)*cfg.pix-ads;
@@ -7475,6 +7490,7 @@ function pnlHojeHtml(pedidos, custos){
       '<div class="dsh-k"><span>Faturado hoje</span><b>R$ '+fmtPreco(rec)+'</b><small>'+vendas+' venda'+(vendas===1?'':'s')+(vendas?' · ticket R$ '+fmtPreco(rec/vendas):'')+'</small></div>'+
       '<div class="dsh-k proj"><span>Projeção até 23:59</span><b>R$ '+fmtPreco(proj)+'</b><small>'+(med7>0?'≈ '+Math.round(proj/Math.max(1,(rec/Math.max(1,vendas))||9.99))+' vendas no dia':'ainda sem histórico pra comparar')+'</small></div>'+
     '</div>'+
+    pnlSplitHtml([0,1,2,3,4,5,6].reduce(function(a,i){ return a.concat(dia(i)); },[]), hoje)+
     cmpHtml+
     '<div class="dsh-proj">'+
       '<div><span>Pelo ritmo de hoje</span><b>'+(projRitmo!=null?'R$ '+fmtPreco(projRitmo):'—')+'</b></div>'+
@@ -7488,12 +7504,14 @@ function pnlHojeHtml(pedidos, custos){
       '<div class="dsh-cfgbox" id="dshCfg" hidden>'+
         '<label>Custo por música gerada (R$)<input type="number" step="0.01" min="0" id="cfgMus" value="'+(cfg.musica||'')+'" placeholder="0,00"></label>'+
         '<label>Custo por letra (R$)<input type="number" step="0.01" min="0" id="cfgLet" value="'+(cfg.letra||'')+'" placeholder="0,00"></label>'+
+        '<label>Custo por Livro Mágico vendido (R$)<input type="number" step="0.01" min="0" id="cfgLivro" value="'+(cfg.livro||'')+'" placeholder="ex.: 2,50"></label>'+
         '<label>Taxa por Pix recebido (R$)<input type="number" step="0.01" min="0" id="cfgPix" value="'+(cfg.pix||'')+'" placeholder="0,00"></label>'+
         '<label>Gasto com anúncio hoje (R$)<input type="number" step="0.01" min="0" id="cfgAds" value="'+(ads||'')+'" placeholder="0,00"></label>'+
         '<button type="button" id="cfgSalvar">Salvar</button></div>'+
       '<div class="dsh-linhas">'+
         '<div><span>🎵 Músicas geradas ('+ch.m+' × R$ '+fmtPreco(cfg.musica)+')</span><b>− R$ '+fmtPreco(ch.m*cfg.musica)+'</b></div>'+
         '<div><span>✍️ Letras escritas ('+ch.l+' × R$ '+fmtPreco(cfg.letra)+')</span><b>− R$ '+fmtPreco(ch.l*cfg.letra)+'</b></div>'+
+        (livrosHoje?'<div><span>📖 Livros vendidos ('+livrosHoje+' × R$ '+fmtPreco(cfg.livro)+')</span><b>− R$ '+fmtPreco(livrosHoje*cfg.livro)+'</b></div>':'')+
         '<div><span>📣 Anúncio</span><b>− R$ '+fmtPreco(ads)+'</b></div>'+
         (cfg.pix?'<div><span>🏦 Taxa Pix ('+vendas+')</span><b>− R$ '+fmtPreco(taxa)+'</b></div>':'')+
         '<div class="tot"><span>Lucro hoje</span><b class="'+(lucro>=0?'pos':'neg')+'">R$ '+fmtPreco(lucro)+'</b></div>'+
@@ -7517,7 +7535,7 @@ function ligarHoje(body){
   var att=el('dshAtt'); if(att) att.onclick=function(){ att.textContent='Atualizando...'; atualizarPainel(); };
   var cb=el('dshCfgBtn'), box=el('dshCfg'); if(cb&&box) cb.onclick=function(){ box.hidden=!box.hidden; };
   var sv=el('cfgSalvar'); if(sv) sv.onclick=function(){
-    jset('cl_custos',{musica:Number(el('cfgMus').value)||0, letra:Number(el('cfgLet').value)||0, pix:Number(el('cfgPix').value)||0});
+    jset('cl_custos',{musica:Number(el('cfgMus').value)||0, letra:Number(el('cfgLet').value)||0, pix:Number(el('cfgPix').value)||0, livro:Number((el('cfgLivro')||{}).value)||0});
     pnlGastoSet(pnlKeyMs(Date.now()), el('cfgAds').value);
     toast('Custos salvos.'); desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas);
   };
@@ -7537,7 +7555,7 @@ function desenharPainel(pedidos, visitas, musicas){
   var ontem=pagos.filter(function(p){ return pnlQuando(p)>=inicioOntem && pnlQuando(p)<inicioDia; });
   var mes=pagos.filter(function(p){ return pnlQuando(p)>=inicioMes; });
   function soma(l){ return l.reduce(function(s,p){ return s+(Number(p.valor)||0); },0); }
-  var nomeProd={completo:'Retrospectiva Completa', carta:'Carta Virtual', convite:'Convite Criativo', musica:'Música Personalizada'};
+  var nomeProd={completo:'Retrospectiva Completa', carta:'Carta Virtual', convite:'Convite Criativo', musica:'Música Personalizada', livro:'📖 Livro Mágico'};
 
   /* lucro — gasto com anúncio é digitado manualmente (não temos acesso à API do Facebook/TikTok) */
   var hojeKey=pnlKeyMs(agora.getTime());
@@ -7669,7 +7687,7 @@ function desenharPainel(pedidos, visitas, musicas){
 
   /* pedidos, com link, copiar e liberação manual pra quem ficou pendente por engano */
   var _porIdPed={}; pedidos.forEach(function(x){ _porIdPed[x.id]=x; });
-  function nomeDoPedido(p){ return (p.meuNome||'')+(p.meuNome&&p.parceiroNome?' & ':'')+(p.parceiroNome||'') || p.musicaParaNome || ''; }
+  function nomeDoPedido(p){ if(p.produto==='livro') return p.livro&&p.livro.nome?'Livro de '+p.livro.nome:'Livro Mágico'; return (p.meuNome||'')+(p.meuNome&&p.parceiroNome?' & ':'')+(p.parceiroNome||'') || p.musicaParaNome || ''; }
   /* as 2 músicas extras (pedido de R$ 0) entram dentro do pedido original */
   var extrasDe={}; pedidos.forEach(function(x){ if(x.dobroDe){ (extrasDe[x.dobroDe]=extrasDe[x.dobroDe]||[]).push(x); } });
   function htmlMusicasPedido(p){
@@ -7686,7 +7704,7 @@ function desenharPainel(pedidos, visitas, musicas){
     var extras=extrasDe[p.id]||[];
     var nMus=(p.musicaPreviewUrl?1:0)+(p.musicaPreviewUrl2?1:0)+(p.ofertaM1&&p.ofertaM1.url?1:0)+(p.ofertaM1&&p.ofertaM1.url2?1:0)+
       extras.reduce(function(n,x){ return n+(x.musicaPreviewUrl?1:0)+(x.musicaPreviewUrl2?1:0); },0);
-    var msg='Oi! Aqui está a sua música do Capivarinha Love 🎵\n\n'+link+'\n\nNesse link você ouve, baixa e envia 😊';
+    var msg=p.produto==='livro' ? msgLivroZap(p, link) : 'Oi! Aqui está a sua música do Capivarinha Love 🎵\n\n'+link+'\n\nNesse link você ouve, baixa e envia 😊';
     var liberar='';
     if(!p.pago){
       liberar='<div class="pnl-liberar" data-liberar-id="'+esc(p.id)+'">'+
@@ -7706,6 +7724,7 @@ function desenharPainel(pedidos, visitas, musicas){
         (zap?'<a class="pc-bt zap" href="https://wa.me/55'+esc(zap)+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar</a>':'')+
         '<button type="button" class="pc-bt" data-copiar-link="'+esc(link)+'">Copiar link</button>'+
         (nMus?'<button type="button" class="pc-bt" data-expandir>🎵 Músicas ('+nMus+') ▾</button>':'')+
+        (p.produto==='livro'&&p.pago&&!p.cancelado?'<button type="button" class="pc-bt" data-livro-exemplo="'+esc(p.id)+'">⭐ Usar como exemplo</button>':'')+
       '</div>'+
       '<div class="pc-mais" hidden>'+
         '<div class="pnl-musica">'+htmlMusicasPedido(p)+
@@ -8023,6 +8042,21 @@ function desenharPainel(pedidos, visitas, musicas){
   });
   body.querySelectorAll('[data-copiar-link]').forEach(function(btn){
     btn.onclick=function(){ copiar(btn.dataset.copiarLink, 'Link copiado!'); };
+  });
+  /* livro pago → vira exemplo na página do Livro Mágico (capas que giram + livro de exemplo) */
+  body.querySelectorAll('[data-livro-exemplo]').forEach(function(btn){
+    btn.onclick=function(){
+      if(!pedirSenhaAdmin()) return;
+      btn.disabled=true; btn.textContent='Copiando o livro…';
+      fetch('/.netlify/functions/livro-temas',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'exemplo-add',id:btn.dataset.livroExemplo})})
+        .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+        .then(function(res){
+          btn.disabled=false;
+          if(res.ok){ btn.textContent='⭐ Já é exemplo'; toast('Pronto! Esse livro já aparece de exemplo na página. Ajuste a ordem na aba 📚 Livros.'); try{ if(window._lvpExemplos) window._lvpExemplos(res.d.exemplos); }catch(e){} return; }
+          if(res.d && /senha/i.test(res.d.erro||'')){ _pnlChave=''; Store.del('cl_admin_key'); }
+          btn.textContent='⭐ Usar como exemplo'; toast((res.d&&res.d.erro)||'Não deu certo.');
+        }).catch(function(){ btn.disabled=false; btn.textContent='⭐ Usar como exemplo'; toast('Sem conexão.'); });
+    };
   });
   body.querySelectorAll('[data-verificar]').forEach(function(btn){
     btn.onclick=function(){
