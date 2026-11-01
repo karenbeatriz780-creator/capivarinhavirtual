@@ -343,8 +343,8 @@ async function andarImagem(item, chave, criar, limite) {
   }
   if (limite.downloads <= 0) return false;
   const st = await verTarefa(item.task, 'imagem');
-  if (st.estado === 'falhou' || (st.estado === 'rodando' && Date.now() - (item.em || 0) > 6 * 60 * 1000)) {
-    item.msg = st.estado === 'falhou' ? (st.msg || 'a IA recusou ou falhou ao gerar') : 'demorou demais (mais de 6 min)';
+  if (st.estado === 'falhou' || (st.estado === 'rodando' && Date.now() - (item.em || 0) > 2 * 60 * 1000)) {
+    item.msg = st.estado === 'falhou' ? (st.msg || 'a IA recusou ou falhou ao gerar') : 'demorou demais (mais de 2 min)';
     if (/refused|cannot read|upload/i.test(item.msg)) { item.recusas = (item.recusas || 0) + 1; }
     console.error('livro imagem falhou:', chave, item.msg);
     item.task = null; return true; // tenta de novo na próxima volta
@@ -357,12 +357,19 @@ async function andarImagem(item, chave, criar, limite) {
   return false;
 }
 
-export async function avancarLivro(id, base) {
+export async function avancarLivro(id, base, opts) {
   const presentes = getStore('presentes');
   const g = await presentes.get(id, { type: 'json' }).catch(() => null);
   if (!g || g.produto !== 'livro' || !g.livro) return null;
   const L = g.livro;
   if (L.status === 'pronto' && g.pago) return g;
+  // quem faz o livro andar é o "motor" (a cada 3 s). Os outros (tela, agendador, webhook) só ligam o motor,
+  // pra duas partes do sistema não pedirem a mesma imagem ao mesmo tempo.
+  if (!(opts && opts.motor)) {
+    if (await motorRodando(id)) return g;
+    const falta = g.pago ? (L.status !== 'problema') : !(previaPronta(g) && g.musicaPreviewUrl);
+    if (falta && await ligarMotor(id, base)) return g;
+  }
   const tema = await acharTema(L.tema);
   if (!tema) return g;
   const nome = L.nome;
@@ -413,8 +420,9 @@ export async function avancarLivro(id, base) {
   // "so": página só de texto (sem ilustração, custo zero)
   const montarPaginas = () => { if (!(L.paginas && L.paginas.length)) { L.paginas = (tema.paginas || []).map((tp) => (tp && tp.so ? { so: true } : usaDe(tp) != null ? { usa: usaDe(tp) } : {})); mudou = true; } };
 
-  // 2c) PRÉVIA (antes de pagar): só a 1ª ilustração da história, pra pessoa ver que é de verdade
-  if (!g.pago && (L.capa.ok || L.capa.erro || (L.capa.tent || 0) >= 3)) {
+  // 2c) PRÉVIA (antes de pagar): só a 1ª ilustração da história, pra pessoa ver que é de verdade.
+  // Começa JUNTO com a capa (usa a foto como referência), pra prévia sair em menos de 1 minuto.
+  if (!g.pago) {
     montarPaginas();
     const i0 = indiceAmostra(L.paginas);
     if (i0 >= 0) {
@@ -458,6 +466,27 @@ export async function avancarLivro(id, base) {
   return g;
 }
 
+// prévia pronta pra mandar = capa + 1ª ilustração (se a ilustração falhar de vez, vai sem ela)
+// + música (se a música ainda estiver terminando depois de 40 s, manda assim mesmo: no link ela aparece quando ficar pronta)
+export function previaPronta(x) {
+  if (!(x && x.livro && x.livro.capa && x.livro.capa.ok)) return false;
+  const ps = x.livro.paginas || [];
+  if (!ps.length) return false;
+  const i0 = indiceAmostra(ps);
+  if (i0 >= 0 && !(ps[i0].ok || ps[i0].erro)) return false;
+  return !!x.musicaPreviewUrl || Date.now() - (x.criadoEm || 0) > 40 * 1000;
+}
+// liga o "motor" rápido do livro (segundo plano). Se já tiver um rodando, ele mesmo ignora.
+export async function ligarMotor(id, base) {
+  try {
+    const r = await fetch((base || SITE) + '/.netlify/functions/livro-andar-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    return !!(r && (r.ok || r.status === 202));
+  } catch (e) { return false; }
+}
+export async function motorRodando(id) {
+  const t = await loja().get('andar/' + id, { type: 'json' }).catch(() => null);
+  return !!(t && t.ate > Date.now());
+}
 // AMOSTRA GRÁTIS: a 1ª ilustração da história (não é a capa) sai já na prévia, antes de pagar
 export function indiceAmostra(paginas) { const ps = paginas || []; for (let i = 0; i < ps.length; i++) { const p = ps[i]; if (p && !p.so && p.usa == null) return i; } return -1; }
 // índice da cena cuja ilustração esta página repete (ou null = ilustração nova)
@@ -527,19 +556,20 @@ export async function entregarPreviaLivro(id, token, numero, base) {
     if (extra) await enviarTexto(para, '📚 Os outros ' + extra + ' livro' + (extra > 1 ? 's' : '') + ' do seu pacote também chegam aqui, um por um, conforme ficarem prontos.');
     return 'pago';
   }
-  // prévia pronta = capa + música + a 1ª ilustração (se a ilustração falhar de vez, manda sem ela)
-  const pronto = (x) => {
-    if (!(x && x.livro && x.livro.capa && x.livro.capa.ok && x.musicaPreviewUrl)) return false;
-    const i0 = indiceAmostra(x.livro.paginas);
-    if (!x.livro.paginas || !x.livro.paginas.length) return false;
-    return i0 < 0 || !!(x.livro.paginas[i0].ok || x.livro.paginas[i0].erro);
-  };
+  const pronto = previaPronta;
   if (!pronto(g)) {
     try { g = (await avancarLivro(id, base || SITE)) || g; } catch (e) { console.error('previa livro zap', id, e && e.message); }
     if (!pronto(g)) return 'esperando';
   }
   const para = await conversaAberta(num);
   if (!para) return 'semjanela';
+  // não manda a mesma prévia 2 vezes seguidas (o motor e o WhatsApp podem chegar juntos)
+  {
+    const zl = getStore('whatsapp'), k = 'lvenv_' + id + '_' + num;
+    const ja = await zl.get(k, { type: 'json' }).catch(() => null);
+    if (ja && Date.now() - (ja.em || 0) < 60 * 1000) return 'enviado';
+    await zl.setJSON(k, { em: Date.now() }).catch(() => {});
+  }
   const nome = g.livro.nome;
   let tema = null; try { tema = await acharTema(g.livro.tema); } catch (e) {}
   const titulo = tema ? flex(tema.titulo, nome, g.livro.genero) : 'Livro Mágico';
@@ -574,11 +604,14 @@ export async function enviarInfoPrevia(para, g) {
   try { await enviarExemplosZap(para, g.livro.tema); } catch (e) { console.error('exemplos zap', e && e.message); }
 }
 // PDF da prévia (capa, "este livro pertence a", título, o começo da história e a 1ª ilustração)
-export function linkPdfPrevia(g) { return SITE + '/lv-pdf/' + g.id + '/previa-' + g.livro.token + '.pdf'; }
+export function linkPdfPrevia(g, tipo) { return SITE + '/lv-pdf/' + g.id + '/' + (tipo || 'previa') + '-' + g.livro.token + '.pdf'; }
 export async function enviarPdfPrevia(para, g) {
   const n = String(g.livro.nome || 'Livro').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return enviarDocumento(para, linkPdfPrevia(g), 'Previa-Livro-Magico-' + n + '.pdf',
-    '📖 *Prévia do livro de ' + g.livro.nome + '*\nAbra pra ver a capa, o começo da história e a primeira ilustração. ✨');
+  const a = await enviarDocumento(para, linkPdfPrevia(g, 'previa'), 'Previa-Livro-Magico-' + n + '.pdf',
+    '📱 *Prévia pra ler no celular*\nA capa, o começo da história e a primeira ilustração de ' + g.livro.nome + '. ✨');
+  const b = await enviarDocumento(para, linkPdfPrevia(g, 'previa-livreto'), 'Previa-Livro-Magico-' + n + '-imprimir-livreto.pdf',
+    '🖨️ *Prévia no jeito de imprimir (livreto)*\nAssim fica a impressão: frente e verso, dobra ao meio e vira um livrinho. No livro completo vem a história inteira.');
+  return a || b;
 }
 export async function enviarExemplosZap(para, temaPreferido) {
   let lista = []; try { lista = (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) {}

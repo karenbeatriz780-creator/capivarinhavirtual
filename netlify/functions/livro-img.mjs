@@ -2,10 +2,10 @@
 //  img/tema/<id>          → capas de vitrine (públicas)
 //  ex/<id>/capa|pN        → exemplos escolhidos no painel (públicos)
 //  img/<pedido>/capa      → capa do livro (com o token do livro)
-//  img/<pedido>/p1..p5    → ilustrações (só com o livro PAGO)
+//  img/<pedido>/p1..p5    → ilustrações (só com o livro PAGO; antes de pagar, só a 1ª ilustração = amostra)
 //  foto/<pedido>          → foto enviada (só com o token; é o que a IA usa de referência)
 import { getStore } from '@netlify/blobs';
-import { loja, tipoImagem } from './_livros.mjs';
+import { loja, tipoImagem, indiceAmostra } from './_livros.mjs';
 
 function nao(status) { return new Response('não encontrado', { status: status || 404, headers: { 'Cache-Control': 'no-store' } }); }
 
@@ -21,7 +21,7 @@ export default async (req) => {
       if (!mm) return nao(400);
       const g = await getStore('presentes').get(mm[1], { type: 'json' }).catch(() => null);
       if (!g || !g.livro || !t || t !== g.livro.token) return nao();
-      if (k.indexOf('img/') === 0 && /^p\d+$/.test(mm[2] || '') && !g.pago) return nao(403);
+      if (k.indexOf('img/') === 0 && /^p\d+$/.test(mm[2] || '') && !g.pago && +mm[2].slice(1) !== indiceAmostra(g.livro.paginas) + 1) return nao(403);
     }
     const r = await loja().getWithMetadata(k, { type: 'arrayBuffer' }).catch(() => null);
     if (!r || !r.data) return nao();

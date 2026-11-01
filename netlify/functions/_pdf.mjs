@@ -195,16 +195,29 @@ export async function gerarPdfPrevia(id) {
   const ps = [{ t: 'capa' }, { t: 'pertence' }, { t: 'rosto' }];
   const ate = i0 >= 0 ? i0 : 0;
   for (let i = 0; i <= ate && i < (tema.paginas || []).length; i++) { ps.push({ t: 'texto', i }); if (i === i0 && imgs.pags[i0]) ps.push({ t: 'img', i }); }
-  ps.push({ t: 'trancado' });
   const d = { nome: L.nome, genero: L.genero }, link = (process.env.URL || SITE) + '/#/livro/' + id;
+  // 1) pra ler no celular
+  const psLer = ps.concat([{ t: 'trancado' }]);
   const doc = await PDFDocument.create(); doc.setTitle('Prévia do Livro Mágico de ' + L.nome);
-  for (let i = 0; i < ps.length; i++) {
-    const im = await doc.embedJpg(desenharPagina(ps[i], d, tema, imgs, i + 1, 1200, 1600, F, link).toBuffer('image/jpeg', 84));
+  for (let i = 0; i < psLer.length; i++) {
+    const im = await doc.embedJpg(desenharPagina(psLer[i], d, tema, imgs, i + 1, 1200, 1600, F, link).toBuffer('image/jpeg', 84));
     const pg = doc.addPage([150 * 2.8346, 200 * 2.8346]); pg.drawImage(im, { x: 0, y: 0, width: pg.getWidth(), height: pg.getHeight() });
   }
   const buf = Buffer.from(await doc.save());
+  // 2) livreto pra imprimir (A4 deitado, 2 páginas por folha, já na ordem de dobrar)
+  const psLiv = ps.slice(); while ((psLiv.length + 1) % 4) psLiv.push({ t: 'branco' }); psLiv.push({ t: 'trancado' });
+  const N = psLiv.length, a5 = [];
+  for (let i = 0; i < N; i++) a5.push(desenharPagina(psLiv[i], d, tema, imgs, i + 1, 1240, 1754, F, link).toBuffer('image/jpeg', 84));
+  const A4W = 297 * 2.8346, A4H = 210 * 2.8346, liv = await PDFDocument.create(); liv.setTitle('Prévia do Livro Mágico de ' + L.nome + ' (livreto)');
+  const cache = {};
+  for (let s = 0; s < N / 4; s++) for (const f of [[N - 1 - 2 * s, 2 * s], [2 * s + 1, N - 2 - 2 * s]]) {
+    const pg = liv.addPage([A4W, A4H]);
+    for (let lado = 0; lado < 2; lado++) { const idx = f[lado]; if (!cache[idx]) cache[idx] = await liv.embedJpg(a5[idx]); pg.drawImage(cache[idx], { x: lado * A4W / 2, y: 0, width: A4W / 2, height: A4H }); }
+  }
+  const bufLiv = Buffer.from(await liv.save());
   await loja().set('pdf/' + id + '/previa.pdf', buf, { metadata: { tipo: 'application/pdf' } });
-  return { ok: true, tamanho: buf.length, paginas: ps.length };
+  await loja().set('pdf/' + id + '/previa-livreto.pdf', bufLiv, { metadata: { tipo: 'application/pdf' } });
+  return { ok: true, tamanho: buf.length, livreto: bufLiv.length, paginas: psLer.length };
 }
 
 const QRCodeGen = (function(){
