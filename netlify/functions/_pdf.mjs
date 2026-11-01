@@ -105,6 +105,11 @@ function desenharPagina(p, d, tema, imgs, num, W, H, F, linkLivro) {
     textoCentro(ctx, 'A música de ' + nome, W / 2, H * 0.22, W * 0.8, (u * 7.5) + 'px ' + F.titulo, c[2], u * 8);
     const qs = W * 0.46; desenharQR(ctx, linkLivro, (W - qs) / 2, H * 0.4, qs);
     textoCentro(ctx, 'Aponte a câmera do celular pra ouvir a música e ler o livro com ela tocando.', W / 2, H * 0.8, W * 0.72, (u * 3.6) + 'px ' + F.miudo, '#6E5C82', u * 4.6);
+  } else if (p.t === 'trancado') {
+    capaMini(ctx, imgs.capa, W * 0.34, H * 0.1, W * 0.32);
+    textoCentro(ctx, 'A história continua…', W / 2, H * 0.47, W * 0.8, (u * 8) + 'px ' + F.titulo, c[2], u * 8.5);
+    textoCentro(ctx, 'Esta é só uma amostra. O livro completo de ' + nome + ' tem a história inteira ilustrada e 2 músicas com o nome ' + (d.genero === 'menina' ? 'dela' : 'dele') + '.', W / 2, H * 0.6, W * 0.74, (u * 4.2) + 'px ' + F.texto, '#2A1B3D', u * 6);
+    textoCentro(ctx, 'Desbloqueie em capivarinhalove.com.br', W / 2, H * 0.84, W * 0.8, (u * 3.8) + 'px ' + F.miudo, '#6E5C82', u * 4.6);
   } else if (p.t === 'branco') {
     textoCentro(ctx, 'Espaço pra um desenho ou uma mensagem especial', W / 2, H * 0.47, W * 0.7, (u * 3.8) + 'px ' + F.miudo, '#9C8BAE', u * 5);
   }
@@ -172,6 +177,34 @@ export async function gerarPdfsLivro(id) {
   g2.livro.pdf = { em: Date.now(), ler: bLer.length, folhas: bFolhas.length, livreto: bLivreto.length, fontes: F.titulo };
   await presentes.setJSON(id, g2);
   return { ok: true, tamanhos: g2.livro.pdf };
+}
+
+// PRÉVIA (antes de pagar): capa, "pertence a", título, o começo da história até a 1ª ilustração e uma página "continua…"
+export async function gerarPdfPrevia(id) {
+  const presentes = getStore('presentes');
+  const g = await presentes.get(id, { type: 'json' }).catch(() => null);
+  if (!g || !g.livro) return { erro: 'livro não encontrado' };
+  const L = g.livro;
+  const temas = await lerTemas(), tema = temas.find((t) => t.id === L.tema);
+  if (!tema) return { erro: 'história não encontrada' };
+  const F = await carregarFontes();
+  const ps0 = (L.paginas || []);
+  let i0 = -1; for (let i = 0; i < ps0.length; i++) { if (ps0[i] && !ps0[i].so && ps0[i].usa == null) { i0 = i; break; } }
+  const imgs = { capa: await lerImagem('img/' + id + '/capa'), pags: [] };
+  if (i0 >= 0 && ps0[i0].ok) imgs.pags[i0] = await lerImagem('img/' + id + '/p' + (i0 + 1));
+  const ps = [{ t: 'capa' }, { t: 'pertence' }, { t: 'rosto' }];
+  const ate = i0 >= 0 ? i0 : 0;
+  for (let i = 0; i <= ate && i < (tema.paginas || []).length; i++) { ps.push({ t: 'texto', i }); if (i === i0 && imgs.pags[i0]) ps.push({ t: 'img', i }); }
+  ps.push({ t: 'trancado' });
+  const d = { nome: L.nome, genero: L.genero }, link = (process.env.URL || SITE) + '/#/livro/' + id;
+  const doc = await PDFDocument.create(); doc.setTitle('Prévia do Livro Mágico de ' + L.nome);
+  for (let i = 0; i < ps.length; i++) {
+    const im = await doc.embedJpg(desenharPagina(ps[i], d, tema, imgs, i + 1, 1200, 1600, F, link).toBuffer('image/jpeg', 84));
+    const pg = doc.addPage([150 * 2.8346, 200 * 2.8346]); pg.drawImage(im, { x: 0, y: 0, width: pg.getWidth(), height: pg.getHeight() });
+  }
+  const buf = Buffer.from(await doc.save());
+  await loja().set('pdf/' + id + '/previa.pdf', buf, { metadata: { tipo: 'application/pdf' } });
+  return { ok: true, tamanho: buf.length, paginas: ps.length };
 }
 
 const QRCodeGen = (function(){
@@ -443,4 +476,3 @@ const QRCodeGen = (function(){
   }
   return {build:build, toSVG:toSVG};
 })();
-

@@ -51,7 +51,7 @@ async function processar(corpo) {
               const r = await entregarPreviaLivro(lcod[1], lcod[2].toLowerCase(), msg.from, SITE);
               if (r === 'esperando') {
                 await loja.setJSON('lvpend_' + lcod[1], { id: lcod[1], t: lcod[2].toLowerCase(), numero: String(msg.from), em: Date.now() });
-                await enviarTexto(msg.from, '✅ Recebi! A prévia do Livro Mágico está ficando pronta agora 📖✨\n\nPode ficar tranquilo(a): em uns minutinhos eu te mando aqui a capa e a música. 💛');
+                await enviarTexto(msg.from, '✅ Recebi sua historinha! 📖✨\n\nEstou preparando a *capa* com o rostinho da criança, a *música* com o nome dela e a *primeira ilustração* da história. Assim que ficar pronto eu te mando aqui a prévia. 💛');
               } else if (r === 'naoachei') {
                 await enviarTexto(msg.from, 'Não achei esse livro 😕\nCrie o seu aqui: ' + SITE + '/#/livro');
               }

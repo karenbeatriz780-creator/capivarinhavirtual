@@ -409,11 +409,25 @@ export async function avancarLivro(id, base) {
     try { await criarLivrosDoPacote(g); mudou = true; } catch (e) { console.error('pacote livro', id, e && e.message); }
   }
 
-  // 3) depois do Pix: as 5 ilustrações
+  // página com "usa": repete a ilustração de outra cena (não gera imagem nova)
+  // "so": página só de texto (sem ilustração, custo zero)
+  const montarPaginas = () => { if (!(L.paginas && L.paginas.length)) { L.paginas = (tema.paginas || []).map((tp) => (tp && tp.so ? { so: true } : usaDe(tp) != null ? { usa: usaDe(tp) } : {})); mudou = true; } };
+
+  // 2c) PRÉVIA (antes de pagar): só a 1ª ilustração da história, pra pessoa ver que é de verdade
+  if (!g.pago && (L.capa.ok || L.capa.erro || (L.capa.tent || 0) >= 3)) {
+    montarPaginas();
+    const i0 = indiceAmostra(L.paginas);
+    if (i0 >= 0) {
+      try {
+        mudou = (await andarImagem(L.paginas[i0], 'img/' + g.id + '/p' + (i0 + 1), (it) =>
+          criarImagem(promptImagem(tema, L, tema.paginas[i0].cena, false), refsPagina(base, g, it), '3:4', '2K', it.recusas || 0), limite)) || mudou;
+      } catch (e) { console.error('livro amostra', id, e.message); }
+    }
+  }
+
+  // 3) depois do Pix: as outras ilustrações (a da amostra já está pronta e é aproveitada)
   if (g.pago && (L.capa.ok || L.capa.erro || (L.capa.tent || 0) >= 3)) {
-    // página com "usa": repete a ilustração de outra cena (não gera imagem nova)
-    // "so": página só de texto (sem ilustração, custo zero)
-    L.paginas = L.paginas && L.paginas.length ? L.paginas : (tema.paginas || []).map((tp) => (tp && tp.so ? { so: true } : usaDe(tp) != null ? { usa: usaDe(tp) } : {}));
+    montarPaginas();
     if (L.status !== 'gerando' && L.status !== 'pronto') { L.status = 'gerando'; L.gerandoEm = Date.now(); mudou = true; }
     // as ilustrações andam todas ao mesmo tempo (antes era uma de cada vez e a tela pulava de 2 pra 4)
     const res = await Promise.all(L.paginas.map(async (p, i) => {
@@ -444,6 +458,8 @@ export async function avancarLivro(id, base) {
   return g;
 }
 
+// AMOSTRA GRÁTIS: a 1ª ilustração da história (não é a capa) sai já na prévia, antes de pagar
+export function indiceAmostra(paginas) { const ps = paginas || []; for (let i = 0; i < ps.length; i++) { const p = ps[i]; if (p && !p.so && p.usa == null) return i; } return -1; }
 // índice da cena cuja ilustração esta página repete (ou null = ilustração nova)
 export function usaDe(tp) { const n = tp && tp.usa; return (n === 0 || (n && Number.isInteger(+n))) && +n >= 0 ? +n : null; }
 // diagnóstico (só o administrador vê)
@@ -468,7 +484,9 @@ export function resumoPublico(g, base) {
       if (p.so) return 'so';
       if (p.usa != null) { const o = (L.paginas || [])[p.usa]; return o && o.ok ? img('p' + (p.usa + 1)) : null; }
       return p.ok ? img('p' + (i + 1)) : null;
-    }) : [],
+    }) : (L.paginas || []).map((p, i) => (i === indiceAmostra(L.paginas) && p.ok ? img('p' + (i + 1)) : null)),
+    amostra: indiceAmostra(L.paginas) >= 0 ? indiceAmostra(L.paginas) : null,
+    amostraErro: !!(indiceAmostra(L.paginas) >= 0 && L.paginas[indiceAmostra(L.paginas)].erro),
     valor: (g.pagamento && g.pagamento.valor) || PRECO_LIVRO,
     pacote: g.pacote ? { tipo: g.pacote.tipo, livros: g.pacote.criados || [] } : null,
     pacoteDe: g.pacoteDe || null
@@ -509,7 +527,13 @@ export async function entregarPreviaLivro(id, token, numero, base) {
     if (extra) await enviarTexto(para, '📚 Os outros ' + extra + ' livro' + (extra > 1 ? 's' : '') + ' do seu pacote também chegam aqui, um por um, conforme ficarem prontos.');
     return 'pago';
   }
-  const pronto = (x) => !!(x && x.livro && x.livro.capa && x.livro.capa.ok && x.musicaPreviewUrl);
+  // prévia pronta = capa + música + a 1ª ilustração (se a ilustração falhar de vez, manda sem ela)
+  const pronto = (x) => {
+    if (!(x && x.livro && x.livro.capa && x.livro.capa.ok && x.musicaPreviewUrl)) return false;
+    const i0 = indiceAmostra(x.livro.paginas);
+    if (!x.livro.paginas || !x.livro.paginas.length) return false;
+    return i0 < 0 || !!(x.livro.paginas[i0].ok || x.livro.paginas[i0].erro);
+  };
   if (!pronto(g)) {
     try { g = (await avancarLivro(id, base || SITE)) || g; } catch (e) { console.error('previa livro zap', id, e && e.message); }
     if (!pronto(g)) return 'esperando';
@@ -517,35 +541,62 @@ export async function entregarPreviaLivro(id, token, numero, base) {
   const para = await conversaAberta(num);
   if (!para) return 'semjanela';
   const nome = g.livro.nome;
-  const texto = '📖✨ *A prévia do Livro Mágico de ' + nome + ' ficou pronta!*\n\n' +
-    'Toque no link pra abrir o livro, ver a capa e ouvir a música com o nome ' + nome + ' 🎵\n\n' +
-    linkPreviaLivro(g) + '\n\n🔓 Lá mesmo você desbloqueia a história completa.';
+  let tema = null; try { tema = await acharTema(g.livro.tema); } catch (e) {}
+  const titulo = tema ? flex(tema.titulo, nome, g.livro.genero) : 'Livro Mágico';
+  // 1) a capa + o link da prévia (no site ele lê o comecinho da história e ouve a música)
+  const texto = '📖✨ *A prévia do livro de ' + nome + ' ficou pronta!*\n*' + titulo + '*\n\n' +
+    'Toque no link pra ler o começo da história e ouvir a prévia da música com o nome ' + nome + ' 🎵\n\n' + linkPreviaLivro(g);
   const capa = SITE + '/.netlify/functions/livro-img?k=' + encodeURIComponent('img/' + id + '/capa') + '&t=' + g.livro.token;
   let ok = await enviarImagem(para, capa, texto);
   if (!ok) ok = await enviarTexto(para, texto);
   if (!ok) return 'erro';
   await registrar('enviou', { para, pedido: id, nome, via: 'livro' }).catch(() => {});
-  // junto com a prévia: 2 exemplos de livros prontos (um de menino e um de menina), só na primeira vez
-  try {
-    const atual = await presentes.get(id, { type: 'json' }).catch(() => null) || g;
-    if (!atual.livro.exemplosZap) { await enviarExemplosZap(para, g.livro.tema); atual.livro.exemplosZap = Date.now(); await presentes.setJSON(id, atual); }
-  } catch (e) { console.error('exemplos zap', e && e.message); }
+  // 2) o PDF da prévia + o que libera + os exemplos: monta em segundo plano (leva uns segundos)
+  const primeira = !g.livro.exemplosZap;
+  try { const atual = await presentes.get(id, { type: 'json' }).catch(() => null) || g; atual.livro.exemplosZap = atual.livro.exemplosZap || Date.now(); await presentes.setJSON(id, atual); } catch (e) {}
+  const r = await fetch((base || SITE) + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, previa: true, para, info: primeira }) }).catch(() => null);
+  if (!r && primeira) await enviarInfoPrevia(para, g);
   return 'enviado';
+}
+// depois do PDF da prévia: explica a amostra, as músicas, os valores e manda os 2 exemplos
+export async function enviarInfoPrevia(para, g) {
+  const nome = g.livro.nome, P = PACOTES_LIVRO;
+  let nTodos = 0; try { nTodos = (await lerTemas()).filter((t) => t.status === 'publicado').length; } catch (e) {}
+  await enviarTexto(para,
+    '👆 Essa é só uma *amostra*: você está vendo *1 ilustração* do que vai receber.\n\n' +
+    '🎵 A prévia da música toca *70 segundos*, mas cada música completa passa de *2 minutos*. E são *2 músicas* com o nome de ' + nome + '.\n\n' +
+    '🔓 *Depois do pagamento você recebe o livro completo:* a história inteira ilustrada com o rostinho de ' + nome + ', as 2 músicas completas pra ouvir e baixar e os PDFs pra imprimir. Chega tudo aqui no WhatsApp.\n\n' +
+    '💛 *Valores:*\n' +
+    '• 1 livro: R$ ' + P.um.valor + '\n' +
+    '• 2 livros: R$ ' + P.dois.valor + '\n' +
+    '• Coleção completa' + (nTodos > 2 ? ' (' + nTodos + ' livros)' : '') + ': R$ ' + P.todos.valor + '\n\n' +
+    'É só abrir o link da prévia e tocar em *Desbloquear*.').catch(() => {});
+  try { await enviarExemplosZap(para, g.livro.tema); } catch (e) { console.error('exemplos zap', e && e.message); }
+}
+// PDF da prévia (capa, "este livro pertence a", título, o começo da história e a 1ª ilustração)
+export function linkPdfPrevia(g) { return SITE + '/lv-pdf/' + g.id + '/previa-' + g.livro.token + '.pdf'; }
+export async function enviarPdfPrevia(para, g) {
+  const n = String(g.livro.nome || 'Livro').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return enviarDocumento(para, linkPdfPrevia(g), 'Previa-Livro-Magico-' + n + '.pdf',
+    '📖 *Prévia do livro de ' + g.livro.nome + '*\nAbra pra ver a capa, o começo da história e a primeira ilustração. ✨');
 }
 export async function enviarExemplosZap(para, temaPreferido) {
   let lista = []; try { lista = (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) {}
   lista = lista.filter((x) => x && x.tipo === 'livro' && x.mostrar !== false);
   if (!lista.length) return 0;
   const ordem = lista.filter((x) => x.tema === temaPreferido).concat(lista.filter((x) => x.tema !== temaPreferido));
-  const esc = [];
-  const menino = ordem.find((x) => x.genero === 'menino'), menina = ordem.find((x) => x.genero === 'menina');
-  if (menino) esc.push(menino); if (menina) esc.push(menina);
-  if (!esc.length) esc.push(ordem[0]);
+  // os que você marcou "📲 WhatsApp" no painel; sem marcar, um de menino e um de menina
+  let esc = lista.filter((x) => x.zap).slice(0, 2);
+  if (!esc.length) {
+    const menino = ordem.find((x) => x.genero === 'menino'), menina = ordem.find((x) => x.genero === 'menina');
+    if (menino) esc.push(menino); if (menina) esc.push(menina);
+    if (!esc.length) esc.push(ordem[0]);
+  }
   for (const x of esc.slice(0, 2)) {
     const capa = SITE + '/.netlify/functions/livro-img?k=' + encodeURIComponent('ex/' + x.id + '/capa') + '&v=' + (x.em || 1);
-    await enviarImagem(para, capa, '✨ Exemplo de livro pronto: *' + (x.titulo || 'Livro Mágico') + '*');
+    await enviarImagem(para, capa, '✨ Exemplo de como fica: *' + (x.titulo || 'Livro Mágico') + '*');
   }
-  await enviarTexto(para, '👆 Assim fica o livro completo, com o rostinho da criança em cada aventura.\n\nQuer ver por dentro? Abra ' + SITE + '/#/livro e toque em *"Folhear um livro de exemplo"*. 📖');
+  await enviarTexto(para, '👆 Assim fica o livro pronto, com o rostinho da criança em cada página ilustrada.\n\nQuer ver um por dentro? Abra ' + SITE + '/#/livro e toque em *"Folhear um livro de exemplo"*. 📖');
   return esc.length;
 }
 

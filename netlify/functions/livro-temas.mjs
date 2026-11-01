@@ -16,7 +16,7 @@ import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImag
 async function lerExemplos() { try { return (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) { return []; } }
 function urlEx(id, nome, v) { return '/.netlify/functions/livro-img?k=' + encodeURIComponent('ex/' + id + '/' + nome) + '&v=' + (v || 1); }
 function exPublico(x) {
-  const o = { id: x.id, tipo: x.tipo, mostrar: x.mostrar !== false, capa: urlEx(x.id, 'capa', x.em), legenda: x.legenda || '' };
+  const o = { id: x.id, tipo: x.tipo, mostrar: x.mostrar !== false, zap: !!x.zap, capa: urlEx(x.id, 'capa', x.em), legenda: x.legenda || '' };
   if (x.tipo === 'livro') {
     Object.assign(o, { nome: x.nome, genero: x.genero, tema: x.tema, titulo: x.titulo, textos: x.textos || [], pedido: x.pedido,
       paginas: Array.from({ length: x.n || 0 }, (_, i) => { const m = (x.mapa && x.mapa[i] != null) ? x.mapa[i] : i; return m < 0 ? 'so' : urlEx(x.id, 'p' + (m + 1), x.em); }) });
@@ -445,7 +445,8 @@ export default async (req) => {
       const g = await getStore('presentes').get(String(b.id || ''), { type: 'json' }).catch(() => null);
       if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
       if (!g.pago) return json({ erro: 'Esse livro ainda não foi liberado.' }, 400);
-      if (g.livro.pdf && !b.refazer) return json({ ok: true, links: { ler: linkPdf(g, 'ler'), folhas: linkPdf(g, 'folhas'), livreto: linkPdf(g, 'livreto') } });
+      const mus = (v) => (process.env.URL || new URL(req.url).origin) + '/.netlify/functions/baixar-musica?id=' + g.id + '&v=' + v;
+      if (g.livro.pdf && !b.refazer) return json({ ok: true, links: { ler: linkPdf(g, 'ler'), folhas: linkPdf(g, 'folhas'), livreto: linkPdf(g, 'livreto'), musica1: g.musicaPreviewUrl ? mus(1) : null, musica2: g.musicaPreviewUrl2 ? mus(2) : null } });
       const base = process.env.URL || new URL(req.url).origin;
       await fetch(base + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: g.id, refazer: !!b.refazer }) }).catch(() => {});
       return json({ ok: true, gerando: true });
@@ -477,7 +478,9 @@ export default async (req) => {
     if (b.acao === 'exemplos-salvar') {
       const atual = await lerExemplos(), porId = {}; atual.forEach((x) => { porId[x.id] = x; });
       const nova = [];
-      (Array.isArray(b.exemplos) ? b.exemplos : []).forEach((e) => { const x = porId[e && e.id]; if (x && nova.indexOf(x) === -1) { x.mostrar = e.mostrar !== false; nova.push(x); } });
+      (Array.isArray(b.exemplos) ? b.exemplos : []).forEach((e) => { const x = porId[e && e.id]; if (x && nova.indexOf(x) === -1) { x.mostrar = e.mostrar !== false; x.zap = !!e.zap && x.tipo === 'livro'; nova.push(x); } });
+      // no máximo 2 vão junto com a prévia no WhatsApp
+      let nz = 0; nova.forEach((x) => { if (x.zap && ++nz > 2) x.zap = false; });
       // os que saíram da lista: apaga as imagens
       for (const x of atual) {
         if (nova.indexOf(x) !== -1) continue;
