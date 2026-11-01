@@ -1219,6 +1219,51 @@ function ligarVitrinePnl(){
     }).catch(function(){ toast('Não consegui abrir essa foto.'); });
   };
 }
+/* cria um livro de exemplo direto do painel: prévia (sem trava) → liberado sem pagar → entra sozinho na vitrine */
+_lvp.fazendo=_lvp.fazendo||[];
+function desenharFilaEx(){
+  var f=el('lvpExFila'); if(!f) return;
+  f.innerHTML=_lvp.fazendo.map(function(x){ return '<div style="font-size:.85rem;margin:.2rem 0">'+(x.pronto?'✅':'⏳')+' <b>'+esc(x.nome)+'</b>: '+esc(x.txt||'começando…')+' · <a href="#/livro/'+esc(x.id)+'" target="_blank" style="color:#8A5A10;font-weight:700">abrir</a></div>'; }).join('');
+}
+function ligarExemploEditor(t, salvar){
+  desenharFilaEx();
+  var bt=el('lvpExCriar'); if(!bt) return;
+  bt.onclick=function(){
+    var nome=(el('lvpExNome').value||'').trim(), f=el('lvpExFotoC').files&&el('lvpExFotoC').files[0];
+    if(nome.length<2){ toast('Escreva o nome da criança.'); return; }
+    if(!f){ toast('Escolha a foto da criança.'); return; }
+    bt.disabled=true; bt.textContent='Salvando a história…';
+    salvar('Salvo.').then(function(ok){
+      if(!ok){ bt.disabled=false; bt.textContent='✨ Criar livro de exemplo'; return; }
+      bt.textContent='Enviando a foto…';
+      return lerFoto(f).then(function(foto){
+        return fetch('/.netlify/functions/livro-previa',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},
+          body:JSON.stringify({tema:t.id,nome:nome,idade:+el('lvpExIdade').value,genero:el('lvpExGen').value,foto:foto,aparelho:'admin'})}).then(function(r){ return r.json(); });
+      }).then(function(d){
+        if(!d||!d.id){ throw new Error((d&&d.erro)||'Não consegui começar.'); }
+        lvSalvar({id:d.id,t:d.token,nome:nome,tema:t.id,em:Date.now()});
+        return lvpPost({acao:'livro-liberar',id:d.id,exemplo:true}).then(function(r){ if(!r.ok) throw new Error(r.d.erro||'Não consegui liberar.'); return d; });
+      }).then(function(d){
+        var item={id:d.id,t:d.token,nome:nome,txt:'fazendo a capa e as ilustrações'}; _lvp.fazendo.unshift(item); desenharFilaEx();
+        toast('Começou! Em uns 3 a 5 minutos entra sozinho na vitrine. Pode sair desta tela.');
+        bt.disabled=false; bt.textContent='✨ Criar livro de exemplo'; el('lvpExNome').value=''; el('lvpExFotoC').value='';
+        acompanharEx(item);
+      }).catch(function(e){ bt.disabled=false; bt.textContent='✨ Criar livro de exemplo'; toast(e.message||'Sem conexão.'); });
+    });
+  };
+}
+function acompanharEx(item){
+  var n=0, iv=setInterval(function(){
+    n++; if(n>90){ clearInterval(iv); return; }
+    fetch('/.netlify/functions/livro-status?id='+item.id+'&t='+encodeURIComponent(item.t),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+      if(!d||!d.id) return;
+      var ok=(d.paginas||[]).filter(Boolean).length, tot=(d.paginas||[]).length;
+      item.txt=d.status==='pronto'?'pronto e já na vitrine ⭐':(d.status==='problema'?'uma imagem não saiu: abra e veja o motivo':(d.capa?'capa pronta · ilustrações '+ok+'/'+(tot||'…'):'fazendo a capa…'));
+      if(d.status==='pronto'){ item.pronto=true; clearInterval(iv); _lvTemas=null; fetch('/.netlify/functions/livro-temas?admin=1',{headers:{'x-admin-key':_pnlChave}}).then(function(r){ return r.json(); }).then(function(x){ if(x&&x.exemplos) _lvp.exemplos=x.exemplos; }).catch(function(){}); }
+      desenharFilaEx();
+    }).catch(function(){});
+  },10000);
+}
 function desenharEditor(){
   var c=el('lvpCaixa'), t=_lvp.temas[_lvp.ed]; if(!t){ _lvp.ed=null; return desenharLvp(); }
   while((t.paginas||[]).length<3) (t.paginas=t.paginas||[]).push({texto:'',cena:''});
@@ -1244,6 +1289,16 @@ function desenharEditor(){
       campo('lvpLetra','Letra da música',t.letra,true,'Comece com "Era uma vez… {nome}". Use {nome} no refrão.')+
       campo('lvpEst','Estilo da música',t.estiloMusica)+
       campo('lvpOrd','Ordem na página',t.ordem)+
+      '<div class="lvp-cena" style="background:#FFF6E0;margin-top:1rem"><b>📖 Livros de exemplo desta história</b>'+
+        '<p style="font-size:.82rem;color:#7a6f86;margin:.3rem 0 .5rem">Crie aqui um livro completo de exemplo, <b>sem pagar</b>. Quando ficar pronto (uns 3 a 5 minutos), ele entra <b>sozinho na vitrine</b> e vira o "Folhear" desta história. Pode criar vários (menino e menina, por exemplo).</p>'+
+        (function(){ var ex=(_lvp.exemplos||[]).filter(function(x){ return x.tipo==='livro'&&x.tema===t.id; });
+          return ex.length?'<div style="font-size:.85rem;margin-bottom:.4rem">Já na vitrine: '+ex.map(function(x){ return '<b>'+esc(x.nome)+'</b>'; }).join(', ')+'</div>':''; })()+
+        '<div id="lvpExFila"></div>'+
+        '<label for="lvpExNome">Nome da criança</label><input id="lvpExNome" maxlength="30" placeholder="Ex.: Davi">'+
+        '<div style="display:flex;gap:.5rem"><div style="flex:1"><label for="lvpExGen">Menino ou menina</label><select id="lvpExGen"><option value="menino">Menino</option><option value="menina">Menina</option></select></div>'+
+        '<div style="flex:1"><label for="lvpExIdade">Idade</label><select id="lvpExIdade">'+[1,2,3,4,5,6,7,8,9,10].map(function(n){ return '<option'+(n===5?' selected':'')+'>'+n+'</option>'; }).join('')+'</select></div></div>'+
+        '<label for="lvpExFotoC">Foto da criança</label><input type="file" id="lvpExFotoC" accept="image/*">'+
+        '<div class="lvp-bts"><button class="ouro" id="lvpExCriar">✨ Criar livro de exemplo</button></div></div>'+
       '<label>Capa de vitrine (exemplo da página inicial)</label>'+img+
       '<div class="lvp-bts"><button class="cl" data-vit="menino">Gerar com menino</button><button class="cl" data-vit="menina">Gerar com menina</button></div>'+
     '</div>'+
@@ -1265,6 +1320,7 @@ function desenharEditor(){
     });
   }
   el('lvpVolta').onclick=function(){ _lvp.ed=null; desenharLvp(); };
+  ligarExemploEditor(t, salvar);
   c.querySelectorAll('[data-lvpus]').forEach(function(sel){ sel.onchange=function(){ var b=el('lvpCeBox'+sel.dataset.lvpus); if(b) b.hidden=+sel.value>=0; }; });
   var add=el('lvpAddPg'); if(add) add.onclick=function(){ ler(); var ult=-1; t.paginas.forEach(function(p,j){ if(!(p.usa===0||p.usa)) ult=j; }); t.paginas.push(ult>=0?{texto:'',cena:'',usa:ult}:{texto:'',cena:''}); desenharEditor(); var x=el('lvpTx'+(t.paginas.length-1)); if(x){ x.scrollIntoView({block:'center'}); x.focus(); } };
   c.querySelectorAll('[data-lvprm]').forEach(function(b){ b.onclick=function(){ ler(); var k=+b.dataset.lvprm; t.paginas.splice(k,1);
