@@ -1414,8 +1414,63 @@ function ligarRelatorioLivros(){
       '<details style="margin-top:1rem"><summary style="cursor:pointer;font-weight:700">✅ Prontos ('+prontos.length+')</summary>'+(prontos.map(function(l){ return linha(l,false); }).join('')||'<div style="font-size:.85rem;color:#999">Nenhum ainda.</div>')+'</details>';
     el('lvpRelDias').onchange=function(){ _lvp.relDias=+this.value; ligarRelatorioLivros(); };
     el('lvpRelAt').onclick=ligarRelatorioLivros;
-    box.querySelectorAll('[data-reltent]').forEach(function(b){ b.onclick=function(){ if(typeof window.abrirTentativasLivro==='function') window.abrirTentativasLivro(b.dataset.reltent); else toast('Recarregue o painel (Ctrl+Shift+R).'); }; });
+    box.querySelectorAll('[data-reltent]').forEach(function(b){ b.onclick=function(){ lvTentativas(b.dataset.reltent); }; });
   }).catch(function(){ box.innerHTML='<b>📊 Relatório do Livro Mágico</b><div style="color:#B4380A">Sem conexão.</div>'; });
+}
+/* PAINEL DAS TENTATIVAS (só você vê): cada tentativa com horário e erro, a foto, trocar foto e refazer */
+var lvTentEnviando=false;
+function lvTentativas(id){
+  var velho=el('lvTentM'); if(velho) velho.remove();
+  var m=document.createElement('div'); m.id='lvTentM';
+  m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);overflow:auto;padding:12px';
+  m.innerHTML='<div style="background:#fff;color:#2A1B3D;border-radius:16px;max-width:44rem;margin:0 auto;padding:14px;font:500 .9rem Inter,system-ui,sans-serif">'+
+    '<div style="display:flex;align-items:center;gap:8px"><b style="flex:1;font-size:1.05rem">🔍 Tentativas do livro</b><button type="button" id="lvTentX" class="pnl-link">Fechar</button></div><div id="lvTentC" style="margin-top:10px">Carregando…</div></div>';
+  document.body.appendChild(m);
+  var iv=null, ocupado=false;
+  function fechar(){ clearInterval(iv); m.remove(); }
+  el('lvTentX').onclick=fechar;
+  function hora(t){ return t?new Date(t).toLocaleTimeString('pt-BR'):'—'; }
+  function ha(t){ if(!t) return ''; var s=Math.max(0,Math.round((Date.now()-t)/1000)); return s<120?s+' s':Math.round(s/60)+' min'; }
+  var EV={pediu:'🟡 pediu ao Google',falhou:'🔴 falhou',erro:'🔴 erro ao pedir',ok:'🟢 ficou pronta',recomecou:'🔄 recomeçou'};
+  function bloco(nome,x){
+    if(!x) return '';
+    var st=x.ok?'<b style="color:#1E8A4C">✅ pronta</b>':(x.rodando?'<b style="color:#B7791F">🟢 gerando agora</b>':'<b style="color:#2563EB">⏳ vai tentar de novo</b>');
+    var h=(x.hist||[]).slice().reverse().map(function(e){ return '<div style="display:flex;gap:8px;padding:3px 0;border-top:1px solid #eee"><span style="color:#888;min-width:5rem">'+hora(e.em)+'</span><span style="min-width:2.2rem;color:#888">'+(e.n?e.n+'ª':'')+'</span><span style="flex:1">'+(EV[e.ev]||e.ev)+(e.msg?'<br><small style="color:#B4380A">'+esc(e.msg)+'</small>':'')+'</span></div>'; }).join('');
+    return '<details'+(x.ok?'':' open')+' style="background:#F6F2FB;border-radius:12px;padding:8px 10px;margin-top:8px"><summary style="cursor:pointer"><b>'+nome+'</b> · '+st+' · '+x.tent+' tentativa'+(x.tent===1?'':'s')+(x.recusas?' · '+x.recusas+' recusas do Google':'')+(x.em&&!x.ok?' · última há '+ha(x.em):'')+'</summary>'+
+      (!x.ok&&x.msg?'<div style="color:#B4380A;margin:4px 0">Último erro: '+esc(x.msg)+'</div>':'')+
+      (h||'<div style="color:#888;padding:4px 0">Histórico com horário começa a aparecer nas próximas tentativas.</div>')+'</details>';
+  }
+  function carregar(){
+    if(ocupado) return;
+    lvpPost({acao:'livro-diag',id:id}).then(function(r){
+      var c=el('lvTentC'); if(!c) return;
+      if(!r.ok){ c.textContent=r.d.erro||'Não carregou.'; return; }
+      var g=r.d.diag, ps=g.paginas||[], todas=[g.capa].concat(ps), rodando=todas.some(function(x){ return x&&!x.ok&&x.rodando; }), falta=todas.some(function(x){ return x&&!x.ok; });
+      var foto=g.temFoto&&g.token?'/.netlify/functions/livro-img?k='+encodeURIComponent('foto/'+id)+'&t='+g.token:'';
+      c.innerHTML='<div style="display:flex;gap:10px;align-items:flex-start;background:#FFF8EC;border-radius:12px;padding:8px 10px">'+
+          (foto?'<img src="'+foto+'" alt="Foto enviada" style="width:84px;height:84px;object-fit:cover;border-radius:10px;flex:none">':'<div style="width:84px;height:84px;border-radius:10px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:.75rem;text-align:center;flex:none">sem foto</div>')+
+          '<div style="flex:1"><b>'+esc(g.nome||'')+'</b> · '+esc(g.status||'')+' · '+(g.pago?'pago':'prévia')+'<br>'+
+          (falta?(g.motor?'⚙️ <b style="color:#1E8A4C">Sistema tentando sozinho agora</b> (confere a cada 2 s)':'⚙️ Sistema volta a conferir em até 3 min')+'<br><small style="color:#888">Esta tela atualiza sozinha a cada 3 s.</small>':'✅ Todas as imagens prontas. Vai sozinho no WhatsApp.')+
+          '</div></div>'+
+        (falta?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'+
+          '<button type="button" class="pnl-link" id="lvTentR"'+(rodando?' disabled style="opacity:.5"':'')+'>🔄 Refazer agora</button>'+
+          (g.token?'<label class="pnl-link" style="cursor:pointer;margin:0">📷 Trocar a foto e refazer<input type="file" id="lvTentF" accept="image/*" hidden></label>':'')+'</div>'+
+          '<div style="font-size:.8rem;color:#888;margin-top:4px">'+(rodando?'Refazer fica bloqueado só enquanto uma imagem está sendo gerada (uns segundos).':'Refazer: tenta de novo com a mesma foto. Trocar a foto: as imagens que já saíram ficam; só refaz as que faltam.')+' Quando terminar, vai sozinho no WhatsApp do cliente.</div>':'')+
+        bloco('Capa',g.capa)+ps.map(function(x,i){ return bloco('Ilustração '+(i+1),x); }).join('');
+      var rb=el('lvTentR');
+      if(rb) rb.onclick=function(){ rb.disabled=true; ocupado=true;
+        lvpPost({acao:'livro-refazer',id:id}).then(function(x){ ocupado=false; toast(x.ok?'Recomeçou! Acompanhe aqui.':(x.d.erro||'Não deu.')); carregar(); }).catch(function(){ ocupado=false; toast('Sem conexão.'); rb.disabled=false; });
+      };
+      var lb=el('lvTentF'); if(lb&&lb.parentNode) lb.parentNode.onclick=function(){ ocupado=true; setTimeout(function(){ if(!lvTentEnviando) ocupado=false; },90000); };
+      var fi=el('lvTentF');
+      if(fi) fi.onchange=function(){ var f=this.files&&this.files[0]; if(!f){ ocupado=false; return; } ocupado=true; lvTentEnviando=true; toast('Enviando a foto…');
+        lerFoto(f).then(function(ft){ return fetch('/.netlify/functions/livro-previa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({trocarFoto:id,t:g.token,foto:ft})}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); }); })
+          .then(function(x){ ocupado=false; lvTentEnviando=false; toast(x.ok?'Foto trocada! Já está refazendo o que falta.':(x.d.erro||'Não deu.')); carregar(); })
+          .catch(function(){ ocupado=false; lvTentEnviando=false; toast('Não consegui enviar essa foto.'); });
+      };
+    }).catch(function(){ var c=el('lvTentC'); if(c) c.textContent='Sem conexão.'; });
+  }
+  carregar(); iv=setInterval(function(){ if(!el('lvTentM')){ clearInterval(iv); return; } carregar(); },3000);
 }
 /* cria um livro de exemplo direto do painel: prévia (sem trava) → liberado sem pagar → entra sozinho na vitrine */
 _lvp.fazendo=_lvp.fazendo||[];
