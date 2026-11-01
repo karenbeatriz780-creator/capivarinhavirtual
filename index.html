@@ -6665,14 +6665,19 @@ function ligarPixLimpo(payload, id, aoPagar){
       if(ok || feito) return;
       var m=el('pxMsg'); m.hidden=false;
       m.innerHTML='⏳ Seu pagamento ainda está sendo processado. Às vezes o banco leva alguns segundos — <b>não precisa pagar de novo</b>. Assim que confirmar, a sua música libera aqui sozinha.';
-      rapido=30; /* confere a cada 3 s pelo próximo minuto e meio */
+      rapido=18; /* confere a cada 5 s pelo próximo minuto e meio */
     });
   };
+  /* confere o Pix: a cada 5 s nos 3 primeiros minutos, depois a cada 15 s até 30 min.
+     Depois disso para (o aviso automático da Efí continua liberando o pedido sozinho,
+     e o botão "Já paguei" confere na hora). Menos chamadas = menos gasto no servidor. */
   iv=setInterval(function(){
     tent++;
     if(rapido>0){ rapido--; checar(); return; }
-    if(tent<=200 || tent%4===0) checar(); /* 3 s nos primeiros 10 min, depois 12 s */
-  },3000);
+    if(tent<=36) checar();
+    else if(tent<=360 && tent%3===0) checar();
+    /* depois de 30 min não pergunta mais sozinho (o botão "Já paguei" continua funcionando) */
+  },5000);
   aoSair(function(){ clearInterval(iv); });
   checar();
 }
