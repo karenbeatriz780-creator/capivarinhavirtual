@@ -86,7 +86,7 @@ var css = `
 .lv-voltar{background:none;border:0;font:700 .95rem 'Inter';color:var(--lv-suave);padding:.7rem 0 .2rem;cursor:pointer}
 .lv-tit{color:var(--lv-tinta);font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.75rem;line-height:1.08;margin:.25rem 0 .4rem;text-wrap:balance}
 .lv-sub{color:var(--lv-suave);line-height:1.55;margin:0 0 1.2rem}
-.lv-temas{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.lv-temas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}
 .lv-op{background:#fff;border:2px solid var(--lv-borda);border-radius:20px;padding:.6rem;text-align:left;cursor:pointer;font:inherit;color:inherit;transition:transform .15s,border-color .15s}
 .lv-op.on{border-color:#F4C35A;box-shadow:0 0 0 4px rgba(244,195,90,.25)}
 .lv-op h4{margin:.55rem .15rem .2rem;font:800 1rem 'Baloo 2',sans-serif;line-height:1.1}
@@ -160,6 +160,25 @@ var css = `
 .lv-preco s{color:#A99BB8;font-size:.95rem}
 .lv-preco strong{display:block;font:800 2.5rem 'Baloo 2';color:#E23C7E;line-height:1}
 .lv-preco small{color:var(--lv-suave)}
+.lv-vend{display:inline-block;font:800 .68rem 'Inter',sans-serif;color:#B4380A;background:#FFF1E0;border:1px solid #FFD8B0;padding:.18rem .5rem;border-radius:99px;margin:.45rem .15rem 0;line-height:1.3}
+.lv-pacs{display:grid;gap:.55rem}
+.lv-pac{display:flex;align-items:center;gap:.7rem;border:2px solid var(--lv-borda);background:#fff;border-radius:16px;padding:.75rem .85rem;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.lv-pac.on{border-color:#E23C7E;box-shadow:0 0 0 4px rgba(226,60,126,.14)}
+.lv-pac input{accent-color:#E23C7E;width:18px;height:18px;flex:none;margin:0}
+.lv-pac .tx{flex:1;min-width:0}
+.lv-pac .tx b{display:block;font:800 1.05rem 'Baloo 2';line-height:1.15}
+.lv-pac .tx b em{font:800 .66rem 'Inter';font-style:normal;text-transform:uppercase;letter-spacing:.03em;background:#FFE7F0;color:#C2185B;padding:.15rem .45rem;border-radius:99px;vertical-align:2px;margin-left:.2rem}
+.lv-pac .tx small{color:#6E5C82;font-size:.82rem;line-height:1.3}
+.lv-pac .vl{text-align:right;flex:none}
+.lv-pac .vl s{display:block;color:#A99BB8;font-size:.78rem}
+.lv-pac .vl b{font:800 1.2rem 'Baloo 2';color:#E23C7E}
+.lv-t2{display:flex;gap:.55rem;overflow-x:auto;padding:.2rem .1rem .6rem}
+.lv-t2b{flex:none;width:5.4rem;background:none;border:2px solid transparent;border-radius:12px;padding:.25rem;cursor:pointer;font:inherit;color:inherit}
+.lv-t2b.on{border-color:#E23C7E;background:#FFF0F6}
+.lv-t2b small{display:block;font:700 .7rem 'Inter';line-height:1.2;margin-top:.3rem}
+.lv-t2{align-items:flex-start}
+.lv-t2b .lv-livro3d{width:100%;box-shadow:-1px 0 0 #d9c49a,-3px 2px 0 #b99a5e,6px 8px 14px rgba(0,0,0,.25)}
+.lv-t2b .lv-capa{width:100%;height:auto;aspect-ratio:3/4}
 .lv-relogio{display:flex;align-items:center;justify-content:center;gap:.5rem;background:#FFF0D6;color:#8A5A10;border-radius:14px;padding:.6rem;font-weight:700;margin-bottom:.9rem}
 .lv-relogio b{font:800 1.25rem 'Baloo 2';font-variant-numeric:tabular-nums}
 
@@ -246,6 +265,7 @@ var css = `
 .lv-musicas-faixa .ic{flex:none;width:2.6rem;height:2.6rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:linear-gradient(180deg,#FF8DB8,#E23C7E);box-shadow:0 6px 16px rgba(226,60,126,.45)}
 .lv-musicas-faixa b{display:block;font:800 1.08rem 'Baloo 2';color:#FFD27A;line-height:1.1}
 .lv-musicas-faixa small{color:#F3ECFF;font-size:.84rem;line-height:1.4}
+.lv-meus-topo{display:flex;align-items:center;justify-content:center;gap:.4rem;width:100%;margin:.7rem 0 0;padding:.85rem;border-radius:16px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;font:800 1rem 'Baloo 2',sans-serif;cursor:pointer;position:relative;z-index:2}
 .lv-link-ex{display:block;margin:.8rem auto 0;background:none;border:0;color:#FFE6A6;font:800 1rem 'Baloo 2';cursor:pointer;text-decoration:underline;text-underline-offset:4px;position:relative;z-index:2}
 .lv-recebe{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
 .lv-recebe>div{background:#fff;border:1px solid var(--lv-borda);border-radius:20px;padding:1rem .9rem;position:relative;overflow:hidden;box-shadow:0 6px 18px rgba(42,27,61,.06)}
@@ -329,9 +349,29 @@ function htmlZapLivro(d,t,esperando){
   return '<a class="lv-zap" target="_blank" rel="noopener" href="https://wa.me/'+num+'?text='+encodeURIComponent(txt)+'">📲 '+(esperando?'Receber no WhatsApp quando ficar pronta':'Receber minha prévia no WhatsApp')+'</a>'+
     '<div class="lv-zap-dica">'+(esperando?'Não quer esperar? Toque, aperte <b>enviar</b> no WhatsApp e pode sair. A gente te manda a capa e a música assim que ficar pronta.':'Toque e depois é só apertar <b>enviar</b> no WhatsApp. A gente te manda o link na hora.')+'</div>';
 }
+/* pacote: guarda os outros livros neste aparelho e mostra os links */
+function mostrarPacote(d){
+  var box=el('lvPacLista'), ls=(d&&d.pacote&&d.pacote.livros)||[]; if(!box||!ls.length) return;
+  ls.forEach(function(x){ if(!lvToken(x.id)) lvSalvar({id:x.id,t:x.t,nome:d.nome,tema:x.tema,em:Date.now()}); });
+  box.innerHTML='<div style="margin-top:1.2rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:.8rem 1rem;text-align:left;max-width:22rem;margin-left:auto;margin-right:auto">'+
+    '<b>📚 '+(ls.length+1)+' livros no seu pacote</b><div style="font-size:.85rem;opacity:.85;margin:.2rem 0 .5rem">Os outros também estão sendo ilustrados. Ficam salvos em "Meus livros".</div>'+
+    ls.map(function(x){ var tm=lvTema(x.tema)||{}; return '<a href="#/livro/'+esc(x.id)+'" style="display:block;color:#FFD27A;font-weight:700;margin:.25rem 0">'+esc((tm.emoji||'📖')+' '+(tm.nome||'Livro'))+' →</a>'; }).join('')+'</div>';
+}
+function htmlZapPago(d,t){
+  if(!d||!t||!d.pago) return '';
+  var num=(typeof ZAP_API!=='undefined'&&ZAP_API)||'5511924826268';
+  var txt='Oi! Quero receber meu Livro Mágico de '+(d.nome||'')+' no WhatsApp 📖 (código L.'+d.id+'.'+t+')';
+  return '<a class="lv-zap" target="_blank" rel="noopener" href="https://wa.me/'+num+'?text='+encodeURIComponent(txt)+'">📲 Receber tudo no WhatsApp</a>'+
+    '<div class="lv-zap-dica">Toque, aperte <b>enviar</b> no WhatsApp e pode fechar: não precisa ficar esperando. A gente te manda o link do livro e os PDFs pra imprimir assim que ficar pronto.</div>';
+}
 function lvToken(id){ var x=lvGet().filter(function(o){ return o.id===id; })[0]; return x?x.t:''; }
 function nIlusTema(t){ return ((t&&t.paginas)||[]).filter(function(p){ return !p.so; }).length||5; }
 function nPagsTema(t){ var ps=(t&&t.paginas)||[]; return ps.length+ps.filter(function(p){ return !p.so; }).length||10; }
+/* selo de vendidos (vendas do site + vendas de fora que você coloca no painel) */
+function seloVendas(t,i){
+  var n=(t&&t.vendidos)||0; if(n<1) return '';
+  return '<span class="lv-vend">'+(i===0?'⭐ Mais vendido · ':'🔥 ')+n.toLocaleString('pt-BR')+' vendido'+(n===1?'':'s')+'</span>';
+}
 function lvFmt(v){ return 'R$ '+Number(v).toFixed(2).replace('.',','); }
 var _lvTemas=null, _lvEx=[];
 function lvTemas(){
@@ -434,6 +474,7 @@ function telaLivroHome(){
         '<p>Um livro ilustrado feito só pra ele: o <b style="color:#fff">rostinho</b> desenhado em cada aventura e o <b style="color:#fff">nome</b> em toda a história.</p>'+
         '<div class="lv-musicas-faixa"><span class="ic">🎵</span><div><b>+ 2 músicas com o nome dele</b><small>Tocam enquanto vocês leem juntos. Ele vai pedir de novo toda noite.</small></div></div>'+
         '<button class="lv-btn" id="lvCriar">Criar meu livro agora ✨</button>'+
+        '<button class="lv-meus-topo" id="lvMeusTopo">📚 Meus livros</button>'+
         '<button class="lv-link-ex" id="lvVerEx" hidden>👀 Folhear um livro de exemplo</button>'+
       '</div></section>'+
     '<div class="lv-wrap">'+
@@ -472,7 +513,7 @@ function telaLivroHome(){
     '<div class="lv-rodape escondido" id="lvRod"><button class="lv-btn" id="lvCriar2">Criar meu livro agora ✨</button></div>'+
   '</div>';
   el('lvCriar').onclick=el('lvCriar2').onclick=function(){ location.hash='#/livro/criar'; };
-  el('lvMeus').onclick=function(){ location.hash='#/livro/meus'; };
+  el('lvMeus').onclick=el('lvMeusTopo').onclick=function(){ location.hash='#/livro/meus'; };
   try{ var ob=new IntersectionObserver(function(es){ var r=el('lvRod'); if(r) r.classList.toggle('escondido', es[0].isIntersecting); }); ob.observe(el('lvCriar')); aoSair(function(){ ob.disconnect(); }); }catch(e){ el('lvRod').classList.remove('escondido'); }
   lvTemas().then(function(ts){
     if(!el('lvPalco')) return;
@@ -487,7 +528,7 @@ function telaLivroHome(){
       });
     palco.insertAdjacentHTML('beforeend', itens.join(''));
     gal.innerHTML=ts.map(function(t,i){
-      return '<div><div class="lv-livro3d">'+capaTema(t,i,7.4)+'</div><small>'+esc(t.emoji+' '+t.nome)+'</small></div>';
+      return '<div><div class="lv-livro3d">'+capaTema(t,i,7.4)+'</div><small>'+esc(t.emoji+' '+t.nome)+'</small>'+seloVendas(t,i)+'</div>';
     }).join('');
     /* livro de exemplo: botão no topo + livro aberto no meio da página */
     var ex=lvExLivro();
@@ -598,7 +639,7 @@ function desenharPasso(){
         var gen=t.vitrineGenero||(i%2?'menina':'menino'), nome=NOMES_EX[gen][(i+1)%6];
         return '<button type="button" class="lv-op'+(LV.tema===t.id?' on':'')+'" data-tema="'+esc(t.id)+'"><div class="lv-livro3d">'+
           capaTema(t,i,7.2)+'</div>'+
-          '<h4>'+esc(t.emoji+' '+t.nome)+'</h4><p>'+esc(flexTxt(t.descricao,'',gen))+'</p><div class="ok">✓ Escolhida</div></button>';
+          seloVendas(t,i)+'<h4>'+esc(t.emoji+' '+t.nome)+'</h4><p>'+esc(flexTxt(t.descricao,'',gen))+'</p><div class="ok">✓ Escolhida</div></button>';
       }).join('')+'</div>';
     pode=!!LV.tema;
   } else if(P===1){
@@ -664,7 +705,7 @@ function folhaTema(id){
   var ex=lvExDoTema(id), n=nIlusTema(t), np=nPagsTema(t);
   var m=document.createElement('div'); m.className='lv-modal';
   m.innerHTML='<div class="lv-folha-tema"><div class="lv-livro3d">'+capaTema(t,i,9)+'</div>'+
-    '<h3>'+esc(t.emoji+' '+t.nome)+'</h3><p class="desc">'+esc(flexTxt(t.descricao,'',gen))+'</p>'+
+    '<div style="text-align:center">'+seloVendas(t,i)+'</div><h3>'+esc(t.emoji+' '+t.nome)+'</h3><p class="desc">'+esc(flexTxt(t.descricao,'',gen))+'</p>'+
     '<ul class="lv-inclui">'+
       '<li>📖 <span><b>Uma história de '+np+' páginas</b> com o <b>rostinho da criança</b> em '+n+' ilustrações</span></li>'+
       '<li>🎵 <span><b>2 músicas personalizadas</b> cantando o nome da criança</span></li>'+
@@ -742,7 +783,7 @@ function telaLivroPedido(id){
       '<div class="lv-livrinho"><div class="esq"></div><div class="dir"></div><div class="folha"></div></div>'+
       '<h2>'+(pago?'Pagamento confirmado! 🎉':'Preparando a magia…')+'</h2><p id="lvMsg"></p>'+
       '<ul class="lv-check" id="lvCheck"></ul>'+
-      '<p style="margin-top:1.2rem;font-size:.85rem;opacity:.75">'+(pago?'Pode deixar esta tela aberta. Se fechar, o livro continua sendo feito e fica salvo aqui.':'Leva uns 2 minutinhos. Pode deixar esta tela aberta.')+'</p>'+(pago?'':htmlZapLivro(d,t,true))+'</div>';
+      '<p style="margin-top:1.2rem;font-size:.85rem;opacity:.75">'+(pago?'Pode deixar esta tela aberta. Se fechar, o livro continua sendo feito e fica salvo aqui.':'Leva uns 2 minutinhos. Pode deixar esta tela aberta.')+'</p>'+(pago?htmlZapPago(d,t):htmlZapLivro(d,t,true))+'<div id="lvPacLista"></div></div>';
     var msgs = pago ? ['Ilustrando cada cena com '+nome+'…','Pintando os detalhes do cenário…','Caprichando nas cores…','Montando as páginas do livro…']
                     : ['Desenhando '+nome+' na capa…','Compondo a música de '+nome+'…','Escolhendo as cores da aventura…','Espalhando purpurina mágica…'];
     var k=0, m=el('lvMsg'); m.textContent=msgs[0];
@@ -751,6 +792,7 @@ function telaLivroPedido(id){
   }
   function atualizarEspera(d,pago){
     var c=el('lvCheck'); if(!c) return;
+    mostrarPacote(d);
     function li(ok,txt){ return '<li><i>'+(ok?'✅':'<span class="lv-giro"></span>')+'</i>'+txt+'</li>'; }
     if(!pago) c.innerHTML=li(!!d.capa,'Capa com o rostinho de '+esc(d.nome))+li(!!d.musica,'Música com o nome '+esc(d.nome));
     else { var prontas=(d.paginas||[]).filter(function(u){ return u&&u!=='so'; }).length, tot=d.nIlus||(d.paginas||[]).filter(function(u){ return u!=='so'; }).length||5;
@@ -830,37 +872,57 @@ function desenharPrevia(d,tema,t){
     setTimeout(function(){ var x=el('lvDepois'); if(x) x.scrollIntoView({behavior:'smooth',block:'start'}); },250);
   };
 }
+var LV_PACOTES={um:37,dois:49,todos:129};
 function htmlDesbloquear(d,tema){
-  var n=nIlusTema(tema), np=nPagsTema(tema);
+  var n=nIlusTema(tema), np=nPagsTema(tema), outros=(_lvTemas||[]).filter(function(x){ return x.id!==d.tema; }), total=outros.length+1;
+  var capaMini=d.capa?'<img src="'+esc(d.capa)+'" alt="" style="width:64px;aspect-ratio:3/4;object-fit:cover;border-radius:4px 8px 8px 4px;box-shadow:0 6px 14px rgba(0,0,0,.18);flex:none">':'';
+  function op(k,tit,sub,preco,de,tag){ return '<label class="lv-pac'+(k==='um'?' on':'')+'" data-pac="'+k+'"><input type="radio" name="lvPac" value="'+k+'"'+(k==='um'?' checked':'')+'>'+
+    '<span class="tx"><b>'+tit+(tag?' <em>'+tag+'</em>':'')+'</b><small>'+sub+'</small></span><span class="vl">'+(de?'<s>'+lvFmt(de)+'</s>':'')+'<b>'+lvFmt(preco)+'</b></span></label>'; }
   return '<div class="lv-tranca">'+
     '<h3>🔓 Desbloqueie a história completa</h3>'+
-    '<p class="sub2">As próximas páginas da aventura de '+esc(d.nome)+' estão esperando…</p>'+
-    '<div class="lv-paginas-bloq"><div></div><div></div><div></div><div></div><div></div></div>'+
-    '<ul class="lv-inclui">'+
-      '<li>📖 <span><b>'+np+' páginas</b> de história, com <b>'+n+' ilustrações</b> com o rostinho de '+esc(d.nome)+'</span></li>'+
-      '<li>🎵 <span><b>2 músicas completas</b> com o nome '+esc(d.nome)+', tocando enquanto lê</span></li>'+
-      '<li>🖨️ <span><b>PDF em alta qualidade</b>: versão pra ler e versão pronta pra imprimir</span></li>'+
-      '<li>💌 <span>Link pra mandar pros avós, padrinhos e toda a família</span></li>'+
+    '<div style="display:flex;gap:.8rem;align-items:center;margin:.2rem 0 1rem">'+capaMini+'<div style="font-size:.93rem;color:#5B4B70;line-height:1.45"><b style="color:#2A1B3D">'+esc(flexTxt(tema.titulo,d.nome,d.genero))+'</b><br>'+np+' páginas, '+n+' ilustrações com o rostinho de '+esc(d.nome)+' e 2 músicas completas.</div></div>'+
+    '<div class="lv-pacs">'+
+      op('um','1 livro','Esta aventura completa',LV_PACOTES.um)+
+      (outros.length?op('dois','2 livros','Esta + mais 1 aventura à sua escolha',LV_PACOTES.dois,LV_PACOTES.um*2,'mais escolhido'):'')+
+      (outros.length>1?op('todos','Coleção completa','Todas as '+total+' aventuras com '+esc(d.nome),LV_PACOTES.todos,LV_PACOTES.um*total,'melhor preço'):'')+
+    '</div>'+
+    '<div id="lvTema2" hidden><div style="font-weight:800;margin:.8rem 0 .4rem">Qual será a segunda aventura?</div><div class="lv-t2">'+
+      outros.map(function(t){ var ex=lvExDoTema(t.id); return '<button type="button" class="lv-t2b" data-t2="'+esc(t.id)+'"><div class="lv-livro3d">'+htmlCapa({img:t.vitrine||(ex&&ex.capa)||null,cores:t.cores,emoji:t.emoji,titulo:flexTxt(t.titulo,d.nome,d.genero),nome:d.nome,fs:5.2})+'</div><small>'+esc(t.nome)+'</small></button>'; }).join('')+
+    '</div></div>'+
+    '<ul class="lv-inclui" style="margin-top:1rem">'+
+      '<li>📖 <span>Cada livro com as ilustrações e o <b>nome</b> de '+esc(d.nome)+'</span></li>'+
+      '<li>🎵 <span><b>2 músicas completas</b> em cada livro, pra ouvir e <b>baixar</b></span></li>'+
+      '<li>📱 <span><b>Versão digital</b> pra ler no celular, com as músicas tocando</span></li>'+
+      '<li>🖨️ <span><b>PDF em alta qualidade</b> pra imprimir</span></li>'+
+      '<li>💌 <span>Tudo chega também no seu <b>WhatsApp</b></span></li>'+
     '</ul>'+
-    '<div class="lv-preco"><strong>'+lvFmt(d.valor||37)+'</strong><small>pagamento único no Pix</small></div>'+
     '<div id="lvPix"></div>'+
-    '<button class="lv-btn rosa" id="lvPagar">Desbloquear agora ✨</button></div>';
+    '<button class="lv-btn rosa" id="lvPagar">Desbloquear por '+lvFmt(LV_PACOTES.um)+' ✨</button></div>';
 }
 function ligarDesbloquear(d,tema,t){
-  var bt=el('lvPagar'), relIv=null;
+  var bt=el('lvPagar'), relIv=null, pac='um', tema2=null;
   aoSair(function(){ clearInterval(relIv); });
+  function rotulo(){ bt.textContent=pac==='dois'&&!tema2?'Escolha a segunda aventura ☝️':'Desbloquear por '+lvFmt(LV_PACOTES[pac])+' ✨'; bt.disabled=pac==='dois'&&!tema2; }
+  document.querySelectorAll('[data-pac]').forEach(function(lb){ lb.onclick=function(){
+    pac=lb.dataset.pac; document.querySelectorAll('[data-pac]').forEach(function(x){ x.classList.toggle('on',x===lb); x.querySelector('input').checked=x===lb; });
+    el('lvTema2').hidden=pac!=='dois'; rotulo();
+    try{ gaEvento('livro_pacote',{pacote:pac}); }catch(e){}
+  }; });
+  document.querySelectorAll('[data-t2]').forEach(function(b){ b.onclick=function(){ tema2=b.dataset.t2; document.querySelectorAll('[data-t2]').forEach(function(x){ x.classList.toggle('on',x===b); }); rotulo(); }; });
   bt.onclick=function(){
+    if(pac==='dois'&&!tema2){ toast('Escolha a segunda aventura.'); return; }
+    var valor=LV_PACOTES[pac];
     bt.disabled=true; bt.innerHTML='<span class="lv-giro"></span> Gerando o Pix…';
-    try{ fbEvento('InitiateCheckout',{value:d.valor||37,currency:'BRL',content_name:'livro'}); gaEvento('livro_checkout',{tema:d.tema}); }catch(e){}
-    fetch('/.netlify/functions/livro-pagamento',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:d.id,t:t})})
+    try{ fbEvento('InitiateCheckout',{value:valor,currency:'BRL',content_name:'livro'}); gaEvento('livro_checkout',{tema:d.tema,pacote:pac}); }catch(e){}
+    fetch('/.netlify/functions/livro-pagamento',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:d.id,t:t,pacote:pac,tema2:tema2})})
       .then(function(r){ return r.json().then(function(x){ return {ok:r.ok,d:x}; }); })
       .then(function(res){
         if(res.d && res.d.pago){ location.reload(); return; }
-        if(!res.ok||!res.d.payload){ toast((res.d&&res.d.erro)||'Não consegui gerar o Pix.'); bt.disabled=false; bt.textContent='Desbloquear agora ✨'; return; }
-        bt.remove();
+        if(!res.ok||!res.d.payload){ toast((res.d&&res.d.erro)||'Não consegui gerar o Pix.'); bt.disabled=false; rotulo(); return; }
+        bt.remove(); document.querySelectorAll('[data-pac],[data-t2]').forEach(function(x){ x.style.pointerEvents='none'; });
         var box=el('lvPix');
         box.innerHTML='<div class="lv-relogio">⏳ O Pix vale por <b id="lvRel">20:00</b></div>'+
-          htmlPixLimpo(res.d.payload, res.d.valor, res.d.teste, {titulo:'Livro Mágico de '+d.nome, itens:['Livro completo com '+nIlusTema(tema)+' ilustrações','2 músicas completas','PDF pra ler e pra imprimir']});
+          htmlPixLimpo(res.d.payload, res.d.valor, res.d.teste, {titulo:'Livro Mágico de '+d.nome+(pac==='dois'?' (2 livros)':pac==='todos'?' (coleção completa)':''), itens:[pac==='um'?'Livro completo com '+nIlusTema(tema)+' ilustrações':pac==='dois'?'2 livros completos':'Todas as aventuras','2 músicas completas em cada livro','PDF pra ler e pra imprimir']});
         var rod=box.querySelector('.pxc-rod'); if(rod) rod.textContent='O livro é liberado assim que o Pix for confirmado. A sua prévia continua salva se você fechar esta página.';
         var fim=res.d.expiraEm||(Date.now()+20*60000);
         relIv=setInterval(function(){
@@ -875,7 +937,7 @@ function ligarDesbloquear(d,tema,t){
           location.hash='#/livro/'+d.id;
         });
       })
-      .catch(function(){ toast('Sem conexão.'); bt.disabled=false; bt.textContent='Desbloquear agora ✨'; });
+      .catch(function(){ toast('Sem conexão.'); bt.disabled=false; rotulo(); });
   };
 }
 
@@ -919,7 +981,7 @@ function abrirLeitor(d,tema,t,opts){
     '<div class="lv-l-baixo">'+
       '<button class="lv-l-bt" id="lvM1">Música 1</button><button class="lv-l-bt" id="lvM2"'+(d.musica2?'':' hidden')+'>Música 2</button>'+
       '<span class="lv-l-cont" id="lvCont"></span>'+
-      (opts.demo?'<button class="lv-l-bt on" id="lvCriarDemo">✨ Criar o meu</button>':'<button class="lv-l-bt" id="lvPdf">⬇️ PDF</button><button class="lv-l-bt" id="lvComp">💌 Enviar</button>')+
+      (opts.demo?'<button class="lv-l-bt on" id="lvCriarDemo">✨ Criar o meu</button>':'<button class="lv-l-bt" id="lvPdf">⬇️ Baixar</button><button class="lv-l-bt" id="lvComp">💌 Enviar</button>')+
     '</div></div>';
   document.body.style.overflow='hidden';
   aoFechar(function(){ document.body.style.overflow=''; });
@@ -984,7 +1046,13 @@ function carregarJsPDF(){
 }
 function abrirModalPdf(d,tema,ps){
   var m=document.createElement('div'); m.className='lv-modal';
-  m.innerHTML='<div><h3>📥 Baixar o livro em PDF</h3><p style="color:#6E5C82;margin:.2rem 0 .6rem;font-size:.92rem">Alta qualidade, pronto pra guardar ou imprimir.</p>'+
+  var dl=function(v){ return (typeof linkBaixarMusica==='function'?linkBaixarMusica(d.id,v):'/.netlify/functions/baixar-musica?id='+encodeURIComponent(d.id)+'&v='+v); };
+  m.innerHTML='<div><h3>📥 Guardar o livro</h3><p style="color:#6E5C82;margin:.2rem 0 .8rem;font-size:.92rem">Escolha como você quer o livro de '+esc(d.nome)+'.</p>'+
+    '<div style="background:#F3ECFF;border-radius:14px;padding:.75rem .85rem;margin-bottom:.7rem"><b>🌐 Versão digital (com as músicas)</b><div style="font-size:.86rem;color:#5B4B70;margin:.2rem 0 .5rem">É este livro aqui: abre no celular, vira as páginas e toca as músicas. Guarde o link e mande pra família.</div>'+
+      '<button class="lv-btn claro" id="lvCopLink" style="margin:0;padding:.7rem">🔗 Copiar o link do livro</button></div>'+
+    '<div style="display:flex;gap:.5rem;margin-bottom:.7rem"><a class="lv-btn claro" style="margin:0;padding:.7rem;text-decoration:none;font-size:.95rem" href="'+esc(dl(1))+'" download>🎵 Baixar música 1</a>'+
+      (d.musica2?'<a class="lv-btn claro" style="margin:0;padding:.7rem;text-decoration:none;font-size:.95rem" href="'+esc(dl(2))+'" download>🎵 Baixar música 2</a>':'')+'</div>'+
+    '<div style="font-weight:800;margin:.4rem 0 .3rem">📄 PDF em alta qualidade</div>'+
     '<button class="lv-btn" data-pdf="ler">📱 PDF pra ler (página por página)</button>'+
     '<button class="lv-btn claro" data-pdf="aberto">🖨️ Pra imprimir: folhas abertas (mais fácil)</button>'+
     '<button class="lv-btn claro" data-pdf="livreto">📖 Pra imprimir: livreto dobrável</button>'+
@@ -998,6 +1066,8 @@ function abrirModalPdf(d,tema,ps){
   document.body.appendChild(m);
   function fechar(){ m.remove(); }
   el('lvPdfFechar').onclick=fechar; m.onclick=function(e){ if(e.target===m) fechar(); };
+  el('lvCopLink').onclick=function(){ copiar(location.origin+'/#/livro/'+d.id,'Link do livro copiado!'); };
+  var t0=lvToken(d.id); if(t0){ var z=document.createElement('div'); z.innerHTML=htmlZapPago(d,t0); m.firstChild.insertBefore(z, el('lvPdfFechar')); }
   m.querySelectorAll('[data-pdf]').forEach(function(b){ b.onclick=function(){
     m.querySelectorAll('[data-pdf]').forEach(function(x){ x.disabled=true; });
     el('lvPdfProg').hidden=false;
@@ -1131,7 +1201,7 @@ window.pnlLivrosLigar=function(){
   if(_lvp.temas){ desenharLvp(); return; }
   fetch('/.netlify/functions/livro-temas?admin=1',{headers:{'x-admin-key':_pnlChave}}).then(function(r){ return r.json(); }).then(function(d){
     if(!d.temas){ lvpPedirSenha(!!_pnlChave); return; }
-    _lvp.temas=d.temas; _lvp.exemplos=d.exemplos||[]; desenharLvp();
+    _lvp.temas=d.temas; _lvp.exemplos=d.exemplos||[]; _lvp.vendasSite=d.vendasSite||{}; desenharLvp();
   }).catch(function(){ var c=el('lvpCaixa'); if(c) c.innerHTML='<div class="pnl-nota">Sem conexão.</div>'; });
 };
 function lvpPedirSenha(errou){
@@ -1152,7 +1222,8 @@ function desenharLvp(){
     (_lvp.temas||[]).map(function(t,i){
       var img=t.vitrineEm?'<img src="/.netlify/functions/livro-img?k='+encodeURIComponent('img/tema/'+t.id)+'&v='+t.vitrineEm+'" alt="">':'<div class="sem">'+esc(t.emoji||'📖')+'</div>';
       return '<div class="lvp-it">'+img+'<div class="tx"><b>'+esc((t.emoji||'')+' '+t.nome)+'</b><small>'+esc(t.titulo)+'</small><br>'+
-        '<span class="lvp-st '+(t.status==='publicado'?'pub':'ras')+'">'+(t.status==='publicado'?'Publicada':'Rascunho')+'</span></div>'+
+        '<span class="lvp-st '+(t.status==='publicado'?'pub':'ras')+'">'+(t.status==='publicado'?'Publicada':'Rascunho')+'</span>'+
+        ' <span class="lvp-st" style="background:#FFF1E0;color:#B4380A">🔥 '+((((_lvp.vendasSite||{})[t.id])||0)+(t.vendasFora||0)).toLocaleString('pt-BR')+' vendidos</span></div>'+
         '<button class="pnl-link" data-lvped="'+i+'">Editar</button></div>';
     }).join('')+
     '<div class="lvp-it" style="display:block" id="lvpVit">'+htmlVitrinePnl()+'</div>'+
@@ -1202,7 +1273,9 @@ function htmlVitrinePnl(){
       var desc=x.tipo==='livro'?'📖 Livro de '+esc(x.nome||'')+' · '+((x.paginas||[]).length)+' ilustrações':'📷 Foto'+(x.legenda?': '+esc(x.legenda):'');
       return '<div class="lvp-ex'+(x.mostrar===false?' off':'')+'"><img src="'+esc(x.capa)+'" alt=""><div class="tx"><b>'+desc+'</b>'+(x.mostrar===false?'escondido':'aparecendo no site')+'</div>'+
         '<button data-exm="'+i+'" data-d="-1" aria-label="Subir">↑</button><button data-exm="'+i+'" data-d="1" aria-label="Descer">↓</button>'+
-        '<button data-exv="'+i+'">'+(x.mostrar===false?'Mostrar':'Esconder')+'</button><button data-exx="'+i+'">Tirar</button></div>';
+        '<button data-exv="'+i+'">'+(x.mostrar===false?'Mostrar':'Esconder')+'</button><button data-exx="'+i+'">Tirar</button>'+
+        (x.tipo==='livro'&&x.pedido?'<button data-expdf="'+esc(x.pedido)+'">⬇️ PDFs</button>':'')+'</div>'+
+        (x.tipo==='livro'&&x.pedido?'<div id="lvpPdf_'+esc(x.pedido)+'" style="font-size:.82rem;padding:0 0 .5rem 56px"></div>':'');
     }).join(''):'<div style="font-size:.85rem;color:#999;padding:.3rem 0">Nenhum exemplo ainda.</div>')+
     '<div class="lvp-ed"><label for="lvpExId">Usar um livro pago como exemplo</label>'+
       '<div style="display:flex;gap:.4rem"><input id="lvpExId" placeholder="Código do livro (começa com L)"><button class="pnl-link" id="lvpExAdd">Adicionar</button></div>'+
@@ -1223,6 +1296,20 @@ function ligarVitrinePnl(){
   }; });
   box.querySelectorAll('[data-exv]').forEach(function(b){ b.onclick=function(){
     var l=_lvp.exemplos.slice(), x=l[+b.dataset.exv]; x.mostrar=x.mostrar===false; salvar(l, x.mostrar?'Aparecendo no site.':'Escondido do site.');
+  }; });
+  box.querySelectorAll('[data-expdf]').forEach(function(b){ b.onclick=function(){
+    var id=b.dataset.expdf, out=el('lvpPdf_'+id); b.disabled=true; out.textContent='Preparando os PDFs em alta qualidade…';
+    var tent=0;
+    (function pedir(){
+      lvpPost({acao:'pdf-links',id:id}).then(function(r){
+        if(!r.ok){ b.disabled=false; out.textContent=r.d.erro||'Não deu.'; return; }
+        if(r.d.links){ b.disabled=false; var L=r.d.links;
+          out.innerHTML='<a href="'+esc(L.ler)+'" target="_blank" rel="noopener" style="color:#8A5A10;font-weight:800">📱 PDF pra ler</a> · <a href="'+esc(L.folhas)+'" target="_blank" rel="noopener" style="color:#8A5A10;font-weight:800">🖨️ Folhas abertas</a> · <a href="'+esc(L.livreto)+'" target="_blank" rel="noopener" style="color:#8A5A10;font-weight:800">📖 Livreto</a>';
+          return; }
+        tent++; if(tent>12){ b.disabled=false; out.textContent='Está demorando. Toque de novo daqui a pouco.'; return; }
+        out.textContent='Gerando os PDFs (leva uns 30 segundos)…'; setTimeout(pedir,8000);
+      }).catch(function(){ b.disabled=false; out.textContent='Sem conexão.'; });
+    })();
   }; });
   box.querySelectorAll('[data-exx]').forEach(function(b){ b.onclick=function(){
     if(b.dataset.ok!=='1'){ b.dataset.ok='1'; b.textContent='Confirmar'; return; }
@@ -1313,7 +1400,9 @@ function desenharEditor(){
       (t.paginas.length<16?'<div class="lvp-bts"><button class="cl" id="lvpAddPg">+ Adicionar página</button></div>':'')+
       campo('lvpLetra','Letra da música',t.letra,true,'Comece com "Era uma vez… {nome}". Use {nome} no refrão.')+
       campo('lvpEst','Estilo da música',t.estiloMusica)+
-      campo('lvpOrd','Ordem na página',t.ordem)+
+      campo('lvpOrd','Ordem na página (desempate)',t.ordem)+
+      '<label for="lvpVend">Vendas feitas fora do site (WhatsApp, avulso)</label><input id="lvpVend" type="number" min="0" inputmode="numeric" value="'+(t.vendasFora||0)+'">'+
+      '<small style="color:#888">Vendas pelo site (contadas sozinhas): <b>'+(((_lvp.vendasSite||{})[t.id])||0)+'</b>. O total aparece no site como "🔥 X vendidos" e os mais vendidos ficam primeiro. Coloque só vendas que aconteceram de verdade.</small>'+
       '<div class="lvp-cena" style="background:#FFF6E0;margin-top:1rem"><b>📖 Livros de exemplo desta história</b>'+
         '<p style="font-size:.82rem;color:#7a6f86;margin:.3rem 0 .5rem">Crie aqui um livro completo de exemplo, <b>sem pagar</b>. Quando ficar pronto (uns 3 a 5 minutos), ele entra <b>sozinho na vitrine</b> e vira o "Folhear" desta história. Pode criar vários (menino e menina, por exemplo).</p>'+
         (function(){ var ex=(_lvp.exemplos||[]).filter(function(x){ return x.tipo==='livro'&&x.tema===t.id; });
@@ -1333,7 +1422,7 @@ function desenharEditor(){
   function ler(){
     t.nome=el('lvpNome').value; t.titulo=el('lvpTit').value; t.emoji=el('lvpEmo').value; t.descricao=el('lvpDesc').value;
     t.cores=el('lvpCores').value.split(',').map(function(x){ return x.trim(); }).filter(Boolean).slice(0,3);
-    t.roupa=el('lvpRoupa').value; t.capa=el('lvpCapa').value; t.letra=el('lvpLetra').value; t.estiloMusica=el('lvpEst').value; t.ordem=+el('lvpOrd').value||99;
+    t.roupa=el('lvpRoupa').value; t.capa=el('lvpCapa').value; t.letra=el('lvpLetra').value; t.estiloMusica=el('lvpEst').value; t.ordem=+el('lvpOrd').value||99; t.vendasFora=Math.max(0,parseInt(el('lvpVend').value,10)||0);
     t.paginas=t.paginas.map(function(p,i){ var v=el('lvpUs'+i).value, o={texto:el('lvpTx'+i).value, cena:el('lvpCe'+i).value}; if(v==='so'){ o.so=true; o.cena=''; } else if(+v>=0) o.usa=+v; return o; });
     if(!t.id || /^nova-/.test(t.id)) t.id=(t.nome||'tema').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30)||t.id;
   }

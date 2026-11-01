@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "description": "Site + funções de pagamento Pix (Efí Bank) do Capivarinha Love",
   "dependencies": {
-    "@netlify/blobs": "^8"
+    "@netlify/blobs": "^8",
+    "@napi-rs/canvas": "0.1.100",
+    "pdf-lib": "1.17.1"
   }
 }
