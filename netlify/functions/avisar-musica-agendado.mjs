@@ -1,6 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { entregarMusica, enviarTexto, conversaAberta, SITE } from './_zap.mjs';
-import { entregarPreviaLivro, avancarLivro } from './_livros.mjs';
+import { entregarPreviaLivro, avancarLivro, motorRodando } from './_livros.mjs';
 
 // A CADA MINUTO: confere as músicas que estão sendo criadas e, quando ficam
 // prontas, manda no WhatsApp do cliente (mesmo que ele tenha fechado o site).
@@ -17,6 +17,7 @@ export default async () => {
       try {
         const p = await loja.get(b.key, { type: 'json' }).catch(() => null);
         if (!p || !p.id || Date.now() - (p.em || 0) > LIMITE) { await loja.delete(b.key); return; }
+        if (await motorRodando(p.id)) return; // o motor rápido já está cuidando (e manda sozinho)
         const r = await entregarPreviaLivro(p.id, p.t, p.numero, process.env.URL || SITE);
         if (r !== 'esperando' && r !== 'erro') { await loja.delete(b.key); return; }
         // passou de 1 minuto e ainda não ficou pronta: avisa uma vez que está finalizando

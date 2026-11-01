@@ -146,7 +146,10 @@ export default async (req) => {
           return { nome: L.nome || '', tema: L.tema || '', status: L.status || '', token: L.token || '', genero: L.genero || '',
             capaOk: !!(L.capa && L.capa.ok), capaErro: !!(L.capa && L.capa.erro), pagOk: ps.filter((p) => p && p.ok).length, pagTotal: ps.length,
             pagErro: ps.filter((p) => p && p.erro).length, tentativas: (L.capa && L.capa.tent || 0) + ps.reduce((n, p) => n + (p && p.tent || 0), 0),
-            msg: msgs[0] || '', fotoApagada: !!L.fotoApagada }; })() : null,
+            msg: msgs[0] || '', fotoApagada: !!L.fotoApagada,
+            // o que ainda está tentando (pra você acompanhar no painel)
+            tentando: [['Capa', L.capa]].concat((L.paginas || []).map((p) => [p && !p.so && p.usa == null ? 'Ilustração ' + (ps.indexOf(p) + 1) : null, p])).filter((x) => x[0] && x[1] && !x[1].ok)
+              .map((x) => ({ n: x[0], tent: x[1].tent || 0, recusas: x[1].recusas || 0, em: x[1].em || 0, pedindo: !!x[1].task, msg: (x[1].msg || '').slice(0, 120) })) }; })() : null,
         duracao: g.pagamento && g.pagamento.duracao || g.duracao || 'vitalicio',
         valor: g.pagamento ? g.pagamento.valor : 0,
         provedor: g.pagamento ? g.pagamento.provedor : null,

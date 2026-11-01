@@ -180,7 +180,7 @@ export async function gerarPdfsLivro(id) {
 }
 
 // PRÉVIA (antes de pagar): capa, "pertence a", título, o começo da história até a 1ª ilustração e uma página "continua…"
-export async function gerarPdfPrevia(id) {
+export async function gerarPdfPrevia(id, opcoes) {
   const presentes = getStore('presentes');
   const g = await presentes.get(id, { type: 'json' }).catch(() => null);
   if (!g || !g.livro) return { erro: 'livro não encontrado' };
@@ -205,6 +205,10 @@ export async function gerarPdfPrevia(id) {
   }
   const buf = Buffer.from(await doc.save());
   // 2) livreto pra imprimir (A4 deitado, 2 páginas por folha, já na ordem de dobrar)
+  if (!opcoes || !opcoes.livreto) {
+    await loja().set('pdf/' + id + '/previa.pdf', buf, { metadata: { tipo: 'application/pdf' } });
+    return { ok: true, tamanho: buf.length, paginas: psLer.length };
+  }
   const psLiv = ps.slice(); while ((psLiv.length + 1) % 4) psLiv.push({ t: 'branco' }); psLiv.push({ t: 'trancado' });
   const N = psLiv.length, a5 = [];
   for (let i = 0; i < N; i++) a5.push(desenharPagina(psLiv[i], d, tema, imgs, i + 1, 1240, 1754, F, link).toBuffer('image/jpeg', 84));

@@ -48,9 +48,11 @@ async function processar(corpo) {
             if (lcod) {
               await marcarConversa(msg.from);
               await registrar('pediu_site', { numero: String(msg.from), pedido: lcod[1], via: 'livro' });
+              // grava o pedido ANTES: assim o motor do livro já manda sozinho quando ficar pronto
+              await loja.setJSON('lvpend_' + lcod[1], { id: lcod[1], t: lcod[2].toLowerCase(), numero: String(msg.from), em: Date.now() });
               const r = await entregarPreviaLivro(lcod[1], lcod[2].toLowerCase(), msg.from, SITE);
+              if (r !== 'esperando' && r !== 'erro') await loja.delete('lvpend_' + lcod[1]).catch(() => {});
               if (r === 'esperando') {
-                await loja.setJSON('lvpend_' + lcod[1], { id: lcod[1], t: lcod[2].toLowerCase(), numero: String(msg.from), em: Date.now() });
                 await enviarTexto(msg.from, '✅ Recebi sua historinha! 📖✨\n\nEstou preparando a *capa* com o rostinho da criança, a *música* com o nome dela e a *primeira ilustração* da história. Assim que ficar pronto eu te mando aqui a prévia. 💛');
               } else if (r === 'naoachei') {
                 await enviarTexto(msg.from, 'Não achei esse livro 😕\nCrie o seu aqui: ' + SITE + '/#/livro');

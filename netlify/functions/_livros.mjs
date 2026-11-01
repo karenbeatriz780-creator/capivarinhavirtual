@@ -316,9 +316,10 @@ function linkFoto(base, g, alt) {
 // referências pra ilustração: foto + capa (pra manter o mesmo personagem). Se o Google recusar
 // uma referência, a próxima tentativa vai só com a foto (que é o que importa pro rosto).
 function refsPagina(base, g, p) {
-  const L = g.livro, foto = linkFoto(base, g, Math.floor(((p && p.recusas) || 0) / 3) % 2 === 1);
-  const recusou = /refused|cannot read|upload/i.test((p && p.msg) || '');
-  if (!L.capa.ok || recusou || ((p && p.tent) || 0) >= 2) return [foto];
+  // SEMPRE a foto real da criança (é ela que garante o rosto). Com a capa pronta, vai junto só como modelo de visual.
+  // Se o Google recusar, NÃO troca nada: só insiste de novo, quantas vezes precisar.
+  const L = g.livro, foto = linkFoto(base, g, false);
+  if (!L.capa.ok) return [foto];
   return [foto, L.capa.url || linkImg(base, g, 'capa')];
 }
 function linkImg(base, g, nome) { return base + '/.netlify/functions/livro-img?k=' + encodeURIComponent('img/' + g.id + '/' + nome) + '&t=' + g.livro.token; }
@@ -334,10 +335,12 @@ async function andarImagem(item, chave, criar, limite) {
     //  - passou de 30 min: marca no painel como "com problema", mas CONTINUA tentando a cada 5 min (até 24 h).
     item.ini = item.ini || Date.now();
     const idade = Date.now() - item.ini;
-    if (idade > 24 * 3600 * 1000) { if (!item.erro) { item.erro = true; return true; } return false; }
+    // tenta ATÉ O FINAL: não existe limite de tentativas
     let marcou = false;
     if (idade > 30 * 60 * 1000 && !item.erro) { item.erro = true; marcou = true; }
-    const espera = tent < 3 ? 0 : idade < 30 * 60 * 1000 ? 30 * 1000 : 5 * 60 * 1000;
+    // recusa do Google: insiste rápido (a cada ~5 s); outros erros: a cada 30 s. Depois de 30 min, a cada 5 min.
+    const recusou = /refused|cannot read|upload/i.test(item.msg || '');
+    const espera = tent < 3 ? 0 : idade < 30 * 60 * 1000 ? (recusou ? 5 * 1000 : 30 * 1000) : 5 * 60 * 1000;
     if (Date.now() - (item.em || 0) < espera) return marcou;
     try { item.task = await criar(item); }
     catch (e) { item.msg = String(e && e.message || e).slice(0, 300); item.tent = tent + 1; item.em = Date.now(); console.error('livro imagem (criar):', chave, item.msg); return true; }
