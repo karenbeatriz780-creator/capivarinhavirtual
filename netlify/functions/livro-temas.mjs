@@ -471,7 +471,8 @@ export default async (req) => {
     if (b.acao === 'livro-diag') {
       const g = await getStore('presentes').get(String(b.id || ''), { type: 'json' }).catch(() => null);
       if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
-      const dg = diagLivro(g); dg.motor = await motorRodando(g.id).catch(() => false); dg.pago = !!g.pago; dg.nome = g.livro.nome;
+      const dg = diagLivro(g); dg.motor = await motorRodando(g.id).catch(() => false); dg.pago = !!g.pago; dg.nome = g.livro.nome; dg.token = g.livro.token;
+      dg.temFoto = !!(await loja().get('foto/' + g.id, { type: 'arrayBuffer' }).catch(() => null));
       return json({ ok: true, diag: dg });
     }
     if (b.acao === 'pdf-links') {

@@ -31,7 +31,8 @@ export default async (req) => {
       if (bf.length < 8000 || bf.length > 4.5 * 1024 * 1024) return json({ erro: 'Essa foto não serve. Tente outra.' }, 400);
       await loja().set('foto/' + id, bf, { metadata: { tipo: 'image/jpeg' } });
       const L = g.livro;
-      L.capa = { trocouFoto: (L.capa && L.capa.trocouFoto || 0) + 1 };
+      // capa que já ficou pronta é mantida (só refaz o que falta)
+      if (!(L.capa && L.capa.ok)) L.capa = { trocouFoto: (L.capa && L.capa.trocouFoto || 0) + 1 };
       (L.paginas || []).forEach((p) => { if (p && !p.ok) { p.tent = 0; p.erro = false; p.task = null; p.msg = ''; p.recusas = 0; p.ini = 0; } });
       L.fotoApagada = false; if (L.status === 'problema') L.status = g.pago ? 'gerando' : 'criando';
       await pres.setJSON(id, g);

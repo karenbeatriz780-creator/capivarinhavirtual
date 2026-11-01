@@ -44,7 +44,7 @@ export default async (req) => {
         if (tudo && !pend) break;
         if (Date.now() - inicio > 9 * 60 * 1000) break;
       } else {
-        if (g.livro.status === 'pronto' || g.livro.status === 'problema') break;
+        if (g.livro.status === 'pronto') break; // com problema: continua tentando
         if (Date.now() - inicio > 13 * 60 * 1000) break;
       }
       await dormir(PASSO);

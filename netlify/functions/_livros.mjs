@@ -342,9 +342,9 @@ async function andarImagem(item, chave, criar, limite) {
     // tenta ATÉ O FINAL: não existe limite de tentativas
     let marcou = false;
     if (idade > 30 * 60 * 1000 && !item.erro) { item.erro = true; marcou = true; }
-    // recusa do Google: insiste rápido (a cada ~5 s); outros erros: a cada 30 s. Depois de 30 min, a cada 5 min.
+    // recusa do Google: insiste a cada ~5 s; outros erros: a cada 30 s. SEM diminuir o ritmo, até sair.
     const recusou = /refused|cannot read|upload/i.test(item.msg || '');
-    const espera = tent < 3 ? 0 : idade < 30 * 60 * 1000 ? (recusou ? 5 * 1000 : 30 * 1000) : 5 * 60 * 1000;
+    const espera = tent < 3 ? 0 : (recusou ? 5 * 1000 : 30 * 1000);
     if (Date.now() - (item.em || 0) < espera) return marcou;
     try { item.task = await criar(item); }
     catch (e) { item.msg = String(e && e.message || e).slice(0, 300); item.tent = tent + 1; item.em = Date.now(); hist(item, 'erro', item.msg); console.error('livro imagem (criar):', chave, item.msg); return true; }
@@ -378,7 +378,7 @@ export async function avancarLivro(id, base, opts) {
   // pra duas partes do sistema não pedirem a mesma imagem ao mesmo tempo.
   if (!(opts && opts.motor)) {
     if (await motorRodando(id)) return g;
-    const falta = g.pago ? (L.status !== 'problema') : !(previaPronta(g) && g.musicaPreviewUrl);
+    const falta = g.pago ? true : !(previaPronta(g) && g.musicaPreviewUrl);
     if (falta && await ligarMotor(id, base)) return g;
   }
   const tema = await acharTema(L.tema);
