@@ -3,7 +3,7 @@ import { entregarMusica, SITE } from './_zap.mjs';
 
 // A CADA MINUTO: confere as músicas que estão sendo criadas e, quando ficam
 // prontas, manda no WhatsApp do cliente (mesmo que ele tenha fechado o site).
-export const config = { schedule: '* * * * *' };
+export const config = { schedule: '*/3 * * * *' };
 
 const LIMITE = 3 * 3600 * 1000; // depois de 3 h desiste
 

@@ -5,7 +5,7 @@ import { enviarTexto, conversaAberta, chaveNum, registrar, temMusica, linkPedido
 // A CADA MINUTO: quem PAGOU recebe no WhatsApp o link das músicas + os áudios completos.
 // - Só pra quem conversou com o número nas últimas 24 h → manda grátis (texto + áudios).
 // - Quem não conversou NÃO recebe nada agora; se mandar mensagem em até 7 dias, recebe na hora.
-export const config = { schedule: '* * * * *' };
+export const config = { schedule: '*/3 * * * *' };
 
 const JANELA = 6 * 3600 * 1000; // só pedidos pagos nas últimas 6 h (não dispara pra pedidos antigos)
 

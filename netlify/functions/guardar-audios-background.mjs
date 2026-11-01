@@ -2,10 +2,11 @@ import { getStore } from '@netlify/blobs';
 import { pegarAudio, jaGuardado, versoesDoPedido } from './_audio.mjs';
 import { lerDias, idsDosDiasTudo } from './_indice.mjs';
 
-// Guarda uma cópia de TODAS as músicas pagas (o serviço de música apaga o
-// arquivo em ~7 dias). Ordem: 1) o pedido pedido em ?id= (na hora do pagamento),
-// 2) os pagos dos últimos 10 dias (os mais urgentes), 3) o resto do histórico.
-// Roda em segundo plano (até 15 min); o que já foi guardado é pulado.
+// Guarda uma cópia das músicas pagas (o serviço de música apaga o arquivo em ~7 dias).
+// Roda 1 vez por dia, na virada do dia: confere só os pagos dos últimos 8 dias
+// (cada pedido passa por ~7 conferências antes de o arquivo sumir lá).
+// O histórico antigo já foi copiado antes e NÃO é mais varrido a cada vez (era o que mais gastava).
+// ?id=<pedido> guarda só aquele pedido. O que já foi guardado é pulado.
 export default async (req) => {
   const t0 = Date.now();
   const idx = getStore('indices');
@@ -44,18 +45,11 @@ export default async (req) => {
     const falhas = [], feitos = {};
     // 1) pagos recentes primeiro
     let recentes = [];
-    try { recentes = await idsDosDiasTudo(await lerDias(), 10, 'pg'); } catch (e) {}
+    try { recentes = await idsDosDiasTudo(await lerDias(), 8, 'pg'); } catch (e) {}
     for (const id of recentes) {
       if (Date.now() - t0 > 13 * 60 * 1000) break;
       if (feitos[id]) continue; feitos[id] = 1;
       const r = await guardarPedido(id, falhas); novos += r.novos; vistos += r.vistos;
-    }
-    // 2) todo o resto
-    const { blobs } = await presentes.list();
-    for (const b of blobs) {
-      if (Date.now() - t0 > 13 * 60 * 1000) break;
-      if (feitos[b.key]) continue; feitos[b.key] = 1;
-      const r = await guardarPedido(b.key, falhas); novos += r.novos; vistos += r.vistos;
     }
     const fim = Date.now() - t0 < 13 * 60 * 1000;
     falhas.sort((a, b) => (b.pagoEm || 0) - (a.pagoEm || 0));

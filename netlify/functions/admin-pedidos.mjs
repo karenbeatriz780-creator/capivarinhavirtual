@@ -123,12 +123,13 @@ export default async (req) => {
         await Promise.race([fetch(base + '/.netlify/functions/indexar-telefones-background', { method: 'POST' }).catch(() => null), new Promise((r) => setTimeout(r, 1500))]);
       }
     } catch (e) {}
-    // cópia de segurança das músicas pagas: roda a cada 3 h
+    // cópia de segurança das músicas pagas: roda sozinha 1x por dia; aqui é só um
+    // plano B, se por algum motivo ficar mais de 26 h sem rodar
     let audiosBackup = null;
     try {
       const bk = await getStore('indices').get('audios-backup', { type: 'json' }).catch(() => null);
       audiosBackup = bk;
-      if (!bk || Date.now() - (bk.em || 0) > 3 * 3600 * 1000) {
+      if (!bk || Date.now() - (bk.em || 0) > 26 * 3600 * 1000) {
         const base = new URL(req.url).origin;
         await Promise.race([fetch(base + '/.netlify/functions/guardar-audios-background', { method: 'POST' }).catch(() => null), new Promise((r) => setTimeout(r, 1200))]);
       }
