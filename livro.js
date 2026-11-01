@@ -187,7 +187,12 @@ var css = `
 .lv-pag .txt{font-family:'Baloo 2',sans-serif;font-weight:600;font-size:1em;line-height:1.5;text-align:left;width:100%}
 .lv-pag .txt:first-letter{font-size:2.3em;font-weight:800;line-height:.8;float:left;margin:.08em .1em 0 0;color:var(--cor2)}
 .lv-pag .num{position:absolute;bottom:4%;left:0;right:0;text-align:center;font:700 .62em 'Inter';opacity:.5}
-.lv-pag .canto{position:absolute;font-size:1.6em;opacity:.85}
+.lv-pag .canto{display:none}
+.lv-pag .orn{display:flex;align-items:center;gap:.5em;width:42%;margin:.9em auto;color:var(--cor2)}
+.lv-pag .orn:before,.lv-pag .orn:after{content:"";flex:1;height:1.5px;background:currentColor;opacity:.45}
+.lv-pag .orn i{width:.42em;height:.42em;transform:rotate(45deg);background:currentColor;opacity:.75}
+.lv-pag .moldura{width:46%;aspect-ratio:3/4;border-radius:3% 6% 6% 3%;overflow:hidden;box-shadow:0 .5em 1.4em rgba(42,27,61,.25),0 0 0 .3em #fff}
+.lv-pag .moldura img{width:100%;height:100%;object-fit:cover;display:block}
 .lv-pag .grande{font-family:'Baloo 2';font-weight:800;font-size:2.2em;line-height:1;color:var(--cor2)}
 .lv-pag .script{font-family:'Grand Hotel',cursive;font-size:2.6em;line-height:1;color:var(--cor2)}
 .lv-pag .peq{font-size:.75em;opacity:.75;line-height:1.5}
@@ -280,6 +285,15 @@ var css = `
 .lv-folha-tema .lv-livro3d{width:min(46vw,170px);margin:.2rem auto 1rem}
 .lv-folha-tema h3{text-align:center}
 .lv-folha-tema .desc{text-align:center;color:var(--lv-suave);font-size:.92rem;margin:0 0 .9rem;line-height:1.45}
+.lv-pdfv{position:fixed;inset:0;z-index:45;overflow-y:auto;-webkit-overflow-scrolling:touch;background:radial-gradient(90% 50% at 50% 0%,#3A2560 0%,#22163A 60%,#160E26 100%);color:#fff}
+.lv-pdfv-topo{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:.6rem;padding:calc(.6rem + env(safe-area-inset-top,0px)) .8rem .6rem;background:rgba(22,14,38,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.lv-pdfv-topo .t{flex:1;min-width:0;font:800 1rem 'Baloo 2';line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lv-pdfv-topo .t small{display:block;font:700 .68rem 'Inter';letter-spacing:.06em;text-transform:uppercase;color:var(--lv-ouro)}
+.lv-pdfv-pags{max-width:32rem;margin:0 auto;padding:1rem max(16px,env(safe-area-inset-left,0px)) 7rem;display:grid;gap:1rem}
+.lv-pdfv-pg{aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:#EFE6F6;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 34px rgba(0,0,0,.45)}
+.lv-pdfv-pg img{width:100%;height:100%;display:block}
+.lv-pdfv-rod{position:fixed;left:0;right:0;bottom:0;padding:.8rem max(16px,env(safe-area-inset-left,0px)) calc(.8rem + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(22,14,38,0),#160E26 40%)}
+.lv-pdfv-rod .lv-btn{max-width:30rem;margin:0 auto}
 .lv-demo-tag{position:absolute;top:calc(3.7rem + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:6;font:800 .72rem 'Inter';letter-spacing:.04em;text-transform:uppercase;padding:.3rem .7rem;border-radius:99px;background:rgba(244,195,90,.92);color:#2A1B3D}
 .lvp-ex{display:flex;gap:.6rem;align-items:center;border-top:1px solid #f0ece6;padding:.55rem 0}
 .lvp-ex img{width:46px;height:62px;border-radius:5px;object-fit:cover;flex:none;background:#eee}
@@ -312,6 +326,13 @@ function lvTemas(){
 }
 /* livro de exemplo (pago, escolhido no painel): prefere o do mesmo tema */
 function lvExLivro(tema){ var ls=_lvEx.filter(function(x){ return x.tipo==='livro' && x.paginas && x.paginas.length; }); return ls.filter(function(x){ return x.tema===tema; })[0]||ls[0]||null; }
+function lvExDoTema(id){ return _lvEx.filter(function(x){ return x.tipo==='livro' && x.tema===id; })[0]||null; }
+function capaTema(t,i,fs){
+  var ex=lvExDoTema(t.id);
+  if(ex) return htmlCapa({img:ex.capa,cores:t.cores,emoji:t.emoji,titulo:ex.titulo,nome:ex.nome,fs:fs});
+  var gen=t.vitrineGenero||(i%2?'menina':'menino'), nome=NOMES_EX[gen][(i+1)%6];
+  return htmlCapa({img:t.vitrine,cores:t.cores,emoji:t.emoji,titulo:flexTxt(t.titulo,nome,gen),nome:nome,fs:fs});
+}
 function abrirExemplo(ex, aoCriar){
   if(!ex) return;
   var base=lvTema(ex.tema)||{cores:['#FFE8B8','#F6B86B','#7BAE5A'],emoji:'📖'};
@@ -319,7 +340,34 @@ function abrirExemplo(ex, aoCriar){
   var tema=Object.assign({}, base, {titulo:ex.titulo, paginas:ex.paginas.slice(0,n).map(function(u,i){ return {texto:(ex.textos||[])[i]||''}; })});
   var d={id:ex.pedido, nome:ex.nome, genero:ex.genero, tema:ex.tema, capa:ex.capa, paginas:ex.paginas.slice(0,n), musica:true, musica2:true, pago:true};
   try{ gaEvento('livro_exemplo',{tema:ex.tema}); }catch(e){}
-  abrirLeitor(d, tema, '', {demo:true, aoCriar:aoCriar});
+  abrirPdfExemplo(d, tema, aoCriar);
+}
+/* exemplo do livro do jeito do PDF: uma página embaixo da outra, rolando */
+function abrirPdfExemplo(d, tema, aoCriar){
+  var ps=paginasDoLivro(d,tema).filter(function(p){ return p.t!=='branco'; });
+  var box=document.createElement('div'); box.className='lv-pdfv';
+  box.innerHTML='<div class="lv-pdfv-topo"><button class="lv-l-bt" id="lvPvX" aria-label="Fechar">←</button><div class="t"><small>Livro de exemplo</small>'+esc(flexTxt(tema.titulo,d.nome,d.genero))+'</div><button class="lv-l-bt" id="lvPvMus">🎵 Tocar</button></div>'+
+    '<div class="lv-pdfv-pags">'+ps.map(function(p,i){ return '<div class="lv-pdfv-pg" data-i="'+i+'"><span class="lv-giro"></span></div>'; }).join('')+'</div>'+
+    '<div class="lv-pdfv-rod"><button class="lv-btn rosa" id="lvPvCriar">✨ Criar o livro do meu filho</button></div>';
+  document.body.appendChild(box); document.body.style.overflow='hidden';
+  var vivo=true, tocando=false;
+  function fechar(){ vivo=false; pararAudioLivro(); document.body.style.overflow=''; if(box.parentNode) box.remove(); }
+  aoSair(fechar);
+  function marcar(){ el('lvPvMus').textContent=tocando?'⏸ Pausar':'🎵 Tocar'; }
+  el('lvPvMus').onclick=function(){ if(tocando){ pararAudioLivro(); tocando=false; } else { tocarLivro(d.id,1); tocando=true; } marcar(); };
+  el('lvPvX').onclick=fechar;
+  el('lvPvCriar').onclick=function(){ fechar(); if(aoCriar) aoCriar(); };
+  tocarLivro(d.id,1); tocando=true; marcar();
+  var fontes=Promise.all(['600 40px "Baloo 2"','800 40px "Baloo 2"','40px "Grand Hotel"','600 20px Inter'].map(function(f){ return document.fonts.load(f).catch(function(){}); })).catch(function(){});
+  fontes.then(async function(){
+    for(var i=0;i<ps.length && vivo;i++){
+      try{
+        var cv=await desenharPaginaCanvas(ps[i],d,tema,i+1,900,1200);
+        var slot=box.querySelector('[data-i="'+i+'"]'); if(!slot) return;
+        var im=new Image(); im.alt='Página '+(i+1); im.src=cv.toDataURL('image/jpeg',.88); slot.innerHTML=''; slot.appendChild(im);
+      }catch(e){ console.error(e); }
+    }
+  });
 }
 function lvTema(id){ return (_lvTemas||[]).filter(function(t){ return t.id===id; })[0]||null; }
 
@@ -334,7 +382,7 @@ function htmlCapa(o){
   var tituloHtml = nome && tit.indexOf(nome)===0 ? '<b>'+esc(nome)+'</b>'+esc(resto) : esc(tit);
   return '<div class="lv-capa" style="font-size:'+(o.fsCss||((o.fs||16)+'px'))+'">'+arte+
     '<div class="lv-capa-tit" style="font-size:'+(o.fsTit||1.35)+'em">'+tituloHtml+'</div>'+
-    '<div class="lv-capa-marca">Capivarinha Love</div>'+(o.extra||'')+'</div>';
+    (o.extra||'')+'</div>';
 }
 
 /* --------------------------------------------------------------- roteador */
@@ -419,13 +467,11 @@ function telaLivroHome(){
         var t=lvTema(x.tema)||{};
         return '<div class="lv-livro3d">'+htmlCapa({img:x.capa,cores:t.cores,emoji:t.emoji,titulo:x.titulo,nome:x.nome,fs:fs})+'</div>';
       }) : ts.map(function(t,i){
-        var gen=t.vitrineGenero||(i%2?'menina':'menino'), nome=NOMES_EX[gen][i%6];
-        return '<div class="lv-livro3d">'+htmlCapa({img:t.vitrine, cores:t.cores, emoji:t.emoji, titulo:flexTxt(t.titulo,nome,gen), nome:nome, fs:fs})+'</div>';
+        return '<div class="lv-livro3d">'+capaTema(t,i,fs)+'</div>';
       });
     palco.insertAdjacentHTML('beforeend', itens.join(''));
     gal.innerHTML=ts.map(function(t,i){
-      var gen=t.vitrineGenero||(i%2?'menina':'menino'), nome=NOMES_EX[gen][(i+2)%6];
-      return '<div><div class="lv-livro3d">'+htmlCapa({img:t.vitrine,cores:t.cores,emoji:t.emoji,titulo:flexTxt(t.titulo,nome,gen),nome:nome,fs:7.4})+'</div><small>'+esc(t.emoji+' '+t.nome)+'</small></div>';
+      return '<div><div class="lv-livro3d">'+capaTema(t,i,7.4)+'</div><small>'+esc(t.emoji+' '+t.nome)+'</small></div>';
     }).join('');
     /* livro de exemplo: botão no topo + livro aberto no meio da página */
     var ex=lvExLivro();
@@ -533,7 +579,7 @@ function desenharPasso(){
       (_lvTemas||[]).map(function(t,i){
         var gen=t.vitrineGenero||(i%2?'menina':'menino'), nome=NOMES_EX[gen][(i+1)%6];
         return '<button type="button" class="lv-op'+(LV.tema===t.id?' on':'')+'" data-tema="'+esc(t.id)+'"><div class="lv-livro3d">'+
-          htmlCapa({img:t.vitrine,cores:t.cores,emoji:t.emoji,titulo:flexTxt(t.titulo,nome,gen),nome:nome,fs:7.2})+'</div>'+
+          capaTema(t,i,7.2)+'</div>'+
           '<h4>'+esc(t.emoji+' '+t.nome)+'</h4><p>'+esc(flexTxt(t.descricao,'',gen))+'</p><div class="ok">✓ Escolhida</div></button>';
       }).join('')+'</div>';
     pode=!!LV.tema;
@@ -598,7 +644,7 @@ function folhaTema(id){
   var i=(_lvTemas||[]).indexOf(t), gen=t.vitrineGenero||(i%2?'menina':'menino'), nome=NOMES_EX[gen][(i+1)%6];
   var ex=lvExLivro(id), n=(t.paginas||[]).length||5;
   var m=document.createElement('div'); m.className='lv-modal';
-  m.innerHTML='<div class="lv-folha-tema"><div class="lv-livro3d">'+htmlCapa({img:t.vitrine,cores:t.cores,emoji:t.emoji,titulo:flexTxt(t.titulo,nome,gen),nome:nome,fs:9})+'</div>'+
+  m.innerHTML='<div class="lv-folha-tema"><div class="lv-livro3d">'+capaTema(t,i,9)+'</div>'+
     '<h3>'+esc(t.emoji+' '+t.nome)+'</h3><p class="desc">'+esc(flexTxt(t.descricao,'',gen))+'</p>'+
     '<ul class="lv-inclui">'+
       '<li>📖 <span><b>Uma história de '+(n*2)+' páginas</b> com o <b>rostinho da criança</b> em '+n+' ilustrações</span></li>'+
@@ -783,15 +829,17 @@ function htmlPagina(p,d,tema,num){
   var fundo='<div class="fundo" style="background:radial-gradient(120% 70% at 50% 0%,#fff 0%,'+c[0]+' 75%)"></div>';
   if(p.t==='capa') return '<div class="lv-pag" style="'+est+'">'+htmlCapa({img:d.capa,cores:c,emoji:tema.emoji,titulo:flexTxt(tema.titulo,d.nome,d.genero),nome:d.nome,fsCss:'calc(var(--pw) * 0.058)'})+'</div>';
   if(p.t==='img'){ var u=(d.paginas||[])[p.i]; return '<div class="lv-pag'+(u?'':' carregando')+'" style="'+est+'">'+(u?'<img class="cheia" src="'+esc(u)+'" alt="Ilustração '+(p.i+1)+'">':'<span class="lv-giro" style="border-top-color:'+c[2]+'"></span>')+'</div>'; }
-  if(p.t==='texto'){ var tx=((tema.paginas||[])[p.i]||{}).texto||''; return '<div class="lv-pag" style="'+est+'">'+fundo+'<span class="canto" style="top:5%;left:6%">'+(tema.emoji||'✨')+'</span><span class="canto" style="bottom:6%;right:7%">✨</span>'+
-    '<div class="miolo"><div class="txt">'+esc(flexTxt(tx,d.nome,d.genero))+'</div></div><div class="num">'+num+'</div></div>'; }
-  if(p.t==='pertence') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><img src="'+MASCOTE+'" alt="" style="width:34%;margin-bottom:6%"><div class="peq">Este livro pertence a</div><div class="script" style="margin:.15em 0">'+nome+'</div><div class="peq" style="margin-top:12%">com amor, ______________________</div></div></div>';
-  if(p.t==='rosto') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div style="font-size:2.4em">'+(tema.emoji||'📖')+'</div><div class="grande" style="margin:.3em 0">'+esc(flexTxt(tema.titulo,d.nome,d.genero))+'</div><div class="peq">Uma aventura mágica criada especialmente para '+nome+'</div><div class="peq" style="margin-top:14%">Capivarinha Love · Livro Mágico</div></div></div>';
-  if(p.t==='fim') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div class="script">Fim</div><div style="font-size:2em;margin:.3em 0">💛</div><div class="txt" style="font-size:.95em">'+nome+', que venham muitas outras aventuras!</div></div><div class="num">'+num+'</div></div>';
+  var capaMini=d.capa?'<div class="moldura"><img src="'+esc(d.capa)+'" alt=""></div>':'';
+  var orn='<div class="orn"><i></i></div>';
+  if(p.t==='texto'){ var tx=((tema.paginas||[])[p.i]||{}).texto||''; return '<div class="lv-pag" style="'+est+'">'+fundo+
+    '<div class="miolo"><div class="txt">'+esc(flexTxt(tx,d.nome,d.genero))+'</div>'+orn+'</div><div class="num">'+num+'</div></div>'; }
+  if(p.t==='pertence') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo">'+capaMini+'<div class="peq" style="margin-top:9%">Este livro pertence a</div><div class="script" style="margin:.15em 0">'+nome+'</div><div class="peq" style="margin-top:12%">com amor, ______________________</div></div></div>';
+  if(p.t==='rosto') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo">'+orn+'<div class="grande" style="margin:.3em 0">'+esc(flexTxt(tema.titulo,d.nome,d.genero))+'</div>'+orn+'<div class="peq">Uma aventura mágica criada especialmente para '+nome+'</div></div></div>';
+  if(p.t==='fim') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div class="script">Fim</div>'+orn+'<div class="txt" style="font-size:.95em;text-align:center">'+nome+', que venham muitas outras aventuras!</div></div><div class="num">'+num+'</div></div>';
   if(p.t==='musica'){ var svg=''; try{ svg=QRCodeGen.toSVG(location.origin+'/#/livro/'+d.id,{ec:'M',quiet:1}); }catch(e){}
-    return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div style="font-size:2em">🎵</div><div class="grande" style="font-size:1.5em;margin:.3em 0">A música de '+nome+'</div><div class="qr">'+svg+'</div><div class="peq" style="margin-top:6%">Aponte a câmera do celular pra ouvir a música e ler o livro com ela tocando.</div></div><div class="num">'+num+'</div></div>'; }
-  if(p.t==='branco') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div class="peq">Espaço pra um desenho ou uma mensagem especial ✏️</div></div></div>';
-  return '<div class="lv-pag" style="'+est+'"><div class="fundo" style="background:linear-gradient(160deg,'+c[1]+','+c[2]+')"></div><div class="miolo" style="color:#fff"><img src="'+MASCOTE+'" alt="" style="width:30%"><div class="grande" style="color:#fff;font-size:1.4em;margin-top:.4em">Capivarinha Love</div><div class="peq" style="opacity:.9">capivarinhalove.com.br</div></div></div>';
+    return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div class="grande" style="font-size:1.5em;margin:.3em 0">A música de '+nome+'</div>'+orn+'<div class="qr">'+svg+'</div><div class="peq" style="margin-top:6%">Aponte a câmera do celular pra ouvir a música e ler o livro com ela tocando.</div></div><div class="num">'+num+'</div></div>'; }
+  if(p.t==='branco') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div class="peq">Espaço pra um desenho ou uma mensagem especial</div></div></div>';
+  return '<div class="lv-pag" style="'+est+'"><div class="fundo" style="background:linear-gradient(160deg,'+c[1]+','+c[2]+')"></div><div class="miolo" style="color:#fff">'+capaMini.replace('class="moldura"','class="moldura" style="width:40%"')+'<div class="peq" style="opacity:.95;margin-top:10%;font-weight:700;letter-spacing:.03em">capivarinhalove.com.br</div></div></div>';
 }
 function abrirLeitor(d,tema,t,opts){
   opts=opts||{};
@@ -907,6 +955,20 @@ function textoCentro(ctx,txt,cx,y,maxW,fonte,cor,lh){
 function fundoTexto(ctx,W,H,c){ var g=ctx.createRadialGradient(W/2,0,W*.05,W/2,H*.2,H*.95); g.addColorStop(0,'#ffffff'); g.addColorStop(1,c[0]); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); }
 var _imgCache={};
 function img(src){ if(!_imgCache[src]) _imgCache[src]=carregarImg(src); return _imgCache[src]; }
+/* enfeite fino (linha + losango) no lugar dos emojis */
+function ornamento(ctx,cx,y,w,cor){
+  ctx.save(); ctx.strokeStyle=cor; ctx.fillStyle=cor; ctx.globalAlpha=.55; ctx.lineWidth=Math.max(1.5,w*.006);
+  var r=w*.035; ctx.beginPath(); ctx.moveTo(cx-w/2,y); ctx.lineTo(cx-r*2,y); ctx.moveTo(cx+r*2,y); ctx.lineTo(cx+w/2,y); ctx.stroke();
+  ctx.globalAlpha=.8; ctx.beginPath(); ctx.moveTo(cx,y-r); ctx.lineTo(cx+r,y); ctx.lineTo(cx,y+r); ctx.lineTo(cx-r,y); ctx.closePath(); ctx.fill(); ctx.restore();
+}
+/* capa do livro em miniatura, com moldura branca e sombra (página 2 e contracapa) */
+async function capaMiniCanvas(ctx,d,x,y,w){
+  if(!d.capa) return; var h=w*4/3;
+  try{ var im=await img(d.capa);
+    ctx.save(); ctx.shadowColor='rgba(42,27,61,.3)'; ctx.shadowBlur=w*.08; ctx.shadowOffsetY=w*.03; ctx.fillStyle='#fff'; ctx.fillRect(x-w*.035,y-w*.035,w*1.07,h+w*.07); ctx.restore();
+    cobrir(ctx,im,x,y,w,h);
+  }catch(e){}
+}
 async function desenharPaginaCanvas(p,d,tema,num,W,H){
   var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var ctx=cv.getContext('2d');
   var c=tema.cores||['#FFE8B8','#F6B86B','#7BAE5A'], u=W/100, nome=d.nome;
@@ -921,48 +983,44 @@ async function desenharPaginaCanvas(p,d,tema,num,W,H){
       var y=H*.05;
       function linha(t,tam,cor){ ctx.font='800 '+tam+'px "Baloo 2"'; quebrar(ctx,t,W*.86).forEach(function(l){ ctx.lineWidth=tam*.16; ctx.strokeStyle='rgba(70,25,45,.75)'; ctx.strokeText(l,W/2,y); ctx.fillStyle=cor; ctx.fillText(l,W/2,y); y+=tam*1.0; }); }
       if(tit.indexOf(nome)===0){ linha(nome,u*12,'#FFE6A6'); linha(resto,u*7,'#FFFFFF'); } else linha(tit,u*8,'#FFFFFF');
-      ctx.font='700 '+(u*2.6)+'px Inter'; ctx.fillStyle='rgba(255,255,255,.85)'; ctx.textAlign='right'; ctx.fillText('Capivarinha Love',W*.95,H*.955);
     }
     return cv;
   }
   if(p.t==='contra'){
     var gg=ctx.createLinearGradient(0,0,W,H); gg.addColorStop(0,c[1]); gg.addColorStop(1,c[2]); ctx.fillStyle=gg; ctx.fillRect(0,0,W,H);
-    try{ var m=await img(MASCOTE); ctx.drawImage(m,W*.35,H*.33,W*.3,W*.3*m.naturalHeight/m.naturalWidth); }catch(e){}
-    textoCentro(ctx,'Capivarinha Love',W/2,H*.62,W*.8,'800 '+(u*7)+'px "Baloo 2"','#fff',u*8);
-    textoCentro(ctx,'capivarinhalove.com.br',W/2,H*.7,W*.8,'600 '+(u*3.4)+'px Inter','rgba(255,255,255,.9)',u*4);
+    await capaMiniCanvas(ctx,d,W*.3,H*.24,W*.4);
+    textoCentro(ctx,'capivarinhalove.com.br',W/2,H*.72,W*.8,'700 '+(u*3.6)+'px Inter','rgba(255,255,255,.95)',u*4);
     return cv;
   }
   fundoTexto(ctx,W,H,c);
   if(p.t==='texto'){
     var tx=flexTxt(((tema.paginas||[])[p.i]||{}).texto||'',nome,d.genero);
-    ctx.font=(u*8)+'px serif'; ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillText(tema.emoji||'✨',W*.06,H*.04);
-    ctx.textAlign='right'; ctx.fillText('✨',W*.94,H*.88);
     var tam=u*5.6, lh=tam*1.5; ctx.font='600 '+tam+'px "Baloo 2"';
     var ls=quebrar(ctx,tx,W*.78); while(ls.length*lh>H*.72 && tam>u*3.6){ tam-=u*.2; lh=tam*1.5; ctx.font='600 '+tam+'px "Baloo 2"'; ls=quebrar(ctx,tx,W*.78); }
     var y0=(H-ls.length*lh)/2; ctx.fillStyle='#2A1B3D'; ctx.textAlign='left'; ctx.textBaseline='top';
     ls.forEach(function(l,i){ ctx.fillText(l,W*.11,y0+i*lh); });
+    ornamento(ctx,W/2,y0+ls.length*lh+lh*.6,W*.42,c[2]);
   } else if(p.t==='pertence'){
-    try{ var m2=await img(MASCOTE); var mw=W*.34; ctx.drawImage(m2,(W-mw)/2,H*.2,mw,mw*m2.naturalHeight/m2.naturalWidth); }catch(e){}
-    textoCentro(ctx,'Este livro pertence a',W/2,H*.5,W*.8,'600 '+(u*4.4)+'px "Baloo 2"','#6E5C82',u*5);
-    textoCentro(ctx,nome,W/2,H*.56,W*.86,(u*15)+'px "Grand Hotel"',c[2],u*15);
-    textoCentro(ctx,'com amor, ______________________',W/2,H*.8,W*.86,'500 '+(u*3.6)+'px Inter','#6E5C82',u*4);
+    await capaMiniCanvas(ctx,d,W*.29,H*.1,W*.42);
+    textoCentro(ctx,'Este livro pertence a',W/2,H*.56,W*.8,'600 '+(u*4.4)+'px "Baloo 2"','#6E5C82',u*5);
+    textoCentro(ctx,nome,W/2,H*.62,W*.86,(u*15)+'px "Grand Hotel"',c[2],u*15);
+    textoCentro(ctx,'com amor, ______________________',W/2,H*.84,W*.86,'500 '+(u*3.6)+'px Inter','#6E5C82',u*4);
   } else if(p.t==='rosto'){
-    ctx.font=(u*16)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText(tema.emoji||'📖',W/2,H*.22);
-    var hh=textoCentro(ctx,flexTxt(tema.titulo,nome,d.genero),W/2,H*.42,W*.8,'800 '+(u*9)+'px "Baloo 2"',c[2],u*9.5);
+    ornamento(ctx,W/2,H*.33,W*.42,c[2]);
+    var hh=textoCentro(ctx,flexTxt(tema.titulo,nome,d.genero),W/2,H*.37,W*.8,'800 '+(u*9)+'px "Baloo 2"',c[2],u*9.5);
+    ornamento(ctx,W/2,H*.39+hh,W*.42,c[2]);
     textoCentro(ctx,'Uma aventura mágica criada especialmente para '+nome,W/2,H*.44+hh,W*.75,'500 '+(u*3.8)+'px Inter','#6E5C82',u*5);
-    textoCentro(ctx,'Capivarinha Love · Livro Mágico',W/2,H*.86,W*.8,'600 '+(u*3.2)+'px Inter','#6E5C82',u*4);
   } else if(p.t==='fim'){
     textoCentro(ctx,'Fim',W/2,H*.3,W*.8,(u*24)+'px "Grand Hotel"',c[2],u*24);
-    ctx.font=(u*12)+'px serif'; ctx.textAlign='center'; ctx.fillText('💛',W/2,H*.52);
+    ornamento(ctx,W/2,H*.56,W*.42,c[2]);
     textoCentro(ctx,nome+', que venham muitas outras aventuras!',W/2,H*.68,W*.75,'600 '+(u*5)+'px "Baloo 2"','#2A1B3D',u*6.5);
   } else if(p.t==='musica'){
-    textoCentro(ctx,'🎵',W/2,H*.12,W*.8,(u*12)+'px serif','#000',u*12);
-    textoCentro(ctx,'A música de '+nome,W/2,H*.27,W*.8,'800 '+(u*7.5)+'px "Baloo 2"',c[2],u*8);
+    textoCentro(ctx,'A música de '+nome,W/2,H*.22,W*.8,'800 '+(u*7.5)+'px "Baloo 2"',c[2],u*8);
     try{ var svg=QRCodeGen.toSVG(location.origin+'/#/livro/'+d.id,{ec:'M',quiet:1}); var q=await carregarImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));
       var qs=W*.46; ctx.fillStyle='#fff'; ctx.fillRect((W-qs)/2-u*2,H*.42-u*2,qs+u*4,qs+u*4); ctx.drawImage(q,(W-qs)/2,H*.42,qs,qs); }catch(e){}
     textoCentro(ctx,'Aponte a câmera do celular pra ouvir a música e ler o livro com ela tocando.',W/2,H*.8,W*.72,'500 '+(u*3.6)+'px Inter','#6E5C82',u*4.6);
   } else if(p.t==='branco'){
-    textoCentro(ctx,'Espaço pra um desenho ou uma mensagem especial ✏️',W/2,H*.47,W*.7,'500 '+(u*3.8)+'px Inter','#9C8BAE',u*5);
+    textoCentro(ctx,'Espaço pra um desenho ou uma mensagem especial',W/2,H*.47,W*.7,'500 '+(u*3.8)+'px Inter','#9C8BAE',u*5);
   }
   if(num && p.t!=='pertence' && p.t!=='rosto' && p.t!=='branco'){ ctx.font='700 '+(u*2.6)+'px Inter'; ctx.fillStyle='rgba(42,27,61,.45)'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(String(num),W/2,H*.965); }
   return cv;
