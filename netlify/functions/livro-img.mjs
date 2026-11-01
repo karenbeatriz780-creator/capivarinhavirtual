@@ -1,5 +1,6 @@
 // LIVRO MÁGICO — entrega as imagens guardadas.
 //  img/tema/<id>          → capas de vitrine (públicas)
+//  ex/<id>/capa|pN        → exemplos escolhidos no painel (públicos)
 //  img/<pedido>/capa      → capa do livro (com o token do livro)
 //  img/<pedido>/p1..p5    → ilustrações (só com o livro PAGO)
 //  foto/<pedido>          → foto enviada (só com o token; é o que a IA usa de referência)
@@ -14,7 +15,7 @@ export default async (req) => {
     const k = (u.searchParams.get('k') || '').trim();
     const t = (u.searchParams.get('t') || '').trim();
     let publico = false;
-    if (/^img\/tema\/[a-z0-9-]{1,40}$/.test(k)) publico = true;
+    if (/^img\/tema\/[a-z0-9-]{1,40}$/.test(k) || /^ex\/(?:L[0-9a-f]{14}|F[0-9a-f]{10})\/(?:capa|p[1-9]|p1[0-9])$/.test(k)) publico = true;
     else {
       const mm = /^(?:img|foto)\/(L[0-9a-f]{14})(?:\/(capa|p[1-9]|p1[0-9]))?$/.exec(k);
       if (!mm) return nao(400);

@@ -5,7 +5,30 @@
 //                    { acao: 'rascunho', ideia }        → a IA escreve uma história nova (rascunho)
 //                    { acao: 'vitrine', id }            → gera a capa de vitrine (exemplo da página inicial)
 //                    { acao: 'vitrine-status', id }
-import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi } from './_livros.mjs';
+//                    { acao: 'exemplo-add', id }        → usa um livro PAGO como exemplo na página (copia capa + ilustrações)
+//                    { acao: 'exemplo-foto', foto }     → foto sua (ex.: livro impresso) pra girar na página
+//                    { acao: 'exemplos-salvar', exemplos:[{id,mostrar}] } → ordem / mostrar / tirar
+import crypto from 'node:crypto';
+import { getStore } from '@netlify/blobs';
+import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex } from './_livros.mjs';
+
+// ---------- exemplos (vitrine da página) ----------
+async function lerExemplos() { try { return (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) { return []; } }
+function urlEx(id, nome, v) { return '/.netlify/functions/livro-img?k=' + encodeURIComponent('ex/' + id + '/' + nome) + '&v=' + (v || 1); }
+function exPublico(x) {
+  const o = { id: x.id, tipo: x.tipo, mostrar: x.mostrar !== false, capa: urlEx(x.id, 'capa', x.em), legenda: x.legenda || '' };
+  if (x.tipo === 'livro') {
+    Object.assign(o, { nome: x.nome, genero: x.genero, tema: x.tema, titulo: x.titulo, textos: x.textos || [], pedido: x.pedido,
+      paginas: Array.from({ length: x.n || 0 }, (_, i) => urlEx(x.id, 'p' + (i + 1), x.em)) });
+  }
+  return o;
+}
+async function copiarBlob(de, para) {
+  const r = await loja().getWithMetadata(de, { type: 'arrayBuffer' }).catch(() => null);
+  if (!r || !r.data) return false;
+  await loja().set(para, r.data, { metadata: r.metadata || {} });
+  return true;
+}
 
 const MODELOS_TEXTO = ['openai/gpt-5.4-mini', 'google/gemini-3.8-flash', 'anthropic/claude-haiku-4-5'];
 
@@ -73,10 +96,11 @@ export default async (req) => {
       const temas = await lerTemas();
       if (u.searchParams.get('admin') === '1') {
         if (!admin) return json({ erro: 'Senha incorreta.' }, 401);
-        return json({ temas });
+        return json({ temas, exemplos: (await lerExemplos()).map(exPublico) });
       }
       const pubs = temas.filter((t) => t.status === 'publicado').sort((a, b) => (a.ordem || 99) - (b.ordem || 99)).map(publico);
-      return new Response(JSON.stringify({ temas: pubs }), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' } });
+      const exemplos = (await lerExemplos()).filter((x) => x.mostrar !== false).map(exPublico);
+      return new Response(JSON.stringify({ temas: pubs, exemplos }), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' } });
     }
 
     if (req.method !== 'POST') return json({ erro: 'Método não permitido.' }, 405);
@@ -89,6 +113,49 @@ export default async (req) => {
       const ids = {}; for (const t of lista) { if (ids[t.id]) return json({ erro: 'Duas histórias com o mesmo id: ' + t.id }, 400); ids[t.id] = 1; }
       await loja().setJSON('temas', lista);
       return json({ ok: true, temas: lista });
+    }
+    if (b.acao === 'exemplo-add') {
+      const id = String(b.id || '').trim();
+      if (!/^L[0-9a-f]{14}$/.test(id)) return json({ erro: 'Código do livro inválido (começa com L).' }, 400);
+      const g = await getStore('presentes').get(id, { type: 'json' }).catch(() => null);
+      if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
+      if (!g.pago) return json({ erro: 'Só dá pra usar como exemplo um livro pago (com todas as ilustrações).' }, 400);
+      const L = g.livro, pags = L.paginas || [];
+      if (!(L.capa && L.capa.ok) || !pags.length || pags.some((p) => !p || !p.ok)) return json({ erro: 'Esse livro ainda não terminou de ficar pronto. Tente daqui a pouco.' }, 400);
+      if (!(await copiarBlob('img/' + id + '/capa', 'ex/' + id + '/capa'))) return json({ erro: 'Não achei a capa desse livro.' }, 404);
+      for (let i = 1; i <= pags.length; i++) await copiarBlob('img/' + id + '/p' + i, 'ex/' + id + '/p' + i);
+      const temas = await lerTemas(), t = temas.find((x) => x.id === L.tema) || {};
+      const ex = {
+        id, tipo: 'livro', pedido: id, nome: L.nome, genero: L.genero, tema: L.tema, n: pags.length, em: Date.now(), mostrar: true,
+        titulo: flex(t.titulo || '{nome}', L.nome, L.genero), textos: (t.paginas || []).map((p) => flex(p.texto || '', L.nome, L.genero))
+      };
+      const lista = (await lerExemplos()).filter((x) => x.id !== id); lista.unshift(ex);
+      await loja().setJSON('exemplos', lista);
+      return json({ ok: true, exemplos: lista.map(exPublico) });
+    }
+    if (b.acao === 'exemplo-foto') {
+      const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(String(b.foto || ''));
+      if (!m) return json({ erro: 'Mande uma foto JPG ou PNG.' }, 400);
+      const buf = Buffer.from(m[2], 'base64');
+      if (buf.length < 3000 || buf.length > 4500000) return json({ erro: 'Foto muito pequena ou muito grande.' }, 400);
+      const id = 'F' + crypto.randomBytes(5).toString('hex');
+      await loja().set('ex/' + id + '/capa', buf, { metadata: { tipo: m[1] } });
+      const lista = await lerExemplos(); lista.unshift({ id, tipo: 'foto', legenda: String(b.legenda || '').slice(0, 80), em: Date.now(), mostrar: true });
+      await loja().setJSON('exemplos', lista);
+      return json({ ok: true, exemplos: lista.map(exPublico) });
+    }
+    if (b.acao === 'exemplos-salvar') {
+      const atual = await lerExemplos(), porId = {}; atual.forEach((x) => { porId[x.id] = x; });
+      const nova = [];
+      (Array.isArray(b.exemplos) ? b.exemplos : []).forEach((e) => { const x = porId[e && e.id]; if (x && nova.indexOf(x) === -1) { x.mostrar = e.mostrar !== false; nova.push(x); } });
+      // os que saíram da lista: apaga as imagens
+      for (const x of atual) {
+        if (nova.indexOf(x) !== -1) continue;
+        const nomes = ['capa'].concat(Array.from({ length: x.n || 0 }, (_, i) => 'p' + (i + 1)));
+        for (const n of nomes) await loja().delete('ex/' + x.id + '/' + n).catch(() => {});
+      }
+      await loja().setJSON('exemplos', nova);
+      return json({ ok: true, exemplos: nova.map(exPublico) });
     }
     if (b.acao === 'restaurar') {
       await loja().setJSON('temas', TEMAS_PADRAO);

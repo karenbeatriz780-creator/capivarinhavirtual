@@ -142,6 +142,7 @@ export default async (req) => {
       pedidos.push({
         id: g.id,
         produto: g.produto,
+        livro: g.livro ? { nome: g.livro.nome || '', tema: g.livro.tema || '', status: g.livro.status || '', token: g.livro.token || '', genero: g.livro.genero || '' } : null,
         duracao: g.pagamento && g.pagamento.duracao || g.duracao || 'vitalicio',
         valor: g.pagamento ? g.pagamento.valor : 0,
         provedor: g.pagamento ? g.pagamento.provedor : null,
