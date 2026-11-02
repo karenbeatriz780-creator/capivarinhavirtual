@@ -191,6 +191,13 @@ h1.hero-t .script{color:var(--rose);font-size:1.02em;line-height:1.25;padding-ri
   background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);
   animation:btnMusBrilho 4.5s ease-in-out infinite;}
 @keyframes btnMusBrilho{0%{left:-60%;}55%,100%{left:130%;}}
+/* botão dourado do Livro infantil, ao lado do da música */
+.btn-livro{position:relative;overflow:hidden;color:#3A2208;
+  background:linear-gradient(120deg,#E9B949,#FFE08A 45%,#D9A23A);background-size:200% 100%;
+  box-shadow:0 10px 28px rgba(201,146,40,.38);animation:btnMusGrad 7s ease-in-out infinite;}
+.btn-livro::after{content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);animation:btnMusBrilho 4.5s ease-in-out infinite;}
+.btn-livro .liv-ic{font-size:1.15em;margin-right:.1rem}
 .cta-eq{display:inline-flex;align-items:flex-end;gap:2px;height:14px;margin-right:.15rem;}
 .cta-eq i{display:block;width:2.5px;border-radius:3px;background:var(--gold);
   animation:ctaEq 1s ease-in-out infinite;}
@@ -4050,6 +4057,7 @@ function telaHome(){
       '<a href="#comofunciona">Como funciona</a>'+
       '<a href="#pacotes">Preço</a>'+
       '<a href="#depoimentos">Depoimentos</a>'+
+      '<a href="#/livro">Livro infantil</a>'+
       '<a href="#/meus">Meus presentes</a>'+
     '</nav>'+
   '</div></header>'+
@@ -4067,6 +4075,7 @@ function telaHome(){
         '<a class="btn btn-musica btn-lg" href="#/criar/musica">'+
           '<span class="cta-eq"><i></i><i></i><i></i><i></i></span>'+
           'Criar música personalizada</a>'+
+        '<a class="btn btn-livro btn-lg" href="#/livro"><span class="liv-ic" aria-hidden="true">📖</span>Criar livro infantil</a>'+
         '<button type="button" class="link-amostra" id="heroAmostra">🎧 Ouvir exemplos de músicas</button>'+
         '<a class="btn btn-ghost btn-lg" href="#/meus">Ver meus presentes'+IC.down+'</a>'+
       '</div>'+
@@ -4126,7 +4135,10 @@ function telaHome(){
     '<img src="'+MASCOTE+'" alt="" style="width:96px;margin:0 auto 1.4rem">'+
     '<h2 style="font-size:clamp(1.8rem,5.4vw,2.6rem);font-weight:600">Alguém aí merece <span class="script" style="color:var(--rose-1);font-size:1.18em">chorar de alegria</span></h2>'+
     '<p style="color:#C9BCC1;margin:1rem auto 2rem;max-width:32rem;line-height:1.65">Fica pronta em menos de 1 minuto e você ouve antes de pagar.</p>'+
-    '<a class="btn btn-primary btn-lg" href="#/criar/musica">Criar minha música'+IC.arrow+'</a>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:.8rem;justify-content:center">'+
+      '<a class="btn btn-primary btn-lg" href="#/criar/musica">Criar minha música'+IC.arrow+'</a>'+
+      '<a class="btn btn-livro btn-lg" href="#/livro"><span class="liv-ic" aria-hidden="true">📖</span>Criar livro infantil</a>'+
+    '</div>'+
   '</div></section>'+
 
   '<footer class="site"><div class="shell">'+
