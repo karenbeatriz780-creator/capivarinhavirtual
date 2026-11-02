@@ -11,7 +11,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { lerDias, idsDosDiasTudo, diaBR } from './_indice.mjs';
-import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, motorRodando, adicionarExemplo, linkPdf, lerVendas } from './_livros.mjs';
+import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, motorRodando, adicionarExemplo, linkPdf, lerVendas, lerPropria, salvarPropria } from './_livros.mjs';
 
 // ---------- exemplos (vitrine da página) ----------
 async function lerExemplos() { try { return (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) { return []; } }
@@ -306,6 +306,8 @@ const NOVAS_HISTORIAS = [
   }
 ];
 
+// "Crie sua própria história": 11 páginas, 5 ilustradas (só pra contar no site; o texto a IA escreve)
+const PAGINAS_PROPRIA = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => ([0, 3, 5, 8, 10].indexOf(i) >= 0 ? { texto: '' } : { texto: '', so: true }));
 const MAX_ILUS = 5; // ilustrações novas por história (custo por livro)
 const MODELOS_TEXTO = ['openai/gpt-5.4-mini', 'google/gemini-3.8-flash', 'anthropic/claude-haiku-4-5'];
 
@@ -384,14 +386,18 @@ export default async (req) => {
       const temas = await lerTemas();
       if (u.searchParams.get('admin') === '1') {
         if (!admin) return json({ erro: 'Senha incorreta.' }, 401);
-        return json({ temas, exemplos: (await lerExemplos()).map(exPublico), vendasSite: await lerVendas() });
+        return json({ temas, propria: await lerPropria(), exemplos: (await lerExemplos()).map(exPublico), vendasSite: await lerVendas() });
       }
       // mais vendidos primeiro (vendas do site + vendas de fora que você colocou no painel); empate: ordem do painel
       const vendas = await lerVendas();
       const total = (t) => (vendas[t.id] || 0) + (t.vendasFora || 0);
-      const pubs = temas.filter((t) => t.status === 'publicado')
+      // "Crie sua própria história" entra na lista como mais uma opção (ordenada pelas vendas, igual às outras)
+      const prop = await lerPropria();
+      const lista = temas.filter((t) => t.status === 'publicado');
+      if (prop.status === 'publicado') lista.push(prop);
+      const pubs = lista
         .sort((a, b) => (total(b) - total(a)) || ((a.ordem || 99) - (b.ordem || 99)))
-        .map((t) => Object.assign(publico(t), { vendidos: total(t) }));
+        .map((t) => Object.assign(publico(t), { vendidos: total(t) }, t.propria ? { propria: true, paginas: PAGINAS_PROPRIA } : {}));
       const exemplos = (await lerExemplos()).filter((x) => x.mostrar !== false).map(exPublico);
       return new Response(JSON.stringify({ temas: pubs, exemplos }), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' } });
     }
@@ -422,6 +428,10 @@ export default async (req) => {
       await loja().setJSON('temas', lista);
       return json({ ok: true, temas: lista });
     }
+    if (b.acao === 'propria-salvar') {
+      const n = await salvarPropria(b.propria || {});
+      return json({ ok: true, propria: n });
+    }
     if (b.acao === 'livro-liberar') {
       // você libera um livro seu sem pagar (pra testar ou pra usar de exemplo). Não conta como venda.
       const id = String(b.id || '').trim();
@@ -447,7 +457,7 @@ export default async (req) => {
       const gs = (await Promise.all(ids.map((id) => pres.get(id, { type: 'json' }).catch(() => null)))).filter((g) => g && g.livro && !g.cancelado);
       const pagos = gs.filter((g) => g.pago);
       const ent = await Promise.all(pagos.map((g) => zl.get('lvent_' + g.id, { type: 'json' }).catch(() => null)));
-      const temas = await lerTemas(), nomeTema = (id) => { const t = temas.find((x) => x.id === id); return t ? (t.emoji || '📖') + ' ' + t.nome : id; };
+      const temas = await lerTemas(), nomeTema = (id) => { if (id === 'propria') return '✨ História própria'; const t = temas.find((x) => x.id === id); return t ? (t.emoji || '📖') + ' ' + t.nome : id; };
       const prov = (g) => (g.pagamento && g.pagamento.provedor) || '';
       const livros = pagos.map((g, i) => {
         const L = g.livro, ps = (L.paginas || []).filter((p) => p && !p.so && p.usa == null);
@@ -563,6 +573,24 @@ export default async (req) => {
       const t = await rascunhoIA(b.ideia);
       if (!t) return json({ erro: 'A IA não conseguiu escrever agora. Tente de novo.' }, 502);
       return json({ ok: true, tema: t });
+    }
+    if ((b.acao === 'vitrine' || b.acao === 'vitrine-status') && b.id === 'propria') {
+      const t = await lerPropria(), chaveTask = 'vit/propria';
+      if (b.acao === 'vitrine') {
+        const genero = b.genero === 'menino' ? 'menino' : 'menina';
+        const task = await criarImagem(promptImagem(t, { idade: 4, genero }, t.capa, true, true), [], '3:4', '2K');
+        await loja().setJSON(chaveTask, { task, genero, em: Date.now() });
+        return json({ ok: true, rodando: true });
+      }
+      const info = await loja().get(chaveTask, { type: 'json' }).catch(() => null);
+      if (!info || !info.task) return json({ ok: true, pronto: !!t.vitrineEm, propria: t });
+      const st = await verTarefa(info.task, 'imagem');
+      if (st.estado === 'falhou') { await loja().delete(chaveTask); return json({ erro: 'A geração da capa falhou. Tente de novo.' }, 502); }
+      if (st.estado !== 'pronto') return json({ ok: true, rodando: true });
+      await guardarImagem(st.urls[0], 'img/tema/propria');
+      const n = await salvarPropria({ vitrineEm: Date.now(), vitrineGenero: info.genero });
+      await loja().delete(chaveTask);
+      return json({ ok: true, pronto: true, propria: n });
     }
     if (b.acao === 'vitrine' || b.acao === 'vitrine-status') {
       const temas = await lerTemas();

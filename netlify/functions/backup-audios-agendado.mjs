@@ -17,7 +17,7 @@ export default async () => {
     const { blobs } = await livros.list({ prefix: 'foto/' });
     let apagadas = 0;
     for (const b of blobs.slice(0, 300)) {
-      const id = b.key.slice(5);
+      const id = b.key.slice(5).split('/')[0]; // foto/<pedido> ou foto/<pedido>/x1 (quem vai junto)
       const g = await presentes.get(id, { type: 'json' }).catch(() => null);
       const velho = !g || Date.now() - (g.criadoEm || 0) > 3 * 86400000;
       const pronto = g && g.pago && g.livro && g.livro.status === 'pronto';

@@ -13,12 +13,13 @@ function nao(status) { return new Response('não encontrado', { status: status |
 export default async (req) => {
   try {
     const u = new URL(req.url);
-    const m = /\/lv-foto\/(L[0-9a-f]{14})\/(foto|capa)-([0-9a-f]{24})\.(?:jpg|jpeg|png)$/i.exec(u.pathname);
+    const m = /\/lv-foto\/(L[0-9a-f]{14})\/(foto|capa|x[1-3])-([0-9a-f]{24})\.(?:jpg|jpeg|png)$/i.exec(u.pathname);
     if (!m) return nao(400);
     const [, id, nome, token] = m;
     const g = await getStore('presentes').get(id, { type: 'json' }).catch(() => null);
     if (!g || !g.livro || token.toLowerCase() !== g.livro.token) return nao();
-    const k = nome === 'foto' ? 'foto/' + id : 'img/' + id + '/capa';
+    // x1, x2, x3 = fotos de quem vai junto na história (mãe, pai, bichinho…)
+    const k = nome === 'foto' ? 'foto/' + id : /^x[1-3]$/i.test(nome) ? 'foto/' + id + '/' + nome.toLowerCase() : 'img/' + id + '/capa';
     const r = await loja().getWithMetadata(k, { type: 'arrayBuffer' }).catch(() => null);
     if (!r || !r.data) return nao();
     const buf = Buffer.from(r.data);

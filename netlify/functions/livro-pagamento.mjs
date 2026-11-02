@@ -31,7 +31,7 @@ export default async (req) => {
     let tema2 = null;
     if (tipo === 'dois') {
       const t2 = await acharTema(String(b.tema2 || ''));
-      if (!t2 || t2.status !== 'publicado' || t2.id === g.livro.tema) return json({ erro: 'Escolha a segunda aventura.' }, 400);
+      if (!t2 || t2.propria || t2.status !== 'publicado' || t2.id === g.livro.tema) return json({ erro: 'Escolha a segunda aventura.' }, 400);
       tema2 = t2.id;
     }
     // Pix ainda válido e do mesmo pacote? devolve o mesmo (não cria cobrança nova a cada clique)

@@ -51,6 +51,69 @@ export function flex(txt, nome, genero) {
 }
 
 // ---------------------------------------------------------------------------
+// QUEM VAI JUNTO NA HISTÓRIA (até 3: família, amigo ou bichinho), cada um com foto e nome.
+// pt = como aparece no texto ("a mamãe Ana"); en = como a IA desenha.
+// ---------------------------------------------------------------------------
+export const MAX_EXTRAS = 3;
+export const TIPOS_EXTRA = {
+  mae: { pt: 'a mamãe', en: "the child's mother, an adult woman" },
+  pai: { pt: 'o papai', en: "the child's father, an adult man" },
+  irmao: { pt: 'o irmão', en: "the child's brother" },
+  irma: { pt: 'a irmã', en: "the child's sister" },
+  avo_f: { pt: 'a vovó', en: "the child's grandmother, an older woman" },
+  avo_m: { pt: 'o vovô', en: "the child's grandfather, an older man" },
+  tio: { pt: 'o tio', en: "the child's uncle, an adult man" },
+  tia: { pt: 'a tia', en: "the child's aunt, an adult woman" },
+  primo: { pt: 'o primo', en: "the child's cousin, a boy" },
+  prima: { pt: 'a prima', en: "the child's cousin, a girl" },
+  amigo: { pt: 'o amigo', en: "the child's best friend, a boy" },
+  amiga: { pt: 'a amiga', en: "the child's best friend, a girl" },
+  pessoa: { pt: '', en: 'a person very close to the child' },
+  cachorro: { pt: 'o cachorrinho', en: 'the family pet dog', pet: true },
+  gato: { pt: 'o gatinho', en: 'the family pet cat', pet: true },
+  coelho: { pt: 'o coelhinho', en: 'the family pet rabbit', pet: true },
+  passaro: { pt: 'o passarinho', en: 'the family pet bird', pet: true },
+  pet: { pt: 'o bichinho de estimação', en: 'the family pet animal', pet: true }
+};
+const PAPEIS = ['mae', 'mamae', 'mainha', 'pai', 'papai', 'painho', 'vovo', 'vo', 'avo', 'tio', 'tia', 'titio', 'titia', 'irmao', 'irma', 'primo', 'prima', 'dinda', 'dindo', 'madrinha', 'padrinho'];
+function semAcento(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
+// "Papai", "Mamãe", "Vovó"… no lugar do nome: usa o próprio apelido ("o papai", "a vovó")
+export function nomeExtra(x) {
+  const t = TIPOS_EXTRA[x && x.tipo] || TIPOS_EXTRA.pessoa, n = String((x && x.nome) || '');
+  if (PAPEIS.indexOf(semAcento(n)) >= 0) {
+    const art = /^(a|as)\b/.test(t.pt) ? 'a ' : 'o ';
+    return art + n.toLowerCase();
+  }
+  return (t.pt ? t.pt + ' ' : '') + n;
+}
+function listaExtras(extras) {
+  const ns = (extras || []).filter((x) => x && x.nome).map(nomeExtra);
+  if (ns.length <= 1) return ns[0] || '';
+  return ns.slice(0, -1).join(', ') + ' e ' + ns[ns.length - 1];
+}
+// frase que entra na 1ª página (quem foi junto) e na última (quem estava lá no final)
+export function fraseExtras(livro) {
+  const ex = (livro && livro.extras) || [];
+  const lista = listaExtras(ex);
+  if (!lista) return null;
+  return {
+    ini: 'E sabe quem foi junto nessa aventura? ' + lista.charAt(0).toUpperCase() + lista.slice(1) + '!',
+    fim: 'E ' + lista + (ex.length > 1 ? ' estavam' : ' estava') + ' ali, pertinho, vibrando junto.'
+  };
+}
+// texto pronto de uma página da história (nome, menino/menina e quem foi junto)
+export function textoPagina(tema, livro, i) {
+  const ps = (tema && tema.paginas) || [];
+  let tx = flex((ps[i] || {}).texto || '', livro.nome, livro.genero);
+  const f = tema && tema.propria ? null : fraseExtras(livro);
+  if (f && tx) {
+    if (i === 0) tx = tx + ' ' + f.ini;
+    else if (i === ps.length - 1) tx = f.fim + ' ' + tx;
+  }
+  return tx;
+}
+
+// ---------------------------------------------------------------------------
 // HISTÓRIAS PRONTAS (o painel pode editar, criar novas e publicar)
 // Cada tema: 5 cenas. Cada cena vira 2 páginas no livro (texto à esquerda + ilustração à direita).
 // "cena" e "capa" são as instruções da ilustração (em inglês: a IA entende melhor).
@@ -181,8 +244,127 @@ export async function lerTemas() {
   return TEMAS_PADRAO;
 }
 export async function acharTema(id) {
+  if (id === 'propria') return lerPropria();
   const ts = await lerTemas();
   return ts.find((t) => t.id === id) || null;
+}
+
+// ---------------------------------------------------------------------------
+// "CRIE SUA PRÓPRIA HISTÓRIA": a pessoa conta como quer a história e a IA escreve
+// (10 a 12 páginas, 5 ilustradas). A vitrine (capa, vendas, publicar) fica no painel.
+// O livro guarda a história escrita em livro.temaProprio.
+// ---------------------------------------------------------------------------
+export const PROPRIA_PADRAO = {
+  id: 'propria', propria: true, emoji: '✨', status: 'publicado', ordem: 1,
+  nome: 'Crie sua própria história',
+  titulo: 'Crie sua própria história',
+  descricao: 'Você conta como quer a história e a gente escreve e ilustra com o rostinho da criança e de quem você quiser junto: família, amigos ou o bichinho de estimação.',
+  cores: ['#FFF1D6', '#F4C35A', '#6B4BC4'],
+  roupa: 'colorful comfortable clothes',
+  capa: 'standing in the middle of a giant open magical storybook, little scenes rising from the pages around (a castle, a beach, a forest with animals, a rocket in the stars), floating golden letters and sparkles, warm magical light',
+  vitrineEm: null, vitrineGenero: 'menina', vendasFora: 0
+};
+export async function lerPropria() {
+  let c = null; try { c = await loja().get('propria', { type: 'json' }); } catch (e) {}
+  return Object.assign({}, PROPRIA_PADRAO, c || {}, { id: 'propria', propria: true });
+}
+export async function salvarPropria(c) {
+  const atual = await lerPropria();
+  const n = Object.assign(atual, {
+    status: c.status === 'rascunho' ? 'rascunho' : (c.status === 'publicado' ? 'publicado' : atual.status),
+    descricao: c.descricao != null ? String(c.descricao).slice(0, 300) : atual.descricao,
+    capa: c.capa != null && String(c.capa).trim() ? String(c.capa).slice(0, 900) : atual.capa,
+    ordem: c.ordem != null ? (Number(c.ordem) || 1) : atual.ordem,
+    vendasFora: c.vendasFora != null ? Math.max(0, Math.min(1000000, parseInt(c.vendasFora, 10) || 0)) : atual.vendasFora
+  });
+  if (c.vitrineEm) { n.vitrineEm = c.vitrineEm; n.vitrineGenero = c.vitrineGenero === 'menino' ? 'menino' : 'menina'; }
+  await loja().setJSON('propria', n);
+  return n;
+}
+// a história do livro: a escrita pela IA (própria) ou a do catálogo
+export async function temaDoLivro(L) {
+  if (L && L.tema === 'propria') return L.temaProprio || null;
+  return acharTema(L && L.tema);
+}
+
+const MODELOS_HIST = ['openai/gpt-5.4-mini', 'google/gemini-3.8-flash', 'anthropic/claude-haiku-4-5'];
+function pedidoHistoria(L) {
+  const menina = L.genero === 'menina';
+  const idade = Number(L.idade) === 0 ? 'bebê de ' + (L.idadeMeses || 0) + ' meses' : (L.idade || 4) + ' anos';
+  const ex = (L.extras || []).filter((x) => x && x.nome);
+  const juntos = ex.length ? ex.map((x) => '- ' + nomeExtra(x) + ' (' + ((TIPOS_EXTRA[x.tipo] || {}).en || 'a person') + ')').join('\n') : '(ninguém: só a criança e os personagens que você inventar)';
+  return 'Escreva um livro infantil personalizado em português do Brasil.\n' +
+    'Protagonista: ' + L.nome + ', ' + (menina ? 'menina' : 'menino') + ', ' + idade + '.\n' +
+    'Quem vai junto na história (use exatamente esses nomes e papéis, e faça cada um participar de verdade):\n' + juntos + '\n' +
+    'O que a família pediu (siga com carinho todos os detalhes, momentos marcantes e preferências):\n + String(L.pedidoHistoria || ).slice(0, 2500) + \n\n' +
+    'Regras:\n' +
+    '- 11 páginas (pode ser 10 a 12). Cada "texto" tem de 35 a 60 palavras, linguagem de livro infantil, com começo, meio e fim e uma lição bonita no final. Use o nome ' + L.nome + ' e os nomes de quem vai junto direto no texto. Escreva ' + (menina ? 'no feminino' : 'no masculino') + ' para a criança.\n' +
+    '- EXATAMENTE 5 páginas com "ilustrada": true, e a PRIMEIRA página é sempre ilustrada. As outras são só texto ("ilustrada": false).\n' +
+    '- Para cada página ilustrada, "cena" é uma descrição em INGLÊS do que aparece na ilustração, começando com um verbo de ação (ex.: "riding a pony through..."), cheia de detalhes de cenário, cores e bichinhos, e dizendo quem de quem vai junto aparece (ex.: "with her mom and the dog Thor"). Use "the child" para a criança.\n' +
+    '- Tudo fofo, seguro e adequado para crianças: sem violência, sem medo, sem marcas, sem personagens famosos de desenho ou filme (troque por personagens originais parecidos). Se o pedido tiver algo impróprio, adapte com delicadeza.\n' +
+    '- "titulo": título da capa com o nome da criança (ex.: "' + L.nome + ' e o Safári Encantado"), até 45 letras.\n' +
+    '- "capa": cena da capa em INGLÊS, com a criança na frente e quem vai junto ao lado. "roupa": a roupa da criança em INGLÊS (sempre a mesma, combinando com a história).\n' +
+    '- "letra": letra de uma música infantil curta em português sobre essa história, com [Intro] "Era uma vez… ' + L.nome + '…", [Verse], [Chorus] repetindo o nome ' + L.nome + ', [Verse], [Chorus] e [Outro]. "estiloMusica": estilo em inglês terminando com "portuguese vocals".\n' +
+    'Responda SOMENTE com JSON válido neste formato:\n' +
+    '{"titulo":"...","emoji":"🎈","cores":["#hex claro","#hex médio","#hex escuro"],"roupa":"...","capa":"...","paginas":[{"texto":"...","ilustrada":true,"cena":"..."},{"texto":"...","ilustrada":false}],"letra":"...","estiloMusica":"children\'s song, ..., portuguese vocals"}';
+}
+// transforma a resposta da IA numa "história" igual às do catálogo (texto + cena; páginas só de texto)
+function montarTemaProprio(o, L) {
+  const brutas = (Array.isArray(o && o.paginas) ? o.paginas : []).map((p) => ({
+    texto: String((p && p.texto) || '').replace(/\s+/g, ' ').trim().slice(0, 700),
+    cena: String((p && p.cena) || '').replace(/\s+/g, ' ').trim().slice(0, 700),
+    ilu: !!(p && p.ilustrada)
+  })).filter((p) => p.texto).slice(0, 12);
+  if (brutas.length < 8) return null;
+  // exatamente 5 ilustradas (a 1ª sempre); se a IA errou, espalha pelas páginas
+  let ilus = brutas.map((p, i) => (p.ilu && p.cena ? i : -1)).filter((i) => i >= 0);
+  if (ilus.indexOf(0) < 0 && brutas[0].cena) ilus.unshift(0);
+  if (ilus.length !== 5 || ilus[0] !== 0) {
+    const n = brutas.length, alvo = [0, Math.round(n * 0.25), Math.round(n * 0.5), Math.round(n * 0.75), n - 1];
+    ilus = [...new Set(alvo)].slice(0, 5);
+  }
+  const fallbackCena = String((o && o.capa) || 'smiling in a magical colorful landscape').slice(0, 700);
+  const paginas = brutas.map((p, i) => (ilus.indexOf(i) >= 0 ? { texto: p.texto, cena: p.cena || fallbackCena } : { texto: p.texto, so: true }));
+  const cores = Array.isArray(o.cores) && o.cores.length === 3 && o.cores.every((c) => /^#[0-9a-f]{3,8}$/i.test(String(c))) ? o.cores : PROPRIA_PADRAO.cores;
+  const letra = String(o.letra || '').slice(0, 2500);
+  return {
+    id: 'propria', propria: true, emoji: String(o.emoji || '✨').slice(0, 4), status: 'publicado',
+    nome: 'História de ' + L.nome, titulo: String(o.titulo || (L.nome + ' e a Grande Aventura')).slice(0, 60),
+    cores, roupa: String(o.roupa || 'colorful comfortable clothes').slice(0, 300),
+    capa: String(o.capa || PROPRIA_PADRAO.capa).slice(0, 900), paginas,
+    letra: letra.length > 80 ? letra : '[Intro]\nEra uma vez… ' + L.nome + '!\n\n[Verse]\nUma história só minha, cheia de magia\nCom gente que eu amo e muita alegria\n\n[Chorus]\n' + L.nome + ', ' + L.nome + ', que aventura linda\nA nossa história mais bonita ainda!\n\n[Outro]\nFim… e começa de novo, ' + L.nome + '!',
+    estiloMusica: String(o.estiloMusica || "children's song, cheerful, warm vocals, catchy chorus, portuguese vocals").slice(0, 300)
+  };
+}
+// pede a história a 3 IAs ao mesmo tempo e usa a primeira que vier certinha
+export async function escreverHistoriaPropria(L) {
+  const sistema = 'Você é um autor premiado de livros infantis personalizados. Escreve em português do Brasil, com emoção, humor leve e muitos detalhes visuais. Responda SOMENTE com JSON válido, sem comentários.';
+  const pedido = pedidoHistoria(L);
+  const ctrls = [];
+  async function chamar(m) {
+    const ctl = new AbortController(); ctrls.push(ctl);
+    try {
+      const r = await fetch('https://api.unifically.com/v1/chat/completions', {
+        method: 'POST', signal: ctl.signal,
+        headers: { Authorization: 'Bearer ' + chaveApi(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: m, max_tokens: 6000, temperature: 0.85, messages: [{ role: 'system', content: sistema }, { role: 'user', content: pedido }] })
+      });
+      const d = await r.json().catch(() => null);
+      const txt = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
+      if (!r.ok || !txt) { console.log('história própria FALHA ' + m + ' ' + r.status); return null; }
+      const ini = txt.indexOf('{'), fim = txt.lastIndexOf('}');
+      const t = montarTemaProprio(JSON.parse(txt.slice(ini, fim + 1)), L);
+      if (t) console.log('história própria OK ' + m);
+      return t;
+    } catch (e) { console.log('história própria erro ' + m + ': ' + (e && e.message)); return null; }
+  }
+  const tema = await new Promise((resolve) => {
+    let faltam = MODELOS_HIST.length;
+    const tm = setTimeout(() => resolve(null), 90 * 1000);
+    MODELOS_HIST.forEach((m) => chamar(m).then((v) => { if (v) { clearTimeout(tm); resolve(v); } else if (--faltam === 0) { clearTimeout(tm); resolve(null); } }));
+  });
+  ctrls.forEach((c) => { try { c.abort(); } catch (e) {} });
+  return tema;
 }
 
 // Descrição da idade pra ilustração
@@ -232,7 +414,23 @@ export function cenaSegura(cena, recusas) {
   if ((recusas || 0) >= 3) TROCAS_DEPOIS.forEach(([re, por]) => { c = c.replace(re, por); });
   return c.replace(/\s{2,}/g, ' ').replace(/\ba a\b/gi, 'a').trim();
 }
+// quem vai junto: a foto de cada um vem logo depois da foto da criança (referências 2, 3, 4)
+function promptExtras(livro, ehCapa) {
+  const ex = ((livro && livro.extras) || []).filter((x) => x && x.nome);
+  if (!ex.length) return '';
+  const ord = ['SECOND', 'THIRD', 'FOURTH'];
+  const quem = ex.map((x, i) => {
+    const t = TIPOS_EXTRA[x.tipo] || TIPOS_EXTRA.pessoa;
+    return 'the ' + ord[i] + ' reference photo is ' + t.en + ' (named ' + x.nome + ')' +
+      (t.pet ? ': draw this exact animal, same species, breed, size, fur color and markings, friendly and cute'
+        : ': draw this exact person with the same face, age, skin tone, hair and look as in the photo, fully dressed in casual clothes that match the scene');
+  }).join('; ');
+  return 'Companions in this story: ' + quem + '. ' +
+    (ehCapa ? 'Show the companions on the cover around the child, slightly behind the child, ' : 'The companions take part in this scene together with the child, ') +
+    'everyone happy and natural, all in the same illustration style. The main child is always the hero, in the center and in front. ';
+}
 export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
+  const nEx = semFoto ? 0 : (((livro && livro.extras) || []).filter((x) => x && x.nome).length);
   return ESTILO_BASE +
     (semFoto ? 'The main character is an adorable, expressive Brazilian child with a big smile. '
       : 'The main character is the child from the FIRST reference photo. FACE LIKENESS IS THE TOP PRIORITY: the child must look IDENTICAL to the photo, a faithful portrait of this exact child. ' +
@@ -240,7 +438,10 @@ export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
         'hair color, hair texture (straight, wavy, curly or coily), hair length, hairline, bangs and hairstyle. Keep the same age, ethnicity and gender appearance. ' +
         'Do not beautify, do not make the face generic, do not change proportions: only render the same face in the illustration style, so the parents instantly recognize their own child. ') +
     'The child is ' + idadeIA(livro) + ', wearing ' + (tema.roupa || 'colorful comfortable clothes') + '. ' +
-    (ehCapa ? '' : 'If a SECOND reference image is given, keep the same character design and outfit as in it. ') +
+    (nEx ? promptExtras(livro, ehCapa) : '') +
+    (ehCapa ? '' : nEx
+      ? 'If there is one more reference image after the companion photos (the LAST one), it is the book cover: keep the same character designs and outfits as in it. '
+      : 'If a SECOND reference image is given, keep the same character design and outfit as in it. ') +
     'The child is fully dressed in the outfit described and is the clear hero of the scene, happy and expressive. ' +
     'Scene: the child ' + cena + '. ' +
     (ehCapa ? 'Book cover composition: keep the top quarter of the image calm and uncluttered (sky or soft background) because the title will be placed there. ' : '') +
@@ -347,12 +548,17 @@ function linkFoto(base, g, alt) {
 }
 // referências pra ilustração: foto + capa (pra manter o mesmo personagem). Se o Google recusar
 // uma referência, a próxima tentativa vai só com a foto (que é o que importa pro rosto).
+// fotos de quem vai junto (mãe, pai, bichinho…): /lv-foto/<pedido>/x1-<token>.jpg
+function linksExtras(base, g) {
+  return ((g.livro && g.livro.extras) || []).filter((x) => x && x.nome).map((x, i) => base + '/lv-foto/' + g.id + '/x' + (i + 1) + '-' + g.livro.token + '.jpg');
+}
 function refsPagina(base, g, p) {
-  // SEMPRE a foto real da criança (é ela que garante o rosto). Com a capa pronta, vai junto só como modelo de visual.
+  // SEMPRE a foto real da criança (é ela que garante o rosto), depois as fotos de quem vai junto.
+  // Com a capa pronta, ela vai por último, só como modelo de visual.
   // Se o Google recusar, NÃO troca nada: só insiste de novo, quantas vezes precisar.
-  const L = g.livro, foto = linkFoto(base, g, false);
-  if (!L.capa.ok) return [foto];
-  return [foto, L.capa.url || linkImg(base, g, 'capa')];
+  const L = g.livro, fotos = [linkFoto(base, g, false)].concat(linksExtras(base, g));
+  if (!L.capa.ok) return fotos;
+  return fotos.concat([L.capa.url || linkImg(base, g, 'capa')]);
 }
 function linkImg(base, g, nome) { return base + '/.netlify/functions/livro-img?k=' + encodeURIComponent('img/' + g.id + '/' + nome) + '&t=' + g.livro.token; }
 
@@ -430,7 +636,18 @@ export async function avancarLivro(id, base, opts) {
     const falta = g.pago ? true : !(previaPronta(g) && g.musicaPreviewUrl);
     if (falta && await ligarMotor(id, base)) return g;
   }
-  const tema = await acharTema(L.tema);
+  // CRIE SUA PRÓPRIA HISTÓRIA: primeiro a IA escreve a história (uns 10 a 30 s), depois segue igual às outras
+  if (L.tema === 'propria' && !L.temaProprio) {
+    L.escrita = L.escrita || {};
+    if (Date.now() - (L.escrita.em || 0) < (L.escrita.tent ? 20 * 1000 : 0)) return g;
+    L.escrita.em = Date.now(); L.escrita.tent = (L.escrita.tent || 0) + 1;
+    const tp = await escreverHistoriaPropria(L).catch(() => null);
+    if (tp) { L.temaProprio = tp; L.escrita.ok = Date.now(); L.historiaEm = Date.now(); }
+    else { L.escrita.erro = 'a IA não escreveu a história (tentativa ' + L.escrita.tent + '), tentando de novo'; }
+    await presentes.setJSON(g.id, g);
+    if (!tp) return g;
+  }
+  const tema = await temaDoLivro(L);
   if (!tema) return g;
   const nome = L.nome;
   let mudou = false;
@@ -441,13 +658,13 @@ export async function avancarLivro(id, base, opts) {
   // 1) capa (prévia)
   try {
     mudou = (await andarImagem(L.capa, 'img/' + g.id + '/capa',
-      (it) => criarImagem(promptImagem(tema, L, cenaSegura(tema.capa, it.recusas), true), [linkFoto(base, g, Math.floor((it.recusas || 0) / 3) % 2 === 1)], '3:4', '2K', it.recusas || 0), limite)) || mudou;
+      (it) => criarImagem(promptImagem(tema, L, cenaSegura(tema.capa, it.recusas), true), [linkFoto(base, g, Math.floor((it.recusas || 0) / 3) % 2 === 1)].concat(linksExtras(base, g)), '3:4', '2K', it.recusas || 0), limite)) || mudou;
   } catch (e) { console.error('livro capa', id, e.message); }
 
   // 2) música (prévia) — reaproveita se já existir pra esse nome + tema
   try {
     if (!g.musicaPreviewUrl) {
-      const chaveMus = 'mus/' + tema.id + '/' + normNome(nome);
+      const chaveMus = tema.propria ? 'mus/propria/' + g.id : 'mus/' + tema.id + '/' + normNome(nome);
       if (!L.musica.task) {
         const pronta = await loja().get(chaveMus, { type: 'json' }).catch(() => null);
         if (pronta && pronta.url) {
@@ -513,6 +730,7 @@ export async function avancarLivro(id, base, opts) {
       // conta a venda dessa história (livros liberados por você no painel não contam)
       if (!L.contado && !(g.pagamento && g.pagamento.provedor === 'admin')) { L.contado = true; await somarVenda(L.tema); }
       try { await loja().delete('foto/' + g.id); L.fotoApagada = true; } catch (e) {}
+      for (let i = 1; i <= (L.extras || []).length; i++) { try { await loja().delete('foto/' + g.id + '/x' + i); } catch (e) {} }
       if (L.autoExemplo) { L.autoExemplo = false; await presentes.setJSON(g.id, g); try { await adicionarExemplo(g.id); L.virouExemplo = true; } catch (e) { console.error('exemplo automático', e && e.message); } }
     } else if (acabou && L.status !== 'problema') {
       // alguma imagem não saiu depois de todas as tentativas: guarda a foto e avisa no painel (botão "Refazer imagens")
@@ -586,6 +804,11 @@ export function resumoPublico(g, base) {
     fotoRecusada: !!(L.capa && !L.capa.ok && (L.capa.recusas || 0) >= 4),
     musica: !!g.musicaPreviewUrl, musica2: !!g.musicaPreviewUrl2,
     nIlus: (L.paginas || []).filter((p) => !p.so && p.usa == null).length || null,
+    extras: (L.extras || []).map((x) => ({ tipo: x.tipo, nome: x.nome })),
+    txExtra: L.tema === 'propria' ? null : fraseExtras(L),
+    escrevendo: L.tema === 'propria' && !L.temaProprio,
+    temaProprio: L.temaProprio ? { id: 'propria', propria: true, emoji: L.temaProprio.emoji, nome: L.temaProprio.nome, titulo: L.temaProprio.titulo, cores: L.temaProprio.cores,
+      paginas: (L.temaProprio.paginas || []).map((p) => (p.so ? { texto: p.texto, so: true } : { texto: p.texto })) } : null,
     paginas: g.pago ? (L.paginas || []).map((p, i) => {
       if (p.so) return 'so';
       if (p.usa != null) { const o = (L.paginas || [])[p.usa]; return o && o.ok ? img('p' + (p.usa + 1)) : null; }
@@ -643,7 +866,7 @@ export async function entregarPreviaLivro(id, token, numero, base) {
   // a prévia vai UMA vez só pra este número (se pedir de novo em 10 min, não repete)
   if (!(await reservar('lvenv_' + id + '_' + num, 10 * 60 * 1000))) return 'enviado';
   const nome = g.livro.nome;
-  let tema = null; try { tema = await acharTema(g.livro.tema); } catch (e) {}
+  let tema = null; try { tema = await temaDoLivro(g.livro); } catch (e) {}
   const titulo = tema ? flex(tema.titulo, nome, g.livro.genero) : 'Livro Mágico';
   // 1) a capa + o link da prévia (no site ele lê o comecinho da história e ouve a música)
   const texto = '📖✨ *A prévia do livro de ' + nome + ' ficou pronta!*\n*' + titulo + '*\n\n' +
@@ -740,11 +963,11 @@ export async function adicionarExemplo(id) {
   if (!(L.capa && L.capa.ok) || !pags.length || pags.some((p) => !p || (p.usa == null && !p.so && !p.ok))) return { erro: 'Esse livro ainda não terminou de ficar pronto. Tente daqui a pouco.' };
   if (!(await copiarBlobLv('img/' + id + '/capa', 'ex/' + id + '/capa'))) return { erro: 'Não achei a capa desse livro.' };
   for (let i = 1; i <= pags.length; i++) if (pags[i - 1].usa == null && !pags[i - 1].so) await copiarBlobLv('img/' + id + '/p' + i, 'ex/' + id + '/p' + i);
-  const temas = await lerTemas(), t = temas.find((x) => x.id === L.tema) || {};
+  const t = L.temaProprio || (await lerTemas()).find((x) => x.id === L.tema) || {};
   const ex = {
     id, tipo: 'livro', pedido: id, nome: L.nome, genero: L.genero, tema: L.tema, n: pags.length, em: Date.now(), mostrar: true,
     mapa: pags.map((p, i) => (p.so ? -1 : p.usa != null ? p.usa : i)),
-    titulo: flex(t.titulo || '{nome}', L.nome, L.genero), textos: (t.paginas || []).map((p) => flex(p.texto || '', L.nome, L.genero))
+    titulo: flex(t.titulo || '{nome}', L.nome, L.genero), textos: (t.paginas || []).map((p, i) => textoPagina(t, L, i))
   };
   let lista = []; try { lista = (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) {}
   lista = lista.filter((x) => x.id !== id); lista.unshift(ex);
@@ -801,10 +1024,15 @@ export async function criarLivrosDoPacote(g) {
   for (const t of escolhidos) {
     const id = novoId(), token = novoToken();
     if (foto && foto.data) await loja().set('foto/' + id, foto.data, { metadata: foto.metadata || { tipo: 'image/jpeg' } });
+    // quem vai junto (mãe, pai, bichinho…) também entra nos outros livros do pacote
+    for (let k = 1; k <= (L.extras || []).length; k++) {
+      const fx = await loja().getWithMetadata('foto/' + g.id + '/x' + k, { type: 'arrayBuffer' }).catch(() => null);
+      if (fx && fx.data) await loja().set('foto/' + id + '/x' + k, fx.data, { metadata: fx.metadata || { tipo: 'image/jpeg' } });
+    }
     const n = {
       id, produto: 'livro', duracao: 'vitalicio', criadoEm: Date.now(), pago: true, pagoEm: Date.now(), cortesia: true, pacoteDe: g.id,
       meuNome: '', parceiroNome: L.nome, musicaParaNome: L.nome, musicaWhatsapp: g.musicaWhatsapp || g.whatsapp || '', whatsapp: g.whatsapp || '',
-      livro: { tema: t.id, nome: L.nome, genero: L.genero, idade: L.idade, idadeMeses: L.idadeMeses, token, status: 'criando', capa: {}, musica: {}, paginas: [], zapEntrega: L.zapEntrega || '' },
+      livro: { tema: t.id, nome: L.nome, genero: L.genero, idade: L.idade, idadeMeses: L.idadeMeses, extras: L.extras || [], token, status: 'criando', capa: {}, musica: {}, paginas: [], zapEntrega: L.zapEntrega || '' },
       pagamento: { valor: 0, provedor: 'pacote', pacoteDe: g.id }
     };
     await getStore('presentes').setJSON(id, n);

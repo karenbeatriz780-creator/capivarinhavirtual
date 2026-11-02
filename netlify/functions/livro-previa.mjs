@@ -1,7 +1,7 @@
 // LIVRO MÁGICO — começa um livro: guarda a foto, cria o pedido e dispara a CAPA + a MÚSICA (prévia).
 // POST { tema, nome, idade, idadeMeses, genero, foto (dataURL jpg/png), whatsapp? }
 import { getStore } from '@netlify/blobs';
-import { json, loja, novoId, novoToken, acharTema, avancarLivro, baseSite, chaveApi, PRECO_LIVRO } from './_livros.mjs';
+import { json, loja, novoId, novoToken, acharTema, avancarLivro, baseSite, chaveApi, PRECO_LIVRO, TIPOS_EXTRA, MAX_EXTRAS } from './_livros.mjs';
 import { indexar, indexarDia } from './_indice.mjs';
 
 // ATÉ 2 prévias grátis por pessoa (por aparelho). Depois de PAGAR, libera de novo.
@@ -48,6 +48,9 @@ export default async (req) => {
     if (nome === nome.toUpperCase() || nome === nome.toLowerCase()) nome = nome.toLowerCase().replace(/(^|[\s-])(\S)/g, (m, a, l) => a + l.toUpperCase()).replace(/\b(Da|De|Do|Das|Dos|E)\b/g, (x) => x.toLowerCase());
     if (nome.length < 2) return json({ erro: 'Escreva o nome da criança.' }, 400);
     const genero = b.genero === 'menina' ? 'menina' : 'menino';
+    // CRIE SUA PRÓPRIA HISTÓRIA: o que a família contou (a IA escreve a história a partir disso)
+    const pedidoHistoria = tema.propria ? String(b.historia || '').replace(/\s+\n/g, '\n').trim().slice(0, 2500) : '';
+    if (tema.propria && pedidoHistoria.length < 30) return json({ erro: 'Conte um pouquinho mais de como você quer a história (pelo menos 1 ou 2 frases).' }, 400);
     const idade = Math.max(0, Math.min(10, parseInt(b.idade, 10) || 0));
     const idadeMeses = idade === 0 ? Math.max(0, Math.min(11, parseInt(b.idadeMeses, 10) || 0)) : null;
 
@@ -56,6 +59,19 @@ export default async (req) => {
     const buf = Buffer.from(m[2], 'base64');
     if (buf.length < 8000) return json({ erro: 'A foto ficou muito pequena. Tente outra, com o rostinho bem visível.' }, 400);
     if (buf.length > 4.5 * 1024 * 1024) return json({ erro: 'A foto é muito grande. Tente outra.' }, 400);
+
+    // QUEM VAI JUNTO (opcional): até 3 — família, amigo ou bichinho — cada um com tipo, nome e foto
+    const extras = [], fotosExtras = [];
+    for (const x of (Array.isArray(b.extras) ? b.extras : []).slice(0, MAX_EXTRAS)) {
+      const tipo = TIPOS_EXTRA[x && x.tipo] ? x.tipo : null;
+      let nx = String((x && x.nome) || '').trim().replace(/\s+/g, ' ').slice(0, 24);
+      if (nx && (nx === nx.toUpperCase() || nx === nx.toLowerCase())) nx = nx.toLowerCase().replace(/(^|[\s-])(\S)/g, (mm, a, l) => a + l.toUpperCase());
+      const mx = /^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/.exec(String((x && x.foto) || ''));
+      if (!tipo || nx.length < 2 || !mx) return json({ erro: 'Complete quem vai junto na história: quem é, o nome e a foto.' }, 400);
+      const bx = Buffer.from(mx[2], 'base64');
+      if (bx.length < 3000 || bx.length > 4.5 * 1024 * 1024) return json({ erro: 'A foto de ' + nx + ' não serve. Tente outra.' }, 400);
+      extras.push({ tipo, nome: nx }); fotosExtras.push(bx);
+    }
 
     const senhaAdm = (process.env.ADMIN_SENHA || '').trim();
     const admin = !!senhaAdm && (req.headers.get('x-admin-key') || '') === senhaAdm;
@@ -98,13 +114,14 @@ export default async (req) => {
     const id = novoId();
     const token = novoToken();
     await loja().set('foto/' + id, buf, { metadata: { tipo: 'image/' + (m[1] === 'jpg' ? 'jpeg' : m[1]) } });
+    for (let i = 0; i < fotosExtras.length; i++) await loja().set('foto/' + id + '/x' + (i + 1), fotosExtras[i], { metadata: { tipo: 'image/jpeg' } });
 
     const zap = String(b.whatsapp || '').replace(/\D/g, '').slice(0, 13);
     const g = {
       id, produto: 'livro', duracao: 'vitalicio', criadoEm: Date.now(), pago: false,
       meuNome: '', parceiroNome: nome, musicaParaNome: nome,
       musicaWhatsapp: zap, whatsapp: zap,
-      livro: { tema: tema.id, nome, genero, idade, idadeMeses, token, status: 'criando', capa: {}, musica: {}, paginas: [] },
+      livro: { tema: tema.id, nome, genero, idade, idadeMeses, extras, pedidoHistoria: pedidoHistoria || undefined, token, status: 'criando', capa: {}, musica: {}, paginas: [] },
       pagamento: { valor: PRECO_LIVRO }
     };
     await getStore('presentes').setJSON(id, g);

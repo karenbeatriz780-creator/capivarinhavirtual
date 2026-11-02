@@ -6,7 +6,7 @@
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { PDFDocument } from 'pdf-lib';
 import { getStore } from '@netlify/blobs';
-import { loja, lerTemas, flex } from './_livros.mjs';
+import { loja, lerTemas, flex, textoPagina } from './_livros.mjs';
 import { SITE } from './_zap.mjs';
 import { POPPINS_BOLD, POPPINS_MEDIUM } from './_fontes.mjs';
 
@@ -84,7 +84,7 @@ function desenharPagina(p, d, tema, imgs, num, W, H, F, linkLivro) {
   }
   fundoTexto(ctx, W, H, c);
   if (p.t === 'texto') {
-    const tx = flex(((tema.paginas || [])[p.i] || {}).texto || '', nome, d.genero);
+    const tx = textoPagina(tema, { nome, genero: d.genero, extras: d.extras }, p.i);
     let tam = u * 5.6, lh = tam * 1.5; ctx.font = tam + 'px ' + F.texto;
     let ls = quebrar(ctx, tx, W * 0.78);
     while (ls.length * lh > H * 0.72 && tam > u * 3.6) { tam -= u * 0.2; lh = tam * 1.5; ctx.font = tam + 'px ' + F.texto; ls = quebrar(ctx, tx, W * 0.78); }
@@ -129,7 +129,7 @@ export async function gerarPdfsLivro(id) {
   const g = await presentes.get(id, { type: 'json' }).catch(() => null);
   if (!g || !g.livro || !g.pago) return { erro: 'livro não encontrado ou não pago' };
   const L = g.livro;
-  const temas = await lerTemas(), tema = temas.find((t) => t.id === L.tema);
+  const tema = L.temaProprio || (await lerTemas()).find((t) => t.id === L.tema);
   if (!tema) return { erro: 'história não encontrada' };
   const F = await carregarFontes();
   const imgs = { capa: await lerImagem('img/' + id + '/capa'), pags: [] };
@@ -137,7 +137,7 @@ export async function gerarPdfsLivro(id) {
     const p = L.paginas[i] || {};
     imgs.pags[i] = p.so ? null : await lerImagem('img/' + id + '/p' + ((p.usa != null ? p.usa : i) + 1));
   }
-  const d = { nome: L.nome, genero: L.genero };
+  const d = { nome: L.nome, genero: L.genero, extras: L.extras || [] };
   const ps = paginasDoLivro(tema), N = ps.length, link = (process.env.URL || SITE) + '/#/livro/' + id;
   const jpg = (cv, q) => cv.toBuffer('image/jpeg', q);
 
@@ -185,7 +185,7 @@ export async function gerarPdfPrevia(id, opcoes) {
   const g = await presentes.get(id, { type: 'json' }).catch(() => null);
   if (!g || !g.livro) return { erro: 'livro não encontrado' };
   const L = g.livro;
-  const temas = await lerTemas(), tema = temas.find((t) => t.id === L.tema);
+  const tema = L.temaProprio || (await lerTemas()).find((t) => t.id === L.tema);
   if (!tema) return { erro: 'história não encontrada' };
   const F = await carregarFontes();
   const ps0 = (L.paginas || []);
@@ -195,7 +195,7 @@ export async function gerarPdfPrevia(id, opcoes) {
   const ps = [{ t: 'capa' }, { t: 'pertence' }, { t: 'rosto' }];
   const ate = i0 >= 0 ? i0 : 0;
   for (let i = 0; i <= ate && i < (tema.paginas || []).length; i++) { ps.push({ t: 'texto', i }); if (i === i0 && imgs.pags[i0]) ps.push({ t: 'img', i }); }
-  const d = { nome: L.nome, genero: L.genero }, link = (process.env.URL || SITE) + '/#/livro/' + id;
+  const d = { nome: L.nome, genero: L.genero, extras: L.extras || [] }, link = (process.env.URL || SITE) + '/#/livro/' + id;
   // 1) pra ler no celular
   const psLer = ps.concat([{ t: 'trancado' }]);
   const doc = await PDFDocument.create(); doc.setTitle('Prévia do Livro Mágico de ' + L.nome);
