@@ -429,23 +429,32 @@ function promptExtras(livro, ehCapa) {
     (ehCapa ? 'Show the companions on the cover around the child, slightly behind the child, ' : 'The companions take part in this scene together with the child, ') +
     'everyone happy and natural, all in the same illustration style. The main child is always the hero, in the center and in front. ';
 }
+// ROSTO IDÊNTICO: a instrução do rosto vem PRIMEIRO (a IA dá mais peso ao começo), é repetida no final,
+// e a capa (quando vai junto) serve só pra roupa e cores — o rosto vem SEMPRE da foto real.
+const ROSTO =
+  'MOST IMPORTANT RULE, ABOVE EVERYTHING ELSE: the main child must have EXACTLY the same face as the child in the FIRST reference photo. ' +
+  'This is a personalized gift: the parents must look at the picture and instantly say "that is my child". ' +
+  'Copy precisely, feature by feature: face shape and width, cheeks, jaw and chin; the eyes (shape, size, distance between them, eyelids and eye color); eyebrows (shape and thickness); ' +
+  'nose (width, bridge and tip); mouth, lips and smile; ears; skin tone and undertone; freckles, moles, dimples or birthmarks; ' +
+  'hair color, hair texture (straight, wavy, curly or coily), length, hairline, part, bangs and hairstyle. Keep the same age, ethnicity and gender appearance. ' +
+  'Keep the REAL proportions of this face: do not enlarge the eyes, do not shrink the nose, do not slim or round the face, do not lighten or darken the skin, do not beautify, never use a generic cartoon face. ' +
+  'Only the rendering is illustrated (soft 3D picture-book shading and lighting); the facial structure stays a faithful portrait of the photo. ';
 export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
   const nEx = semFoto ? 0 : (((livro && livro.extras) || []).filter((x) => x && x.nome).length);
-  return ESTILO_BASE +
+  return (semFoto ? '' : ROSTO) + ESTILO_BASE +
     (semFoto ? 'The main character is an adorable, expressive Brazilian child with a big smile. '
-      : 'The main character is the child from the FIRST reference photo. FACE LIKENESS IS THE TOP PRIORITY: the child must look IDENTICAL to the photo, a faithful portrait of this exact child. ' +
-        'Copy precisely the face shape, cheeks and chin, the eyes (shape, size, spacing and color), eyebrows, eyelashes, nose, lips and smile, ears, skin tone, freckles, dimples or birthmarks, ' +
-        'hair color, hair texture (straight, wavy, curly or coily), hair length, hairline, bangs and hairstyle. Keep the same age, ethnicity and gender appearance. ' +
-        'Do not beautify, do not make the face generic, do not change proportions: only render the same face in the illustration style, so the parents instantly recognize their own child. ') +
+      : 'The main character is the child from the FIRST reference photo. ') +
     'The child is ' + idadeIA(livro) + ', wearing ' + (tema.roupa || 'colorful comfortable clothes') + '. ' +
     (nEx ? promptExtras(livro, ehCapa) : '') +
-    (ehCapa ? '' : nEx
-      ? 'If there is one more reference image after the companion photos (the LAST one), it is the book cover: keep the same character designs and outfits as in it. '
-      : 'If a SECOND reference image is given, keep the same character design and outfit as in it. ') +
-    'The child is fully dressed in the outfit described and is the clear hero of the scene, happy and expressive. ' +
+    (ehCapa || semFoto ? '' : (nEx
+      ? 'If there is one more reference image after the companion photos (the LAST one), it is the book cover: use it ONLY for the outfit, colors and art style. '
+      : 'If a SECOND reference image is given, it is the book cover: use it ONLY for the outfit, colors and art style. ') +
+      'Never copy the face from the cover: the face always comes from the FIRST photo. ') +
+    'The child is fully dressed in the outfit described and is the clear hero of the scene, happy and expressive, with the face clearly visible (not hidden, not turned away, not too small). ' +
     'Scene: the child ' + cena + '. ' +
-    (ehCapa ? 'Book cover composition: keep the top quarter of the image calm and uncluttered (sky or soft background) because the title will be placed there. ' : '') +
-    'Absolutely no text, letters, words, numbers on clothing except as described, logos or watermarks. Safe, wholesome, age-appropriate.';
+    (ehCapa ? 'Book cover composition: keep the top quarter of the image calm and uncluttered (sky or soft background) because the title will be placed there; the child is large in the frame with the face well lit. ' : '') +
+    'Absolutely no text, letters, words, numbers on clothing except as described, logos or watermarks. Safe, wholesome, age-appropriate. ' +
+    (semFoto ? '' : 'Final check before finishing: the child\'s face must be identical to the FIRST reference photo' + (nEx ? ', and each companion must look like their own photo' : '') + '.');
 }
 
 // ---------------------------------------------------------------------------
