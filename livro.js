@@ -406,6 +406,28 @@ function lvTemas(){
   if(_lvTemas) return Promise.resolve(_lvTemas);
   return fetch('/.netlify/functions/livro-temas').then(function(r){ return r.json(); }).then(function(d){ _lvTemas=(d&&d.temas)||[]; _lvEx=(d&&d.exemplos)||[]; return _lvTemas; });
 }
+/* PÁGINA INICIAL: livros prontos pra vitrine (primeiro os exemplos reais do painel, depois as histórias) */
+window.lvItensHome=function(){
+  return lvTemas().then(function(ts){
+    var mais=(ts[0]&&ts[0].vendidos>0)?ts[0].id:null, itens=[], usados={};
+    /* "Crie sua própria história" sempre em primeiro */
+    ts.forEach(function(t,i){ if(t.propria){ usados[t.id]=1; itens.push({capa:capaTema(t,i,6.4), titulo:'Crie sua própria história', sub:'Você conta, a gente escreve', ex:null, propria:true, selo:t.id===mais?'⭐ Mais vendido':'✨ Crie a sua'}); } });
+    _lvEx.filter(function(x){ return x.tipo==='livro' && x.paginas && x.paginas.length; }).slice(0,8).forEach(function(ex){
+      var t=lvTema(ex.tema)||{};
+      usados[ex.tema]=1;
+      itens.push({capa:htmlCapa({img:ex.capa,cores:t.cores,emoji:t.emoji,titulo:ex.titulo,nome:ex.nome,fs:6.4}), titulo:t.nome||ex.titulo, sub:'Exemplo: feito pra '+ex.nome, ex:ex.id, selo:ex.tema===mais?'⭐ Mais vendido':''});
+    });
+    ts.forEach(function(t,i){
+      if(usados[t.id] || itens.length>=10) return;
+      itens.push({capa:capaTema(t,i,6.4), titulo:t.nome, sub:t.propria?'Você conta, a gente escreve':'', ex:null, selo:t.id===mais?'⭐ Mais vendido':''});
+    });
+    return itens;
+  });
+};
+window.lvAbrirExemplo=function(id){
+  var ex=_lvEx.filter(function(x){ return x.id===id; })[0];
+  if(ex) abrirExemplo(ex, function(){ location.hash='#/livro/criar'; }); else location.hash='#/livro';
+};
 /* livro de exemplo (pago, escolhido no painel): prefere o do mesmo tema */
 function lvExLivro(tema){ var ls=_lvEx.filter(function(x){ return x.tipo==='livro' && x.paginas && x.paginas.length; }); return ls.filter(function(x){ return x.tema===tema; })[0]||ls[0]||null; }
 function lvExDoTema(id){ return _lvEx.filter(function(x){ return x.tipo==='livro' && x.tema===id; })[0]||null; }
@@ -873,7 +895,7 @@ function desenharPasso(){
       '<label class="lv-foto" for="lvArq">'+(LV.foto?'<img src="'+LV.foto+'" alt="Foto escolhida"><b>Trocar foto</b>':'<div class="ic">📷</div><b>Toque para escolher a foto</b><small>JPG ou PNG</small>')+'</label>'+
       '<input type="file" id="lvArq" accept="image/*" hidden>'+
       '<div class="lv-dica" style="background:#FFF0F3;color:#7A2440;border:1.5px solid #FFC2D1">⚠️<div><b>Atenção na foto:</b> a criança precisa estar <b>de roupa</b>. Foto <b>sem camisa, de fralda, de biquíni ou roupa de banho</b> é recusada pela inteligência artificial.</div></div>'+
-      '<div class="lv-dica">💡<div>Use uma foto só de <b>'+nm+'</b>, <b>de frente e com boa luz</b> (sem filtro, sem boné e sem óculos escuros). Depois de escolher, você <b>recorta o rostinho</b>. Assim a IA desenha certinho.</div></div>'+
+      '<div class="lv-dica">💡<div>Use uma foto só de <b>'+nm+'</b>, <b>de frente e com boa luz</b> (sem filtro, sem boné e sem óculos escuros). Depois de escolher, você <b>recorta o rostinho</b>. Quanto mais nítido o rosto na foto, <b>mais idêntico</b> ele fica no livro.</div></div>'+
       htmlQuemVaiJunto()+
       '<div class="lv-campo"><label for="lvZap">WhatsApp pra receber o livro <span style="font-weight:500;color:#8a7a96">(opcional)</span></label><input type="tel" id="lvZap" inputmode="tel" placeholder="(11) 91234-5678" value="'+esc(LV.zap)+'"></div>'+
       '<label class="lv-aceite"><input type="checkbox" id="lvAceite"'+(LV.aceite?' checked':'')+'><span>Sou responsável pela criança e autorizo usar '+(LV.extras.length?'as fotos':'a foto')+' só para criar este livro'+(LV.extras.length?' (e tenho a autorização de quem aparece nelas)':'')+'. '+(LV.extras.length?'As fotos são apagadas':'A foto é apagada')+' automaticamente depois.</span></label>'+

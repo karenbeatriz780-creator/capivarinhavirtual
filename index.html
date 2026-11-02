@@ -198,6 +198,64 @@ h1.hero-t .script{color:var(--rose);font-size:1.02em;line-height:1.25;padding-ri
 .btn-livro::after{content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;
   background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);animation:btnMusBrilho 4.5s ease-in-out infinite;}
 .btn-livro .liv-ic{font-size:1.15em;margin-right:.1rem}
+/* ===== PÁGINA INICIAL NOVA (livro em cima, música embaixo, meus presentes) ===== */
+.hn{position:relative;overflow:hidden;background:radial-gradient(120% 70% at 88% 0%,#FFE1EC 0%,var(--cream,#FFF8F4) 62%)}
+.hn-in{position:relative;padding-top:1.4rem;padding-bottom:1.7rem;max-width:34rem}
+.hn-cap{position:absolute;right:max(.2rem,calc(50% - 17rem));top:.7rem;width:clamp(84px,24vw,128px);filter:drop-shadow(0 10px 16px rgba(150,60,80,.2));animation:float 6s ease-in-out infinite;z-index:1}
+.hn-tag{display:inline-flex;gap:.35rem;align-items:center;background:#fff;border:1px solid #F6D4DF;color:#B42357;font-weight:700;font-size:.78rem;border-radius:999px;padding:.4rem .8rem;position:relative;z-index:2}
+h1.hn-t{font-size:clamp(1.95rem,8.4vw,2.7rem);line-height:1.08;margin:.9rem 0 .55rem;max-width:min(17rem,72%);font-weight:700;position:relative;z-index:2}
+h1.hn-t em{color:var(--rose,#D63A72)}
+.hn-sub{font-size:.93rem;line-height:1.55;color:#6B5560;margin:0 0 1.15rem;max-width:22rem}
+.hn-btn{display:flex;align-items:center;gap:.8rem;width:100%;border-radius:20px;padding:.95rem 1rem;margin-bottom:.75rem;text-decoration:none;position:relative;overflow:hidden;transition:transform .15s}
+.hn-btn:active{transform:scale(.98)}
+.hn-btn .ic{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex:none}
+.hn-btn .tx{min-width:0}
+.hn-btn b{display:block;font-size:1.08rem;line-height:1.15;font-weight:800}
+.hn-btn small{display:block;font-size:.78rem;font-weight:500;opacity:.85;margin-top:.15rem;line-height:1.3}
+.hn-btn .ar{margin-left:auto;font-size:1.4rem;font-weight:700;padding-left:.3rem}
+.hn-ouro{background:linear-gradient(120deg,#F2C14E,#FFE29A 50%,#E5A93A);background-size:200% 100%;color:#3A2208;box-shadow:0 12px 26px rgba(214,150,40,.38);animation:btnMusGrad 7s ease-in-out infinite}
+.hn-ouro .ic{background:rgba(255,255,255,.55)}
+.hn-ouro::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);transform:skewX(-20deg);animation:hnBrilho 3.6s ease-in-out infinite}
+@keyframes hnBrilho{0%,55%{left:-60%}100%{left:130%}}
+.hn-uva{background:linear-gradient(120deg,#3B1830,#5B2148);color:#fff;box-shadow:0 12px 26px rgba(70,20,50,.35)}
+.hn-uva .ic{background:rgba(255,255,255,.12)}
+.hn-conf{display:flex;justify-content:center;flex-wrap:wrap;gap:.35rem .9rem;font-size:.76rem;color:#7A6470;font-weight:600;margin-top:.2rem}
+.hn-sec{padding:1.7rem 0 .5rem}
+.hn-nota{font-size:.85rem;color:#6B5560;margin:-.35rem 0 .3rem;line-height:1.45}
+.hn-lv.prop .cv{box-shadow:0 0 0 3px #F2C14E,0 12px 22px rgba(214,150,40,.35)}
+.hn-sh{display:flex;align-items:flex-end;justify-content:space-between;gap:.6rem;margin-bottom:.8rem}
+.hn-sh h2{font-size:1.5rem;margin:0;line-height:1.1}
+.hn-sh h2 small{display:block;font-family:Inter,sans-serif;font-size:.74rem;font-weight:800;color:var(--rose,#D63A72);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.25rem}
+.hn-sh a{font-size:.85rem;font-weight:700;color:#B42357;text-decoration:none;white-space:nowrap}
+.hn-ca{display:flex;gap:.8rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:var(--pad,1.2rem);padding:.3rem var(--pad,1.2rem) 1rem;margin:0 calc(-1 * var(--pad,1.2rem));scrollbar-width:none}
+.hn-ca::-webkit-scrollbar{display:none}
+.hn-lv{flex:none;width:136px;scroll-snap-align:start;background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit;font:inherit}
+.hn-lv .cv{position:relative;width:136px;aspect-ratio:3/4;border-radius:6px 12px 12px 6px;overflow:hidden;box-shadow:-3px 0 0 rgba(0,0,0,.08) inset,0 12px 22px rgba(60,30,40,.25)}
+.hn-lv .cv .lv-capa{position:absolute;inset:0;width:100%;height:100%}
+.hn-lv .sel{position:absolute;left:6px;bottom:8px;z-index:3;background:#FFF3C4;color:#7A4A00;font-size:.62rem;font-weight:800;border-radius:999px;padding:.2rem .5rem}
+.hn-lv b{display:block;font-size:.82rem;margin-top:.5rem;line-height:1.2}
+.hn-lv span.s{font-size:.72rem;color:#8A7380}
+.hn-lv.sk .cv{background:linear-gradient(90deg,#F4E6EA,#FBF2F4,#F4E6EA);background-size:200% 100%;animation:hnSk 1.2s linear infinite}
+@keyframes hnSk{to{background-position:-200% 0}}
+.hn-cta{display:flex;align-items:center;justify-content:center;gap:.45rem;flex-wrap:wrap;border-radius:16px;padding:.9rem;font-weight:800;font-size:.98rem;text-decoration:none;position:relative;overflow:hidden}
+.hn-free{display:inline-block;background:#E8F7EE;color:#1E7A45;font-size:.66rem;font-weight:800;border-radius:999px;padding:.15rem .5rem}
+.hn-uva .hn-free{background:rgba(255,255,255,.18);color:#fff}
+.hn-mus{display:flex;align-items:center;gap:.75rem;background:#fff;border:1px solid #F1E2E7;border-radius:18px;padding:.75rem;margin-bottom:.6rem;box-shadow:0 6px 16px rgba(90,40,60,.06)}
+.hn-mus .pl{width:46px;height:46px;border-radius:50%;border:0;background:linear-gradient(135deg,#FF8DB8,#D63A72);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 14px rgba(214,58,114,.35);cursor:pointer}
+.hn-mus .pl svg{width:18px;height:18px;fill:#fff}
+.hn-mus .tx{flex:1;min-width:0}
+.hn-mus b{display:block;font-size:.92rem}
+.hn-mus small{font-size:.76rem;color:#8A7380}
+.hn-mus .br{height:4px;border-radius:4px;background:#F3E4E9;margin-top:.4rem;overflow:hidden}
+.hn-mus .br i{display:block;height:100%;width:0;background:#D63A72}
+.hn-mp{background:#fff;border-radius:22px;padding:1.1rem;border:1px solid #F1E2E7;box-shadow:0 10px 24px rgba(90,40,60,.08);margin:1.4rem 0 1.8rem}
+.hn-mp h3{font-size:1.25rem;margin:0 0 .25rem}
+.hn-mp p{font-size:.84rem;color:#6B5560;margin:0 0 .75rem;line-height:1.45}
+.hn-mp form{display:flex;gap:.5rem}
+.hn-mp input{flex:1;min-width:0;border:2px solid #F0DCE3;border-radius:14px;padding:.75rem;font-size:1rem;font-family:inherit}
+.hn-mp input:focus{outline:none;border-color:#E7A9C0}
+.hn-mp button{background:#2A1B2E;color:#fff;font-weight:800;border:0;border-radius:14px;padding:.75rem 1.05rem;font-size:.95rem;cursor:pointer}
+.hn-mp .er{font-size:.8rem;color:#C0392B;margin-top:.4rem}
 .cta-eq{display:inline-flex;align-items:flex-end;gap:2px;height:14px;margin-right:.15rem;}
 .cta-eq i{display:block;width:2.5px;border-radius:3px;background:var(--gold);
   animation:ctaEq 1s ease-in-out infinite;}
@@ -2941,7 +2999,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
-<script src="/livro.js?v=29"></script>
+<script src="/livro.js?v=31"></script>
 <script>
 /* =========================================================
    CAPIVARINHA LOVE — aplicação completa (single file)
@@ -4062,35 +4120,35 @@ function telaHome(){
     '</nav>'+
   '</div></header>'+
 
-  '<section class="hero"><div class="hero-blob"></div><div class="shell hero-in">'+
-    '<div>'+
-      '<span class="eyebrow">'+IC.clock+'Música pronta em menos de 1 minuto.</span>'+
-      '<h1 class="hero-t">Declare seu amor'+
-        '<span class="l2"><span class="script">para quem você ama</span><span class="heart-pop">'+IC.heartO+'</span>'+
-          '<svg class="underline-sw" viewBox="0 0 340 12" aria-hidden="true"><path d="M3 8.5C64 3 150 1.6 337 5.4"/></svg>'+
-        '</span>'+
-      '</h1>'+
-      '<p class="hero-sub">Uma música personalizada com o nome e a história de quem você ama. E você ouve antes de pagar.</p>'+
-      '<div class="hero-cta">'+
-        '<a class="btn btn-musica btn-lg" href="#/criar/musica">'+
-          '<span class="cta-eq"><i></i><i></i><i></i><i></i></span>'+
-          'Criar música personalizada</a>'+
-        '<a class="btn btn-livro btn-lg" href="#/livro"><span class="liv-ic" aria-hidden="true">📖</span>Criar livro infantil</a>'+
-        '<button type="button" class="link-amostra" id="heroAmostra">🎧 Ouvir exemplos de músicas</button>'+
-        '<a class="btn btn-ghost btn-lg" href="#/meus">Ver meus presentes'+IC.down+'</a>'+
-      '</div>'+
-    '</div>'+
-    '<div class="hero-art">'+
-      '<img src="'+MASCOTE+'" alt="Capivarinha segurando um coração" fetchpriority="high">'+
-      '<span class="hart h1">'+IC.heart+'</span><span class="hart h2">'+IC.heart+'</span><span class="hart h3">'+IC.heart+'</span>'+
-    '</div>'+
-  '</div>'+
-  '<div class="shell" style="padding-bottom:2.6rem">'+
-    '<div class="trust">'+
-      '<div class="trust-i">'+IC.clock+'<div><b>Pronta em menos de 1 minuto</b><span>do celular, sem instalar nada</span></div></div>'+
-      '<div class="trust-i">'+IC.shield+'<div><b>100% seguro</b><span>e confidencial</span></div></div>'+
-      '<div class="trust-i">'+IC.heartO+'<div><b>Feito com amor</b><span>para emocionar</span></div></div>'+
-    '</div>'+
+  '<section class="hn"><div class="shell hn-in">'+
+    '<img class="hn-cap" src="'+MASCOTE+'" alt="" fetchpriority="high">'+
+    '<span class="hn-tag">✨ Prévia grátis · veja antes de pagar</span>'+
+    '<h1 class="hn-t">Presentes que <em>emocionam</em> de verdade</h1>'+
+    '<p class="hn-sub">Um livro com o rostinho do seu filho ou uma música com o nome de quem você ama. Pronto em minutos.</p>'+
+    '<a class="hn-btn hn-ouro" href="#/livro"><span class="ic" aria-hidden="true">📖</span><span class="tx"><b>Criar livro infantil</b><small>Seu filho como protagonista + 2 músicas</small></span><span class="ar" aria-hidden="true">›</span></a>'+
+    '<a class="hn-btn hn-uva" href="#/criar/musica"><span class="ic" aria-hidden="true">🎵</span><span class="tx"><b>Criar música personalizada</b><small>Com o nome e a história de vocês</small></span><span class="ar" aria-hidden="true">›</span></a>'+
+    '<div class="hn-conf"><span>👀 Prévia grátis</span><span>🔒 Pix seguro</span><span>💬 Suporte no Zap</span></div>'+
+  '</div></section>'+
+
+  '<section class="hn-sec"><div class="shell">'+
+    '<div class="hn-sh"><h2><small>📖 Livro Mágico</small>Crie a história do seu filho</h2><a href="#/livro">Ver histórias ›</a></div>'+
+    '<p class="hn-nota">Cada livro é criado na hora, com a <b>foto</b> e o <b>nome</b> da sua criança. Veja alguns exemplos:</p>'+
+    '<div class="hn-ca" id="hnLivros">'+[0,1,2,3].map(function(){ return '<div class="hn-lv sk"><div class="cv"></div><b>&nbsp;</b></div>'; }).join('')+'</div>'+
+    '<a class="hn-cta hn-ouro" href="#/livro/criar">📖 Criar o livro do meu filho <span class="hn-free">PRÉVIA GRÁTIS</span></a>'+
+  '</div></section>'+
+
+  '<section class="hn-sec"><div class="shell">'+
+    '<div class="hn-sh"><h2><small>🎵 Músicas</small>Ouça exemplos</h2></div>'+
+    AMOSTRAS.map(function(a){
+      return '<div class="hn-mus"><button type="button" class="pl" data-hnplay="'+a.id+'" aria-label="Tocar '+esc(a.titulo)+'">'+IC.play+'</button>'+
+        '<div class="tx"><b>'+esc(a.titulo)+'</b><small>'+esc(a.sub)+'</small><div class="br"><i id="hnbar-'+a.id+'"></i></div></div>'+
+        '<audio id="hnau-'+a.id+'" src="'+a.arquivo+'" preload="none"></audio></div>';
+    }).join('')+
+    '<a class="hn-cta hn-uva" href="#/criar/musica" style="margin-top:.3rem">🎵 Criar minha música <span class="hn-free">OUÇA ANTES DE PAGAR</span></a>'+
+    '<div class="hn-mp" id="meuspresentes"><h3>🎁 Meus presentes</h3>'+
+      '<p>Já comprou? Coloque o WhatsApp usado na compra pra ver seus livros e músicas.</p>'+
+      '<form id="hnMeus" novalidate><input id="hnTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" aria-label="Seu WhatsApp"><button type="submit">Ver</button></form>'+
+      '<div class="er" id="hnTelEr"></div></div>'+
   '</div></section>'+
 
   '<section class="sec" id="comofunciona"><div class="shell">'+
@@ -4175,9 +4233,44 @@ function telaHome(){
       apagarAvaliacao(b.dataset.del); telaHome(); toast('Avaliação removida.');
     };
   });
-  var ha=el('heroAmostra'); if(ha) ha.onclick=abrirAmostras;
+  ligarHomeNova();
   observarReveal(el('app'));
   // ligarVitrineSocial(); // desligado a pedido — aquele avisinho de "Fulano comprou" no canto da tela
+}
+
+/* página inicial nova: livros prontos (exemplos reais do painel), músicas de exemplo e meus presentes */
+function ligarHomeNova(){
+  var box=el('hnLivros');
+  if(box && window.lvItensHome){
+    window.lvItensHome().then(function(itens){
+      if(!el('hnLivros')) return;
+      if(!itens.length){ box.closest('.hn-sec').style.display='none'; return; }
+      box.innerHTML=itens.map(function(x,i){
+        return '<button type="button" class="hn-lv'+(x.propria?' prop':'')+'" data-hnlv="'+i+'"><div class="cv">'+x.capa+(x.selo?'<span class="sel">'+esc(x.selo)+'</span>':'')+'</div>'+
+          '<b>'+esc(x.titulo)+'</b><span class="s">'+esc(x.sub||'')+'</span></button>';
+      }).join('');
+      box.querySelectorAll('[data-hnlv]').forEach(function(b){ b.onclick=function(){ var x=itens[+b.dataset.hnlv]; if(x.propria) location.hash='#/livro/criar'; else if(x.ex && window.lvAbrirExemplo) window.lvAbrirExemplo(x.ex); else location.hash='#/livro'; }; });
+    }).catch(function(){ box.closest('.hn-sec').style.display='none'; });
+  }
+  var tocando=null;
+  function parar(){ AMOSTRAS.forEach(function(a){ var au=el('hnau-'+a.id); if(au){ au.pause(); } var b=document.querySelector('[data-hnplay="'+a.id+'"]'); if(b) b.innerHTML=IC.play; }); tocando=null; }
+  document.querySelectorAll('[data-hnplay]').forEach(function(b){ b.onclick=function(){
+    var id=b.dataset.hnplay, au=el('hnau-'+id);
+    if(tocando===id){ parar(); return; }
+    parar(); tocando=id; b.innerHTML=IC.pause;
+    au.play().catch(function(){ parar(); toast('Não consegui tocar agora.'); });
+    au.ontimeupdate=function(){ var bar=el('hnbar-'+id); if(bar && au.duration) bar.style.width=(au.currentTime/au.duration*100)+'%'; };
+    au.onended=parar;
+    try{ gaEvento('viu_amostras_musica',{}); }catch(e){}
+  }; });
+  aoSair(parar);
+  var f=el('hnMeus'); if(f) f.onsubmit=function(ev){
+    ev.preventDefault();
+    var t=el('hnTel').value.trim();
+    if(t.replace(/\D/g,'').length<10){ el('hnTelEr').textContent='Digite o número com DDD. Ex: (94) 98118-3763'; return; }
+    try{ Store.set('cl_meus',JSON.stringify({tel:t})); }catch(e){}
+    location.hash='#/meus';
+  };
 }
 
 /* --------- mini preview animado dentro do celular --------- */
