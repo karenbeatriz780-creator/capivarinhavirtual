@@ -4,7 +4,7 @@
 // Depois do pagamento, faz o mesmo com as outras ilustrações.
 // POST { id }   (segundo plano: pode rodar até 15 min; aqui para bem antes)
 import { getStore } from '@netlify/blobs';
-import { loja, avancarLivro, entregarPreviaLivro, previaPronta } from './_livros.mjs';
+import { avancarLivro, entregarPreviaLivro, previaPronta, reservar } from './_livros.mjs';
 import { SITE, enviarTexto, conversaAberta } from './_zap.mjs';
 
 const PASSO = 2000;
@@ -15,16 +15,20 @@ export default async (req) => {
   const id = String(b.id || '');
   if (!/^L[0-9a-f]{14}$/.test(id)) return;
   const trava = 'andar/' + id, eu = Math.random().toString(36).slice(2);
+  const lj = getStore({ name: 'livros', consistency: 'strong' });
   // já tem um motor rodando pra esse livro? então não começa outro (evita pedir a mesma imagem 2 vezes)
-  const atual = await loja().get(trava, { type: 'json' }).catch(() => null);
+  const atual = await lj.get(trava, { type: 'json' }).catch(() => null);
   if (atual && atual.ate > Date.now() && atual.eu) return;
-  await loja().setJSON(trava, { eu, ate: Date.now() + 20000 });
+  await lj.setJSON(trava, { eu, ate: Date.now() + 20000 });
+  await dormir(400 + Math.floor(Math.random() * 400));
+  const conf = await lj.get(trava, { type: 'json' }).catch(() => null);
+  if (!conf || conf.eu !== eu) return; // outro motor ganhou a vez
   const base = process.env.URL || SITE, zap = getStore('whatsapp'), inicio = Date.now();
   try {
     for (;;) {
-      const t = await loja().get(trava, { type: 'json' }).catch(() => null);
+      const t = await lj.get(trava, { type: 'json' }).catch(() => null);
       if (t && t.eu !== eu) return; // outro motor assumiu
-      await loja().setJSON(trava, { eu, ate: Date.now() + 20000 });
+      await lj.setJSON(trava, { eu, ate: Date.now() + 20000 });
       let g = null;
       try { g = await avancarLivro(id, base, { motor: true }); } catch (e) { console.error('livro-andar', id, e && e.message); }
       if (!g || !g.livro) break;
@@ -34,11 +38,10 @@ export default async (req) => {
         if (pend && previaPronta(g)) {
           const r = await entregarPreviaLivro(id, pend.t, pend.numero, base).catch(() => 'erro');
           if (r !== 'esperando' && r !== 'erro') await zap.delete('lvpend_' + id).catch(() => {});
-        } else if (pend && !pend.avisou && Date.now() - (pend.em || 0) > 45 * 1000) {
-          // passou de 45 s: avisa uma vez que está finalizando
-          pend.avisou = Date.now(); await zap.setJSON('lvpend_' + id, pend).catch(() => {});
+        } else if (pend && Date.now() - (pend.em || 0) > 45 * 1000 && await reservar('lvfin_' + id, 60 * 60 * 1000)) {
+          // passou de 45 s: avisa UMA vez que está finalizando
           const para = await conversaAberta(pend.numero);
-          if (para) await enviarTexto(para, '⏳ Estamos finalizando a capa, a música e a primeira ilustração… só mais um pouquinho! Já já chega aqui. 💛').catch(() => {});
+          if (para) await enviarTexto(para, '⏳ Estamos finalizando a capa, a música e a primeira ilustração… já já chega aqui. 💛').catch(() => {});
         }
         const tudo = previaPronta(g) && !!g.musicaPreviewUrl;
         if (tudo && !pend) break;
@@ -50,7 +53,7 @@ export default async (req) => {
       await dormir(PASSO);
     }
   } finally {
-    const t = await loja().get(trava, { type: 'json' }).catch(() => null);
-    if (t && t.eu === eu) await loja().delete(trava).catch(() => {});
+    const t = await lj.get(trava, { type: 'json' }).catch(() => null);
+    if (t && t.eu === eu) await lj.delete(trava).catch(() => {});
   }
 };

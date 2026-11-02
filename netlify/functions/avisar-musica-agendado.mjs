@@ -20,12 +20,7 @@ export default async () => {
         if (await motorRodando(p.id)) return; // o motor rápido já está cuidando (e manda sozinho)
         const r = await entregarPreviaLivro(p.id, p.t, p.numero, process.env.URL || SITE);
         if (r !== 'esperando' && r !== 'erro') { await loja.delete(b.key); return; }
-        // passou de 1 minuto e ainda não ficou pronta: avisa uma vez que está finalizando
-        if (r === 'esperando' && !p.avisou && Date.now() - (p.em || 0) > 60 * 1000) {
-          const para = await conversaAberta(p.numero);
-          if (para) await enviarTexto(para, '⏳ Estamos finalizando a capa, a música e a primeira ilustração… só mais um pouquinho! Já já chega aqui. 💛').catch(() => {});
-          p.avisou = Date.now(); await loja.setJSON(b.key, p);
-        }
+        // o aviso "estamos finalizando" é mandado só pelo motor (uma vez)
       } catch (e) { console.error('avisar-livro:', b.key, e && e.message); }
     }));
   } catch (e) {}

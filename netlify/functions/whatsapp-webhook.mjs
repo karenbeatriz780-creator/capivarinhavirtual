@@ -1,7 +1,7 @@
 import { getStore } from '@netlify/blobs';
 import { enviarTexto, marcarConversa, entregarMusica, entregarAudiosPagos, chaveNum, registrar, SITE } from './_zap.mjs';
 import { tratarBot, boasVindas } from './_bot.mjs';
-import { entregarPreviaLivro } from './_livros.mjs';
+import { entregarPreviaLivro, reservar } from './_livros.mjs';
 
 // WEBHOOK DO WHATSAPP (Meta Cloud API)
 // URL de callback:  https://capivarinhalove.com.br/.netlify/functions/whatsapp-webhook
@@ -52,7 +52,7 @@ async function processar(corpo) {
               await loja.setJSON('lvpend_' + lcod[1], { id: lcod[1], t: lcod[2].toLowerCase(), numero: String(msg.from), em: Date.now() });
               const r = await entregarPreviaLivro(lcod[1], lcod[2].toLowerCase(), msg.from, SITE);
               if (r !== 'esperando' && r !== 'erro') await loja.delete('lvpend_' + lcod[1]).catch(() => {});
-              if (r === 'esperando') {
+              if (r === 'esperando' && await reservar('lvrec_' + lcod[1] + '_' + String(msg.from), 10 * 60 * 1000)) {
                 await enviarTexto(msg.from, '✅ Recebi sua historinha! 📖✨\n\nEstou preparando a *capa* com o rostinho da criança, a *música* com o nome dela e a *primeira ilustração* da história. Assim que ficar pronto eu te mando aqui a prévia. 💛');
               } else if (r === 'naoachei') {
                 await enviarTexto(msg.from, 'Não achei esse livro 😕\nCrie o seu aqui: ' + SITE + '/#/livro');

@@ -235,7 +235,10 @@ export function cenaSegura(cena, recusas) {
 export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
   return ESTILO_BASE +
     (semFoto ? 'The main character is an adorable, expressive Brazilian child with a big smile. '
-      : 'The main character is the child from the FIRST reference photo: keep the exact same face, facial features, skin tone, eye color, hair color and hairstyle, so the parents instantly recognize their child. ') +
+      : 'The main character is the child from the FIRST reference photo. FACE LIKENESS IS THE TOP PRIORITY: the child must look IDENTICAL to the photo, a faithful portrait of this exact child. ' +
+        'Copy precisely the face shape, cheeks and chin, the eyes (shape, size, spacing and color), eyebrows, eyelashes, nose, lips and smile, ears, skin tone, freckles, dimples or birthmarks, ' +
+        'hair color, hair texture (straight, wavy, curly or coily), hair length, hairline, bangs and hairstyle. Keep the same age, ethnicity and gender appearance. ' +
+        'Do not beautify, do not make the face generic, do not change proportions: only render the same face in the illustration style, so the parents instantly recognize their own child. ') +
     'The child is ' + idadeIA(livro) + ', wearing ' + (tema.roupa || 'colorful comfortable clothes') + '. ' +
     (ehCapa ? '' : 'If a SECOND reference image is given, keep the same character design and outfit as in it. ') +
     'The child is fully dressed in the outfit described and is the clear hero of the scene, happy and expressive. ' +
@@ -548,6 +551,18 @@ export async function motorRodando(id) {
   const t = await loja().get('andar/' + id, { type: 'json' }).catch(() => null);
   return !!(t && t.ate > Date.now());
 }
+// RESERVA: só UMA parte do sistema manda cada mensagem (evita mensagens repetidas no WhatsApp).
+// Grava "é minha", espera um instante e confere se continua sendo minha.
+export async function reservar(chave, ttl) {
+  const zl = getStore({ name: 'whatsapp', consistency: 'strong' });
+  const ja = await zl.get(chave, { type: 'json' }).catch(() => null);
+  if (ja && Date.now() - (ja.em || 0) < ttl) return false;
+  const eu = Math.random().toString(36).slice(2);
+  await zl.setJSON(chave, { em: Date.now(), eu }).catch(() => {});
+  await new Promise((r) => setTimeout(r, 300 + Math.floor(Math.random() * 400)));
+  const v = await zl.get(chave, { type: 'json' }).catch(() => null);
+  return !!(v && v.eu === eu);
+}
 // AMOSTRA GRÁTIS: a 1ª ilustração da história (não é a capa) sai já na prévia, antes de pagar
 export function indiceAmostra(paginas) { const ps = paginas || []; for (let i = 0; i < ps.length; i++) { const p = ps[i]; if (p && !p.so && p.usa == null) return i; } return -1; }
 // índice da cena cuja ilustração esta página repete (ou null = ilustração nova)
@@ -625,19 +640,14 @@ export async function entregarPreviaLivro(id, token, numero, base) {
   }
   const para = await conversaAberta(num);
   if (!para) return 'semjanela';
-  // não manda a mesma prévia 2 vezes seguidas (o motor e o WhatsApp podem chegar juntos)
-  {
-    const zl = getStore('whatsapp'), k = 'lvenv_' + id + '_' + num;
-    const ja = await zl.get(k, { type: 'json' }).catch(() => null);
-    if (ja && Date.now() - (ja.em || 0) < 60 * 1000) return 'enviado';
-    await zl.setJSON(k, { em: Date.now() }).catch(() => {});
-  }
+  // a prévia vai UMA vez só pra este número (se pedir de novo em 10 min, não repete)
+  if (!(await reservar('lvenv_' + id + '_' + num, 10 * 60 * 1000))) return 'enviado';
   const nome = g.livro.nome;
   let tema = null; try { tema = await acharTema(g.livro.tema); } catch (e) {}
   const titulo = tema ? flex(tema.titulo, nome, g.livro.genero) : 'Livro Mágico';
   // 1) a capa + o link da prévia (no site ele lê o comecinho da história e ouve a música)
   const texto = '📖✨ *A prévia do livro de ' + nome + ' ficou pronta!*\n*' + titulo + '*\n\n' +
-    'Toque no link pra ler o começo da história e ouvir a prévia da música com o nome ' + nome + ' 🎵\n\n' + linkPreviaLivro(g);
+    '🎵 Ouça a música e veja o começo da história:\n' + linkPreviaLivro(g);
   const capa = SITE + '/.netlify/functions/livro-img?k=' + encodeURIComponent('img/' + id + '/capa') + '&t=' + g.livro.token;
   let ok = await enviarImagem(para, capa, texto);
   if (!ok) ok = await enviarTexto(para, texto);
@@ -650,25 +660,21 @@ export async function entregarPreviaLivro(id, token, numero, base) {
   if (!r && primeira) await enviarInfoPrevia(para, g);
   return 'enviado';
 }
-// depois do PDF da prévia: explica a amostra, as músicas, os valores e manda os 2 exemplos
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+// depois do PDF da prévia: o que libera + valores, 1 exemplo (PDF pra ler + PDF pra imprimir) e o link pra desbloquear
 export async function enviarInfoPrevia(para, g) {
   const nome = g.livro.nome, P = PACOTES_LIVRO;
-  let nTodos = 0; try { nTodos = (await lerTemas()).filter((t) => t.status === 'publicado').length; } catch (e) {}
+  await esperar(1500);
   await enviarTexto(para,
-    '👆 Essa é só uma *amostra*: você está vendo *1 ilustração* do que vai receber.\n\n' +
-    '🎵 A prévia da música toca *70 segundos*, mas cada música completa passa de *2 minutos*. E são *2 músicas* com o nome de ' + nome + '.\n\n' +
-    '🔓 *Depois do pagamento você recebe o livro completo*, com a história inteira ilustrada com o rostinho de ' + nome + ':\n' +
-    '📱 Versão digital pra ler no celular\n' +
-    '📄 PDF pra ler\n' +
-    '🖨️ PDF pra imprimir (folhas e livreto)\n' +
-    '🎶 As 2 músicas completas pra ouvir e baixar\n' +
-    'Tudo enviado aqui no WhatsApp logo após o pagamento.\n\n' +
-    '💛 *Valores:*\n' +
-    '• 1 livro: R$ ' + P.um.valor + '\n' +
-    '• 2 livros: R$ ' + P.dois.valor + '\n' +
-    '• Coleção completa' + (nTodos > 2 ? ' (' + nTodos + ' livros)' : '') + ': R$ ' + P.todos.valor + '\n\n' +
-    'É só abrir o link da prévia e tocar em *Desbloquear*.').catch(() => {});
-  try { await enviarExemplosZap(para, g.livro.tema); } catch (e) { console.error('exemplos zap', e && e.message); }
+    '👆 Essa é só uma *amostra*, com 1 ilustração.\n\n' +
+    '🔓 *Desbloqueando, você recebe:*\n' +
+    '📖 O livro completo, ilustrado com o rostinho de ' + nome + '\n' +
+    '🎵 2 músicas personalizadas completas\n' +
+    '📱 Versão digital + 🖨️ PDF pra imprimir\n\n' +
+    '💛 1 livro R$ ' + P.um.valor + ' · 2 livros R$ ' + P.dois.valor + ' · coleção R$ ' + P.todos.valor).catch(() => {});
+  try { await enviarExemploZap(para, g.livro.tema); } catch (e) { console.error('exemplo zap', e && e.message); }
+  await esperar(2500);
+  await enviarTexto(para, '🔓 *Ouça sua música e desbloqueie o livro de ' + nome + ':*\n' + linkPreviaLivro(g)).catch(() => {});
 }
 // PDF da prévia (capa, "este livro pertence a", título, o começo da história e a 1ª ilustração)
 export function linkPdfPrevia(g, tipo) { return SITE + '/lv-pdf/' + g.id + '/' + (tipo || 'previa') + '-' + g.livro.token + '.pdf'; }
@@ -677,39 +683,25 @@ export async function enviarPdfPrevia(para, g) {
   return enviarDocumento(para, linkPdfPrevia(g, 'previa'), 'Previa-Livro-Magico-' + n + '.pdf',
     '📖 *Prévia do livro de ' + g.livro.nome + '*\nA capa, o começo da história e a primeira ilustração. ✨');
 }
-export async function enviarExemplosZap(para, temaPreferido) {
+// 1 exemplo de livro pronto (o 1º marcado "📲 WhatsApp" no painel): o PDF pra ler e o PDF de folhas pra imprimir
+export async function enviarExemploZap(para, temaPreferido) {
   let lista = []; try { lista = (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) {}
-  lista = lista.filter((x) => x && x.tipo === 'livro' && x.mostrar !== false);
+  lista = lista.filter((x) => x && x.tipo === 'livro' && x.mostrar !== false && x.pedido);
   if (!lista.length) return 0;
-  const ordem = lista.filter((x) => x.tema === temaPreferido).concat(lista.filter((x) => x.tema !== temaPreferido));
-  // os que você marcou "📲 WhatsApp" no painel; sem marcar, um de menino e um de menina
-  let esc = lista.filter((x) => x.zap).slice(0, 2);
-  if (!esc.length) {
-    const menino = ordem.find((x) => x.genero === 'menino'), menina = ordem.find((x) => x.genero === 'menina');
-    if (menino) esc.push(menino); if (menina) esc.push(menina);
-    if (!esc.length) esc.push(ordem[0]);
-  }
-  await enviarTexto(para, '✨ *Exemplos de como vai ficar* 👇\n2 livros completos de outras crianças, com a história inteira ilustrada.');
-  for (const x of esc.slice(0, 2)) {
-    // manda o PDF do livro completo (se ainda não existir, manda a capa e já prepara o PDF pra próxima vez)
-    let foi = false;
-    if (x.pedido) {
-      const ge = await getStore('presentes').get(x.pedido, { type: 'json' }).catch(() => null);
-      if (ge && ge.pago && ge.livro && ge.livro.pdf) {
-        const n = String(ge.livro.nome || 'Livro').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        foi = await enviarDocumento(para, linkPdf(ge, 'ler'), 'Exemplo-Livro-Magico-' + n + '.pdf', '📖 *Exemplo de livro completo:* ' + (x.titulo || 'Livro Mágico'));
-      } else if (ge && ge.pago) {
-        await fetch(SITE + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.pedido }) }).catch(() => {});
-      }
-    }
-    if (!foi) {
-      const capa = SITE + '/.netlify/functions/livro-img?k=' + encodeURIComponent('ex/' + x.id + '/capa') + '&v=' + (x.em || 1);
-      await enviarImagem(para, capa, '✨ Exemplo de livro pronto: *' + (x.titulo || 'Livro Mágico') + '*');
-    }
-  }
-  await enviarTexto(para, '👆 Assim vai ficar o seu: a história inteira com o rostinho da criança em cada ilustração. Pra liberar, é só abrir o link da prévia e tocar em *Desbloquear*. 💛');
-  return esc.length;
+  const x = lista.find((y) => y.zap) || lista.find((y) => y.tema === temaPreferido) || lista[0];
+  const ge = await getStore('presentes').get(x.pedido, { type: 'json' }).catch(() => null);
+  if (!(ge && ge.pago && ge.livro)) return 0;
+  if (!ge.livro.pdf) { await fetch(SITE + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.pedido }) }).catch(() => {}); return 0; }
+  const n = String(ge.livro.nome || 'Livro').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  await esperar(1500);
+  await enviarTexto(para, '✨ *Veja um livro pronto, de outra criança* 👇');
+  await enviarDocumento(para, linkPdf(ge, 'ler'), 'Exemplo-Livro-Magico-' + n + '.pdf', '📱 *Exemplo: livro completo pra ler*\nA história inteira ilustrada, página por página.');
+  await esperar(1500);
+  await enviarDocumento(para, linkPdf(ge, 'folhas'), 'Exemplo-Livro-Magico-' + n + '-imprimir.pdf', '🖨️ *Exemplo: jeito de imprimir*\nCada folha A4 vira 2 páginas do livro. É só imprimir, empilhar e grampear.');
+  return 1;
 }
+// compatibilidade com o nome antigo
+export const enviarExemplosZap = enviarExemploZap;
 
 // PAINEL: refaz as imagens que falharam (zera as tentativas). A foto precisa ainda existir.
 export async function refazerImagens(id) {
