@@ -11,6 +11,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { lerDias, idsDosDiasTudo, diaBR } from './_indice.mjs';
+import { HISTORIAS_20 } from './_historias20.mjs';
 import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, motorRodando, adicionarExemplo, linkPdf, lerVendas, lerPropria, salvarPropria } from './_livros.mjs';
 
 // ---------- exemplos (vitrine da página) ----------
@@ -541,6 +542,21 @@ export default async (req) => {
       }
       await loja().setJSON('exemplos', nova);
       return json({ ok: true, exemplos: nova.map(exPublico) });
+    }
+    if (b.acao === 'importar20') {
+      // as 20 histórias novas (bíblicas e educativas), completas: entram como RASCUNHO.
+      // Se já existir com o mesmo id, atualiza o texto e mantém publicada/capa de vitrine/vendas.
+      const atuais = await lerTemas();
+      const porId = {}; atuais.forEach((t) => { porId[t.id] = t; });
+      let novas = 0, atualizadas = 0;
+      for (const n of HISTORIAS_20) {
+        const v = porId[n.id];
+        const t = limparTema(Object.assign({}, n, v ? { status: v.status, vitrineEm: v.vitrineEm, vitrineGenero: v.vitrineGenero, vendasFora: v.vendasFora, ordem: v.ordem } : { status: 'rascunho' }));
+        if (!t) continue;
+        if (v) { atuais[atuais.indexOf(v)] = t; atualizadas++; } else { atuais.push(t); novas++; }
+      }
+      await loja().setJSON('temas', atuais);
+      return json({ ok: true, temas: atuais, novas, atualizadas });
     }
     if (b.acao === 'importar') {
       // adiciona as histórias novas SEM apagar as suas. Se já existir uma com o mesmo id, atualiza o conteúdo
