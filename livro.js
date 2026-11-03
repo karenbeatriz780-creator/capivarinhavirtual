@@ -1479,7 +1479,9 @@ function desenharLvp(){
       '<div style="display:flex;flex-wrap:wrap;gap:.35rem">'+LVP_IDEIAS.map(function(x,i){ return '<button type="button" class="cl" data-lvpideia="'+i+'" style="font-size:.8rem;padding:.4rem .65rem;border-radius:999px">'+esc(x[0])+'</button>'; }).join('')+'</div>'+
       '<div class="lvp-bts"><button class="ouro" id="lvpIA">Escrever com IA</button><button class="cl" id="lvpBranco">Criar em branco</button><button class="cl" id="lvpRest">Restaurar as 5 originais</button></div></div>'+
     '<div class="lvp-it" style="display:block"><b>📚 Histórias novas prontas</b><p style="margin:.3rem 0 .2rem;font-size:.85rem;color:#666">Davi e Golias com Jesus, Um Dia com Jesus, Fazenda, Craque, Mundo das Cores, Dinossauros, Ateliê dos Sonhos, Natal Mágico, Astronauta da Galáxia e ABC Encantado. Cada uma com 5 ilustrações e páginas extras só de texto. <b>Não apaga as suas.</b> Fazenda, Craque e Galáxia são atualizadas; as outras entram como rascunho pra você revisar e publicar.</p>'+
-      '<div class="lvp-bts"><button class="ouro" id="lvpImp">Adicionar as histórias novas</button></div></div>';
+      '<div class="lvp-bts"><button class="ouro" id="lvpImp">Adicionar as histórias novas</button></div></div>'+
+    '<div class="lvp-it" style="display:block"><b>📚 20 histórias novas, completas</b><p style="margin:.3rem 0 .2rem;font-size:.85rem;color:#666">Arca de Noé, Daniel, Rainha Ester, Jonas, Bebê Moisés, Bom Samaritano, Criação, Pães e Peixinhos, Capa das Estrelas, Pequeno Herói, Bombeiro, Veterinário, Dentinhos, Amazônia, Planeta Limpinho, Laboratório, Sentimentos, Cofrinho, Bailarina e Pirata do Bem. Cada uma com <b>12 páginas e 5 ilustrações</b>, texto e música prontos. Entram como <b>rascunho</b>: gere a capa, crie um livro de exemplo e publique. <b>Não apaga as suas.</b></p>'+
+      '<div class="lvp-bts"><button class="ouro" id="lvpImp20">Adicionar as 20 histórias</button></div></div>';
   el('lvpCop').onclick=function(){ copiar(location.origin+'/#/livro','Link copiado!'); };
   ligarPropriaPnl();
   ligarVitrinePnl(); ligarRelatorioLivros();
@@ -1490,6 +1492,14 @@ function desenharLvp(){
   };
   c.querySelectorAll('[data-lvped]').forEach(function(b){ b.onclick=function(){ _lvp.ed=+b.dataset.lvped; desenharLvp(); }; });
   el('lvpBranco').onclick=function(){ _lvp.temas.push({id:'nova-'+Date.now().toString(36),emoji:'📖',status:'rascunho',ordem:_lvp.temas.length+1,nome:'Nova história',titulo:'{nome} e …',descricao:'',cores:['#FFE8F0','#E86A9E','#6B4BC4'],roupa:'',capa:'',paginas:[{},{},{},{},{}],letra:'',estiloMusica:"children's song, cheerful, catchy chorus, portuguese vocals"}); _lvp.ed=_lvp.temas.length-1; desenharLvp(); };
+  el('lvpImp20').onclick=function(){
+    var b=el('lvpImp20'); b.disabled=true; b.textContent='Adicionando…';
+    lvpPost({acao:'importar20'}).then(function(r){
+      if(!r.ok){ b.disabled=false; b.textContent='Adicionar as 20 histórias'; toast(r.d.erro||'Não deu.'); return; }
+      _lvp.temas=r.d.temas; _lvTemas=null; desenharLvp();
+      toast((r.d.novas||0)+' histórias novas'+(r.d.atualizadas?' e '+r.d.atualizadas+' atualizadas':'')+'. Estão em rascunho. 📚');
+    }).catch(function(){ b.disabled=false; b.textContent='Adicionar as 20 histórias'; toast('Sem conexão.'); });
+  };
   el('lvpImp').onclick=function(){
     var b=el('lvpImp'); b.disabled=true; b.textContent='Adicionando…';
     lvpPost({acao:'importar'}).then(function(r){ b.disabled=false; b.textContent='Adicionar as histórias novas';
