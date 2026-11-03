@@ -101,6 +101,16 @@ export function fraseExtras(livro) {
     fim: 'E ' + lista + (ex.length > 1 ? ' estavam' : ' estava') + ' ali, pertinho, vibrando junto.'
   };
 }
+// MÚSICA com quem vai junto: entra uma ponte cantando o nome de cada um (antes do final)
+export function letraComJunto(letra, livro, tema) {
+  const ex = ((livro && livro.extras) || []).filter((x) => x && x.nome);
+  if (!ex.length || (tema && tema.propria)) return letra;
+  const lista = listaExtras(ex);
+  const ponte = '[Bridge]\nE quem foi junto nessa aventura?\n' + lista.charAt(0).toUpperCase() + lista.slice(1) + '!\n' +
+    'De mãos dadas, que alegria pura\n' + livro.nome + ' e ' + (ex.length > 1 ? 'quem mais ama' : nomeExtra(ex[0])) + ', juntinhos na vida!\n\n';
+  const i = String(letra).search(/\[Outro\]/i);
+  return i >= 0 ? letra.slice(0, i) + ponte + letra.slice(i) : String(letra).replace(/\s*$/, '') + '\n\n' + ponte.trim();
+}
 // texto pronto de uma página da história (nome, menino/menina e quem foi junto)
 export function textoPagina(tema, livro, i) {
   const ps = (tema && tema.paginas) || [];
@@ -304,7 +314,7 @@ function pedidoHistoria(L) {
     '- Tudo fofo, seguro e adequado para crianças: sem violência, sem medo, sem marcas, sem personagens famosos de desenho ou filme (troque por personagens originais parecidos). Se o pedido tiver algo impróprio, adapte com delicadeza.\n' +
     '- "titulo": título da capa com o nome da criança (ex.: "' + L.nome + ' e o Safári Encantado"), até 45 letras.\n' +
     '- "capa": cena da capa em INGLÊS, com a criança na frente e quem vai junto ao lado. "roupa": a roupa da criança em INGLÊS (sempre a mesma, combinando com a história).\n' +
-    '- "letra": letra de uma música infantil curta em português sobre essa história, com [Intro] "Era uma vez… ' + L.nome + '…", [Verse], [Chorus] repetindo o nome ' + L.nome + ', [Verse], [Chorus] e [Outro]. "estiloMusica": estilo em inglês terminando com "portuguese vocals".\n' +
+    '- "letra": letra de uma música infantil curta em português sobre essa história (cantando também o nome de cada um que vai junto), com [Intro] "Era uma vez… ' + L.nome + '…", [Verse], [Chorus] repetindo o nome ' + L.nome + ', [Verse], [Chorus] e [Outro]. "estiloMusica": estilo em inglês terminando com "portuguese vocals".\n' +
     'Responda SOMENTE com JSON válido neste formato:\n' +
     '{"titulo":"...","emoji":"🎈","cores":["#hex claro","#hex médio","#hex escuro"],"roupa":"...","capa":"...","paginas":[{"texto":"...","ilustrada":true,"cena":"..."},{"texto":"...","ilustrada":false}],"letra":"...","estiloMusica":"children\'s song, ..., portuguese vocals"}';
 }
@@ -453,8 +463,11 @@ export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
     'The child is fully dressed in the outfit described and is the clear hero of the scene, happy and expressive, with the face clearly visible (not hidden, not turned away, not too small). ' +
     'Scene: the child ' + cena + '. ' +
     (ehCapa ? 'Book cover composition: keep the top quarter of the image calm and uncluttered (sky or soft background) because the title will be placed there; the child is large in the frame with the face well lit. ' : '') +
+    'CORRECT ANATOMY FOR EVERY PERSON AND ANIMAL: each person has exactly two arms, two hands and two legs, five fingers on each hand, and every arm clearly connected to the shoulder; no extra or missing arms, hands, legs, fingers or heads, no merged or floating limbs. ' +
+    'Each hand does only ONE thing: if the child is holding someone\'s hand, only the OTHER hand can touch or hold something else (or rests naturally). ' +
+    'Animals have the right number of legs, ears, eyes and one tail. ' +
     'Absolutely no text, letters, words, numbers on clothing except as described, logos or watermarks. Safe, wholesome, age-appropriate. ' +
-    (semFoto ? '' : 'Final check before finishing: the child\'s face must be identical to the FIRST reference photo' + (nEx ? ', and each companion must look like their own photo' : '') + '.');
+    (semFoto ? '' : 'Final check before finishing: count the arms and hands of every character (exactly two each); the child\'s face must be identical to the FIRST reference photo' + (nEx ? ', and each companion must look like their own photo' : '') + '.');
 }
 
 // ---------------------------------------------------------------------------
@@ -673,14 +686,16 @@ export async function avancarLivro(id, base, opts) {
   // 2) música (prévia) — reaproveita se já existir pra esse nome + tema
   try {
     if (!g.musicaPreviewUrl) {
-      const chaveMus = tema.propria ? 'mus/propria/' + g.id : 'mus/' + tema.id + '/' + normNome(nome);
+      // com gente junto (mãe, pai, bichinho…) a música é só deste livro: leva os nomes deles também
+      const temJunto = (L.extras || []).some((x) => x && x.nome);
+      const chaveMus = tema.propria ? 'mus/propria/' + g.id : temJunto ? 'mus/junto/' + g.id : 'mus/' + tema.id + '/' + normNome(nome);
       if (!L.musica.task) {
         const pronta = await loja().get(chaveMus, { type: 'json' }).catch(() => null);
         if (pronta && pronta.url) {
           g.musicaPreviewUrl = pronta.url; g.musicaPreviewUrl2 = pronta.url2 || null; g.musicaPreviewId = pronta.taskId || null;
           L.musica.reaproveitada = true; mudou = true;
         } else if ((L.musica.tent || 0) < MAX_TENTATIVAS) {
-          L.musica.task = await criarMusica(flex(tema.letra, nome, L.genero), tema.estiloMusica, flex(tema.titulo, nome, L.genero));
+          L.musica.task = await criarMusica(letraComJunto(flex(tema.letra, nome, L.genero), L, tema), tema.estiloMusica, flex(tema.titulo, nome, L.genero));
           L.musica.tent = (L.musica.tent || 0) + 1; L.musica.em = Date.now(); mudou = true;
         }
       } else {
