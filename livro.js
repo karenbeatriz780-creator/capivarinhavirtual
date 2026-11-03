@@ -1475,6 +1475,8 @@ function desenharLvp(){
       '<div class="lvp-bts"><button class="ouro" id="lvpCod">Gerar código</button><span id="lvpCodOut" style="font:800 1.1rem Inter;align-self:center"></span></div></div>'+
     '<div class="lvp-it" style="display:block"><b>✨ Nova história com IA</b><div class="lvp-ed"><label for="lvpIdeia">Descreva a ideia</label>'+
       '<textarea id="lvpIdeia" placeholder="Ex.: uma aventura no mundo dos dinossauros, com um dinossauro bebê que vira melhor amigo"></textarea></div>'+
+      '<div style="font-size:.82rem;color:#666;margin:.5rem 0 .35rem">💡 Ideias prontas: toque numa, depois em <b>Escrever com IA</b>, revise e publique.</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:.35rem">'+LVP_IDEIAS.map(function(x,i){ return '<button type="button" class="cl" data-lvpideia="'+i+'" style="font-size:.8rem;padding:.4rem .65rem;border-radius:999px">'+esc(x[0])+'</button>'; }).join('')+'</div>'+
       '<div class="lvp-bts"><button class="ouro" id="lvpIA">Escrever com IA</button><button class="cl" id="lvpBranco">Criar em branco</button><button class="cl" id="lvpRest">Restaurar as 5 originais</button></div></div>'+
     '<div class="lvp-it" style="display:block"><b>📚 Histórias novas prontas</b><p style="margin:.3rem 0 .2rem;font-size:.85rem;color:#666">Davi e Golias com Jesus, Um Dia com Jesus, Fazenda, Craque, Mundo das Cores, Dinossauros, Ateliê dos Sonhos, Natal Mágico, Astronauta da Galáxia e ABC Encantado. Cada uma com 5 ilustrações e páginas extras só de texto. <b>Não apaga as suas.</b> Fazenda, Craque e Galáxia são atualizadas; as outras entram como rascunho pra você revisar e publicar.</p>'+
       '<div class="lvp-bts"><button class="ouro" id="lvpImp">Adicionar as histórias novas</button></div></div>';
@@ -1498,6 +1500,7 @@ function desenharLvp(){
     var b=el('lvpRest'); if(b.dataset.ok!=='1'){ b.dataset.ok='1'; b.textContent='Toque de novo pra confirmar (apaga as mudanças)'; return; }
     lvpPost({acao:'restaurar'}).then(function(r){ if(r.ok){ _lvp.temas=r.d.temas; toast('As 5 histórias originais foram restauradas.'); desenharLvp(); } else toast(r.d.erro||'Erro'); });
   };
+  c.querySelectorAll('[data-lvpideia]').forEach(function(b){ b.onclick=function(){ var t=el('lvpIdeia'); t.value=LVP_IDEIAS[+b.dataset.lvpideia][1]; t.focus(); t.scrollIntoView({block:'center'}); }; });
   el('lvpIA').onclick=function(){
     var ideia=el('lvpIdeia').value.trim(); if(ideia.length<5){ toast('Descreva a ideia.'); return; }
     var b=el('lvpIA'); b.disabled=true; b.textContent='Escrevendo… (até 1 min)';
@@ -1529,6 +1532,29 @@ function htmlVitrinePnl(){
     '<div class="lvp-bts"><label class="pnl-link" style="cursor:pointer;margin:0">📷 Enviar uma foto (ex.: livro impresso)<input type="file" id="lvpExFoto" accept="image/*" hidden></label></div>'+
     htmlVendasPnl();
 }
+/* 20 ideias de histórias (bíblicas e educativas) pra escrever com IA no painel */
+var LVP_IDEIAS=[
+  ['🌈 Arca de Noé','História bíblica: a criança ajuda Noé a levar os bichinhos de dois em dois para a arca, enfrenta a grande chuva dentro da arca cuidando dos animais e no final vê o arco-íris da promessa de Deus. Lição: confiar em Deus e obedecer.'],
+  ['🦁 Daniel e os leões','História bíblica: a criança fica ao lado de Daniel, que continuou orando mesmo proibido, e vê Deus fechar a boca dos leões, que ficam mansinhos como gatinhos. Lição: coragem e fé. Sem violência, tudo fofo.'],
+  ['👑 Rainha Ester','História bíblica: a criança ajuda a jovem Ester a ter coragem de falar com o rei para salvar o seu povo, com um palácio lindo, joias e jardins. Lição: coragem para fazer o que é certo.'],
+  ['🐋 Jonas e o peixe','História bíblica: a criança acompanha Jonas que fugiu de barco, vê o grande peixe (fofo, não assustador), e depois ajuda Jonas a ir até Nínive levar a mensagem de Deus. Lição: obedecer e dar segunda chance.'],
+  ['🧺 Bebê Moisés','História bíblica: a criança ajuda Miriã a cuidar do cestinho com o bebê Moisés no rio, entre juncos e patinhos, até a princesa encontrar o bebê e cuidar dele. Lição: cuidar da família.'],
+  ['❤️ Bom Samaritano','História bíblica com Jesus: a criança vê um viajante machucado na estrada, outras pessoas passam direto, e ela com Jesus e um bom samaritano ajudam com carinho. Lição: amar o próximo.'],
+  ['🌍 Criação do mundo','História bíblica: a criança viaja pelos 7 dias da criação: a luz, o céu, o mar, as plantas, o sol e as estrelas, os bichinhos e por último as pessoas, e descobre que é obra especial de Deus. Lição: gratidão.'],
+  ['🍞 Pães e peixinhos','História bíblica: a criança divide o seu lanche de 5 pães e 2 peixinhos com Jesus, que alimenta uma multidão enorme num campo verde. Lição: partilhar.'],
+  ['🦸 Guardiã das Estrelas','Super-heroína original (não usar personagens famosos): a criança ganha uma capa mágica que brilha e salva a cidade usando gentileza, inteligência e coragem, ajudando pessoas e bichinhos. Lição: o maior poder é fazer o bem.'],
+  ['🦸‍♂️ Pequeno Herói','Super-herói original (não usar personagens famosos): com capa e escudo, a criança ajuda os vizinhos, salva um gatinho e vence o Vilão da Bagunça arrumando a cidade com os amigos. Lição: heróis ajudam os outros.'],
+  ['🚒 Bombeiro por um dia','A criança passa um dia no quartel dos bombeiros, aprende a se prevenir de incêndios, anda no caminhão vermelho e ajuda a resgatar um gatinho na árvore. Lição: segurança e prevenção.'],
+  ['🩺 Veterinária(o)','A criança vira doutor(a) dos bichinhos numa clínica colorida e cuida de um cachorrinho com a patinha dodói, um passarinho e um coelho. Lição: cuidar dos animais com carinho.'],
+  ['🦷 Exército dos dentinhos','A criança encolhe e entra numa boca gigante e limpinha para ajudar os dentinhos a vencer os bichinhos da cárie com escova e pasta mágicas. Lição: escovar os dentes todo dia.'],
+  ['🌳 Guardião da Amazônia','A criança conhece a onça-pintada, a arara, o boto-cor-de-rosa e o bicho-preguiça e ajuda a proteger a floresta amazônica. Lição: cuidar da natureza.'],
+  ['♻️ Planeta limpinho','A criança e um robozinho amigo limpam a praia e o parque e aprendem a separar o lixo nas lixeiras coloridas da reciclagem. Lição: reciclar e cuidar do planeta.'],
+  ['🔬 Laboratório mágico','A criança vira cientista num laboratório mágico e faz experiências: vulcão de bicarbonato, arco-íris com prisma e ímãs que dançam. Lição: curiosidade e aprender.'],
+  ['😊 Ilha dos sentimentos','A criança visita a ilha da alegria, da tristeza, da raiva e da calma e aprende com cada uma a entender e lidar com o que sente. Lição: entender as emoções.'],
+  ['💰 Cofrinho encantado','O cofrinho da criança ganha vida e ensina a guardar moedinhas aos pouquinhos para realizar um sonho, e no final ela compra um presente para alguém que ama. Lição: paciência e poupar.'],
+  ['🩰 Bailarina das estrelas','A criança se prepara para a grande apresentação de balé, sente medo antes de entrar no palco, respira fundo e brilha como uma estrela. Lição: persistência e coragem.'],
+  ['🏴‍☠️ Pirata do bem','A criança vira um pirata do bem, navega por ilhas coloridas, decifra um mapa com os amigos e descobre que o maior tesouro é a amizade. Lição: amizade e trabalho em equipe.']
+];
 /* PAINEL: "Crie sua própria história" (publicar, capa da vitrine feita com IA, vendas de fora, posição) */
 function htmlPropriaPnl(){
   var p=_lvp.propria; if(!p) return '<b>✨ Crie sua própria história</b><p style="font-size:.85rem;color:#666">Carregando…</p>';
