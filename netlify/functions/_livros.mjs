@@ -302,21 +302,31 @@ function pedidoHistoria(L) {
   const menina = L.genero === 'menina';
   const idade = Number(L.idade) === 0 ? 'bebê de ' + (L.idadeMeses || 0) + ' meses' : (L.idade || 4) + ' anos';
   const ex = (L.extras || []).filter((x) => x && x.nome);
-  const juntos = ex.length ? ex.map((x) => '- ' + nomeExtra(x) + ' (' + ((TIPOS_EXTRA[x.tipo] || {}).en || 'a person') + ')').join('\n') : '(ninguém: só a criança e os personagens que você inventar)';
-  return 'Escreva um livro infantil personalizado em português do Brasil.\n' +
+  const juntos = ex.length ? ex.map((x) => '- ' + nomeExtra(x) + ' (' + ((TIPOS_EXTRA[x.tipo] || {}).en || 'a person') + ')').join('\n') : '(ninguém: só a criança e os personagens que a família citar)';
+  const relato = String(L.pedidoHistoria || '').replace(/\s+/g, ' ').trim().slice(0, 2500);
+  const tituloPedido = String(L.tituloPedido || '').trim();
+  return 'Escreva um livro infantil personalizado em português do Brasil, A PARTIR DO RELATO DA FAMÍLIA abaixo.\n\n' +
     'Protagonista: ' + L.nome + ', ' + (menina ? 'menina' : 'menino') + ', ' + idade + '.\n' +
-    'Quem vai junto na história (use exatamente esses nomes e papéis, e faça cada um participar de verdade):\n' + juntos + '\n' +
-    'O que a família pediu (siga com carinho todos os detalhes, momentos marcantes e preferências):\n + String(L.pedidoHistoria || ).slice(0, 2500) + \n\n' +
+    'Quem vai junto na história (use exatamente esses nomes e papéis, e faça cada um participar de verdade):\n' + juntos + '\n\n' +
+    '=== RELATO DA FAMÍLIA (é a base de TUDO) ===\n' + relato + '\n=== FIM DO RELATO ===\n\n' +
+    'REGRA MAIS IMPORTANTE: a história TEM que ser a que a família contou. Antes de escrever, liste em "elementos" tudo o que o relato cita: ' +
+    'o lugar, as pessoas, os bichos, os objetos, as brincadeiras, as comidas, os acontecimentos e o momento marcante. ' +
+    'Depois escreva a história usando TODOS esses elementos, na ordem que fizer sentido, e NÃO troque o tema, o lugar nem os acontecimentos por outros. ' +
+    'Você pode (e deve) deixar mais divertido e emocionante: diálogos, humor leve, detalhes bonitos e um pouquinho de magia, mas sempre em volta do que a família contou. ' +
+    'Se o relato for curto, aprofunde o que foi dito, sem inventar outro assunto.\n\n' +
     'Regras:\n' +
-    '- 11 páginas (pode ser 10 a 12). Cada "texto" tem de 35 a 60 palavras, linguagem de livro infantil, com começo, meio e fim e uma lição bonita no final. Use o nome ' + L.nome + ' e os nomes de quem vai junto direto no texto. Escreva ' + (menina ? 'no feminino' : 'no masculino') + ' para a criança.\n' +
-    '- EXATAMENTE 5 páginas com "ilustrada": true, e a PRIMEIRA página é sempre ilustrada. As outras são só texto ("ilustrada": false).\n' +
-    '- Para cada página ilustrada, "cena" é uma descrição em INGLÊS do que aparece na ilustração, começando com um verbo de ação (ex.: "riding a pony through..."), cheia de detalhes de cenário, cores e bichinhos, e dizendo quem de quem vai junto aparece (ex.: "with her mom and the dog Thor"). Use "the child" para a criança.\n' +
-    '- Tudo fofo, seguro e adequado para crianças: sem violência, sem medo, sem marcas, sem personagens famosos de desenho ou filme (troque por personagens originais parecidos). Se o pedido tiver algo impróprio, adapte com delicadeza.\n' +
-    '- "titulo": título da capa com o nome da criança (ex.: "' + L.nome + ' e o Safári Encantado"), até 45 letras.\n' +
-    '- "capa": cena da capa em INGLÊS, com a criança na frente e quem vai junto ao lado. "roupa": a roupa da criança em INGLÊS (sempre a mesma, combinando com a história).\n' +
-    '- "letra": letra de uma música infantil curta em português sobre essa história (cantando também o nome de cada um que vai junto), com [Intro] "Era uma vez… ' + L.nome + '…", [Verse], [Chorus] repetindo o nome ' + L.nome + ', [Verse], [Chorus] e [Outro]. "estiloMusica": estilo em inglês terminando com "portuguese vocals".\n' +
+    '- 12 páginas. Cada "texto" tem de 35 a 60 palavras, linguagem de livro infantil, com começo, meio e fim. Use o nome ' + L.nome + ' e os nomes de quem vai junto direto no texto. Escreva ' + (menina ? 'no feminino' : 'no masculino') + ' para a criança.\n' +
+    '- A última página termina com uma LIÇÃO bonita e educativa que nasce da própria história (ex.: cuidar, compartilhar, coragem, gratidão, amor pela família).\n' +
+    '- EXATAMENTE 5 páginas com "ilustrada": true: a 1ª, a 3ª, a 6ª, a 9ª e a 12ª. As outras são só texto ("ilustrada": false).\n' +
+    '- Para cada página ilustrada, "cena" é uma descrição em INGLÊS do momento DAQUELA página, mostrando os elementos do relato (o lugar, os bichos, os objetos citados), começando com um verbo de ação, cheia de detalhes de cenário e cores, e dizendo quem de quem vai junto aparece (ex.: "with her mom and the dog Thor"). Use "the child" para a criança.\n' +
+    '- Tudo fofo, seguro e adequado para crianças: sem violência, sem medo, sem marcas, sem personagens famosos de desenho ou filme (troque por personagens originais parecidos). Se o relato tiver algo impróprio, adapte com delicadeza.\n' +
+    (tituloPedido
+      ? '- "titulo": use EXATAMENTE este título escolhido pela família: "' + tituloPedido.replace(/"/g, "'") + '".\n'
+      : '- "titulo": título da capa com o nome da criança, ligado ao relato (ex.: "' + L.nome + ' e o Sítio do Vovô"), até 45 letras.\n') +
+    '- "capa": cena da capa em INGLÊS que mostra o LUGAR e os elementos principais do relato, com a criança na frente e quem vai junto ao lado. "roupa": a roupa da criança em INGLÊS (sempre a mesma, combinando com o relato).\n' +
+    '- "letra": letra de uma música infantil curta em português sobre ESSA história (cantando também o nome de cada um que vai junto), com [Intro] "Era uma vez… ' + L.nome + '…", [Verse], [Chorus] repetindo o nome ' + L.nome + ', [Verse], [Chorus] e [Outro]. "estiloMusica": estilo em inglês terminando com "portuguese vocals".\n' +
     'Responda SOMENTE com JSON válido neste formato:\n' +
-    '{"titulo":"...","emoji":"🎈","cores":["#hex claro","#hex médio","#hex escuro"],"roupa":"...","capa":"...","paginas":[{"texto":"...","ilustrada":true,"cena":"..."},{"texto":"...","ilustrada":false}],"letra":"...","estiloMusica":"children\'s song, ..., portuguese vocals"}';
+    '{"elementos":["..."],"titulo":"...","emoji":"🎈","cores":["#hex claro","#hex médio","#hex escuro"],"roupa":"...","capa":"...","paginas":[{"texto":"...","ilustrada":true,"cena":"..."},{"texto":"...","ilustrada":false}],"letra":"...","estiloMusica":"children\'s song, ..., portuguese vocals"}';
 }
 // transforma a resposta da IA numa "história" igual às do catálogo (texto + cena; páginas só de texto)
 function montarTemaProprio(o, L) {
@@ -339,7 +349,7 @@ function montarTemaProprio(o, L) {
   const letra = String(o.letra || '').slice(0, 2500);
   return {
     id: 'propria', propria: true, emoji: String(o.emoji || '✨').slice(0, 4), status: 'publicado',
-    nome: 'História de ' + L.nome, titulo: String(o.titulo || (L.nome + ' e a Grande Aventura')).slice(0, 60),
+    nome: 'História de ' + L.nome, titulo: String((L.tituloPedido && String(L.tituloPedido).trim()) || o.titulo || (L.nome + ' e a Grande Aventura')).slice(0, 60),
     cores, roupa: String(o.roupa || 'colorful comfortable clothes').slice(0, 300),
     capa: String(o.capa || PROPRIA_PADRAO.capa).slice(0, 900), paginas,
     letra: letra.length > 80 ? letra : '[Intro]\nEra uma vez… ' + L.nome + '!\n\n[Verse]\nUma história só minha, cheia de magia\nCom gente que eu amo e muita alegria\n\n[Chorus]\n' + L.nome + ', ' + L.nome + ', que aventura linda\nA nossa história mais bonita ainda!\n\n[Outro]\nFim… e começa de novo, ' + L.nome + '!',
@@ -348,7 +358,7 @@ function montarTemaProprio(o, L) {
 }
 // pede a história a 3 IAs ao mesmo tempo e usa a primeira que vier certinha
 export async function escreverHistoriaPropria(L) {
-  const sistema = 'Você é um autor premiado de livros infantis personalizados. Escreve em português do Brasil, com emoção, humor leve e muitos detalhes visuais. Responda SOMENTE com JSON válido, sem comentários.';
+  const sistema = 'Você é um autor premiado de livros infantis personalizados. Você transforma o relato de cada família num livro fiel ao que ela contou: mesmo lugar, mesmas pessoas, mesmos bichos, mesmos acontecimentos, só que mais divertido, emocionante e educativo. Escreve em português do Brasil. Responda SOMENTE com JSON válido, sem comentários.';
   const pedido = pedidoHistoria(L);
   const ctrls = [];
   async function chamar(m) {
@@ -357,7 +367,7 @@ export async function escreverHistoriaPropria(L) {
       const r = await fetch('https://api.unifically.com/v1/chat/completions', {
         method: 'POST', signal: ctl.signal,
         headers: { Authorization: 'Bearer ' + chaveApi(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: m, max_tokens: 6000, temperature: 0.85, messages: [{ role: 'system', content: sistema }, { role: 'user', content: pedido }] })
+        body: JSON.stringify({ model: m, max_tokens: 6000, temperature: 0.7, messages: [{ role: 'system', content: sistema }, { role: 'user', content: pedido }] })
       });
       const d = await r.json().catch(() => null);
       const txt = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;

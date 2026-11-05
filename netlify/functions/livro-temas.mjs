@@ -307,8 +307,8 @@ const NOVAS_HISTORIAS = [
   }
 ];
 
-// "Crie sua própria história": 11 páginas, 5 ilustradas (só pra contar no site; o texto a IA escreve)
-const PAGINAS_PROPRIA = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => ([0, 3, 5, 8, 10].indexOf(i) >= 0 ? { texto: '' } : { texto: '', so: true }));
+// "Crie sua própria história": 12 páginas, 5 ilustradas (só pra contar no site; o texto a IA escreve)
+const PAGINAS_PROPRIA = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => ([0, 2, 5, 8, 11].indexOf(i) >= 0 ? { texto: '' } : { texto: '', so: true }));
 const MAX_ILUS = 5; // ilustrações novas por história (custo por livro)
 const MODELOS_TEXTO = ['openai/gpt-5.4-mini', 'google/gemini-3.8-flash', 'anthropic/claude-haiku-4-5'];
 

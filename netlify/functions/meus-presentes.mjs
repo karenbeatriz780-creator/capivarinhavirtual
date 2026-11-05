@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { chaveTel, lerIndice, idsDoTel } from './_indice.mjs';
+import { lerTemas, flex, linkPdf, pdfsProntos } from './_livros.mjs';
 
 // MEUS PRESENTES pelo número de telefone. Rápido: usa o índice por telefone
 // (_indice.mjs) e só abre os pedidos daquele número. Nada de áudio aqui —
@@ -58,10 +59,29 @@ export default async (req) => {
     meus.forEach((g) => { if (g.musicaPreviewId) usadas[g.musicaPreviewId] = 1; if (g.ofertaM1 && g.ofertaM1.id) usadas[g.ofertaM1.id] = 1; if (g.ofertaM2 && g.ofertaM2.id) usadas[g.ofertaM2.id] = 1; });
     // prévia sem pedido: some se já existe um pedido PAGO depois dela (ela foi substituída)
     const ultimoPago = meus.filter((g) => g.pago && !g.cancelado).reduce((mx, g) => Math.max(mx, g.criadoEm || g.pagoEm || 0), 0);
-    const soMusica = ms.filter((m) => m && m.url && m.origem !== 'painel' && !m.pedidoRecId && !m.presenteId && !usadas[m.taskId] && !(ultimoPago && (m.criadoEm || 0) <= ultimoPago));
+    const soMusica = ms.filter((m) => m && m.url && m.origem !== 'painel' && m.origem !== 'livro' && !m.pedidoRecId && !m.presenteId && !usadas[m.taskId] && !(ultimoPago && (m.criadoEm || 0) <= ultimoPago));
 
     const itens = [];
+    // LIVRO MÁGICO: aparece como livro (capa, abrir o livro, PDFs), nunca como música/apresentação
+    let temas = null;
+    for (const g of meus) {
+      if (g.produto !== 'livro' || !g.livro || !g.livro.token) continue;
+      const L = g.livro;
+      if (!temas) temas = await comLimite(lerTemas().catch(() => []), 3000, []);
+      const tm = L.temaProprio || (temas || []).find((x) => x.id === L.tema) || null;
+      const pronto = !!(g.pago && L.status === 'pronto');
+      const temPdf = pronto ? !!(await comLimite(pdfsProntos(g).catch(() => false), 2500, false)) : false;
+      itens.push({
+        id: g.id, produto: 'livro', pago: !!g.pago, cortesia: !!g.cortesia, para: L.nome || '',
+        titulo: tm ? flex(tm.titulo, L.nome, L.genero) : 'Livro de ' + (L.nome || ''),
+        capa: L.capa && L.capa.ok ? '/.netlify/functions/livro-img?k=' + encodeURIComponent('img/' + g.id + '/capa') + '&t=' + L.token : null,
+        em: g.pagoEm || g.criadoEm || 0, pronto,
+        link: '#/livro/' + g.id + '.' + L.token,
+        pdfs: temPdf ? { ler: linkPdf(g, 'ler'), folhas: linkPdf(g, 'folhas') } : null
+      });
+    }
     meus.forEach((g) => {
+      if (g.produto === 'livro') return;
       if (g.produto === 'extra' || String(g.produto || '').indexOf('extra_') === 0) return;
       const pago = !!g.pago;
       if (!pago && !g.musicaPreviewUrl) return;
@@ -104,7 +124,7 @@ export default async (req) => {
         if (disp > 0 && !resgatar) resgatar = '#/bonus/' + g.id;
       })), Math.max(500, 7000 - (Date.now() - t0)), null);
     }
-    const base = meus.slice().sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0))[0];
+    const base = meus.filter((g) => g.produto !== 'livro').sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0))[0];
     const promo = base ? '#/oferta/p.' + base.id : (soMusica[0] ? '#/oferta/t.' + soMusica[0].taskId : null);
     return json({
       ok: true, itens, promo,

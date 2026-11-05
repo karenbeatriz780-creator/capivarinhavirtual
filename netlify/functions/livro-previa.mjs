@@ -50,6 +50,7 @@ export default async (req) => {
     const genero = b.genero === 'menina' ? 'menina' : 'menino';
     // CRIE SUA PRÓPRIA HISTÓRIA: o que a família contou (a IA escreve a história a partir disso)
     const pedidoHistoria = tema.propria ? String(b.historia || '').replace(/\s+\n/g, '\n').trim().slice(0, 2500) : '';
+    const tituloPedido = tema.propria ? String(b.tituloLivro || '').replace(/\s+/g, ' ').trim().slice(0, 50) : '';
     if (tema.propria && pedidoHistoria.length < 30) return json({ erro: 'Conte um pouquinho mais de como você quer a história (pelo menos 1 ou 2 frases).' }, 400);
     const idade = Math.max(0, Math.min(10, parseInt(b.idade, 10) || 0));
     const idadeMeses = idade === 0 ? Math.max(0, Math.min(11, parseInt(b.idadeMeses, 10) || 0)) : null;
@@ -121,7 +122,7 @@ export default async (req) => {
       id, produto: 'livro', duracao: 'vitalicio', criadoEm: Date.now(), pago: false,
       meuNome: '', parceiroNome: nome, musicaParaNome: nome,
       musicaWhatsapp: zap, whatsapp: zap,
-      livro: { tema: tema.id, nome, genero, idade, idadeMeses, extras, pedidoHistoria: pedidoHistoria || undefined, token, status: 'criando', capa: {}, musica: {}, paginas: [] },
+      livro: { tema: tema.id, nome, genero, idade, idadeMeses, extras, pedidoHistoria: pedidoHistoria || undefined, tituloPedido: tituloPedido || undefined, token, status: 'criando', capa: {}, musica: {}, paginas: [] },
       pagamento: { valor: PRECO_LIVRO }
     };
     await getStore('presentes').setJSON(id, g);
