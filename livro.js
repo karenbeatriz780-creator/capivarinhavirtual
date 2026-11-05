@@ -650,7 +650,7 @@ function telaLivroMeus(){
 }
 
 /* ------------------------------------------------------- passo a passo */
-var LV={passo:0, tema:null, nome:'', idade:null, meses:null, genero:null, foto:null, extras:[], historia:'', zap:'', aceite:false, codigo:''};
+var LV={passo:0, tema:null, nome:'', idade:null, meses:null, genero:null, foto:null, extras:[], historia:'', tituloLivro:'', zap:'', aceite:false, codigo:''};
 /* QUEM VAI JUNTO na história (até 3): família, amigo ou bichinho, cada um com foto e nome */
 var LV_MAX_EXTRAS=3;
 var LV_QUEM=[
@@ -786,7 +786,11 @@ var LV_IDEIAS=[
 function htmlPassoHistoria(){
   var nm=esc(LV.nome.trim().split(' ')[0]||'a criança'), voz=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
   return '<div class="lv-eb">sua história</div><h1 class="lv-tit">Como você quer a história de '+nm+'? ✍️</h1>'+
-    '<p class="lv-sub">Conte com detalhes: onde acontece, quem aparece, um momento marcante, o que '+nm+' ama (bichinhos, lugares, brincadeiras). A gente transforma num livro de <b>11 páginas com 5 ilustrações</b>.</p>'+
+    '<p class="lv-sub">Conte com detalhes: onde acontece, quem aparece, um momento marcante, o que '+nm+' ama (bichinhos, lugares, brincadeiras). <b>A história e a capa são feitas a partir do que você escrever</b>, com 12 páginas e 5 ilustrações e uma lição no final.</p>'+
+    '<div class="lv-campo" style="margin:0 0 .9rem"><label for="lvTitLivro" style="margin-top:0">Nome do livro <span style="font-weight:500;color:#8a7a96">(opcional)</span></label>'+
+      '<input type="text" id="lvTitLivro" maxlength="50" autocomplete="off" placeholder="Ex.: '+nm+' e o Sítio da Vovó" value="'+esc(LV.tituloLivro)+'" style="font-size:1.05rem">'+
+      '<div style="font-size:.8rem;color:var(--lv-suave);margin-top:.3rem">É o título que vai na capa. Se deixar em branco, a gente cria um.</div></div>'+
+    '<label for="lvHist" style="display:block;font-weight:700;margin:0 0 .45rem">Conte a história</label>'+
     '<div class="lv-campo" style="margin:0"><textarea id="lvHist" maxlength="2000" rows="7" placeholder="Ex.: Queria que '+nm+' fosse com o papai e a mamãe numa fazenda, alimentando os bichinhos. Ela ama cavalos e o nosso cachorro Thor. No final, todos fazem um piquenique e ela aprende a cuidar dos animais." style="width:100%;font:500 1rem/1.5 Inter,sans-serif;padding:.9rem 1rem;border-radius:16px;border:2px solid var(--lv-borda);background:#fff;color:var(--lv-tinta);resize:vertical">'+esc(LV.historia)+'</textarea></div>'+
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;margin-top:.45rem">'+
       (voz?'<button type="button" class="lv-chip" id="lvFalar" style="padding:.6rem .9rem;font-size:.95rem">🎤 Falar em vez de digitar</button>':'<small style="color:var(--lv-suave)">🎤 Prefere falar? Toque no microfone do teclado.</small>')+
@@ -797,7 +801,8 @@ function htmlPassoHistoria(){
     '<div class="lv-dica">💡<div>No próximo passo você coloca a foto de '+nm+' e, se quiser, de <b>até 3 pessoas ou bichinhos</b> (papai, mamãe, irmãos, avós, pet…) pra aparecerem nas ilustrações.</div></div>';
 }
 function ligarPassoHistoria(){
-  var ta=el('lvHist'), n=el('lvHistN'), nm=LV.nome.trim().split(' ')[0]||'a criança';
+  var ta=el('lvHist'), n=el('lvHistN'), nm=LV.nome.trim().split(' ')[0]||'a criança', tl=el('lvTitLivro');
+  if(tl) tl.oninput=function(){ LV.tituloLivro=tl.value; };
   function mudou(){ LV.historia=ta.value; n.textContent=ta.value.trim().length+'/2000'; el('lvProx').disabled=ta.value.trim().length<30; }
   ta.oninput=mudou;
   document.querySelectorAll('[data-ideia]').forEach(function(b){ b.onclick=function(){
@@ -972,14 +977,14 @@ function lerFoto(f,max){
 function enviarLivro(){
   var b=el('lvProx'); b.disabled=true; b.innerHTML='<span class="lv-giro"></span> Enviando…';
   fetch('/.netlify/functions/livro-previa',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({tema:LV.tema,nome:LV.nome.trim(),idade:LV.idade,idadeMeses:LV.meses,genero:LV.genero,foto:LV.foto,extras:LV.extras.map(function(x){ return {tipo:x.tipo,nome:x.nome,foto:x.foto}; }),historia:LV.tema==='propria'?LV.historia:'',whatsapp:LV.zap,aparelho:lvAparelho(),codigo:LV.codigo})})
+    body:JSON.stringify({tema:LV.tema,nome:LV.nome.trim(),idade:LV.idade,idadeMeses:LV.meses,genero:LV.genero,foto:LV.foto,extras:LV.extras.map(function(x){ return {tipo:x.tipo,nome:x.nome,foto:x.foto}; }),historia:LV.tema==='propria'?LV.historia:'',tituloLivro:LV.tema==='propria'?LV.tituloLivro:'',whatsapp:LV.zap,aparelho:lvAparelho(),codigo:LV.codigo})})
   .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
   .then(function(res){
     if(res.d && res.d.jaTem && !LV.codigo){ telaJaTemPrevia(lvGet()[0]||null, null); return; }
     if(!res.ok||!res.d.id){ el('lvErro').textContent=(res.d&&res.d.erro)||'Não consegui começar agora. Tente de novo.'; b.disabled=false; b.textContent='Tentar de novo'; return; }
     lvSalvar({id:res.d.id,t:res.d.token,nome:LV.nome.trim(),tema:LV.tema,em:Date.now()});
     try{ gaEvento('livro_previa',{tema:LV.tema}); fbEvento('Lead',{content_name:'livro'}); }catch(e){}
-    LV={passo:0,tema:null,nome:'',idade:null,meses:null,genero:null,foto:null,extras:[],historia:'',zap:'',aceite:false,codigo:''};
+    LV={passo:0,tema:null,nome:'',idade:null,meses:null,genero:null,foto:null,extras:[],historia:'',tituloLivro:'',zap:'',aceite:false,codigo:''};
     location.hash='#/livro/'+res.d.id;
   })
   .catch(function(){ el('lvErro').textContent='Sem conexão. Tente de novo.'; b.disabled=false; b.textContent='Tentar de novo'; });
@@ -1572,7 +1577,7 @@ function htmlPropriaPnl(){
   var img=p.vitrineEm?'<img src="/.netlify/functions/livro-img?k='+encodeURIComponent('img/tema/propria')+'&v='+p.vitrineEm+'" alt="" style="width:96px;aspect-ratio:3/4;object-fit:cover;border-radius:10px;flex:none">':'<div style="width:96px;aspect-ratio:3/4;border-radius:10px;background:#FFF1D6;display:flex;align-items:center;justify-content:center;font-size:2rem;flex:none">✨</div>';
   return '<div style="display:flex;gap:.8rem;align-items:flex-start">'+img+'<div style="flex:1;min-width:0"><b>✨ Crie sua própria história</b><br>'+
       '<span class="lvp-st '+(pub?'pub':'ras')+'">'+(pub?'Publicada':'Escondida')+'</span> <span class="lvp-st" style="background:#FFF1E0;color:#B4380A">🔥 '+(site+(p.vendasFora||0)).toLocaleString('pt-BR')+' vendidos</span>'+
-      '<p style="margin:.4rem 0 0;font-size:.82rem;color:#666">O cliente conta a história (digitando ou falando) e a IA escreve 11 páginas com 5 ilustrações. Na vitrine aparece com o título <b>Crie sua própria história</b>.</p></div></div>'+
+      '<p style="margin:.4rem 0 0;font-size:.82rem;color:#666">O cliente conta a história (digitando ou falando) e a IA escreve 12 páginas com 5 ilustrações, seguindo o que ele contou. Na vitrine aparece com o título <b>Crie sua própria história</b>.</p></div></div>'+
     '<div class="lvp-ed">'+
       '<label for="lvpPrDesc">Descrição na vitrine</label><textarea id="lvpPrDesc" style="min-height:4.5rem">'+esc(p.descricao||'')+'</textarea>'+
       '<label for="lvpPrCapa">O que aparece na capa da vitrine (pode ser em português)</label><textarea id="lvpPrCapa" style="min-height:4.5rem">'+esc(p.capa||'')+'</textarea>'+

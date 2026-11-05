@@ -2999,7 +2999,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
-<script src="/livro.js?v=33"></script>
+<script src="/livro.js?v=34"></script>
 <script>
 /* =========================================================
    CAPIVARINHA LOVE — aplicação completa (single file)
@@ -8357,7 +8357,7 @@ function meusLogin(msg, tel, nome){
 }
 function meusCarregar(sess){
   var b=el('meusBody'); if(!b) return;
-  b.innerHTML='<div class="empty"><img src="'+MASCOTE+'" alt="" style="animation:float 2.4s ease-in-out infinite"><p><b>Buscando suas músicas...</b><br>Só um instante.</p></div>';
+  b.innerHTML='<div class="empty"><img src="'+MASCOTE+'" alt="" style="animation:float 2.4s ease-in-out infinite"><p><b>Buscando seus pedidos...</b><br>Só um instante.</p></div>';
   function buscar(tentativa){
     var ctl=window.AbortController?new AbortController():null, tm=setTimeout(function(){ if(ctl) ctl.abort(); },15000);
     return fetch('/.netlify/functions/meus-presentes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sess),signal:ctl?ctl.signal:undefined})
@@ -8377,7 +8377,7 @@ function meusCarregar(sess){
       }
       sess=Object.assign({},sess); delete sess._prep;
       if(!res.ok){ Store.set('cl_meus',''); meusLogin(d.msg||d.erro||'Não consegui entrar agora.', sess.tel); return; }
-      if(d.vazio){ Store.set('cl_meus',''); meusLogin('Não achamos nenhuma música com esse número. Confira se é o mesmo que você colocou na compra.', sess.tel); return; }
+      if(d.vazio){ Store.set('cl_meus',''); meusLogin('Não achamos nenhum pedido com esse número. Confira se é o mesmo que você colocou na compra.', sess.tel); return; }
       Store.set('cl_meus', JSON.stringify(sess));
       meusMostrar(d, sess);
     })
@@ -8388,6 +8388,17 @@ function meusMostrar(d, sess){
   var ind=d.indicacao||{}, itens=d.itens||[];
   var tel=String(sess.tel).replace(/\D/g,'');
   var cards=itens.map(function(it){
+    /* LIVRO: capa, abrir o livro e baixar os PDFs (nada de música/apresentação) */
+    if(it.produto==='livro'){
+      var bl = it.pago ? (it.pronto ? '<span class="pillbadge pb-live">✓ Liberado</span>' : '<span class="pillbadge pb-live">⏳ Ficando pronto</span>') : '<span class="pillbadge pb-exp">Falta desbloquear</span>';
+      return '<div class="gcard"><div class="gcard-top">'+
+        (it.capa?'<img class="gcard-th" src="'+esc(it.capa)+'" alt="" style="object-fit:cover">':'<div class="gcard-th">📖</div>')+
+        '<div style="flex:1;min-width:0"><h4>📖 '+esc(it.titulo||('Livro de '+it.para))+'</h4><div class="mt">'+esc(['Livro Mágico', it.em?new Date(it.em).toLocaleDateString('pt-BR'):''].filter(Boolean).join(' · '))+'</div></div>'+bl+
+        '</div><div class="acts">'+
+          '<a class="ms-btn'+(it.pago?' forte':'')+'" href="'+esc(it.link)+'">'+(it.pago?'📖 Abrir o livro e as músicas':'👀 Ver a prévia e desbloquear')+'</a>'+
+          (it.pdfs?'<a class="ms-btn" href="'+esc(it.pdfs.ler)+'" target="_blank" rel="noopener">📱 Baixar PDF pra ler</a><a class="ms-btn" href="'+esc(it.pdfs.folhas)+'" target="_blank" rel="noopener">🖨️ Baixar PDF pra imprimir</a>':'')+
+        '</div></div>';
+    }
     var badge = it.pago ? (it.cortesia||it.bonus ? '<span class="pillbadge pb-live">🎁 Presente</span>' : '<span class="pillbadge pb-live">✓ Liberada</span>')
                         : '<span class="pillbadge pb-exp">Falta pagar</span>';
     var tit = it.produto==='musica' ? (it.seis ? '6 músicas' : it.quatro ? '4 músicas' : 'Música')+(it.para?' pra '+it.para:'') : (PACOTES[it.produto]?PACOTES[it.produto].nome:'Presente')+(it.para?' · '+it.para:'');
@@ -8419,7 +8430,7 @@ function meusMostrar(d, sess){
     '<div class="gift-list">'+(cards||'<div class="pnl-nota">Nenhuma música ainda.</div>')+'</div>'+
     mkt+amigosHtml+
     meusLocalHtml(itens)+
-    '<a class="btn btn-ghost btn-block" href="#/criar/musica" style="margin-top:1.2rem">Criar outra música</a>';
+    '<div style="display:flex;gap:.6rem;margin-top:1.2rem;flex-wrap:wrap"><a class="btn btn-ghost" style="flex:1 1 12rem" href="#/livro/criar">📖 Criar outro livro</a><a class="btn btn-ghost" style="flex:1 1 12rem" href="#/criar/musica">🎵 Criar outra música</a></div>';
   el('meusSair').onclick=function(){ Store.set('cl_meus',''); meusLogin(); };
   document.querySelectorAll('[data-ms-copy]').forEach(function(x){ x.onclick=function(){ copiar(x.dataset.msCopy,'Link copiado! É só enviar pra quem vai receber.'); }; });
   ligarMeusLocal();
