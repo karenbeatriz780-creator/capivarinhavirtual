@@ -120,8 +120,42 @@ export async function entregarAudiosPagos(para, g, comTexto = true) {
   if (!vs.length) return false;
   if (comTexto) await enviarTexto(para, '🎧 Aqui estão suas músicas completas pra ouvir e guardar! 💗\n\nTambém ficam salvas no link:\n' + linkPedido(g));
   for (const v of vs) await enviarAudio(para, SITE + '/.netlify/functions/baixar-musica?id=' + encodeURIComponent(g.id) + '&v=' + v);
-  await oferecerPromo(para, g);
+  if (ehInfantil(g)) await oferecerLivro(para, g); else await oferecerPromo(para, g);
   return true;
+}
+
+// ===== MÚSICA INFANTIL → oferece o LIVRO MÁGICO (R$ 37) =====
+export const ehInfantil = (g) => /^infantil/.test(String((g && g.musicaEstilo) || '')) || (g && g.musicaPara) === 'filho';
+async function capaExemploLivro() {
+  try {
+    const l = (await getStore('livros').get('exemplos', { type: 'json' }).catch(() => null)) || [];
+    const x = l.find((e) => e.tipo === 'livro' && e.mostrar !== false) || l.find((e) => e.tipo === 'livro');
+    return x ? SITE + '/.netlify/functions/livro-img?k=' + encodeURIComponent('ex/' + x.id + '/capa') + '&v=' + (x.em || 1) : null;
+  } catch (e) { return null; }
+}
+const nomeCrianca = (g) => String((g && (g.musicaParaNome || g.parceiroNome)) || '').split(/,|\s+e\s+/)[0].trim().slice(0, 30);
+// etapa 1: logo depois da música paga · etapa 2: lembrete umas 3 h depois (só com a conversa aberta)
+export async function oferecerLivro(para, g, etapa) {
+  try {
+    const loja = getStore('whatsapp'), kp = 'lvofp_' + g.id;
+    const ja = await loja.get(kp, { type: 'json' }).catch(() => null);
+    const et = etapa || 1;
+    if (ja && ja.etapa >= et) return;
+    const nome = nomeCrianca(g), quem = nome ? '*' + nome + '*' : 'seu filho(a)', link = SITE + '/#/livro';
+    if (et === 1) {
+      await new Promise((r) => setTimeout(r, 6000)); // deixa os áudios chegarem antes
+      const capa = await capaExemploLivro();
+      const txt = '📖 E se ' + quem + ' virasse o herói de um livro?\n\n' +
+        'A gente faz um *livro personalizado* com o *rostinho e o nome* ' + (nome ? 'de ' + quem : 'da criança') + ' em toda a história, pra *imprimir ou ler no celular*, + *2 músicas* novas.\n\n' +
+        'Tudo por *R$ 37*. A prévia é grátis: você vê antes de pagar 👇\n' + link;
+      if (capa) await enviarImagem(para, capa, '✨ Olha um livro que fizemos 👆');
+      await enviarTexto(para, txt);
+      await loja.setJSON('lvof_' + chaveNum(para), { para, pedido: g.id, nome, em: Date.now() }).catch(() => {});
+    } else {
+      await enviarTexto(para, 'Oi! Passando só pra lembrar 💛\n\nA prévia do *livro do ' + (nome || 'seu pequeno') + '* é grátis: você manda uma foto, escolhe a história e vê como fica antes de pagar.\n\n👉 ' + link);
+    }
+    await loja.setJSON(kp, { etapa: et, em: Date.now() });
+  } catch (e) { console.error('oferecerLivro:', e && e.message); }
 }
 
 // Depois de entregar a música paga: pergunta se quer as promoções (1 vez por pedido)

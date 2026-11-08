@@ -335,7 +335,7 @@ var css = `
 .lv-am-pags .lv-pdfv-sp.so{max-width:min(64%,20rem)}
 .lv-am-fim{margin-top:1rem;background:rgba(255,255,255,.1);border:1px dashed rgba(255,210,122,.6);border-radius:16px;padding:.9rem 1rem;font-size:.92rem;line-height:1.45;text-align:center}
 .lv-am-fim b:first-child{display:block;font:800 1.1rem 'Baloo 2';color:#FFD27A;margin-bottom:.2rem}
-.lv-pdfv{position:fixed;inset:0;z-index:45;overflow-y:auto;-webkit-overflow-scrolling:touch;background:radial-gradient(90% 50% at 50% 0%,#3A2560 0%,#22163A 60%,#160E26 100%);color:#fff}
+.lv-pdfv{position:fixed;inset:0;z-index:190;overflow-y:auto;-webkit-overflow-scrolling:touch;background:radial-gradient(90% 50% at 50% 0%,#3A2560 0%,#22163A 60%,#160E26 100%);color:#fff}
 .lv-pdfv-topo{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:.6rem;padding:calc(.6rem + env(safe-area-inset-top,0px)) .8rem .6rem;background:rgba(22,14,38,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .lv-pdfv-topo .t{flex:1;min-width:0;font:800 1rem 'Baloo 2';line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lv-pdfv-topo .t small{display:block;font:700 .68rem 'Inter';letter-spacing:.06em;text-transform:uppercase;color:var(--lv-ouro)}
@@ -424,6 +424,18 @@ window.lvItensHome=function(){
     return itens;
   });
 };
+/* vindo da MÚSICA infantil: mostra um livro de exemplo tocando e, no botão, já começa o livro com o nome */
+var _lvRotuloCriar='';
+window.lvOfertaDaMusica=function(info){
+  info=info||{};
+  function adicionar(){ if(info.nome && !LV.nome) LV.nome=info.nome; if(info.zap && !LV.zap) LV.zap=String(info.zap); LV.passo=0; location.hash='#/livro/criar'; toast('Agora escolha a história do livro 📖'); }
+  lvTemas().then(function(){
+    var ex=lvExLivro(null);
+    if(!ex){ adicionar(); return; }
+    _lvRotuloCriar='➕ Adicionar o livro · '+lvFmt(LV_PACOTES.um);
+    abrirExemplo(ex, adicionar);
+  }).catch(adicionar);
+};
 window.lvAbrirExemplo=function(id){
   var ex=_lvEx.filter(function(x){ return x.id===id; })[0];
   if(ex) abrirExemplo(ex, function(){ location.hash='#/livro/criar'; }); else location.hash='#/livro';
@@ -455,7 +467,8 @@ function abrirPdfExemplo(d, tema, aoCriar){
   var box=document.createElement('div'); box.className='lv-pdfv';
   box.innerHTML='<div class="lv-pdfv-topo"><button class="lv-l-bt" id="lvPvX" aria-label="Fechar">←</button><div class="t"><small>Livro de exemplo</small>'+esc(flexTxt(tema.titulo,d.nome,d.genero))+'</div><button class="lv-l-bt" id="lvPvMus">🎵 Tocar</button></div>'+
     '<div class="lv-pdfv-pags">'+linhas.map(function(l){ return '<div class="lv-pdfv-sp'+(l.length===1?' so':'')+'">'+l.map(function(i){ return '<div class="lv-pdfv-pg" data-i="'+i+'"><span class="lv-giro"></span></div>'; }).join('')+'</div>'; }).join('')+'</div>'+
-    '<div class="lv-pdfv-rod"><button class="lv-btn rosa" id="lvPvCriar">✨ Criar o livro do meu filho</button></div>';
+    '<div class="lv-pdfv-rod"><button class="lv-btn rosa" id="lvPvCriar">'+(_lvRotuloCriar||'✨ Criar o livro do meu filho')+'</button></div>';
+  _lvRotuloCriar='';
   document.body.appendChild(box); document.body.style.overflow='hidden';
   var vivo=true, tocando=false;
   function fechar(){ vivo=false; pararAudioLivro(); document.body.style.overflow=''; if(box.parentNode) box.remove(); }
@@ -1247,17 +1260,22 @@ function abrirLeitor(d,tema,t,opts){
     vista.innerHTML=ids.map(function(i){ return htmlPagina(ps[i],d,tema,i+1); }).join('');
     vista.querySelectorAll('.lv-pag .txt').forEach(function(tx){ var m=tx.parentNode, f=1; while(m.scrollHeight>m.clientHeight+1 && f>0.55){ f-=0.05; tx.style.fontSize=f+'em'; } });
     el('lvCont').textContent=(pos+1)+' / '+vs.length;
+    [pos+1,pos-1,pos+2].forEach(function(q){ (vs[q]||[]).forEach(function(i){ var p=ps[i]; if(p&&p.t==='img'){ var u=(d.paginas||[])[p.i]; if(u){ var im=new Image(); im.src=u; } } }); });
     el('lvAnt').style.visibility=pos>0?'visible':'hidden';
     el('lvProx2').style.visibility=pos<vs.length-1?'visible':'hidden';
   }
   function ir(dl){ var vs=vistas(); var n=Math.max(0,Math.min(pos+dl,vs.length-1)); if(n===pos) return; pos=n; desenhar(dl); if(!tocando && pos===1) alternarMusica(true); }
   el('lvAnt').onclick=function(){ ir(-1); }; el('lvProx2').onclick=function(){ ir(1); };
-  vista.onclick=function(e){ var r=vista.getBoundingClientRect(); ir(e.clientX<r.left+r.width/2?-1:1); };
-  var x0=null; palco.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; },{passive:true});
-  palco.addEventListener('touchend',function(e){ if(x0==null) return; var dx=e.changedTouches[0].clientX-x0; if(Math.abs(dx)>40) ir(dx<0?1:-1); x0=null; },{passive:true});
+  /* toque/deslize: um gesto = uma página (o "clique" que o celular solta depois do deslize é ignorado) */
+  var x0=null, y0=null, ultGesto=0;
+  vista.onclick=function(e){ if(Date.now()-ultGesto<600) return; var r=vista.getBoundingClientRect(); ir(e.clientX<r.left+r.width/2?-1:1); };
+  palco.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; y0=e.touches[0].clientY; },{passive:true});
+  palco.addEventListener('touchend',function(e){ if(x0==null) return; var dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0; x0=null;
+    if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)*1.2){ ultGesto=Date.now(); ir(dx<0?1:-1); } },{passive:true});
   function tecla(e){ if(e.key==='ArrowRight') ir(1); if(e.key==='ArrowLeft') ir(-1); }
   document.addEventListener('keydown',tecla); aoFechar(function(){ document.removeEventListener('keydown',tecla); });
-  var rz=function(){ desenhar(0); }; window.addEventListener('resize',rz); aoFechar(function(){ window.removeEventListener('resize',rz); });
+  var _lw=window.innerWidth, _lh=window.innerHeight;
+  var rz=function(){ if(window.innerWidth===_lw && Math.abs(window.innerHeight-_lh)<140) return; _lw=window.innerWidth; _lh=window.innerHeight; desenhar(0); }; window.addEventListener('resize',rz); aoFechar(function(){ window.removeEventListener('resize',rz); });
   function marcar(){ el('lvMus').textContent=tocando?'⏸ Pausar':'🎵 Tocar'; el('lvM1').classList.toggle('on',musV===1); el('lvM2').classList.toggle('on',musV===2); }
   function alternarMusica(ligar){
     if(ligar===undefined) ligar=!tocando;

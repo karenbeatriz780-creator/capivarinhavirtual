@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { entregarMusica, enviarTexto, conversaAberta, SITE } from './_zap.mjs';
+import { entregarMusica, enviarTexto, conversaAberta, SITE, oferecerLivro } from './_zap.mjs';
 import { entregarPreviaLivro, avancarLivro, motorRodando } from './_livros.mjs';
 
 // A CADA MINUTO: confere as músicas que estão sendo criadas e, quando ficam
@@ -34,6 +34,21 @@ export default async () => {
       if (!g || (g.livro && g.livro.status === 'pronto' && !g.livro.autoExemplo)) await loja.delete(b.key);
     }
   } catch (e) { console.error('avisar-livro-adm:', e && e.message); }
+  // MÚSICA INFANTIL paga: lembrete do Livro Mágico ~3 h depois (só se a conversa ainda estiver aberta)
+  try {
+    const lvs = ((await loja.list({ prefix: 'lvof_' })).blobs || []).slice(0, 20);
+    for (const b of lvs) {
+      const o = await loja.get(b.key, { type: 'json' }).catch(() => null);
+      if (!o) { await loja.delete(b.key); continue; }
+      const idade = Date.now() - (o.em || 0);
+      if (idade < 3 * 3600 * 1000) continue;
+      await loja.delete(b.key);
+      if (idade > 20 * 3600 * 1000) continue; // passou da janela de 24 h do WhatsApp
+      if (!(await conversaAberta(o.para))) continue;
+      const g = await getStore('presentes').get(o.pedido, { type: 'json' }).catch(() => null);
+      if (g) await oferecerLivro(o.para, g, 2);
+    }
+  } catch (e) { console.error('lembrete-livro:', e && e.message); }
   let lista = [];
   try { lista = ((await loja.list({ prefix: 'pend_' })).blobs || []).slice(0, 40); } catch (e) { return; }
   if (!lista.length) return;

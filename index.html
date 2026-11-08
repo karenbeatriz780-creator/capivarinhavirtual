@@ -6710,8 +6710,24 @@ function htmlCombosPrevia(){
   _upsellVisto=true; /* já mostrou as opções aqui: não abre o pop-up de novo no pagamento */
   return htmlOpcoesCombo(W.comboDaMusica?W.produto:'musica');
 }
+/* música infantil (estilo infantil ou "pro meu filho/filha") → oferece o Livro Mágico */
+function musicaInfantil(){ return /^infantil/.test(W.musicaEstilo||'') || W.musicaPara==='filho'; }
 function htmlOpcoesCombo(esc1){
   var pm=PACOTES.musica.preco;
+  if(musicaInfantil()){
+    var nmK=String(W.musicaParaNome||'').split(/,|\s+e\s+/)[0].trim()||'seu filho';
+    var opsK=[
+      ['musica','🎵','4 Músicas Personalizadas','Estas 2 completas, sem corte + mais 2 liberadas depois do pagamento, com outra letra e outro estilo.',pm,'',''],
+      ['livro','📖','2 Músicas + Livro Mágico','Um livro completo com a história e o rostinho de '+esc(nmK)+', pra imprimir ou ler no celular, + 2 músicas personalizadas.',37,'PRESENTE COMPLETO','livro']
+    ];
+    return '<div class="cprev"><div class="cprev-t">🎁 Escolha o seu presente</div>'+opsK.map(function(o){
+      var on=esc1===o[0];
+      return '<div class="cprev-op'+(on?' on':'')+'" data-cprev="'+o[0]+'" role="button" tabindex="0">'+
+        (o[5]?'<span class="cprev-tag">'+o[5]+'</span>':'')+'<span class="cprev-r"></span>'+
+        '<span class="cprev-tx"><b>'+o[1]+' '+o[2]+'</b><small>'+o[3]+'</small>'+
+          (o[6]?'<button type="button" class="cprev-ex" data-cprevex="'+o[6]+'">▶ Ver exemplo</button>':'')+'</span>'+
+        '<span class="cprev-pr">R$ '+fmtPreco(o[4])+'</span></div>'; }).join('')+'</div>';
+  }
   var ops=[
     ['musica','🎵','4 Músicas Personalizadas','Estas 2 completas, sem corte + mais 2 liberadas depois do pagamento, com outra letra e outro estilo.',pm,'',''],
     ['carta','💌','4 Músicas + Carta Virtual','Suas 4 músicas + uma carta com envelope, foto colada e sua assinatura.',pm+COMBO_DA_MUSICA.carta,'','carta'],
@@ -6728,7 +6744,14 @@ function htmlOpcoesCombo(esc1){
         '<span class="cprev-pr">R$ '+fmtPreco(o[4])+'</span></div>';
     }).join('')+'</div>';
 }
+function ofertaLivroDaMusica(){
+  gaEvento('aceitou_upsell',{de:'musica', para:'livro', onde:'previa'});
+  var nm=String(W.musicaParaNome||'').split(/,|\s+e\s+/)[0].trim();
+  if(typeof window.lvOfertaDaMusica==='function') window.lvOfertaDaMusica({nome:nm, zap:W.musicaWhatsapp||''});
+  else location.hash='#/livro';
+}
 function escolherComboPrevia(prod){
+  if(prod==='livro'){ ofertaLivroDaMusica(); return; }
   if(prod==='musica'){
     if(!W.comboDaMusica) return;
     W.produto='musica'; W.comboDaMusica=false;
@@ -6774,7 +6797,7 @@ function abrirExemploRetro(){
 }
 document.addEventListener('click',function(ev){
   var t=ev.target; if(!t || !t.closest) return;
-  var exb=t.closest('[data-cprevex]'); if(exb){ ev.preventDefault(); ev.stopPropagation(); if(exb.dataset.cprevex==='carta') abrirExemploCarta(); else abrirExemploRetro(); return; }
+  var exb=t.closest('[data-cprevex]'); if(exb){ ev.preventDefault(); ev.stopPropagation(); if(exb.dataset.cprevex==='carta') abrirExemploCarta(); else if(exb.dataset.cprevex==='livro') ofertaLivroDaMusica(); else abrirExemploRetro(); return; }
   var op=t.closest('[data-cprev]'); if(op){ if(op.closest('#ouvirCombos')) ouvirEscolher(op.dataset.cprev); else escolherComboPrevia(op.dataset.cprev); }
 });
 function abrirUpsell(aoFechar){
