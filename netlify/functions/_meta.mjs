@@ -22,7 +22,7 @@ export const CFG_PADRAO = {
   tituloPadrao: 'Crie sua música personalizada',
   link: 'https://capivarinhalove.com.br/',
   cta: 'SHOP_NOW',
-  pageId: '', igId: '', pixelId: '2102013347063288',
+  pageId: '1267535713110534', igId: '', pixelId: '2102013347063288',
   zapAvisos: ''                // seu WhatsApp pra receber os avisos do robô (com DDI: 5591...)
 };
 export async function lerCfg() {
