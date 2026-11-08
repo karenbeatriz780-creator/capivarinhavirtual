@@ -49,7 +49,7 @@ export async function graph(metodo, caminho, campos) {
   const p = Object.assign({ access_token: token() }, campos || {});
   Object.keys(p).forEach((k) => { if (p[k] && typeof p[k] === 'object') p[k] = JSON.stringify(p[k]); });
   let r;
-  if (metodo === 'GET') r = await fetch(url + (url.includes('?') ? '&' : '?') + new URLSearchParams(p));
+  if (metodo === 'GET' || metodo === 'DELETE') r = await fetch(url + (url.includes('?') ? '&' : '?') + new URLSearchParams(p), { method: metodo });
   else r = await fetch(url, { method: 'POST', body: new URLSearchParams(p) });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || d.error) {
@@ -147,6 +147,15 @@ export const SEM_APRIMORAMENTOS = ['adapt_to_placement', 'add_text_overlay', 'ad
   'media_type_automation', 'multi_photo_to_video', 'music_generation', 'pac_relaxation', 'product_extensions', 'profile_card', 'profile_extension',
   'replace_media_text', 'reveal_details_over_time', 'show_destination_blurbs', 'show_summary', 'site_extensions', 'text_extraction_for_headline',
   'text_extraction_for_tap_target', 'text_optimizations', 'text_overlay_translation', 'text_translation', 'translate_voiceover', 'video_highlights', 'video_to_image'];
+export async function acharInstagram(pageId) {
+  const tenta = async (f) => { try { return await f(); } catch (e) { return null; } };
+  let id = await tenta(async () => { const p = await graph('GET', pageId, { fields: 'instagram_business_account{id},connected_instagram_account{id}' });
+    return (p.instagram_business_account && p.instagram_business_account.id) || (p.connected_instagram_account && p.connected_instagram_account.id) || null; });
+  if (!id) id = await tenta(async () => { const d = await graphConta('GET', 'instagram_accounts', { fields: 'id,username', limit: 50 }); return d.data && d.data[0] && d.data[0].id; });
+  if (!id) id = await tenta(async () => { const d = await graph('GET', pageId + '/instagram_accounts', { fields: 'id,username' }); return d.data && d.data[0] && d.data[0].id; });
+  if (!id) id = await tenta(async () => { const d = await graph('GET', pageId + '/page_backed_instagram_accounts', { fields: 'id' }); return d.data && d.data[0] && d.data[0].id; });
+  return id ? String(id) : '';
+}
 async function proximoNumero() {
   const L = loja(), n = ((await L.get('anuncio_seq', { type: 'json' }).catch(() => null)) || { n: 0 }).n + 1;
   await L.setJSON('anuncio_seq', { n }); return String(n).padStart(3, '0');
@@ -156,6 +165,12 @@ export async function publicarAnuncio(cfg, a, etapa) {
   etapa = etapa || (async () => {});
   if (!cfg.pageId) throw new Error('Falta escolher a Página do Facebook (Robô do tráfego → Detectar).');
   if (!a.feed || !a.vertical) throw new Error('Precisa dos 2 arquivos: um pro Feed e um pro Reels/Stories.');
+  // o Instagram é obrigatório pra rodar no IG: se não estiver salvo, descobre sozinho (antes de criar qualquer campanha)
+  if (!cfg.igId) {
+    cfg.igId = await acharInstagram(cfg.pageId);
+    if (cfg.igId) { try { await salvarCfg({ igId: cfg.igId }); } catch (e) {} }
+    else throw new Error('não achei o Instagram @capivarinha_love ligado a essa conta. Precisa compartilhar o Instagram com o portfólio Capivarinha love e dar ele pro painel-capivarinha (igual fez com a Página).');
+  }
   const pixel = cfg.pixelId || '2102013347063288';
   const orc = Math.max(6, Number(a.orcamento || cfg.orcInicial || 45));
   const dataTxt = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10).split('-').reverse().join('/');
@@ -205,7 +220,6 @@ export async function publicarAnuncio(cfg, a, etapa) {
         // algum aprimoramento que essa conta não aceita desligar → tira só ele da lista e tenta de novo
         const k = SEM_APRIMORAMENTOS.find((x) => tirar.indexOf(x) < 0 && msg.indexOf(x) >= 0);
         if (k) { tirar.push(k); continue; }
-        if (comInsta && /instagram/i.test(msg)) { comInsta = false; continue; } // Instagram deu erro → vai pela Página
         break;
       }
     }
@@ -213,7 +227,8 @@ export async function publicarAnuncio(cfg, a, etapa) {
     await etapa('Publicando…');
     ad = await graphConta('POST', 'ads', { name: nome, adset_id: adset.id, creative: { creative_id: criativo.id }, status: 'ACTIVE' });
   } catch (e) {
-    try { await graph('POST', camp.id, { status: 'PAUSED' }); } catch (x) {} // não deixa campanha pela metade gastando
+    // não deixa campanha pela metade: apaga (se não der, pausa)
+    try { await graph('DELETE', camp.id, {}); } catch (x) { try { await graph('POST', camp.id, { status: 'PAUSED' }); } catch (y) {} }
     throw e;
   }
   return { campanha: camp.id, conjunto: adset.id, criativo: criativo.id, anuncio: ad.id, nome, orcamento: orc };
