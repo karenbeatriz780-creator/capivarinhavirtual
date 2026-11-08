@@ -82,12 +82,18 @@ export async function metaAds(dias) {
   const tr = encodeURIComponent(JSON.stringify({ since: de, until: ate }));
   const campos = 'spend,impressions,clicks,cpc,ctr,actions,action_values';
   try {
-    const [rc, rd, rcamp] = await Promise.all([
-      fetch(base + '?fields=name,currency,account_status&access_token=' + encodeURIComponent(c.tk)),
-      fetch(base + '/insights?level=account&time_increment=1&time_range=' + tr + '&fields=' + campos + '&limit=100&access_token=' + encodeURIComponent(c.tk)),
-      fetch(base + '/insights?level=campaign&date_preset=last_7d&fields=campaign_name,' + campos + '&limit=50&access_token=' + encodeURIComponent(c.tk))
+    const tk = '&access_token=' + encodeURIComponent(c.tk);
+    const tr7 = encodeURIComponent(JSON.stringify({ since: diaBR(Date.now() - 6 * 864e5), until: ate }));
+    const [rc, rd, rcamp, rcd, rlist, rsets] = await Promise.all([
+      fetch(base + '?fields=name,currency,account_status' + tk),
+      fetch(base + '/insights?level=account&time_increment=1&time_range=' + tr + '&fields=' + campos + '&limit=100' + tk),
+      fetch(base + '/insights?level=campaign&date_preset=last_7d&fields=campaign_id,campaign_name,' + campos + '&limit=100' + tk),
+      fetch(base + '/insights?level=campaign&time_increment=1&time_range=' + tr7 + '&fields=campaign_id,spend,actions,action_values&limit=500' + tk),
+      fetch(base + '/campaigns?fields=name,effective_status,created_time,start_time,daily_budget,lifetime_budget&limit=100' + tk),
+      fetch(base + '/adsets?fields=campaign_id,effective_status,daily_budget,learning_stage_info&limit=300' + tk)
     ]);
     const conta = await rc.json(), dd = await rd.json(), dc = await rcamp.json();
+    const dcd = await rcd.json().catch(() => ({})), dlist = await rlist.json().catch(() => ({})), dsets = await rsets.json().catch(() => ({}));
     if (conta.error || dd.error) {
       const e = conta.error || dd.error;
       return { configurado: true, erro: (e.message || 'erro') + (e.code === 190 ? ' (chave vencida ou inválida)' : '') };
@@ -97,8 +103,24 @@ export async function metaAds(dias) {
       porDia[x.date_start] = { gasto: Number(x.spend) || 0, imp: Number(x.impressions) || 0, cliques: Number(x.clicks) || 0,
         compras: acao(x.actions, COMPRA), valorCompras: acao(x.action_values, COMPRA) };
     });
-    const campanhas = (dc.data || []).map((x) => ({ nome: x.campaign_name, gasto: Number(x.spend) || 0, cliques: Number(x.clicks) || 0,
-      cpc: Number(x.cpc) || 0, ctr: Number(x.ctr) || 0, compras: acao(x.actions, COMPRA) })).sort((a, b) => b.gasto - a.gasto);
+    // por campanha: últimos 7 dias, dia a dia, status, orçamento e aprendizado
+    const info = {};
+    (dlist.data || []).forEach((x) => { info[x.id] = x; });
+    const sets = {};
+    (dsets.data || []).forEach((x) => { (sets[x.campaign_id] = sets[x.campaign_id] || []).push(x); });
+    const diaCamp = {};
+    (dcd.data || []).forEach((x) => { (diaCamp[x.campaign_id] = diaCamp[x.campaign_id] || {})[x.date_start] = { gasto: Number(x.spend) || 0, compras: acao(x.actions, COMPRA), valor: acao(x.action_values, COMPRA) }; });
+    const campanhas = (dc.data || []).map((x) => {
+      const i = info[x.campaign_id] || {}, ss = (sets[x.campaign_id] || []).filter((a) => a.effective_status === 'ACTIVE');
+      const orc = Number(i.daily_budget || 0) || ss.reduce((t, a) => t + (Number(a.daily_budget) || 0), 0);
+      return { id: x.campaign_id, nome: x.campaign_name, gasto: Number(x.spend) || 0, cliques: Number(x.clicks) || 0,
+        cpc: Number(x.cpc) || 0, ctr: Number(x.ctr) || 0, compras: acao(x.actions, COMPRA), valor: acao(x.action_values, COMPRA),
+        status: i.effective_status || '', criada: i.start_time || i.created_time || null,
+        orcamentoDia: orc ? orc / 100 : null,
+        aprendendo: ss.some((a) => a.learning_stage_info && /LEARNING/.test(String(a.learning_stage_info.status || '')) && !/FAIL|LIMITED/.test(String(a.learning_stage_info.status || ''))),
+        aprendizadoLimitado: ss.some((a) => a.learning_stage_info && /FAIL|LIMITED/.test(String(a.learning_stage_info.status || ''))),
+        dias: diaCamp[x.campaign_id] || {} };
+    }).sort((a, b) => b.gasto - a.gasto);
     const dados = { configurado: true, conta: conta.name, moeda: conta.currency || 'BRL', porDia, campanhas };
     await L.setJSON('meta_cache', { em: Date.now(), dados }).catch(() => {});
     return dados;

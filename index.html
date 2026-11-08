@@ -3169,6 +3169,16 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .gst-per-l{display:flex;justify-content:space-between;font-size:.8rem;padding:.25rem 0;border-top:1px dashed #EEF0F5}
 .gst-per-l i{font-style:normal;color:#5B5670}.gst-per-l em{font-style:normal;font-weight:800}
 .gst-card td.pos{color:#178A50;font-weight:800}.gst-card td.neg{color:#D21F4A;font-weight:800}
+.cmp-leg{display:flex;gap:.8rem;flex-wrap:wrap;font-size:.72rem;color:#6B6782;margin:.2rem 0 .6rem}
+.cmp{border:1.5px solid #EEF0F5;border-left-width:6px;border-radius:16px;padding:.75rem .85rem;margin-bottom:.55rem;background:#fff}
+.cmp.verde{border-left-color:#1FAF5F}.cmp.amar{border-left-color:#F2B705}.cmp.verm{border-left-color:#E5484D}.cmp.cinza{border-left-color:#C9C7D3;opacity:.75}
+.cmp-top{display:flex;justify-content:space-between;gap:.6rem;align-items:flex-start}
+.cmp-top b{font-size:.9rem;font-weight:800;color:#1E1830}
+.cmp-acao{flex:none;font-size:.74rem;font-weight:800;border-radius:99px;padding:.25rem .6rem;background:#F3F4F8;color:#1E1830}
+.cmp.verde .cmp-acao{background:#E8F7EF;color:#178A50}.cmp.verm .cmp-acao{background:#FFECEE;color:#C8243A}.cmp.amar .cmp-acao{background:#FFF6D9;color:#8A6400}
+.cmp-nums{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin:.55rem 0 .35rem}
+.cmp-nums small{display:block;font-size:.66rem;color:#8A86A0;font-weight:700}.cmp-nums b{font-size:.84rem;font-weight:800;color:#1E1830;white-space:nowrap}
+.cmp-mot{font-size:.76rem;color:#5B5670}
 .gst-passos{margin:.4rem 0 0 1.1rem;font-size:.85rem;line-height:1.6;color:#3B3650}
 @media (max-width:640px){ .gst-ks,.gst-pers{grid-template-columns:1fr} }
 </style>
@@ -7914,6 +7924,29 @@ function pnlGastosPeriodo(filtro){
     if(g.kie!=null){ o.kie+=g.kie; o.tem=true; } if(g.meta!=null){ o.meta+=g.meta; o.tem=true; } });
   o.total=o.kie+o.meta; return o;
 }
+/* indicação por campanha: aumentar / não mexer / revisar */
+function pnlRecomendar(c, ticket){
+  var valor=c.valor||c.compras*ticket, roas=c.gasto>0?valor/c.gasto:0;
+  var hojeK=pnlKeyMs(Date.now()), dias=Object.keys(c.dias||{}).filter(function(k){ return k<hojeK; }).sort().reverse().slice(0,3);
+  var novo=c.criada && (Date.now()-new Date(c.criada).getTime())<3*864e5;
+  var bons=dias.length>=3 && dias.every(function(k){ var d=c.dias[k], v=d.valor||d.compras*ticket; return d.compras>=1 && v>=d.gasto*1.2; });
+  var cpa=c.compras?c.gasto/c.compras:null, r;
+  if(c.status && c.status!=='ACTIVE') r=['⚪','Pausada','não está rodando agora'];
+  else if(c.compras===0 && c.gasto>=2.5*ticket) r=['🔴','Revisar ou pausar','gastou R$ '+fmtPreco(c.gasto)+' em 7 dias sem nenhuma venda'];
+  else if(novo || c.aprendendo) r=['🟡','Não mexer ainda',(novo?'campanha nova (menos de 3 dias)':'o Meta ainda está aprendendo')+' — mexer agora atrapalha'];
+  else if(roas<0.8 && c.gasto>=3*ticket) r=['🔴','Revisar','cada R$ 1 investido voltou R$ '+fmtPreco(roas)+' — está dando prejuízo'];
+  else if(bons || (roas>=1.5 && c.compras>=5)) r=['🟢','Aumentar ~20%',(bons?'lucro nos últimos 3 dias seguidos':'voltou R$ '+fmtPreco(roas)+' pra cada R$ 1')+(c.orcamentoDia?' · de R$ '+fmtPreco(c.orcamentoDia)+' para R$ '+fmtPreco(Math.round(c.orcamentoDia*1.2))+'/dia':'')];
+  else r=['🟡','Manter e observar','ainda sem sinal claro — espere mais 1 ou 2 dias'];
+  if(c.aprendizadoLimitado && r[0]!=='🔴') r[2]+=' · aprendizado limitado: precisa de mais vendas por semana';
+  return {ic:r[0], acao:r[1], motivo:r[2], roas:roas, cpa:cpa, valor:valor};
+}
+function pnlCampanhaHtml(c, ticket){
+  var r=pnlRecomendar(c, ticket), cor=r.ic==='🟢'?'verde':r.ic==='🔴'?'verm':r.ic==='⚪'?'cinza':'amar';
+  return '<div class="cmp '+cor+'"><div class="cmp-top"><b>'+esc(c.nome)+'</b><span class="cmp-acao">'+r.ic+' '+r.acao+'</span></div>'+
+    '<div class="cmp-nums"><div><small>Gasto</small><b>R$ '+fmtPreco(c.gasto)+'</b></div><div><small>Vendas</small><b>'+c.compras+'</b></div>'+
+    '<div><small>Custo/venda</small><b>'+(r.cpa!=null?'R$ '+fmtPreco(r.cpa):'—')+'</b></div><div><small>Retorno</small><b>'+(c.gasto?r.roas.toFixed(2).replace('.',',')+'x':'—')+'</b></div></div>'+
+    '<div class="cmp-mot">'+esc(r.motivo)+'</div></div>';
+}
 function pnlGastosHtml(pedidos){
   var G=_pnlCache.gastos;
   if(!G) return '<div class="gst"><div class="pnl-nota">Carregando os gastos…</div></div>';
@@ -7936,7 +7969,8 @@ function pnlGastosHtml(pedidos){
       : '<div class="gst-k"><span>Anúncio hoje</span><b>R$ '+fmtPreco(h.meta)+'</b><small>'+esc(G.meta.conta||'conta de anúncios')+'</small></div>');
   var linhas=dias.slice(0,14).map(function(k){ var g=pnlGastosDia(k), r=rec(k), l=r-(g.kie||0)-(g.meta||0), d=(G.porDia[k]||{}).uso||{};
     return '<tr><td>'+k.slice(8,10)+'/'+k.slice(5,7)+'</td><td>'+vendas(k)+'</td><td>R$ '+fmtPreco(r)+'</td><td title="'+((d.texto||0)+' textos, '+(d.musica||0)+' músicas, '+(d.imagem||0)+' imagens')+'">'+(g.kie!=null?'R$ '+fmtPreco(g.kie):'—')+'</td><td>'+(g.meta!=null?'R$ '+fmtPreco(g.meta):'—')+'</td><td class="'+(l>=0?'pos':'neg')+'">R$ '+fmtPreco(l)+'</td></tr>'; }).join('');
-  var camp=(G.meta.campanhas||[]).slice(0,8).map(function(c){ return '<tr><td>'+esc(c.nome)+'</td><td>R$ '+fmtPreco(c.gasto)+'</td><td>'+c.cliques+'</td><td>R$ '+fmtPreco(c.cpc)+'</td><td>'+c.compras+'</td></tr>'; }).join('');
+  var tk7=s7.v?s7.rec/s7.v:9.99;
+  var camp=(G.meta.campanhas||[]).filter(function(c){ return c.gasto>0; }).slice(0,15).map(function(c){ return pnlCampanhaHtml(c, tk7); }).join('');
   var usoH=(G.porDia[dias[0]]||{}).uso||{};
   return '<div class="gst">'+
     '<div class="gst-top"><div><b>Gastos e lucro</b><span>tudo automático · dólar hoje R$ '+fmtPreco(G.usd)+'</span></div></div>'+
@@ -7944,7 +7978,9 @@ function pnlGastosHtml(pedidos){
     '<div class="gst-pers">'+bloco('Hoje',h)+bloco('Últimos 7 dias',s7)+bloco('Últimos 30 dias',s30)+'</div>'+
     '<div class="dsh-card gst-card"><div class="dsh-t">Dia a dia</div><div class="dsh-tab"><table><thead><tr><th>Dia</th><th>Vendas</th><th>Receita</th><th>Kie</th><th>Meta</th><th>Lucro</th></tr></thead><tbody>'+linhas+'</tbody></table></div>'+
       '<div class="dsh-nota">O gasto da Kie é medido pelo saldo de créditos (lido a cada 30 min) e começou a contar no dia em que o painel novo foi ligado. Crédito = US$ '+String(G.usdPorCredito).replace('.',',')+'.</div></div>'+
-    (camp?'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas do Meta · últimos 7 dias</div><div class="dsh-tab"><table><thead><tr><th>Campanha</th><th>Gasto</th><th>Cliques</th><th>CPC</th><th>Compras</th></tr></thead><tbody>'+camp+'</tbody></table></div></div>':'')+
+    (camp?'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas · últimos 7 dias · o que fazer</div>'+
+      '<div class="cmp-leg"><span>🟢 aumentar</span><span>🟡 não mexer / observar</span><span>🔴 revisar</span></div>'+camp+
+      '<div class="dsh-nota">Vendas e valor vêm do Pixel do Meta. Indicação automática: confira antes de mexer. Aumente no máximo 20% por vez pra não reiniciar o aprendizado.</div></div>':'')+
     (!G.meta.configurado?'<div class="dsh-card gst-card"><div class="dsh-t">Como ligar o Meta Ads (uma vez só)</div><ol class="gst-passos">'+
       '<li>Entre em <b>business.facebook.com</b> → <b>Configurações do negócio</b>.</li>'+
       '<li>Em <b>Usuários → Usuários do sistema</b>, crie um usuário (função Admin) e dê acesso à sua <b>conta de anúncios</b>.</li>'+
