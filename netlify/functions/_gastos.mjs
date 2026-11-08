@@ -86,16 +86,19 @@ export async function metaAds(dias, deX, ateX, semCache) {
   try {
     const tk = '&access_token=' + encodeURIComponent(c.tk);
     const tr7 = encodeURIComponent(JSON.stringify({ since: diaBR(Date.now() - 6 * 864e5), until: ate }));
-    const [rc, rd, rcamp, rcd, rlist, rsets] = await Promise.all([
+    const [rc, rd, rcamp, rcd, rlist, rsets, rtot] = await Promise.all([
       fetch(base + '?fields=name,currency,account_status' + tk),
       fetch(base + '/insights?level=account&time_increment=1&time_range=' + tr + '&fields=' + campos + '&limit=500' + tk),
       fetch(base + '/insights?level=campaign&date_preset=last_7d&fields=campaign_id,campaign_name,' + campos + '&limit=100' + tk),
       fetch(base + '/insights?level=campaign&time_increment=1&time_range=' + tr7 + '&fields=campaign_id,spend,actions,action_values&limit=500' + tk),
       fetch(base + '/campaigns?fields=name,effective_status,created_time,start_time,daily_budget,lifetime_budget&limit=100' + tk),
-      fetch(base + '/adsets?fields=id,campaign_id,effective_status,daily_budget,learning_stage_info&limit=300' + tk)
+      fetch(base + '/adsets?fields=id,campaign_id,effective_status,daily_budget,learning_stage_info&limit=300' + tk),
+      fetch(base + '/insights?level=campaign&date_preset=maximum&fields=campaign_id,spend,actions&limit=200' + tk)
     ]);
     const conta = await rc.json(), dd = await rd.json(), dc = await rcamp.json();
     const dcd = await rcd.json().catch(() => ({})), dlist = await rlist.json().catch(() => ({})), dsets = await rsets.json().catch(() => ({}));
+    const dtot = await rtot.json().catch(() => ({})), tot = {};
+    (dtot.data || []).forEach((x) => { tot[x.campaign_id] = { gasto: Number(x.spend) || 0, compras: acao(x.actions, COMPRA) }; });
     if (conta.error || dd.error) {
       const e = conta.error || dd.error;
       return { configurado: true, erro: (e.message || 'erro') + (e.code === 190 ? ' (chave vencida ou inválida)' : '') };
@@ -123,7 +126,7 @@ export async function metaAds(dias, deX, ateX, semCache) {
         aprendizadoLimitado: ss.some((a) => a.learning_stage_info && /FAIL|LIMITED/.test(String(a.learning_stage_info.status || ''))),
         orcamentoNaCampanha: !!Number(i.daily_budget || 0),
         conjuntos: ss.map((a) => ({ id: a.id, orcamentoDia: Number(a.daily_budget || 0) / 100 })),
-        dias: diaCamp[x.campaign_id] || {} };
+        dias: diaCamp[x.campaign_id] || {}, total: tot[x.campaign_id] || null };
     }).sort((a, b) => b.gasto - a.gasto);
     const dados = { configurado: true, conta: conta.name, moeda: conta.currency || 'BRL', porDia, campanhas };
     await L.setJSON(ckey, { em: Date.now(), dados }).catch(() => {});
