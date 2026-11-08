@@ -340,7 +340,7 @@ export default async (req) => {
     // Só o GPT-5.4 (era o único que acertava sempre). Antes 4 modelos reserva
     // eram chamados JUNTOS em toda letra — gastavam requisição mesmo sem uso.
     // Em segundo plano (até 15 min) dá pra esperar bem e tentar 2 vezes.
-    const LIMITE = longo ? 140000 : 26000; // a página espera até 150 s
+    const LIMITE = longo ? 45000 : 26000; // no máximo ~45 s esperando a IA
     const resta = () => LIMITE - (Date.now() - t0);
     // RÁPIDO: pede ao GPT-5.4. Se em 6 s ele ainda não respondeu, pede também
     // a um modelo rápido e usa o primeiro que entregar uma letra boa.
