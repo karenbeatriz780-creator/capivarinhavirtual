@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { registrarSaldoKie, cotacaoDolar, metaAds, usdPorCredito, diaBR } from './_gastos.mjs';
+import { registrarSaldoKie, cotacaoDolar, metaAds, usdPorCredito, diaBR, recomendar, ultimasAcoes } from './_gastos.mjs';
 // Painel: gastos automáticos (Kie + Meta Ads) dos últimos N dias, já em reais.
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 export default async (req) => {
@@ -34,12 +34,16 @@ export default async (req) => {
         metaCliques: m ? m.cliques : 0, metaImp: m ? m.imp : 0, metaCompras: m ? m.compras : 0
       };
     });
+    // estratégia por campanha (já com imposto) + travas
+    const acoes = await ultimasAcoes();
+    const campsImp = (meta.campanhas || []).map((c) => Object.assign({}, c, { gasto: +(c.gasto * (1 + imp)).toFixed(2),
+      dias: Object.fromEntries(Object.entries(c.dias || {}).map(([k, v]) => [k, Object.assign({}, v, { gasto: +(v.gasto * (1 + imp)).toFixed(2) })])) }));
+    campsImp.forEach((c) => { c.rec = recomendar(c, acoes[c.id]); c.ultimaAcao = acoes[c.id] || null; });
     return json({
       ok: true, usd, usdPorCredito: upc, impostoMeta: +(imp * 100).toFixed(2), de: dias[dias.length - 1], ate: dias[0], hoje: diaBR(),
       kie: { configurado: !!(process.env.KIE_API_KEY || '').trim(), saldo: kie ? kie.saldo : null,
         saldoBRL: kie ? +(kie.saldo * upc * usd).toFixed(2) : null },
-      meta: { configurado: !!meta.configurado, erro: meta.erro || null, conta: meta.conta || null, moeda: meta.moeda || null, campanhas: (meta.campanhas || []).map((c) => Object.assign({}, c, { gasto: +(c.gasto * (1 + imp)).toFixed(2),
-        dias: Object.fromEntries(Object.entries(c.dias || {}).map(([k, v]) => [k, Object.assign({}, v, { gasto: +(v.gasto * (1 + imp)).toFixed(2) })])) })) },
+      meta: { configurado: !!meta.configurado, erro: meta.erro || null, conta: meta.conta || null, moeda: meta.moeda || null, campanhas: campsImp },
       porDia
     });
   } catch (e) { return json({ ok: false, erro: e && e.message }, 500); }

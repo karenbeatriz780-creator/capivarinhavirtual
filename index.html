@@ -3194,6 +3194,14 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .cmp-nums{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin:.55rem 0 .35rem}
 .cmp-nums small{display:block;font-size:.66rem;color:#8A86A0;font-weight:700}.cmp-nums b{font-size:.84rem;font-weight:800;color:#1E1830;white-space:nowrap}
 .cmp-mot{font-size:.76rem;color:#5B5670}
+.cmp.verde2{border-left-color:#7ACB98}.cmp.verde2 .cmp-acao{background:#EEF9F2;color:#2F8A55}
+.cmp-bts{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.55rem}
+.cmp-bt{border:1px solid #D9DAE6;background:#fff;color:#1E1830;border-radius:10px;padding:.45rem .75rem;font:inherit;font-size:.78rem;font-weight:800;cursor:pointer}
+.cmp-bt:disabled{opacity:.55;cursor:not-allowed;background:#F5F5F9}
+.cmp-bt.sobe{border-color:#1FAF5F;color:#178A50}.cmp-bt.sobe.forte{background:#1FAF5F;color:#fff}
+.cmp-bt.pausa{border-color:#F3B4BC;color:#C8243A}.cmp-bt.pausa.forte{background:#E5484D;border-color:#E5484D;color:#fff}
+.cmp-ua{font-size:.68rem;color:#8A86A0;margin-top:.4rem}
+.cmp-alerta{background:#FFF3F5;border:1.5px solid #FFC7D0;border-radius:14px;padding:.65rem .8rem;margin-bottom:.6rem;font-size:.82rem;color:#5B1A28;display:grid;gap:.25rem}
 .gst-passos{margin:.4rem 0 0 1.1rem;font-size:.85rem;line-height:1.6;color:#3B3650}
 @media (max-width:640px){ .gst-ks,.gst-pers{grid-template-columns:1fr} }
 </style>
@@ -7939,28 +7947,51 @@ function pnlGastosPeriodo(filtro){
     if(g.kie!=null){ o.kie+=g.kie; o.tem=true; } if(g.meta!=null){ o.meta+=g.meta; o.tem=true; } });
   o.total=o.kie+o.meta; return o;
 }
-/* indicação por campanha: aumentar / não mexer / revisar */
-function pnlRecomendar(c, ticket){
-  var valor=c.valor||c.compras*ticket, roas=c.gasto>0?valor/c.gasto:0;
-  var hojeK=pnlKeyMs(Date.now()), dias=Object.keys(c.dias||{}).filter(function(k){ return k<hojeK; }).sort().reverse().slice(0,3);
-  var novo=c.criada && (Date.now()-new Date(c.criada).getTime())<3*864e5;
-  var bons=dias.length>=3 && dias.every(function(k){ var d=c.dias[k], v=d.valor||d.compras*ticket; return d.compras>=1 && v>=d.gasto*1.2; });
-  var cpa=c.compras?c.gasto/c.compras:null, r;
-  if(c.status && c.status!=='ACTIVE') r=['⚪','Pausada','não está rodando agora'];
-  else if(c.compras===0 && c.gasto>=2.5*ticket) r=['🔴','Revisar ou pausar','gastou R$ '+fmtPreco(c.gasto)+' em 7 dias sem nenhuma venda'];
-  else if(novo || c.aprendendo) r=['🟡','Não mexer ainda',(novo?'campanha nova (menos de 3 dias)':'o Meta ainda está aprendendo')+' — mexer agora atrapalha'];
-  else if(roas<0.8 && c.gasto>=3*ticket) r=['🔴','Revisar','cada R$ 1 investido voltou R$ '+fmtPreco(roas)+' — está dando prejuízo'];
-  else if(bons || (roas>=1.5 && c.compras>=5)) r=['🟢','Aumentar ~20%',(bons?'lucro nos últimos 3 dias seguidos':'voltou R$ '+fmtPreco(roas)+' pra cada R$ 1')+(c.orcamentoDia?' · de R$ '+fmtPreco(c.orcamentoDia)+' para R$ '+fmtPreco(Math.round(c.orcamentoDia*1.2))+'/dia':'')];
-  else r=['🟡','Manter e observar','ainda sem sinal claro — espere mais 1 ou 2 dias'];
-  if(c.aprendizadoLimitado && r[0]!=='🔴') r[2]+=' · aprendizado limitado: precisa de mais vendas por semana';
-  return {ic:r[0], acao:r[1], motivo:r[2], roas:roas, cpa:cpa, valor:valor};
+/* campanhas: a estratégia vem do servidor (c.rec) — aqui só mostra e liga os botões */
+var NIVEL_CMP={pausar:['🚨','verm'],subir:['⬆️','verde'],podeSubir:['🟢','verde2'],travado:['🔒','amar'],manter:['🟡','amar'],pausada:['⏸','cinza']};
+function pnlCampanhaHtml(c){
+  var r=c.rec||{nivel:'manter',titulo:'Manter',motivo:''}, n=NIVEL_CMP[r.nivel]||NIVEL_CMP.manter;
+  var fm=function(v){ return 'R$ '+fmtPreco(v); };
+  var bts='';
+  if(r.nivel==='pausada') bts='<button type="button" class="cmp-bt" data-cmpacao="ativar" data-cmpid="'+esc(c.id)+'">▶️ Ativar</button>';
+  else {
+    bts=(r.podeSubir && r.novoOrcamento
+        ? '<button type="button" class="cmp-bt sobe'+(r.nivel==='subir'?' forte':'')+'" data-cmpacao="subir" data-cmpid="'+esc(c.id)+'" data-cmpval="'+r.novoOrcamento+'">⬆️ Subir para '+fm(r.novoOrcamento)+'/dia</button>'
+        : '<button type="button" class="cmp-bt" disabled title="'+esc(r.trava||r.motivo||'')+'">🔒 Subir orçamento</button>')+
+      '<button type="button" class="cmp-bt pausa'+(r.nivel==='pausar'?' forte':'')+'" data-cmpacao="pausar" data-cmpid="'+esc(c.id)+'">⏸ Pausar</button>';
+  }
+  var ua=c.ultimaAcao&&c.ultimaAcao.em?'<div class="cmp-ua">Última ação pelo painel: '+({pausar:'pausou',ativar:'ativou',orcamento:'subiu o orçamento'+(c.ultimaAcao.de?' de '+fm(c.ultimaAcao.de)+' para '+fm(c.ultimaAcao.para):'')}[c.ultimaAcao.tipo]||c.ultimaAcao.tipo)+' · '+pnlFmt(c.ultimaAcao.em).slice(0,17)+'</div>':'';
+  return '<div class="cmp '+n[1]+'"><div class="cmp-top"><b>'+esc(c.nome)+'</b><span class="cmp-acao">'+n[0]+' '+esc(r.titulo)+'</span></div>'+
+    '<div class="cmp-nums"><div><small>Gasto</small><b>'+fm(c.gasto)+'</b></div><div><small>Vendas</small><b>'+c.compras+'</b></div>'+
+    '<div><small>Custo/venda</small><b>'+(r.cpa!=null?fm(r.cpa):'—')+'</b></div><div><small>Retorno</small><b>'+(c.gasto?Number(r.roas||0).toFixed(2).replace('.',',')+'x':'—')+'</b></div></div>'+
+    '<div class="cmp-mot">'+esc(r.motivo||'')+(c.orcamentoDia?' · orçamento hoje: '+fm(c.orcamentoDia)+'/dia':'')+'</div>'+
+    '<div class="cmp-bts">'+bts+'</div>'+ua+'</div>';
 }
-function pnlCampanhaHtml(c, ticket){
-  var r=pnlRecomendar(c, ticket), cor=r.ic==='🟢'?'verde':r.ic==='🔴'?'verm':r.ic==='⚪'?'cinza':'amar';
-  return '<div class="cmp '+cor+'"><div class="cmp-top"><b>'+esc(c.nome)+'</b><span class="cmp-acao">'+r.ic+' '+r.acao+'</span></div>'+
-    '<div class="cmp-nums"><div><small>Gasto</small><b>R$ '+fmtPreco(c.gasto)+'</b></div><div><small>Vendas</small><b>'+c.compras+'</b></div>'+
-    '<div><small>Custo/venda</small><b>'+(r.cpa!=null?'R$ '+fmtPreco(r.cpa):'—')+'</b></div><div><small>Retorno</small><b>'+(c.gasto?r.roas.toFixed(2).replace('.',',')+'x':'—')+'</b></div></div>'+
-    '<div class="cmp-mot">'+esc(r.motivo)+'</div></div>';
+function pnlCampanhasAlerta(camps){
+  var p=camps.filter(function(c){ return c.rec&&c.rec.nivel==='pausar'; }), s=camps.filter(function(c){ return c.rec&&c.rec.nivel==='subir'; });
+  if(!p.length && !s.length) return '';
+  return '<div class="cmp-alerta">'+
+    (p.length?'<div>🚨 <b>Pausar agora:</b> '+p.map(function(c){ return esc(c.nome); }).join(', ')+'</div>':'')+
+    (s.length?'<div>⬆️ <b>Subir orçamento:</b> '+s.map(function(c){ return esc(c.nome); }).join(', ')+'</div>':'')+'</div>';
+}
+function pnlLigarCampanhas(body){
+  body.querySelectorAll('[data-cmpacao]').forEach(function(bt){
+    bt.onclick=function(){
+      var ac=bt.dataset.cmpacao, nome=(bt.closest('.cmp').querySelector('.cmp-top b')||{}).textContent||'';
+      var pergunta=ac==='pausar'?'Pausar a campanha "'+nome+'"?':ac==='ativar'?'Ativar de novo a campanha "'+nome+'"?':'Subir o orçamento de "'+nome+'" para R$ '+fmtPreco(Number(bt.dataset.cmpval))+' por dia (+20%)?';
+      if(!confirm(pergunta)) return;
+      if(!pedirSenhaAdmin()) return;
+      var txt=bt.textContent; bt.disabled=true; bt.textContent='Enviando…';
+      fetch('/.netlify/functions/admin-meta-acao',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({id:bt.dataset.cmpid,acao:ac})})
+        .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,s:r.status,d:d}; }); })
+        .then(function(x){
+          if(x.s===401){ _pnlChave=''; Store.del('cl_admin_key'); }
+          if(!x.ok){ toast((x.d&&x.d.erro)||'Não deu certo.'); bt.disabled=false; bt.textContent=txt; return; }
+          toast(ac==='pausar'?'Campanha pausada ✓':ac==='ativar'?'Campanha ativada ✓':'Orçamento atualizado ✓');
+          pnlCarregarGastos({headers:{'x-admin-key':_pnlChave}});
+        }).catch(function(){ toast('Sem conexão.'); bt.disabled=false; bt.textContent=txt; });
+    };
+  });
 }
 var _pnlGstPer='30', _pnlGstDe='', _pnlGstAte='';
 function pnlGstRange(){
@@ -8035,14 +8066,17 @@ function pnlGastosHtml(pedidos){
   /* ticket médio dos últimos 7 dias pras indicações das campanhas */
   var v7=0, r7=0; for(var i=0;i<7;i++){ var kk=pnlKeyMs(pnlInicioDia(Date.now(),-i)+3600000); v7+=vendas(kk); r7+=rec(kk); }
   var tk7=v7?r7/v7:9.99;
-  var camp=(G.meta.campanhas||[]).filter(function(c){ return c.gasto>0; }).slice(0,15).map(function(c){ return pnlCampanhaHtml(c, tk7); }).join('');
+  var campsV=(G.meta.campanhas||[]).filter(function(c){ return c.gasto>0; }).slice(0,20);
+  var ordem={pausar:0,subir:1,podeSubir:2,manter:3,travado:4,pausada:5};
+  campsV.sort(function(a,b){ return (ordem[(a.rec||{}).nivel]||3)-(ordem[(b.rec||{}).nivel]||3) || b.gasto-a.gasto; });
+  var camp=campsV.map(function(c){ return pnlCampanhaHtml(c); }).join('');
   return '<div class="gst">'+
     '<div class="gst-top"><div><b>Gastos e lucro</b><span>tudo automático · dólar hoje R$ '+fmtPreco(G.usd)+'</span></div></div>'+
     '<div class="gst-ks">'+kieBox+metaBox+'<div class="gst-k"><span>IA hoje</span><b>R$ '+fmtPreco(gH.kie||0)+'</b><small>'+(usoH.texto||0)+' textos · '+(usoH.musica||0)+' músicas · '+(usoH.imagem||0)+' imagens</small></div></div>'+
     '<div class="gst-chips">'+chips+'</div>'+custom+perHtml+
     (camp?'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas · últimos 7 dias · o que fazer</div>'+
-      '<div class="cmp-leg"><span>🟢 aumentar</span><span>🟡 não mexer / observar</span><span>🔴 revisar</span></div>'+camp+
-      '<div class="dsh-nota">Gasto já com o imposto do Meta ('+String(G.impostoMeta!=null?G.impostoMeta:12.15).replace('.',',')+'%). Vendas e valor vêm do Pixel do Meta. Indicação automática: confira antes de mexer. Aumente no máximo 20% por vez pra não reiniciar o aprendizado.</div></div>':'')+
+      pnlCampanhasAlerta(campsV)+'<div class="cmp-leg"><span>🚨 pausar</span><span>⬆️ subir</span><span>🟢 pode subir</span><span>🔒 não mexer</span><span>🟡 observar</span></div>'+camp+
+      '<div class="dsh-nota">Gasto já com o imposto do Meta ('+String(G.impostoMeta!=null?G.impostoMeta:12.15).replace('.',',')+'%). Vendas e valor vêm do Pixel do Meta. Os botões pedem a senha de administrador. Subir é sempre +20% e fica travado em campanha nova, em aprendizado ou mexida há menos de 72 h.</div></div>':'')+
     (!G.meta.configurado?'<div class="dsh-card gst-card"><div class="dsh-t">Como ligar o Meta Ads (uma vez só)</div><ol class="gst-passos">'+
       '<li>Configurações do negócio → <b>Usuários do sistema</b> → crie um usuário e atribua a <b>conta de anúncios</b> e o <b>app</b>.</li>'+
       '<li><b>Gerar token</b> com a permissão <b>ads_read</b>, validade Nunca.</li>'+
@@ -8491,6 +8525,7 @@ function desenharPainel(pedidos, visitas, musicas){
     carregarPainel(_pnlChave||Store.get('cl_admin_key')||'', function(erro){ if(erro){ toast('Não consegui carregar tudo agora.'); _pnlCompleto=false; } });
   };
   ligarHoje(body);
+  pnlLigarCampanhas(body);
   body.querySelectorAll('[data-gstper]').forEach(function(b){ b.onclick=function(){ _pnlGstPer=b.dataset.gstper; if(_pnlGstPer==='custom' && !_pnlGstDe){ var r=pnlGstRange(); _pnlGstAte=pnlKeyMs(Date.now()); _pnlGstDe=pnlKeyMs(pnlInicioDia(Date.now(),-13)+3600000); } desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); }; });
   var gd=el('gstDatas'); if(gd) gd.onsubmit=function(e){ e.preventDefault(); var a=el('gstDe').value, z=el('gstAte').value; if(!a||!z||a>z){ toast('Escolha a data inicial e a final.'); return; } _pnlGstDe=a; _pnlGstAte=z; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); };
   body.querySelectorAll('[data-expandir]').forEach(function(b){ b.onclick=function(){ var m=b.closest('.pc').querySelector('.pc-mais'); m.hidden=!m.hidden; b.innerHTML=b.innerHTML.replace(m.hidden?'▴':'▾', m.hidden?'▾':'▴'); }; });
