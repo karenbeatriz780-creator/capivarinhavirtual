@@ -1,4 +1,4 @@
-// GASTOS AUTOMÁTICOS (painel → aba Gastos / Dashboard)
+// GASTOS AUTOMÁTICOS (painel → aba Gastos / Dashboard) — Meta Ads ligado
 // - Kie.ai: o saldo de créditos é lido a cada 30 min (gastos-agendado). A diferença
 //   entre uma leitura e outra é o gasto (se o saldo SOBE, foi recarga).
 // - Dólar: cotação do dia (AwesomeAPI, grátis, sem chave).
