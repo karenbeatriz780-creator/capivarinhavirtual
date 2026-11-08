@@ -17,7 +17,7 @@ export default async (req) => {
     const buf = Buffer.from(await ra.arrayBuffer());
     if (buf.length > 8 * 1024 * 1024) throw new Error('áudio grande demais');
     const formato = /mpeg|mp3/.test(info.mime_type || '') ? 'mp3' : /wav/.test(info.mime_type || '') ? 'wav' : 'ogg';
-    for (const modelo of ['google/gemini-3.8-flash', 'openai/gpt-5.4-mini']) {
+    for (const modelo of ['google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5']) {
       try {
         const r = await fetch('https://api.unifically.com/v1/chat/completions', {
           method: 'POST',

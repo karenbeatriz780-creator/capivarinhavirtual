@@ -6,15 +6,40 @@ import { indexarDia } from './_indice.mjs';
 // primeira que chegar completa. Responde direto (sem segundo plano, sem streaming).
 // Também guarda a letra pelo id — se a pessoa sair da aba, o site recupera depois.
 // Se nenhum responder a tempo, o site cai no modo antigo (gerar-letra-background).
-const MODELOS = ['openai/gpt-5.4-mini', 'google/gemini-3.8-flash', 'anthropic/claude-haiku-4-5'];
-const LIMITE_MS = 9000;
+// (nov/2026) a Unifically tirou o GPT-5.4 e o 5.4-mini — por isso a letra parou.
+const MODELOS = ['google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol'];
+const LIMITE_MS = 9500;
 
 function erro(msg, status) {
   return new Response(JSON.stringify({ erro: msg }), { status, headers: { 'Content-Type': 'application/json' } });
 }
 const str = (b, k, n) => String((b && b[k]) || '').trim().slice(0, n || 3000);
 
+// Teste rápido: abre /.netlify/functions/letra-rapida?teste=1 no navegador
+// e mostra se cada modelo da IA está respondendo (não mostra a chave).
+async function testarModelos() {
+  const apiKey = (process.env.UNIFICALLY_API_KEY || '').trim();
+  if (!apiKey) return { chave: 'FALTANDO' };
+  const out = { chave: 'ok' };
+  await Promise.all(MODELOS.map(async (m) => {
+    const t = Date.now();
+    try {
+      const r = await fetch('https://api.unifically.com/v1/chat/completions', {
+        method: 'POST', headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: m, max_tokens: 400, messages: [{ role: 'user', content: 'Responda só: ok' }] })
+      });
+      const d = await r.json().catch(() => null);
+      const txt = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
+      out[m] = r.ok && txt ? 'OK (' + (Date.now() - t) + 'ms)' : 'ERRO ' + r.status + ' ' + JSON.stringify(d && (d.error || d)).slice(0, 160);
+    } catch (e) { out[m] = 'ERRO ' + (e && e.message); }
+  }));
+  return out;
+}
+
 export default async (req) => {
+  if (req.method === 'GET' && new URL(req.url).searchParams.get('teste')) {
+    return new Response(JSON.stringify(await testarModelos(), null, 2), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+  }
   if (req.method !== 'POST') return erro('Método não permitido.', 405);
   let b; try { b = await req.json(); } catch { return erro('JSON inválido.', 400); }
   const id = /^[a-zA-Z0-9_-]{8,64}$/.test(String(b.id || '')) ? String(b.id) : null;
@@ -44,13 +69,13 @@ export default async (req) => {
       const r = await fetch('https://api.unifically.com/v1/chat/completions', {
         method: 'POST', signal: ctl.signal,
         headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: m, max_tokens: 1600, temperature: modoAjuste ? 0.5 : 0.9,
+        body: JSON.stringify({ model: m, max_tokens: 3000, temperature: modoAjuste ? 0.5 : 0.9,
           messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] })
       });
       const d = await r.json().catch(() => null);
       const ch = d && d.choices && d.choices[0];
       const txt = ch && ch.message && ch.message.content;
-      if (!r.ok || !txt || (ch.finish_reason === 'length')) { console.log('letra-rapida FALHA ' + m + ' ' + r.status); return null; }
+      if (!r.ok || !txt || (ch.finish_reason === 'length')) { console.log('letra-rapida FALHA ' + m + ' ' + r.status + ' ' + JSON.stringify(d).slice(0, 200)); return null; }
       const letra = limparResposta(txt);
       if (letra.split('\n').filter((l) => l.trim()).length < 10) { console.log('letra-rapida curta ' + m); return null; }
       console.log('letra-rapida OK ' + m + ' em ' + (Date.now() - t0) + 'ms');

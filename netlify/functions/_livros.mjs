@@ -297,7 +297,7 @@ export async function temaDoLivro(L) {
   return acharTema(L && L.tema);
 }
 
-const MODELOS_HIST = ['openai/gpt-5.4-mini', 'google/gemini-3.8-flash', 'anthropic/claude-haiku-4-5'];
+const MODELOS_HIST = ['google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol'];
 function pedidoHistoria(L) {
   const menina = L.genero === 'menina';
   const idade = Number(L.idade) === 0 ? 'bebê de ' + (L.idadeMeses || 0) + ' meses' : (L.idade || 4) + ' anos';
