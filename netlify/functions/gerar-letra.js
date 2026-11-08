@@ -344,16 +344,16 @@ export default async (req) => {
     // RÁPIDO: pede ao GPT-5.4. Se em 6 s ele ainda não respondeu, pede também
     // a um modelo rápido e usa o primeiro que entregar uma letra boa.
     // (o reserva só é chamado quando o 5.4 está lento — não gasta à toa)
-    const principal = chamar('openai/gpt-5.4', true);
+    const principal = chamar('openai/gpt-6.1-sol', true);
     const reserva = Promise.race([espera(6000), principal]).then((v) => {
       if (v) return null; // o 5.4 já entregou
       console.log('GPT-5.4 lento ou falhou — chamando reserva rápido');
-      return primeiroOk([chamar('openai/gpt-5.4-mini', true), chamar('google/gemini-3.8-flash', true)]);
+      return primeiroOk([chamar('google/gemini-3.8-flash', true), chamar('openai/gpt-6.1-terra', true), chamar('anthropic/claude-haiku-4-5', true)]);
     });
     let conteudo = await Promise.race([primeiroOk([principal, reserva]), espera(resta())]);
     if (!conteudo && longo && resta() > 40000) {
       console.log('GPT-5.4 falhou, tentando de novo...');
-      conteudo = await Promise.race([chamar('openai/gpt-5.4', true), espera(resta())]);
+      conteudo = await Promise.race([primeiroOk([chamar('openai/gpt-6.1-sol', true), chamar('google/gemini-3.8-flash', true)]), espera(resta())]);
     }
     if (!conteudo) {
       return json({ erro: 'Não consegui escrever a letra agora. Tenta de novo em instantes.' }, 502);
