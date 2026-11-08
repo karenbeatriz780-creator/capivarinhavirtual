@@ -3,6 +3,7 @@
 // Cada reserva só entra quando a anterior falha (ou demora demais), pra não gastar à toa.
 //
 // TEXTO: nas listas de modelos, "kie:..." vai pra Kie, "or:..." pra OpenRouter, o resto pra Unifically.
+import { contarUso } from './_gastos.mjs';
 const UNI = 'https://api.unifically.com/v1/chat/completions';
 const OR = 'https://openrouter.ai/api/v1/chat/completions';
 const KIEAPI = 'https://api.kie.ai';
@@ -57,6 +58,7 @@ export async function iaFetch(_url, init) {
       });
       // a Kie responde erro com HTTP 200 + { code, msg }: transforma em erro de verdade
       const d = await r.clone().json().catch(() => null);
+      if (d && d.choices) contarUso('texto');
       if (!d || !d.choices) {
         console.log('Kie texto FALHA ' + nome + ' ' + JSON.stringify(d).slice(0, 200));
         r = falso(502, (d && d.msg) || 'kie sem resposta');
@@ -114,6 +116,7 @@ async function criarMusicaKie(input) {
     const id = d && d.data && (d.data.taskId || d.data.task_id);
     if (!r.ok || !id || (d.code && d.code !== 200)) { console.log('Kie música FALHA ' + r.status + ' ' + JSON.stringify(d).slice(0, 300)); return null; }
     console.log('MÚSICA PELA KIE >> ' + id);
+    contarUso('musica');
     return 'kie_' + id;
   } catch (e) { console.log('Kie música FALHA ' + (e && e.message)); return null; }
 }
@@ -153,6 +156,7 @@ async function criarImagemKie(modelo, input) {
     const d = await r.json().catch(() => null);
     const id = d && d.data && (d.data.taskId || d.data.task_id);
     if (!r.ok || !id || (d.code && d.code !== 200)) { console.log('Kie imagem FALHA ' + r.status + ' ' + JSON.stringify(d).slice(0, 300)); return null; }
+    contarUso('imagem');
     return 'kieimg_' + id;
   } catch (e) { console.log('Kie imagem FALHA ' + (e && e.message)); return null; }
 }
