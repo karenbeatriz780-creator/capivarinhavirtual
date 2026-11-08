@@ -36,17 +36,27 @@ export default async (req) => {
       // junta os pedaços (o Meta pode pedir blocos maiores do que cabe num envio) e manda quando completar
       const sess = String(b.sessao || '').replace(/\D/g, ''), k = 'vbuf_' + sess;
       const ini = Number(b.ini), fim = Number(b.fim), pos = Number(b.pos);
-      const ant = pos === 0 ? null : await L.get(k, { type: 'arrayBuffer' }).catch(() => null);
+      const LS = getStore({ name: 'gastos', consistency: 'strong' });
+      let ant = null;
+      if (pos > 0) { // confere se o pedaço anterior já está guardado inteiro (senão o vídeo sai corrompido)
+        for (let i = 0; i < 6; i++) {
+          ant = await LS.get(k, { type: 'arrayBuffer' }).catch(() => null);
+          if (ant && ant.byteLength === pos) break;
+          await new Promise((r) => setTimeout(r, 700));
+        }
+        if (!ant || ant.byteLength !== pos) return json({ erro: 'falhou ao juntar os pedaços do vídeo — tente de novo' }, 502);
+      }
       const pedaco = Buffer.from(String(b.parte || ''), 'base64');
       const buf = ant ? Buffer.concat([Buffer.from(ant), pedaco]) : pedaco;
-      if (buf.length < fim - ini) { await L.set(k, buf); return json({ falta: fim - ini - buf.length }); }
+      if (buf.length > fim - ini) return json({ erro: 'pedaço do vídeo fora de ordem — tente de novo' }, 502);
+      if (buf.length < fim - ini) { await LS.set(k, buf); return json({ falta: fim - ini - buf.length }); }
       const fd = new FormData();
       fd.append('access_token', String(process.env.META_ADS_TOKEN).trim());
       fd.append('upload_phase', 'transfer'); fd.append('upload_session_id', sess); fd.append('start_offset', String(ini));
       fd.append('video_file_chunk', new Blob([buf]), 'parte');
       const r = await fetch('https://graph.facebook.com/' + VER() + '/act_' + conta() + '/advideos', { method: 'POST', body: fd });
       const d = await r.json().catch(() => ({}));
-      await L.delete(k).catch(() => {});
+      await LS.delete(k).catch(() => {});
       if (!r.ok || d.error) return json({ erro: (d.error && (d.error.error_user_msg || d.error.message)) || 'falha ao enviar o vídeo' }, 502);
       return json({ ini: Number(d.start_offset), fim: Number(d.end_offset) });
     }

@@ -17,7 +17,11 @@ export default async (req) => {
           const v = await graph('GET', x.videoId, { fields: 'status,picture' }).catch(() => null);
           const st = v && v.status && v.status.video_status;
           if (st === 'ready') { x.thumb = v.picture; break; }
-          if (st === 'error') throw new Error('o Meta não conseguiu processar o vídeo do ' + rot);
+          if (st === 'error') {
+            const fases = ['uploading_phase', 'processing_phase', 'publishing_phase'].map((f) => v.status[f]).filter(Boolean);
+            const det = fases.flatMap((f) => (f.errors || []).map((e) => e.message || e.code)).filter(Boolean).join('; ');
+            throw new Error('o Meta não conseguiu processar o vídeo do ' + rot + (det ? ' (' + det + ')' : '') + '. Tente exportar em MP4 (H.264) e publicar de novo');
+          }
           await dormir(10000);
         }
         if (!x.thumb) { const t = await graph('GET', x.videoId + '/thumbnails', {}).catch(() => null); x.thumb = t && t.data && t.data[0] && t.data[0].uri; }
