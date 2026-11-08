@@ -4,7 +4,7 @@ import { entregarPreviaLivro, avancarLivro, motorRodando } from './_livros.mjs';
 
 // A CADA MINUTO: confere as músicas que estão sendo criadas e, quando ficam
 // prontas, manda no WhatsApp do cliente (mesmo que ele tenha fechado o site).
-export const config = { schedule: '*/3 * * * *' };
+export const config = { schedule: '* * * * *' }; // a cada minuto (reserva do aviso rápido)
 
 const LIMITE = 3 * 3600 * 1000; // depois de 3 h desiste
 
@@ -43,6 +43,9 @@ export default async () => {
       if (!p || !p.taskId || Date.now() - (p.em || 0) > LIMITE) {
         await loja.delete(b.key); return;
       }
+      // o vigia rápido (avisar-musica-background) já está cuidando desta? então não mexe
+      const vig = await loja.get('vig_' + p.taskId, { type: 'json' }).catch(() => null);
+      if (vig && Date.now() - (vig.em || 0) < 13 * 60 * 1000) return;
       let r = await entregarMusica(p.taskId, p.numero);
       if (r === 'esperando') {
         // pergunta ao serviço de música se ficou pronta (isso grava o link)

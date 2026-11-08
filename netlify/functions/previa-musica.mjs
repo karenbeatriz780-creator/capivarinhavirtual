@@ -47,6 +47,65 @@ function bytesDaPrevia(buf) {
   return { ini, fim };
 }
 
+// ---- silêncio em MP3 (frames válidos com áudio zerado) ----
+const BR1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320];
+const SR1 = [44100, 48000, 32000];
+function lerFrame(buf, i) {
+  if (i + 4 > buf.length || buf[i] !== 0xff || (buf[i + 1] & 0xe0) !== 0xe0) return null;
+  const h = buf.readUInt32BE(i);
+  const versao = (h >> 19) & 3, camada = (h >> 17) & 3, br = BR1[(h >> 12) & 15], sr = SR1[(h >> 10) & 3];
+  if (versao !== 3 || camada !== 1 || !br || !sr) return null; // só MPEG1 Layer III
+  const pad = (h >> 9) & 1;
+  return { h, br, sr, mono: ((h >> 6) & 3) === 3, tam: Math.floor(144000 * br / sr) + pad };
+}
+function completarComSilencio(buf, ini, so70) {
+  // acha o 1º frame
+  let i = ini;
+  while (i < Math.min(buf.length - 4, ini + 8192) && !lerFrame(buf, i)) i++;
+  const f0 = lerFrame(buf, i);
+  if (!f0) return null;
+  const x = i + 4 + (f0.mono ? 17 : 32);
+  const tag = buf.toString('latin1', x, x + 4);
+  let totalFrames = 0, ref = f0, inicioAudio = i, temXing = false;
+  if ((tag === 'Xing' || tag === 'Info') && (buf[x + 7] & 1)) {
+    temXing = true;
+    totalFrames = buf.readUInt32BE(x + 8);
+    inicioAudio = i + f0.tam;
+    ref = lerFrame(buf, inicioAudio) || f0;
+  }
+  // conta os frames que já estão na prévia
+  let n = 0, j = inicioAudio;
+  while (j < so70.length) { const f = lerFrame(so70, j); if (!f) break; n++; j += f.tam; }
+  if (!totalFrames) totalFrames = Math.round((buf.length - inicioAudio) / ref.tam);
+  const faltam = Math.min(totalFrames - n, Math.ceil(8 * 60 * ref.sr / 1152)); // no máx. 8 min
+  if (faltam <= 0) return null;
+  // frame de silêncio: mesmo formato, sem CRC, sem padding, dados zerados.
+  // Com cabeçalho Xing (duração gravada nele) dá pra usar 32 kbps → arquivo bem menor.
+  const brIdx = temXing ? 1 : ((ref.h >> 12) & 15);
+  const br = BR1[brIdx];
+  const tam = Math.floor(144000 * br / ref.sr);
+  const sil = Buffer.alloc(tam, 0);
+  sil.writeUInt32BE(((((ref.h | 0x10000) & ~0x200) & ~0xf000) | (brIdx << 12)) >>> 0, 0);
+  const corpo = Buffer.alloc(tam * faltam);
+  for (let k = 0; k < faltam; k++) sil.copy(corpo, k * tam);
+  const out = Buffer.concat([so70.subarray(0, j), corpo]);
+  if (temXing) {
+    // acerta o tamanho e o índice de busca (TOC) do cabeçalho Xing pro arquivo novo
+    const flags = out[x + 7];
+    let p = x + 8 + ((flags & 1) ? 4 : 0);
+    if (flags & 2) { out.writeUInt32BE(out.length - i, p); p += 4; }
+    if (flags & 4) {
+      const aud = j - inicioAudio, tot = out.length - inicioAudio, dur = totalFrames, ate = n;
+      for (let k = 0; k < 100; k++) {
+        const fr = dur * k / 100; // frame alvo
+        const pos = fr <= ate ? aud * (fr / Math.max(1, ate)) : aud + (fr - ate) * tam;
+        out[p + k] = Math.min(255, Math.floor(256 * (inicioAudio - i + pos) / (out.length - i)));
+      }
+    }
+  }
+  return out;
+}
+
 async function urlReal(taskId, v) {
   try {
     const reg = await getStore('musicas').get(taskId, { type: 'json' });
@@ -112,13 +171,12 @@ export default async (req) => {
     }
     if (!buf) return erro('Não consegui carregar a música.', 502);
     const { ini, fim } = bytesDaPrevia(buf);
-    const corte = Buffer.from(buf.subarray(0, fim > ini ? fim : buf.length));
-    // O cabeçalho Xing/Info diz a duração da música INTEIRA — apaga, senão o
-    // player mostra "2:43" e para em 1:10. Sem ele, a duração sai certa (≈1:10).
-    for (const tag of ['Xing', 'Info']) {
-      const k = corte.indexOf(tag, 0, 'latin1');
-      if (k > -1 && k < 8192) corte.fill(0, k, k + 4);
-    }
+    // Prévia = 70 s cantando + SILÊNCIO até o tamanho real da música.
+    // Assim o player mostra a duração verdadeira (ex.: 3:42) e para de cantar no 1:10.
+    // O arquivo continua sem o resto da música (quem não pagou nunca recebe ela inteira).
+    const so70 = Buffer.from(buf.subarray(0, fim > ini ? fim : buf.length));
+    let corte = so70;
+    try { corte = completarComSilencio(buf, ini, so70) || so70; } catch (e) { console.error('previa silêncio:', e && e.message); }
     const total = corte.length;
 
     const headers = {

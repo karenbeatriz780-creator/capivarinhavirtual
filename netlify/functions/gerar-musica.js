@@ -468,6 +468,10 @@ export default async (req) => {
       const zap = String((body && body.whatsapp) || '').replace(/\D/g, '');
       if ((body && body.origem) !== 'painel' && zap.length >= 10) {
         await getStore('whatsapp').setJSON('pend_' + taskId, { taskId, numero: zap, em: Date.now() }).catch(() => {});
+        // vigia rápido: manda no WhatsApp assim que a música ficar pronta
+        await fetch((process.env.URL || 'https://capivarinhalove.com.br') + '/.netlify/functions/avisar-musica-background', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId })
+        }).catch(() => {});
       }
     } catch (e) {
       // se o registro falhar, a música ainda deve ser gerada normalmente

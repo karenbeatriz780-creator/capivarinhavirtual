@@ -9,7 +9,8 @@ const KIEAPI = 'https://api.kie.ai';
 const kieChave = () => (process.env.KIE_API_KEY || '').trim();
 
 // texto principal na Kie (rápido e barato) e reservas na OpenRouter
-export const TEXTO_KIE = ['kie:gemini-3-8-flash-openai'];
+// dois modelos da Kie ao mesmo tempo: usa o que responder primeiro (letra mais rápida; custo < R$ 0,01)
+export const TEXTO_KIE = ['kie:gemini-3-8-flash-openai', 'kie:gemini-3-6-flash-openai'];
 export const RESERVA_OR = ['or:google/gemini-3.6-flash', 'or:anthropic/claude-haiku-4.5'];
 
 const ultFalha = [0, 0, 0], ultOk = [0, 0, 0]; // por nível: 0 Kie, 1 Unifically, 2 OpenRouter
