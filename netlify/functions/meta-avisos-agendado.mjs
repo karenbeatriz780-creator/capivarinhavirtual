@@ -7,7 +7,7 @@
 import { getStore } from '@netlify/blobs';
 import { metaAds } from './_gastos.mjs';
 import { lerCfg, aplicarAcao, logRobo, avisar } from './_meta.mjs';
-import { resumoDia, textoResumo, saldoKieBRL, diaBR, horaBR, brl } from './_resumo.mjs';
+import { resumoDia, textoResumo, saldoKieBRL, diaBR, horaBR, brl, rankingCampanhas } from './_resumo.mjs';
 import { iaFetch, TEXTO_KIE, RESERVA_OR } from './_ia.mjs';
 
 export const config = { schedule: '*/2 * * * *' };
@@ -68,7 +68,8 @@ export async function rodarAvisos(forcar) {
   // 7h: ontem
   if (h >= 7 && h < 10 && await uma('av_7_' + hoje)) {
     const ontem = diaBR(agora - 864e5), [r, kie] = await Promise.all([resumoDia(ontem), saldoKieBRL()]);
-    await avisar(textoResumo(r, '☀️ *Bom dia! Resumo de ontem (' + ontem.split('-').reverse().slice(0, 2).join('/') + ')*') + (kie ? '\n🔋 Saldo da IA: ' + brl(kie.reais) + (kie.reais < (cfg.kieMin || 10) ? ' — *recarregue!*' : '') : '') + RODAPE);
+    const rk = await rankingCampanhas(ontem).catch(() => '');
+    await avisar(textoResumo(r, '☀️ *Bom dia! Resumo de ontem (' + ontem.split('-').reverse().slice(0, 2).join('/') + ')*') + (kie ? '\n🔋 Saldo da IA: ' + brl(kie.reais) + (kie.reais < (cfg.kieMin || 10) ? ' — *recarregue!*' : '') : '') + rk + RODAPE);
     return '7h';
   }
   // 12h, 17h, 19h: hoje
@@ -76,7 +77,8 @@ export async function rodarAvisos(forcar) {
     if (h === hs && await uma('av_' + hs + '_' + hoje)) {
       const r = await resumoDia(hoje);
       const st = r.lucro > 0 ? '✅ *Andamento bom*' : r.lucro > -15 ? '🟡 *Andamento no zero a zero* — atenção' : '⚠️ *Precisa de atenção*';
-      await avisar(st + '\n\n' + textoResumo(r, '📊 *Hoje até agora (' + hhmm + ')*') + (hs === 19 ? RODAPE : ''));
+      const rk = hs === 19 ? await rankingCampanhas(hoje).catch(() => '') : '';
+      await avisar(st + '\n\n' + textoResumo(r, '📊 *Hoje até agora (' + hhmm + ')*') + rk + (hs === 19 ? RODAPE : ''));
       return hs + 'h';
     }
   }

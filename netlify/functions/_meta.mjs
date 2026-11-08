@@ -13,11 +13,12 @@ const token = () => String(process.env.META_ADS_TOKEN || '').trim();
 const loja = () => getStore('gastos');
 
 export const CFG_PADRAO = {
-  autoPausar: true, autoSubir: true,
+  autoPausar: true, autoSubir: true, // autoSubir = AVISAR que pode subir (o robô nunca sobe sozinho)
   limiteSemVenda: 15,          // (antigo) — agora vale primeiraVendaMax
-  primeiraVendaMax: 15,        // R$ gastos (COM imposto) sem a 1ª venda → pausa
-  cpaMax: 7,                   // custo por venda máximo (COM imposto) pra o robô subir orçamento
-  segundaChance: true,         // campanha pausada por resultado ruim volta SÓ no horário de pico, uma vez
+  primeiraVendaMax: 14,        // R$ gastos (valor do app do Meta) sem venda → desliga
+  cpaLimite: 13,               // custo por venda de HOJE acima disso → desliga
+  cpaMax: 7,                   // custo por venda até isso → avisa que PODE SUBIR (quem sobe é você)
+  segundaChance: false,         // campanha pausada por resultado ruim volta SÓ no horário de pico, uma vez
   kieMin: 10,                  // avisa quando o saldo da IA (Kie) ficar abaixo disso (R$)
   protecaoQueda: true,         // IA do site caiu → pausa tudo e avisa; voltou → religa
   orcInicial: 45,              // R$/dia de todo anúncio novo publicado pelo painel
@@ -32,7 +33,9 @@ export const CFG_PADRAO = {
 };
 export async function lerCfg() {
   const c = await loja().get('auto_cfg', { type: 'json' }).catch(() => null);
-  return Object.assign({}, CFG_PADRAO, c || {});
+  const o = Object.assign({}, CFG_PADRAO, c || {});
+  if (o.versaoRegras !== 2) Object.assign(o, { versaoRegras: 2, primeiraVendaMax: 14, cpaLimite: 13, segundaChance: false }); // regras novas de 08/11
+  return o;
 }
 export async function salvarCfg(novo) {
   const c = await lerCfg(), num = (v, min, max) => Math.min(max, Math.max(min, Number(v)));
@@ -43,6 +46,7 @@ export async function salvarCfg(novo) {
   if ('protecaoQueda' in novo) o.protecaoQueda = !!novo.protecaoQueda;
   if (novo.primeiraVendaMax != null && novo.primeiraVendaMax !== '') o.primeiraVendaMax = num(novo.primeiraVendaMax, 5, 500);
   if (novo.cpaMax != null && novo.cpaMax !== '') o.cpaMax = num(novo.cpaMax, 1, 500);
+  if (novo.cpaLimite != null && novo.cpaLimite !== '') o.cpaLimite = num(novo.cpaLimite, 1, 500);
   if (novo.kieMin != null && novo.kieMin !== '') o.kieMin = num(novo.kieMin, 0, 5000);
   if (novo.limiteSemVenda != null) o.limiteSemVenda = num(novo.limiteSemVenda, 5, 500);
   if (novo.orcInicial != null) o.orcInicial = num(novo.orcInicial, 6, 1000);

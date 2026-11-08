@@ -87,3 +87,16 @@ export function cpa3dias(c, s, imp) {
   return { gasto: g, vendas: v, cpa: v ? g / v : null };
 }
 
+
+// destaques do dia por campanha (valores do app do Meta): a melhor (pra duplicar) e as piores
+export async function rankingCampanhas(dia) {
+  const meta = await metaAds(3, null, null, false);
+  const l = (meta.campanhas || []).map((c) => { const d = (c.dias || {})[dia] || {}; return { nome: c.nome, ativa: c.status === 'ACTIVE', g: d.gasto || 0, v: d.compras || 0 }; })
+    .filter((x) => x.g >= 5);
+  if (!l.length) return '';
+  const boas = l.filter((x) => x.v >= 3).sort((a, b) => a.g / a.v - b.g / b.v);
+  const linhas = l.sort((a, b) => b.g - a.g).slice(0, 8).map((x) => (x.v ? (x.g / x.v <= 9 ? '🟢' : x.g / x.v <= 13 ? '🟡' : '🔴') : '🔴') + ' ' + x.nome + ': ' + x.v + ' vendas · ' + (x.v ? brl(x.g / x.v) + '/venda' : brl(x.g) + ' sem venda') + (x.ativa ? '' : ' (desligada)'));
+  let dica = '';
+  if (boas[0] && boas[0].g / boas[0].v <= 9) dica = '\n\n💡 *Destaque:* "' + boas[0].nome + '" vendeu a ' + brl(boas[0].g / boas[0].v) + '. Vale *duplicar* essa campanha (mesmo criativo) ou fazer um vídeo parecido com ele.';
+  return '\n\n📋 *Campanhas (valor do app do Meta)*\n' + linhas.join('\n') + dica;
+}
