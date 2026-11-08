@@ -23,6 +23,7 @@ export async function rodarRobo(simular) {
   const cfg = await lerCfg();
   if (!process.env.META_ADS_TOKEN || !process.env.META_AD_ACCOUNT_ID) return { ok: false, motivo: 'Meta não ligado' };
   if (!cfg.autoPausar && !cfg.autoSubir) return { ok: true, motivo: 'robô desligado', feitas: [] };
+  if (!simular && Date.now() < Date.parse('2026-11-09T03:00:00Z')) return { ok: true, motivo: 'regras começam à meia-noite de 09/11', feitas: [] };
   const emerg = await L().get('emergencia', { type: 'json' }).catch(() => null);
   if (emerg) return { ok: true, motivo: 'modo emergência (IA fora do ar) — robô parado até voltar', feitas: [] };
   const imp = imposto(), tk = TICKET(), prim = cfg.primeiraVendaMax || 15, cpaMax = cfg.cpaMax || 7;
