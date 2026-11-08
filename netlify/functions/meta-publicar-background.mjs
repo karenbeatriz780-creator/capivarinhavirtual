@@ -29,7 +29,8 @@ export default async (req) => {
       }
     }
     const r = await publicarAnuncio(cfg, a, etapa);
-    j.feito = true; j.ok = true; j.etapa = 'Publicado ✓ O Meta vai revisar o anúncio (minutos a algumas horas).'; j.resultado = r;
+    j.feito = true; j.ok = true; const cf = r.conferido || {}, nao = cf.aprimoramentosQueOMetaNaoDeixouDesligar || [];
+    j.etapa = 'Publicado ✓ Conferido: 6 posicionamentos, ' + (cf.aprimoramentosDesligados || 0) + ' aprimoramentos desligados' + (nao.length ? ' (o Meta não deixou desligar: ' + nao.join(', ') + ')' : '') + '. Agora o Meta revisa (minutos a algumas horas).'; j.resultado = r;
     await L.setJSON(k, j);
     await logRobo({ tipo: 'publicou', camp: r.nome, id: r.campanha, motivo: 'anúncio novo com R$ ' + r.orcamento + '/dia' });
     await avisar('🚀 Publiquei o anúncio *' + r.nome + '* com R$ ' + r.orcamento + '/dia. O Meta vai revisar e começa a rodar.');

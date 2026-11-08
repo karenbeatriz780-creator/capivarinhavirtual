@@ -8004,7 +8004,7 @@ function pnlNovoAnuncioHtml(){
       '<label>Nome (só pra você)<input type="text" id="naNome" maxlength="50" placeholder="Ex.: Black Friday neon"></label>'+
       '<label>Texto do anúncio<textarea id="naTexto" rows="3">'+esc(c.textoPadrao||'')+'</textarea></label>'+
       '<div class="robo-g"><label>Título<input type="text" id="naTitulo" value="'+esc(c.tituloPadrao||'')+'"></label><label>Orçamento (R$/dia)<input type="number" id="naOrc" min="6" step="1" value="'+(c.orcInicial||45)+'"></label></div>'+
-      '<button type="button" class="cmp-bt sobe forte" id="naPub">🚀 Publicar anúncio</button><div id="naSt" class="na-st"></div>'+
+      '<div class="cmp-bts"><button type="button" class="cmp-bt" id="naChecar">✅ Checar tudo antes</button><button type="button" class="cmp-bt sobe forte" id="naPub">🚀 Publicar anúncio</button></div><div id="naChk"></div><div id="naSt" class="na-st"></div>'+
     '</div></div>';
 }
 function pnlLigarRobo(body){
@@ -8048,6 +8048,17 @@ function pnlLigarRobo(body){
     var arq=inp.files[0], info=el(id+'Info'); if(!arq){ info.textContent=''; return; }
     medir(arq).then(function(m){ var e=proporcaoOk(id==='naFeed'?'feed':'vert',m); info.textContent=e?'⚠️ '+e:'✓ '+m.w+'×'+m.h+(m.dur?' · '+Math.round(m.dur)+' s':''); info.className='na-info '+(e?'ruim':'bom'); });
   }; });
+  /* checklist: token, conta, Página, Instagram, Pixel, permissão de criar — antes de subir qualquer arquivo */
+  function checar(){
+    var box=el('naChk'); if(box) box.innerHTML='<div class="robo-sim">Checando tudo no Meta…</div>';
+    return post('/.netlify/functions/admin-meta-config',{acao:'checar'}).then(function(d){
+      if(_pnlCache.robo && d.cfg) _pnlCache.robo.cfg=d.cfg;
+      if(box) box.innerHTML='<div class="robo-sim">'+d.itens.map(function(x){ return '<div>'+(!x.ok?'❌':x.aviso?'⚠️':'✅')+' <b>'+esc(x.nome)+'</b> — '+esc(x.msg||'')+'</div>'; }).join('')+
+        '<div style="margin-top:.4rem"><b>'+(d.ok?'Tudo certo pra publicar ✓':'Resolva os ❌ antes de publicar.')+'</b></div></div>';
+      return d.ok;
+    });
+  }
+  var ck=el('naChecar'); if(ck) ck.onclick=function(){ if(!pedirSenhaAdmin()) return; ck.disabled=true; checar().catch(function(e){ toast(e.message); }).then(function(){ ck.disabled=false; }); };
   var pub=el('naPub'); if(pub) pub.onclick=function(){
     var fF=el('naFeed').files[0], fV=el('naVert').files[0], st=el('naSt');
     if(!fF||!fV){ toast('Anexe os 2 arquivos: um pro Feed e um pro Reels/Stories.'); return; }
@@ -8090,7 +8101,8 @@ function pnlLigarRobo(body){
         });
       }
       var sobe=vF ? function(arq,m,rot){ return subirVideo(arq,rot); } : subirImagem;
-      sobe(fF,ms[0],'feed').then(function(a1){ return sobe(fV,ms[1],'reels/stories').then(function(a2){ return [a1,a2]; }); }).then(function(x){
+      st.textContent='Checando tudo no Meta antes de enviar…';
+      checar().then(function(ok){ if(!ok) throw new Error('não publiquei — veja os ❌ acima.'); return sobe(fF,ms[0],'feed'); }).then(function(a1){ return sobe(fV,ms[1],'reels/stories').then(function(a2){ return [a1,a2]; }); }).then(function(x){
         st.textContent='Criando a campanha…';
         return post('/.netlify/functions/admin-criativo',Object.assign({acao:'publicar',tipo:vF?'video':'imagem',feed:x[0],vertical:x[1]},info));
       }).then(function(d){

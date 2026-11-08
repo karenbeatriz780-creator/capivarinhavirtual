@@ -1,5 +1,5 @@
 // Painel → Robô do tráfego: configurações, histórico e "detectar Página/Instagram/Pixel".
-import { lerCfg, salvarCfg, detectarAtivos, logRobo } from './_meta.mjs';
+import { lerCfg, salvarCfg, detectarAtivos, logRobo, checarTudo } from './_meta.mjs';
 import { getStore } from '@netlify/blobs';
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 export default async (req) => {
@@ -18,6 +18,7 @@ export default async (req) => {
       if (d.pixels[0] && !d.pixels.find((p) => p.id === cfg.pixelId)) novo.pixelId = d.pixels[0].id;
       return json({ detectado: d, cfg: Object.keys(novo).length ? await salvarCfg(novo) : cfg });
     }
+    if (b.acao === 'checar') return json(await checarTudo());
     if (b.acao === 'rodar') { const { rodarRobo } = await import('./meta-auto-agendado.mjs'); return json(await rodarRobo(!!b.simular)); }
     const cfg = await salvarCfg(b.cfg || {});
     await logRobo({ tipo: 'config', motivo: 'você mudou as configurações do robô' });
