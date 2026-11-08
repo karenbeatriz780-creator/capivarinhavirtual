@@ -71,14 +71,15 @@ function acao(lista, tipos) {
   for (const t of tipos) { const a = lista.find((x) => x.action_type === t); if (a) return Number(a.value) || 0; }
   return 0;
 }
-export async function metaAds(dias) {
+export async function metaAds(dias, deX, ateX) {
   const c = contaMeta();
   if (!c) return { configurado: false };
   const L = loja();
-  const cache = await L.get('meta_cache', { type: 'json' }).catch(() => null);
+  const ckey = 'meta_cache_' + (deX || '') + '_' + (ateX || '') + '_' + dias;
+  const cache = await L.get(ckey, { type: 'json' }).catch(() => null);
   if (cache && Date.now() - cache.em < 10 * 60000) return cache.dados; // guarda por 10 min
   const base = 'https://graph.facebook.com/' + VER() + '/act_' + c.id;
-  const ate = diaBR(), de = diaBR(Date.now() - (dias - 1) * 864e5);
+  const ate = ateX || diaBR(), de = deX || diaBR(Date.now() - (dias - 1) * 864e5);
   const tr = encodeURIComponent(JSON.stringify({ since: de, until: ate }));
   const campos = 'spend,impressions,clicks,cpc,ctr,actions,action_values';
   try {
@@ -86,7 +87,7 @@ export async function metaAds(dias) {
     const tr7 = encodeURIComponent(JSON.stringify({ since: diaBR(Date.now() - 6 * 864e5), until: ate }));
     const [rc, rd, rcamp, rcd, rlist, rsets] = await Promise.all([
       fetch(base + '?fields=name,currency,account_status' + tk),
-      fetch(base + '/insights?level=account&time_increment=1&time_range=' + tr + '&fields=' + campos + '&limit=100' + tk),
+      fetch(base + '/insights?level=account&time_increment=1&time_range=' + tr + '&fields=' + campos + '&limit=500' + tk),
       fetch(base + '/insights?level=campaign&date_preset=last_7d&fields=campaign_id,campaign_name,' + campos + '&limit=100' + tk),
       fetch(base + '/insights?level=campaign&time_increment=1&time_range=' + tr7 + '&fields=campaign_id,spend,actions,action_values&limit=500' + tk),
       fetch(base + '/campaigns?fields=name,effective_status,created_time,start_time,daily_budget,lifetime_budget&limit=100' + tk),
@@ -122,7 +123,7 @@ export async function metaAds(dias) {
         dias: diaCamp[x.campaign_id] || {} };
     }).sort((a, b) => b.gasto - a.gasto);
     const dados = { configurado: true, conta: conta.name, moeda: conta.currency || 'BRL', porDia, campanhas };
-    await L.setJSON('meta_cache', { em: Date.now(), dados }).catch(() => {});
+    await L.setJSON(ckey, { em: Date.now(), dados }).catch(() => {});
     return dados;
   } catch (e) { return { configurado: true, erro: 'sem conexão com o Meta: ' + (e && e.message) }; }
 }

@@ -3169,6 +3169,21 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .gst-per-l{display:flex;justify-content:space-between;font-size:.8rem;padding:.25rem 0;border-top:1px dashed #EEF0F5}
 .gst-per-l i{font-style:normal;color:#5B5670}.gst-per-l em{font-style:normal;font-weight:800}
 .gst-card td.pos{color:#178A50;font-weight:800}.gst-card td.neg{color:#D21F4A;font-weight:800}
+.gst-chips{display:flex;gap:.4rem;flex-wrap:wrap}
+.gst-chip{border:1px solid #D9DAE6;background:#fff;color:#3B3650;border-radius:99px;padding:.45rem .85rem;font:inherit;font-size:.8rem;font-weight:800;cursor:pointer}
+.gst-chip.on{background:#1E1830;border-color:#1E1830;color:#fff}
+.gst-datas{display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap}
+.gst-datas label{display:flex;flex-direction:column;font-size:.72rem;font-weight:700;color:#6B6782;gap:.2rem}
+.gst-datas input{border:1px solid #D9DAE6;border-radius:10px;padding:.45rem .6rem;font:inherit;color:#1E1830;background:#fff}
+.gst-datas button{border:0;border-radius:10px;background:#E32B6D;color:#fff;font-weight:800;padding:.55rem 1rem;font:inherit;font-weight:800}
+.gst-res{border:1.5px solid #EEF0F5;border-radius:18px;padding:1rem}
+.gst-res>span{display:block;font-size:.78rem;font-weight:800;color:#5B5670}
+.gst-res>b{display:block;font-size:2rem;font-weight:900;margin:.1rem 0 .6rem}
+.gst-res>b.pos{color:#178A50}.gst-res>b.neg{color:#D21F4A}
+.gst-res-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.gst-res-g small{display:block;font-size:.68rem;color:#8A86A0;font-weight:700}.gst-res-g b{display:block;font-size:.95rem;font-weight:800;color:#1E1830;white-space:nowrap}.gst-res-g em{font-style:normal;font-size:.7rem;color:#8A86A0}
+.gst-obs{margin-top:.6rem;font-size:.72rem;color:#8A6400;background:#FFF6D9;border-radius:10px;padding:.4rem .6rem}
+@media (max-width:640px){ .gst-res-g{grid-template-columns:repeat(2,1fr)} .gst-card .dsh-tab th,.gst-card .dsh-tab td{padding:.42rem .28rem!important;font-size:.72rem!important;white-space:nowrap} }
 .cmp-leg{display:flex;gap:.8rem;flex-wrap:wrap;font-size:.72rem;color:#6B6782;margin:.2rem 0 .6rem}
 .cmp{border:1.5px solid #EEF0F5;border-left-width:6px;border-radius:16px;padding:.75rem .85rem;margin-bottom:.55rem;background:#fff}
 .cmp.verde{border-left-color:#1FAF5F}.cmp.amar{border-left-color:#F2B705}.cmp.verm{border-left-color:#E5484D}.cmp.cinza{border-left-color:#C9C7D3;opacity:.75}
@@ -7947,46 +7962,92 @@ function pnlCampanhaHtml(c, ticket){
     '<div><small>Custo/venda</small><b>'+(r.cpa!=null?'R$ '+fmtPreco(r.cpa):'—')+'</b></div><div><small>Retorno</small><b>'+(c.gasto?r.roas.toFixed(2).replace('.',',')+'x':'—')+'</b></div></div>'+
     '<div class="cmp-mot">'+esc(r.motivo)+'</div></div>';
 }
+var _pnlGstPer='30', _pnlGstDe='', _pnlGstAte='';
+function pnlGstRange(){
+  var hoje=pnlKeyMs(Date.now()), d=pnlDt(Date.now());
+  function k(ms){ return pnlKeyMs(ms); }
+  if(_pnlGstPer==='hoje') return [hoje,hoje];
+  if(_pnlGstPer==='7') return [k(pnlInicioDia(Date.now(),-6)+3600000),hoje];
+  if(_pnlGstPer==='30') return [k(pnlInicioDia(Date.now(),-29)+3600000),hoje];
+  if(_pnlGstPer==='mes') return [hoje.slice(0,8)+'01',hoje];
+  if(_pnlGstPer==='mesant'){ var u=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),0)); var f=u.toISOString().slice(0,10); return [f.slice(0,8)+'01',f]; }
+  return [_pnlGstDe||hoje,_pnlGstAte||hoje];
+}
+function pnlGstDados(de,ate){
+  /* usa o que já carregou (31 dias) quando cobre o período; senão busca o período no servidor */
+  var G=_pnlCache.gastos;
+  if(G && G.de && de>=G.de && ate<=G.ate) return G;
+  var P=_pnlCache.gastosPer, chave=de+'_'+ate;
+  if(P && P.chave===chave) return P.d;
+  if(!P || P.chave!==chave){
+    _pnlCache.gastosPer={chave:chave, d:null};
+    fetch('/.netlify/functions/admin-gastos?de='+de+'&ate='+ate,{headers:{'x-admin-key':_pnlChave}}).then(function(r){ return r.json(); }).then(function(d){
+      if(_pnlCache.gastosPer && _pnlCache.gastosPer.chave===chave){ _pnlCache.gastosPer.d=d; if(_pnlAba==='gastos'){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); } }
+    }).catch(function(){});
+  }
+  return null;
+}
+function pnlGastosDiaDe(G,k){
+  var d=G&&G.porDia&&G.porDia[k];
+  return { kie:(G&&G.kie&&G.kie.configurado&&d&&d.temLeitura)?d.kieBRL:null, meta:(G&&G.meta&&G.meta.configurado&&!G.meta.erro)?(d?d.metaBRL:0):null };
+}
 function pnlGastosHtml(pedidos){
   var G=_pnlCache.gastos;
   if(!G) return '<div class="gst"><div class="pnl-nota">Carregando os gastos…</div></div>';
   var pagos=pedidos.filter(function(p){ return p.pago && !p.cortesia && !p.cancelado && !p.dobroDe; });
-  var dT=pnlDiasTodos(pagos), agora=Date.now();
-  var dias=Object.keys(G.porDia).sort().reverse();
+  var dT=pnlDiasTodos(pagos);
   function rec(k){ return (dT[k]&&dT[k].vl)||0; }
   function vendas(k){ return (dT[k]&&dT[k].ct)||0; }
-  function per(n){ var ks=dias.slice(0,n), o={rec:0,kie:0,meta:0,v:0}; ks.forEach(function(k){ var g=pnlGastosDia(k); o.rec+=rec(k); o.v+=vendas(k); o.kie+=g.kie||0; o.meta+=g.meta||0; }); o.lucro=o.rec-o.kie-o.meta; o.roas=o.meta>0?o.rec/o.meta:null; return o; }
-  var h=per(1), s7=per(7), s30=per(30);
-  function bloco(t,o){ return '<div class="gst-per"><span>'+t+'</span><b class="'+(o.lucro>=0?'pos':'neg')+'">R$ '+fmtPreco(o.lucro)+'</b><small>lucro · vendas R$ '+fmtPreco(o.rec)+'</small>'+
-    '<div class="gst-per-l"><i>🤖 Kie</i><em>− R$ '+fmtPreco(o.kie)+'</em></div><div class="gst-per-l"><i>📣 Meta</i><em>− R$ '+fmtPreco(o.meta)+'</em></div>'+
-    (o.roas!=null?'<div class="gst-per-l"><i>Retorno do anúncio</i><em>'+o.roas.toFixed(2).replace('.',',')+'x</em></div>':'')+'</div>'; }
+  var hojeK=pnlKeyMs(Date.now()), gH=pnlGastosDiaDe(G,hojeK), usoH=((G.porDia||{})[hojeK]||{}).uso||{};
+  /* período escolhido */
+  var R=pnlGstRange(), de=R[0], ate=R[1], P=pnlGstDados(de,ate);
+  var MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  var chips=[['hoje','Hoje'],['7','7 dias'],['30','30 dias'],['mes','Este mês'],['mesant','Mês passado'],['custom','Escolher datas']].map(function(o){
+    return '<button type="button" class="gst-chip'+(_pnlGstPer===o[0]?' on':'')+'" data-gstper="'+o[0]+'">'+o[1]+'</button>'; }).join('');
+  var custom=_pnlGstPer==='custom'?'<form class="gst-datas" id="gstDatas"><label>De<input type="date" id="gstDe" value="'+de+'"></label><label>Até<input type="date" id="gstAte" value="'+ate+'" max="'+hojeK+'"></label><button type="submit">Ver</button></form>':'';
+  var perHtml='';
+  if(!P){ perHtml='<div class="pnl-nota">Buscando os gastos desse período…</div>'; }
+  else {
+    var ks=[]; for(var t=Date.parse(ate+'T12:00:00Z'); t>=Date.parse(de+'T12:00:00Z') && ks.length<400; t-=864e5) ks.push(new Date(t).toISOString().slice(0,10));
+    var o={rec:0,v:0,kie:0,meta:0,semKie:0}, porMes={};
+    var linhas=ks.map(function(k){ var g=pnlGastosDiaDe(P,k), r=rec(k), l=r-(g.kie||0)-(g.meta||0);
+      o.rec+=r; o.v+=vendas(k); o.kie+=g.kie||0; o.meta+=g.meta||0; if(g.kie==null) o.semKie++;
+      var m=k.slice(0,7); (porMes[m]=porMes[m]||{rec:0,v:0,kie:0,meta:0}); porMes[m].rec+=r; porMes[m].v+=vendas(k); porMes[m].kie+=g.kie||0; porMes[m].meta+=g.meta||0;
+      return '<tr><td>'+k.slice(8,10)+'/'+k.slice(5,7)+'</td><td>'+vendas(k)+'</td><td>R$ '+fmtPreco(r)+'</td><td>'+(g.kie!=null?'R$ '+fmtPreco(g.kie):'—')+'</td><td>'+(g.meta!=null?'R$ '+fmtPreco(g.meta):'—')+'</td><td class="'+(l>=0?'pos':'neg')+'">R$ '+fmtPreco(l)+'</td></tr>'; }).join('');
+    var lucro=o.rec-o.kie-o.meta, roas=o.meta>0?o.rec/o.meta:null;
+    var meses=Object.keys(porMes).sort().reverse();
+    var mesHtml=meses.length>1?'<div class="dsh-card gst-card"><div class="dsh-t">Por mês</div><div class="dsh-tab"><table><thead><tr><th>Mês</th><th>Vendas</th><th>Receita</th><th>Kie</th><th>Meta</th><th>Lucro</th></tr></thead><tbody>'+
+      meses.map(function(m){ var x=porMes[m], l=x.rec-x.kie-x.meta; return '<tr><td>'+MESES[+m.slice(5,7)-1]+'/'+m.slice(2,4)+'</td><td>'+x.v+'</td><td>R$ '+fmtPreco(x.rec)+'</td><td>R$ '+fmtPreco(x.kie)+'</td><td>R$ '+fmtPreco(x.meta)+'</td><td class="'+(l>=0?'pos':'neg')+'">R$ '+fmtPreco(l)+'</td></tr>'; }).join('')+'</tbody></table></div></div>':'';
+    var titulo=de===ate?(de.slice(8,10)+'/'+de.slice(5,7)):(de.slice(8,10)+'/'+de.slice(5,7)+' a '+ate.slice(8,10)+'/'+ate.slice(5,7)+'/'+ate.slice(0,4));
+    perHtml='<div class="gst-res"><span>Lucro · '+titulo+'</span><b class="'+(lucro>=0?'pos':'neg')+'">R$ '+fmtPreco(lucro)+'</b>'+
+      '<div class="gst-res-g"><div><small>Vendas</small><b>R$ '+fmtPreco(o.rec)+'</b><em>'+o.v+' pedidos</em></div><div><small>🤖 Kie</small><b>− R$ '+fmtPreco(o.kie)+'</b></div><div><small>📣 Meta</small><b>− R$ '+fmtPreco(o.meta)+'</b></div><div><small>Retorno do anúncio</small><b>'+(roas!=null?roas.toFixed(2).replace('.',',')+'x':'—')+'</b></div></div>'+
+      (o.semKie?'<div class="gst-obs">'+o.semKie+' dia(s) sem leitura da Kie (antes de ligar o painel) — o gasto de IA desses dias não entra.</div>':'')+'</div>'+
+      mesHtml+
+      '<div class="dsh-card gst-card"><div class="dsh-t">Dia a dia</div><div class="dsh-tab"><table><thead><tr><th>Dia</th><th>Vendas</th><th>Receita</th><th>Kie</th><th>Meta</th><th>Lucro</th></tr></thead><tbody>'+linhas+'</tbody></table></div></div>';
+  }
   var kieBox = !G.kie.configurado
     ? '<div class="gst-k"><span>Saldo na Kie</span><b>—</b><small>coloque a KIE_API_KEY no Netlify</small></div>'
     : '<div class="gst-k'+(G.kie.saldo!=null && G.kie.saldoBRL<15?' alerta':'')+'"><span>Saldo na Kie</span><b>'+(G.kie.saldo!=null?'R$ '+fmtPreco(G.kie.saldoBRL):'—')+'</b><small>'+(G.kie.saldo!=null?Math.round(G.kie.saldo).toLocaleString('pt-BR')+' créditos'+(G.kie.saldoBRL<15?' · ⚠️ recarregue logo':''):'não consegui ler agora')+'</small></div>';
   var metaBox = !G.meta.configurado
     ? '<div class="gst-k"><span>Meta Ads</span><b>Não ligado</b><small>veja o passo a passo abaixo</small></div>'
     : (G.meta.erro ? '<div class="gst-k alerta"><span>Meta Ads</span><b>Erro</b><small>'+esc(G.meta.erro)+'</small></div>'
-      : '<div class="gst-k"><span>Anúncio hoje</span><b>R$ '+fmtPreco(h.meta)+'</b><small>'+esc(G.meta.conta||'conta de anúncios')+'</small></div>');
-  var linhas=dias.slice(0,14).map(function(k){ var g=pnlGastosDia(k), r=rec(k), l=r-(g.kie||0)-(g.meta||0), d=(G.porDia[k]||{}).uso||{};
-    return '<tr><td>'+k.slice(8,10)+'/'+k.slice(5,7)+'</td><td>'+vendas(k)+'</td><td>R$ '+fmtPreco(r)+'</td><td title="'+((d.texto||0)+' textos, '+(d.musica||0)+' músicas, '+(d.imagem||0)+' imagens')+'">'+(g.kie!=null?'R$ '+fmtPreco(g.kie):'—')+'</td><td>'+(g.meta!=null?'R$ '+fmtPreco(g.meta):'—')+'</td><td class="'+(l>=0?'pos':'neg')+'">R$ '+fmtPreco(l)+'</td></tr>'; }).join('');
-  var tk7=s7.v?s7.rec/s7.v:9.99;
+      : '<div class="gst-k"><span>Anúncio hoje</span><b>R$ '+fmtPreco(gH.meta||0)+'</b><small>'+esc(G.meta.conta||'conta de anúncios')+'</small></div>');
+  /* ticket médio dos últimos 7 dias pras indicações das campanhas */
+  var v7=0, r7=0; for(var i=0;i<7;i++){ var kk=pnlKeyMs(pnlInicioDia(Date.now(),-i)+3600000); v7+=vendas(kk); r7+=rec(kk); }
+  var tk7=v7?r7/v7:9.99;
   var camp=(G.meta.campanhas||[]).filter(function(c){ return c.gasto>0; }).slice(0,15).map(function(c){ return pnlCampanhaHtml(c, tk7); }).join('');
-  var usoH=(G.porDia[dias[0]]||{}).uso||{};
   return '<div class="gst">'+
     '<div class="gst-top"><div><b>Gastos e lucro</b><span>tudo automático · dólar hoje R$ '+fmtPreco(G.usd)+'</span></div></div>'+
-    '<div class="gst-ks">'+kieBox+metaBox+'<div class="gst-k"><span>IA hoje</span><b>R$ '+fmtPreco(h.kie)+'</b><small>'+(usoH.texto||0)+' textos · '+(usoH.musica||0)+' músicas · '+(usoH.imagem||0)+' imagens</small></div></div>'+
-    '<div class="gst-pers">'+bloco('Hoje',h)+bloco('Últimos 7 dias',s7)+bloco('Últimos 30 dias',s30)+'</div>'+
-    '<div class="dsh-card gst-card"><div class="dsh-t">Dia a dia</div><div class="dsh-tab"><table><thead><tr><th>Dia</th><th>Vendas</th><th>Receita</th><th>Kie</th><th>Meta</th><th>Lucro</th></tr></thead><tbody>'+linhas+'</tbody></table></div>'+
-      '<div class="dsh-nota">O gasto da Kie é medido pelo saldo de créditos (lido a cada 30 min) e começou a contar no dia em que o painel novo foi ligado. Crédito = US$ '+String(G.usdPorCredito).replace('.',',')+'.</div></div>'+
+    '<div class="gst-ks">'+kieBox+metaBox+'<div class="gst-k"><span>IA hoje</span><b>R$ '+fmtPreco(gH.kie||0)+'</b><small>'+(usoH.texto||0)+' textos · '+(usoH.musica||0)+' músicas · '+(usoH.imagem||0)+' imagens</small></div></div>'+
+    '<div class="gst-chips">'+chips+'</div>'+custom+perHtml+
     (camp?'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas · últimos 7 dias · o que fazer</div>'+
       '<div class="cmp-leg"><span>🟢 aumentar</span><span>🟡 não mexer / observar</span><span>🔴 revisar</span></div>'+camp+
       '<div class="dsh-nota">Vendas e valor vêm do Pixel do Meta. Indicação automática: confira antes de mexer. Aumente no máximo 20% por vez pra não reiniciar o aprendizado.</div></div>':'')+
     (!G.meta.configurado?'<div class="dsh-card gst-card"><div class="dsh-t">Como ligar o Meta Ads (uma vez só)</div><ol class="gst-passos">'+
-      '<li>Entre em <b>business.facebook.com</b> → <b>Configurações do negócio</b>.</li>'+
-      '<li>Em <b>Usuários → Usuários do sistema</b>, crie um usuário (função Admin) e dê acesso à sua <b>conta de anúncios</b>.</li>'+
-      '<li>Toque em <b>Gerar novo token</b>, marque a permissão <b>ads_read</b> e copie o token.</li>'+
-      '<li>No Netlify (Environment variables), crie <b>META_ADS_TOKEN</b> com o token e <b>META_AD_ACCOUNT_ID</b> com o número da conta de anúncios (aparece no Gerenciador de Anúncios, ex.: 123456789).</li>'+
-      '<li>Faça <b>Trigger deploy</b>. Pronto: o gasto aparece aqui sozinho.</li></ol></div>':'')+
+      '<li>Configurações do negócio → <b>Usuários do sistema</b> → crie um usuário e atribua a <b>conta de anúncios</b> e o <b>app</b>.</li>'+
+      '<li><b>Gerar token</b> com a permissão <b>ads_read</b>, validade Nunca.</li>'+
+      '<li>No Netlify: <b>META_ADS_TOKEN</b> (token) e <b>META_AD_ACCOUNT_ID</b> (número da conta) → <b>Trigger deploy</b>.</li></ol></div>':'')+
+    '<div class="dsh-nota" style="padding:0 .2rem">O gasto da Kie é medido pelo saldo de créditos (lido a cada 30 min) e só existe a partir do dia em que o painel novo foi ligado. Crédito = US$ '+String(G.usdPorCredito).replace('.',',')+'.</div>'+
   '</div>';
 }
 function ligarHoje(body){
@@ -8430,6 +8491,8 @@ function desenharPainel(pedidos, visitas, musicas){
     carregarPainel(_pnlChave||Store.get('cl_admin_key')||'', function(erro){ if(erro){ toast('Não consegui carregar tudo agora.'); _pnlCompleto=false; } });
   };
   ligarHoje(body);
+  body.querySelectorAll('[data-gstper]').forEach(function(b){ b.onclick=function(){ _pnlGstPer=b.dataset.gstper; if(_pnlGstPer==='custom' && !_pnlGstDe){ var r=pnlGstRange(); _pnlGstAte=pnlKeyMs(Date.now()); _pnlGstDe=pnlKeyMs(pnlInicioDia(Date.now(),-13)+3600000); } desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); }; });
+  var gd=el('gstDatas'); if(gd) gd.onsubmit=function(e){ e.preventDefault(); var a=el('gstDe').value, z=el('gstAte').value; if(!a||!z||a>z){ toast('Escolha a data inicial e a final.'); return; } _pnlGstDe=a; _pnlGstAte=z; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); };
   body.querySelectorAll('[data-expandir]').forEach(function(b){ b.onclick=function(){ var m=b.closest('.pc').querySelector('.pc-mais'); m.hidden=!m.hidden; b.innerHTML=b.innerHTML.replace(m.hidden?'▴':'▾', m.hidden?'▾':'▴'); }; });
   if(_pnlAba==='zap'){ pnlZapLigar(body); if(!_pnlZap && !_pnlZapCarregando) pnlZapCarregar(); }
   if(_pnlAba==='livros' && typeof pnlLivrosLigar==='function') pnlLivrosLigar();
