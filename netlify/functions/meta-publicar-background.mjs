@@ -11,16 +11,18 @@ export default async (req) => {
   try {
     const cfg = await lerCfg(), a = Object.assign({}, j.dados);
     if (a.tipo === 'video') {
-      await etapa('O Meta está processando o vídeo…');
-      for (let i = 0; i < 60; i++) { // até ~10 min
-        const v = await graph('GET', a.videoId, { fields: 'status,picture' }).catch(() => null);
-        const st = v && v.status && v.status.video_status;
-        if (st === 'ready') { a.thumb = v.picture; break; }
-        if (st === 'error') throw new Error('o Meta não conseguiu processar o vídeo');
-        await dormir(10000);
+      for (const [rot, x] of [['feed', a.feed], ['reels/stories', a.vertical]]) {
+        await etapa('O Meta está processando o vídeo do ' + rot + '…');
+        for (let i = 0; i < 60 && !x.thumb; i++) { // até ~10 min cada
+          const v = await graph('GET', x.videoId, { fields: 'status,picture' }).catch(() => null);
+          const st = v && v.status && v.status.video_status;
+          if (st === 'ready') { x.thumb = v.picture; break; }
+          if (st === 'error') throw new Error('o Meta não conseguiu processar o vídeo do ' + rot);
+          await dormir(10000);
+        }
+        if (!x.thumb) { const t = await graph('GET', x.videoId + '/thumbnails', {}).catch(() => null); x.thumb = t && t.data && t.data[0] && t.data[0].uri; }
+        if (!x.thumb) throw new Error('o vídeo do ' + rot + ' ainda não ficou pronto no Meta — tente de novo em alguns minutos');
       }
-      if (!a.thumb) { const t = await graph('GET', a.videoId + '/thumbnails', {}).catch(() => null); a.thumb = t && t.data && t.data[0] && t.data[0].uri; }
-      if (!a.thumb) throw new Error('o vídeo ainda não ficou pronto no Meta — tente publicar de novo em alguns minutos');
     }
     const r = await publicarAnuncio(cfg, a, etapa);
     j.feito = true; j.ok = true; j.etapa = 'Publicado ✓ O Meta vai revisar o anúncio (minutos a algumas horas).'; j.resultado = r;

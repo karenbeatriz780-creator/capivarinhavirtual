@@ -133,43 +133,87 @@ export async function detectarAtivos() {
 }
 
 // ---------- publicar anúncio novo (campanha de VENDAS completa) ----------
-// a = { nome, texto, titulo, orcamento, tipo:'imagem'|'video', hash, videoId, thumb }
+// REGRAS (pedidas por você):
+//  • 1 campanha → 1 conjunto → 1 anúncio · orçamento NA CAMPANHA
+//  • só 6 posicionamentos: feed FB/IG + stories FB/IG + reels FB/IG (nada de "gastar um pouco" nos excluídos)
+//  • 2 arquivos no MESMO anúncio: um pro feed (4:5/1:1) e outro pro reels/stories (9:16)
+//  • nenhum aprimoramento automático do Meta (sem IA, figurinha, cartão de perfil, comentário, música…)
+//  • destino só o site, botão Comprar
+const POSICOES = { publisher_platforms: ['facebook', 'instagram'], facebook_positions: ['feed', 'story', 'facebook_reels'], instagram_positions: ['stream', 'story', 'reels'] };
+const REGRA_FEED = { publisher_platforms: ['facebook', 'instagram'], facebook_positions: ['feed'], instagram_positions: ['stream'] };
+const REGRA_VERT = { publisher_platforms: ['facebook', 'instagram'], facebook_positions: ['story', 'facebook_reels'], instagram_positions: ['story', 'reels'] };
+export const SEM_APRIMORAMENTOS = ['adapt_to_placement', 'add_text_overlay', 'ads_with_benefits', 'biz_ai', 'creative_stickers', 'description_automation',
+  'generate_cta', 'image_animation', 'image_background_gen', 'image_templates', 'image_touchups', 'inline_comment', 'local_store_extension',
+  'media_type_automation', 'multi_photo_to_video', 'music_generation', 'pac_relaxation', 'product_extensions', 'profile_card', 'profile_extension',
+  'replace_media_text', 'reveal_details_over_time', 'show_destination_blurbs', 'show_summary', 'site_extensions', 'text_extraction_for_headline',
+  'text_extraction_for_tap_target', 'text_optimizations', 'text_overlay_translation', 'text_translation', 'translate_voiceover', 'video_highlights', 'video_to_image'];
+async function proximoNumero() {
+  const L = loja(), n = ((await L.get('anuncio_seq', { type: 'json' }).catch(() => null)) || { n: 0 }).n + 1;
+  await L.setJSON('anuncio_seq', { n }); return String(n).padStart(3, '0');
+}
+// a = { nome, texto, titulo, orcamento, tipo:'imagem'|'video', feed:{hash|videoId, thumb}, vertical:{hash|videoId, thumb} }
 export async function publicarAnuncio(cfg, a, etapa) {
   etapa = etapa || (async () => {});
   if (!cfg.pageId) throw new Error('Falta escolher a Página do Facebook (Robô do tráfego → Detectar).');
+  if (!a.feed || !a.vertical) throw new Error('Precisa dos 2 arquivos: um pro Feed e um pro Reels/Stories.');
   const pixel = cfg.pixelId || '2102013347063288';
   const orc = Math.max(6, Number(a.orcamento || cfg.orcInicial || 45));
   const dataTxt = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10).split('-').reverse().join('/');
-  const nome = String(a.nome || 'Criativo').slice(0, 60) + ' · ' + dataTxt;
+  const nome = 'Capivarinha #' + (await proximoNumero()) + ' · ' + String(a.nome || 'Criativo').slice(0, 40) + ' · ' + dataTxt;
   const link = cfg.link || 'https://capivarinhalove.com.br/';
+  const video = a.tipo === 'video';
   await etapa('Criando a campanha…');
   const camp = await graphConta('POST', 'campaigns', {
-    name: '[Painel] ' + nome, objective: 'OUTCOME_SALES', status: 'ACTIVE', special_ad_categories: [],
+    name: nome, objective: 'OUTCOME_SALES', status: 'ACTIVE', special_ad_categories: [],
     buying_type: 'AUCTION', daily_budget: String(Math.round(orc * 100)), bid_strategy: 'LOWEST_COST_WITHOUT_CAP'
   });
   let adset, criativo, ad;
   try {
-    await etapa('Criando o público (Brasil, automático)…');
+    await etapa('Criando o conjunto (6 posicionamentos, Brasil)…');
     adset = await graphConta('POST', 'adsets', {
       name: nome, campaign_id: camp.id, billing_event: 'IMPRESSIONS', optimization_goal: 'OFFSITE_CONVERSIONS',
+      destination_type: 'WEBSITE', is_dynamic_creative: 'false',
       promoted_object: { pixel_id: pixel, custom_event_type: 'PURCHASE' },
-      targeting: { geo_locations: { countries: ['BR'] }, age_min: 18, targeting_automation: { advantage_audience: 1 } },
+      targeting: Object.assign({ geo_locations: { countries: ['BR'] }, age_min: 18, targeting_automation: { advantage_audience: 1 } }, POSICOES),
       status: 'ACTIVE'
     });
-    await etapa('Montando o anúncio…');
-    const cta = { type: cfg.cta || 'SHOP_NOW', value: { link } };
-    const spec = { page_id: cfg.pageId };
-    if (a.tipo === 'video') spec.video_data = { video_id: a.videoId, message: a.texto || cfg.textoPadrao, title: a.titulo || cfg.tituloPadrao, image_url: a.thumb, call_to_action: cta };
-    else spec.link_data = { image_hash: a.hash, link, message: a.texto || cfg.textoPadrao, name: a.titulo || cfg.tituloPadrao, call_to_action: cta };
-    const corpoCriativo = (comInsta) => ({ name: nome, object_story_spec: Object.assign({}, spec, comInsta && cfg.igId ? { instagram_user_id: cfg.igId } : {}),
-      url_tags: 'utm_source=meta&utm_medium=paid&utm_campaign={{campaign.id}}&utm_content={{ad.id}}' });
-    try { criativo = await graphConta('POST', 'adcreatives', corpoCriativo(true)); }
-    catch (e) { if (!cfg.igId) throw e; criativo = await graphConta('POST', 'adcreatives', corpoCriativo(false)); } // se o Instagram der erro, vai só com a Página
+    await etapa('Montando o anúncio (feed + reels/stories)…');
+    const mid = (x, rot) => video ? { video_id: x.videoId, thumbnail_url: x.thumb, adlabels: [{ name: rot }] } : { hash: x.hash, adlabels: [{ name: rot }] };
+    const lab = video ? 'video_label' : 'image_label';
+    const feedSpec = {
+      [video ? 'videos' : 'images']: [mid(a.feed, 'cap_feed'), mid(a.vertical, 'cap_vertical')],
+      bodies: [{ text: a.texto || cfg.textoPadrao }], titles: [{ text: a.titulo || cfg.tituloPadrao }],
+      link_urls: [{ website_url: link }], call_to_action_types: [cfg.cta || 'SHOP_NOW'],
+      ad_formats: [video ? 'SINGLE_VIDEO' : 'SINGLE_IMAGE'], optimization_type: 'PLACEMENT',
+      asset_customization_rules: [
+        { customization_spec: REGRA_FEED, [lab]: { name: 'cap_feed' }, priority: 1 },
+        { customization_spec: REGRA_VERT, [lab]: { name: 'cap_vertical' }, priority: 2 }
+      ]
+    };
+    let tirar = [];
+    const corpo = (comInsta) => {
+      const feats = {}; SEM_APRIMORAMENTOS.filter((k) => tirar.indexOf(k) < 0).forEach((k) => { feats[k] = { enroll_status: 'OPT_OUT' }; });
+      return { name: nome, object_story_spec: Object.assign({ page_id: cfg.pageId }, comInsta && cfg.igId ? { instagram_user_id: cfg.igId } : {}),
+        asset_feed_spec: feedSpec, degrees_of_freedom_spec: { creative_features_spec: feats },
+        url_tags: 'utm_source=meta&utm_medium=paid&utm_campaign={{campaign.id}}&utm_content={{ad.id}}' };
+    };
+    let comInsta = !!cfg.igId, erro = null;
+    for (let t = 0; t < 8; t++) {
+      try { criativo = await graphConta('POST', 'adcreatives', corpo(comInsta)); erro = null; break; }
+      catch (e) {
+        erro = e; const msg = String(e.message || '') + ' ' + JSON.stringify(e.meta || {});
+        // algum aprimoramento que essa conta não aceita desligar → tira só ele da lista e tenta de novo
+        const k = SEM_APRIMORAMENTOS.find((x) => tirar.indexOf(x) < 0 && msg.indexOf(x) >= 0);
+        if (k) { tirar.push(k); continue; }
+        if (comInsta && /instagram/i.test(msg)) { comInsta = false; continue; } // Instagram deu erro → vai pela Página
+        break;
+      }
+    }
+    if (erro) throw erro;
     await etapa('Publicando…');
     ad = await graphConta('POST', 'ads', { name: nome, adset_id: adset.id, creative: { creative_id: criativo.id }, status: 'ACTIVE' });
   } catch (e) {
-    // não deixa campanha pela metade gastando: pausa
-    try { await graph('POST', camp.id, { status: 'PAUSED' }); } catch (x) {}
+    try { await graph('POST', camp.id, { status: 'PAUSED' }); } catch (x) {} // não deixa campanha pela metade gastando
     throw e;
   }
   return { campanha: camp.id, conjunto: adset.id, criativo: criativo.id, anuncio: ad.id, nome, orcamento: orc };

@@ -56,7 +56,8 @@ export default async (req) => {
     }
     if (b.acao === 'publicar') {
       const job = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      const dados = { tipo: b.tipo === 'video' ? 'video' : 'imagem', hash: b.hash || null, videoId: b.videoId || null,
+      const pega = (x) => (x ? { hash: x.hash ? String(x.hash) : null, videoId: x.videoId ? String(x.videoId) : null } : null);
+      const dados = { tipo: b.tipo === 'video' ? 'video' : 'imagem', feed: pega(b.feed), vertical: pega(b.vertical),
         nome: String(b.nome || '').slice(0, 60), texto: String(b.texto || '').slice(0, 1500), titulo: String(b.titulo || '').slice(0, 120), orcamento: Number(b.orcamento) || null };
       await L.setJSON('job_' + job, { etapa: 'Na fila…', em: Date.now(), dados });
       await fetch((process.env.URL || 'https://capivarinhalove.com.br') + '/.netlify/functions/meta-publicar-background', {
