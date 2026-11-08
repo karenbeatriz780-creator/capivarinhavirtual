@@ -8020,7 +8020,7 @@ function pnlGastosHtml(pedidos){
       meses.map(function(m){ var x=porMes[m], l=x.rec-x.kie-x.meta; return '<tr><td>'+MESES[+m.slice(5,7)-1]+'/'+m.slice(2,4)+'</td><td>'+x.v+'</td><td>R$ '+fmtPreco(x.rec)+'</td><td>R$ '+fmtPreco(x.kie)+'</td><td>R$ '+fmtPreco(x.meta)+'</td><td class="'+(l>=0?'pos':'neg')+'">R$ '+fmtPreco(l)+'</td></tr>'; }).join('')+'</tbody></table></div></div>':'';
     var titulo=de===ate?(de.slice(8,10)+'/'+de.slice(5,7)):(de.slice(8,10)+'/'+de.slice(5,7)+' a '+ate.slice(8,10)+'/'+ate.slice(5,7)+'/'+ate.slice(0,4));
     perHtml='<div class="gst-res"><span>Lucro · '+titulo+'</span><b class="'+(lucro>=0?'pos':'neg')+'">R$ '+fmtPreco(lucro)+'</b>'+
-      '<div class="gst-res-g"><div><small>Vendas</small><b>R$ '+fmtPreco(o.rec)+'</b><em>'+o.v+' pedidos</em></div><div><small>🤖 Kie</small><b>− R$ '+fmtPreco(o.kie)+'</b></div><div><small>📣 Meta</small><b>− R$ '+fmtPreco(o.meta)+'</b></div><div><small>Retorno do anúncio</small><b>'+(roas!=null?roas.toFixed(2).replace('.',',')+'x':'—')+'</b></div></div>'+
+      '<div class="gst-res-g"><div><small>Vendas</small><b>R$ '+fmtPreco(o.rec)+'</b><em>'+o.v+' pedidos</em></div><div><small>🤖 Kie</small><b>− R$ '+fmtPreco(o.kie)+'</b></div><div><small>📣 Meta + imposto</small><b>− R$ '+fmtPreco(o.meta)+'</b></div><div><small>Retorno do anúncio</small><b>'+(roas!=null?roas.toFixed(2).replace('.',',')+'x':'—')+'</b></div></div>'+
       (o.semKie?'<div class="gst-obs">'+o.semKie+' dia(s) sem leitura da Kie (antes de ligar o painel) — o gasto de IA desses dias não entra.</div>':'')+'</div>'+
       mesHtml+
       '<div class="dsh-card gst-card"><div class="dsh-t">Dia a dia</div><div class="dsh-tab"><table><thead><tr><th>Dia</th><th>Vendas</th><th>Receita</th><th>Kie</th><th>Meta</th><th>Lucro</th></tr></thead><tbody>'+linhas+'</tbody></table></div></div>';
@@ -8031,7 +8031,7 @@ function pnlGastosHtml(pedidos){
   var metaBox = !G.meta.configurado
     ? '<div class="gst-k"><span>Meta Ads</span><b>Não ligado</b><small>veja o passo a passo abaixo</small></div>'
     : (G.meta.erro ? '<div class="gst-k alerta"><span>Meta Ads</span><b>Erro</b><small>'+esc(G.meta.erro)+'</small></div>'
-      : '<div class="gst-k"><span>Anúncio hoje</span><b>R$ '+fmtPreco(gH.meta||0)+'</b><small>'+esc(G.meta.conta||'conta de anúncios')+'</small></div>');
+      : '<div class="gst-k"><span>Anúncio hoje</span><b>R$ '+fmtPreco(gH.meta||0)+'</b><small>já com '+String(G.impostoMeta!=null?G.impostoMeta:12.15).replace('.',',')+'% de imposto · '+esc(G.meta.conta||'conta de anúncios')+'</small></div>');
   /* ticket médio dos últimos 7 dias pras indicações das campanhas */
   var v7=0, r7=0; for(var i=0;i<7;i++){ var kk=pnlKeyMs(pnlInicioDia(Date.now(),-i)+3600000); v7+=vendas(kk); r7+=rec(kk); }
   var tk7=v7?r7/v7:9.99;
@@ -8042,7 +8042,7 @@ function pnlGastosHtml(pedidos){
     '<div class="gst-chips">'+chips+'</div>'+custom+perHtml+
     (camp?'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas · últimos 7 dias · o que fazer</div>'+
       '<div class="cmp-leg"><span>🟢 aumentar</span><span>🟡 não mexer / observar</span><span>🔴 revisar</span></div>'+camp+
-      '<div class="dsh-nota">Vendas e valor vêm do Pixel do Meta. Indicação automática: confira antes de mexer. Aumente no máximo 20% por vez pra não reiniciar o aprendizado.</div></div>':'')+
+      '<div class="dsh-nota">Gasto já com o imposto do Meta ('+String(G.impostoMeta!=null?G.impostoMeta:12.15).replace('.',',')+'%). Vendas e valor vêm do Pixel do Meta. Indicação automática: confira antes de mexer. Aumente no máximo 20% por vez pra não reiniciar o aprendizado.</div></div>':'')+
     (!G.meta.configurado?'<div class="dsh-card gst-card"><div class="dsh-t">Como ligar o Meta Ads (uma vez só)</div><ol class="gst-passos">'+
       '<li>Configurações do negócio → <b>Usuários do sistema</b> → crie um usuário e atribua a <b>conta de anúncios</b> e o <b>app</b>.</li>'+
       '<li><b>Gerar token</b> com a permissão <b>ads_read</b>, validade Nunca.</li>'+
