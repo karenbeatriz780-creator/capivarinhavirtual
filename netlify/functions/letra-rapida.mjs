@@ -1,14 +1,15 @@
 import { getStore } from '@netlify/blobs';
 import { montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT } from './gerar-letra.js';
 import { indexarDia } from './_indice.mjs';
+import { iaFetch, RESERVA_OR, TEXTO_KIE } from './_ia.mjs';
 
 // LETRA RÁPIDA (≈3–5 s): pede a letra a modelos rápidos AO MESMO TEMPO e usa a
 // primeira que chegar completa. Responde direto (sem segundo plano, sem streaming).
 // Também guarda a letra pelo id — se a pessoa sair da aba, o site recupera depois.
 // Se nenhum responder a tempo, o site cai no modo antigo (gerar-letra-background).
 // (nov/2026) a Unifically tirou o GPT-5.4 e o 5.4-mini — por isso a letra parou.
-const MODELOS = ['google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol'];
-const LIMITE_MS = 9500;
+const MODELOS = [...TEXTO_KIE, 'google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol', ...RESERVA_OR];
+const LIMITE_MS = 10000;
 
 function erro(msg, status) {
   return new Response(JSON.stringify({ erro: msg }), { status, headers: { 'Content-Type': 'application/json' } });
@@ -24,7 +25,7 @@ async function testarModelos() {
   await Promise.all(MODELOS.map(async (m) => {
     const t = Date.now();
     try {
-      const r = await fetch('https://api.unifically.com/v1/chat/completions', {
+      const r = await iaFetch('ia', {
         method: 'POST', headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: m, max_tokens: 400, messages: [{ role: 'user', content: 'Responda só: ok' }] })
       });
@@ -66,7 +67,7 @@ export default async (req) => {
   async function chamar(m) {
     const ctl = new AbortController(); ctrls.push(ctl);
     try {
-      const r = await fetch('https://api.unifically.com/v1/chat/completions', {
+      const r = await iaFetch('ia', {
         method: 'POST', signal: ctl.signal,
         headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: m, max_tokens: 3000, temperature: modoAjuste ? 0.5 : 0.9,

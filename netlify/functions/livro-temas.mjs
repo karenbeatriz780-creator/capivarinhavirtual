@@ -13,6 +13,7 @@ import { getStore } from '@netlify/blobs';
 import { lerDias, idsDosDiasTudo, diaBR } from './_indice.mjs';
 import { HISTORIAS_20 } from './_historias20.mjs';
 import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, motorRodando, adicionarExemplo, linkPdf, lerVendas, lerPropria, salvarPropria } from './_livros.mjs';
+import { iaFetch, RESERVA_OR, TEXTO_KIE } from './_ia.mjs';
 
 // ---------- exemplos (vitrine da página) ----------
 async function lerExemplos() { try { return (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) { return []; } }
@@ -310,7 +311,7 @@ const NOVAS_HISTORIAS = [
 // "Crie sua própria história": 12 páginas, 5 ilustradas (só pra contar no site; o texto a IA escreve)
 const PAGINAS_PROPRIA = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => ([0, 2, 5, 8, 11].indexOf(i) >= 0 ? { texto: '' } : { texto: '', so: true }));
 const MAX_ILUS = 5; // ilustrações novas por história (custo por livro)
-const MODELOS_TEXTO = ['google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol'];
+const MODELOS_TEXTO = [...TEXTO_KIE, 'google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol', ...RESERVA_OR];
 
 function publico(t) {
   return {
@@ -360,7 +361,7 @@ async function rascunhoIA(ideia) {
     'Formato: {"id":"slug-curto","emoji":"🎈","nome":"Nome do tema","titulo":"{nome} e ...","descricao":"1 frase de venda","cores":["#hex claro","#hex médio","#hex escuro"],"roupa":"...","capa":"...","paginas":[{"texto":"...","cena":"..."}],"letra":"...","estiloMusica":"children\'s song, ..., portuguese vocals"}';
   for (const m of MODELOS_TEXTO) {
     try {
-      const r = await fetch('https://api.unifically.com/v1/chat/completions', {
+      const r = await iaFetch('ia', {
         method: 'POST', headers: { Authorization: 'Bearer ' + chaveApi(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: m, max_tokens: 3500, temperature: 0.8, messages: [{ role: 'system', content: sistema }, { role: 'user', content: pedido }] })
       });

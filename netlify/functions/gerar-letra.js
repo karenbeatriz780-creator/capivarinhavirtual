@@ -1,4 +1,5 @@
 import { indexarDia } from './_indice.mjs';
+import { iaFetch, RESERVA_OR, TEXTO_KIE } from './_ia.mjs';
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
@@ -301,7 +302,7 @@ export default async (req) => {
         };
         // Ajuste pontual pede mais fidelidade ao texto original.
         if (comTemperatura) corpo.temperature = modoAjuste ? 0.55 : 0.9;
-        const r = await fetch('https://api.unifically.com/v1/chat/completions', {
+        const r = await iaFetch('ia', {
           method: 'POST',
           headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
           body: JSON.stringify(corpo)
@@ -339,21 +340,26 @@ export default async (req) => {
     // Só o GPT-5.4 (era o único que acertava sempre). Antes 4 modelos reserva
     // eram chamados JUNTOS em toda letra — gastavam requisição mesmo sem uso.
     // Em segundo plano (até 15 min) dá pra esperar bem e tentar 2 vezes.
-    const LIMITE = longo ? 95000 : 26000;
+    const LIMITE = longo ? 140000 : 26000; // a página espera até 150 s
     const resta = () => LIMITE - (Date.now() - t0);
     // RÁPIDO: pede ao GPT-5.4. Se em 6 s ele ainda não respondeu, pede também
     // a um modelo rápido e usa o primeiro que entregar uma letra boa.
     // (o reserva só é chamado quando o 5.4 está lento — não gasta à toa)
-    const principal = chamar('openai/gpt-6.1-sol', true);
+    const principal = primeiroOk([...TEXTO_KIE.map((m) => chamar(m, true)), chamar('openai/gpt-6.1-sol', true)]);
     const reserva = Promise.race([espera(6000), principal]).then((v) => {
       if (v) return null; // o 5.4 já entregou
       console.log('GPT-5.4 lento ou falhou — chamando reserva rápido');
-      return primeiroOk([chamar('google/gemini-3.8-flash', true), chamar('openai/gpt-6.1-terra', true), chamar('anthropic/claude-haiku-4-5', true)]);
+      return primeiroOk([chamar('google/gemini-3.8-flash', true), chamar('openai/gpt-6.1-terra', true), chamar('anthropic/claude-haiku-4-5', true), ...RESERVA_OR.map((m) => chamar(m, true))]);
     });
     let conteudo = await Promise.race([primeiroOk([principal, reserva]), espera(resta())]);
-    if (!conteudo && longo && resta() > 40000) {
-      console.log('GPT-5.4 falhou, tentando de novo...');
-      conteudo = await Promise.race([primeiroOk([chamar('openai/gpt-6.1-sol', true), chamar('google/gemini-3.8-flash', true)]), espera(resta())]);
+    // NÃO DESISTE: em segundo plano, se tudo falhou, espera um pouco e tenta
+    // de novo todos os modelos (Unifically + reserva), até ~2 minutos.
+    let rodada = 1;
+    while (!conteudo && longo && resta() > 15000) {
+      rodada++;
+      await espera(4000);
+      console.log('Letra: tentativa ' + rodada + ' (todos os modelos)');
+      conteudo = await Promise.race([primeiroOk([...TEXTO_KIE.map((m) => chamar(m, true)), chamar('openai/gpt-6.1-sol', true), chamar('google/gemini-3.8-flash', true), chamar('anthropic/claude-haiku-4-5', true), ...RESERVA_OR.map((m) => chamar(m, true))]), espera(resta())]);
     }
     if (!conteudo) {
       return json({ erro: 'Não consegui escrever a letra agora. Tenta de novo em instantes.' }, 502);

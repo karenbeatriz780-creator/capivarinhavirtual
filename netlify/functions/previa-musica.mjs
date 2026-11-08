@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { baixarPorTask, fonteDoPedido } from './_audio.mjs';
+import { sunoFetch } from './_ia.mjs';
 
 // Entrega só os primeiros 70 segundos do MP3 (a "prévia").
 // A música completa só sai (redirecionando pro arquivo real) se o presente
@@ -55,7 +56,7 @@ async function urlReal(taskId, v) {
   // plano B: pergunta direto pro serviço de música
   try {
     const apiKey = (process.env.UNIFICALLY_API_KEY || '').trim();
-    const r = await fetch('https://api.unifically.com/v1/tasks/' + encodeURIComponent(taskId), { headers: { Authorization: 'Bearer ' + apiKey } });
+    const r = await sunoFetch('https://api.unifically.com/v1/tasks/' + encodeURIComponent(taskId), { headers: { Authorization: 'Bearer ' + apiKey } });
     const d = await r.json();
     const c = (d && d.data) || d || {};
     return (v === 2 ? c.audio_url2 : c.audio_url1 || c.audio_url) || null;

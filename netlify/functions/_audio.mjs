@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import crypto from 'node:crypto';
+import { sunoFetch } from './_ia.mjs';
 
 // ÁUDIO PERMANENTE: guarda uma cópia de cada música PAGA no nosso próprio
 // armazenamento (Netlify Blobs). Os links do serviço de música podem expirar
@@ -38,7 +39,7 @@ async function urlsNovas(taskId, n) {
   try {
     const apiKey = (process.env.UNIFICALLY_API_KEY || '').trim();
     if (!apiKey || !taskId) return out;
-    const r = await fetch('https://api.unifically.com/v1/tasks/' + encodeURIComponent(taskId), { headers: { Authorization: 'Bearer ' + apiKey } });
+    const r = await sunoFetch('https://api.unifically.com/v1/tasks/' + encodeURIComponent(taskId), { headers: { Authorization: 'Bearer ' + apiKey } });
     const d = await r.json().catch(() => null);
     const c = (d && d.data) || d || {};
     out.pronta = /^(completed?|success|succeeded|done|finished)$/i.test(String(c.status || ''));

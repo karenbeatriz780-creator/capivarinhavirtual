@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { indexar, indexarDia } from './_indice.mjs';
+import { sunoFetch } from './_ia.mjs';
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -410,7 +411,7 @@ export default async (req) => {
 
     let resp;
     try {
-      resp = await fetch('https://api.unifically.com/v1/tasks', {
+      resp = await sunoFetch('https://api.unifically.com/v1/tasks', {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
         body: JSON.stringify({

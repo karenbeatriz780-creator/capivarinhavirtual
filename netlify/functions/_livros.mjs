@@ -15,6 +15,7 @@ import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { enviarTexto, enviarImagem, enviarDocumento, conversaAberta, registrar, SITE } from './_zap.mjs';
 import { indexar } from './_indice.mjs';
+import { iaFetch, RESERVA_OR, sunoFetch, TEXTO_KIE } from './_ia.mjs';
 
 export const PRECO_LIVRO = 37;
 export const PRECO_LIVRO_PROPRIO = 67;
@@ -297,7 +298,7 @@ export async function temaDoLivro(L) {
   return acharTema(L && L.tema);
 }
 
-const MODELOS_HIST = ['google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol'];
+const MODELOS_HIST = [...TEXTO_KIE, 'google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol', ...RESERVA_OR];
 function pedidoHistoria(L) {
   const menina = L.genero === 'menina';
   const idade = Number(L.idade) === 0 ? 'bebê de ' + (L.idadeMeses || 0) + ' meses' : (L.idade || 4) + ' anos';
@@ -364,7 +365,7 @@ export async function escreverHistoriaPropria(L) {
   async function chamar(m) {
     const ctl = new AbortController(); ctrls.push(ctl);
     try {
-      const r = await fetch('https://api.unifically.com/v1/chat/completions', {
+      const r = await iaFetch('ia', {
         method: 'POST', signal: ctl.signal,
         headers: { Authorization: 'Bearer ' + chaveApi(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: m, max_tokens: 6000, temperature: 0.7, messages: [{ role: 'system', content: sistema }, { role: 'user', content: pedido }] })
@@ -484,7 +485,7 @@ export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
 // Unifically (mesma conta das músicas)
 // ---------------------------------------------------------------------------
 export async function criarTarefa(model, input) {
-  const r = await fetch(API, {
+  const r = await sunoFetch(API, {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + chaveApi(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, input })
@@ -522,7 +523,7 @@ function coletar(obj, urls, prof) {
 // { estado: 'pronto'|'rodando'|'falhou', urls:[...] }
 export async function verTarefa(taskId, tipo) {
   try {
-    const r = await fetch(API + '/' + encodeURIComponent(taskId), { headers: { Authorization: 'Bearer ' + chaveApi() } });
+    const r = await sunoFetch(API + '/' + encodeURIComponent(taskId), { headers: { Authorization: 'Bearer ' + chaveApi() } });
     const d = await r.json().catch(() => null);
     const c = (d && d.data) || d || {};
     const st = String(c.status || '').toLowerCase();

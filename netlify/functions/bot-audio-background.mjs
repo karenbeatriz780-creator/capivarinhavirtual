@@ -1,5 +1,6 @@
 import { enviarTexto, registrar, VERSAO } from './_zap.mjs';
 import { tratarBot } from './_bot.mjs';
+import { iaFetch, RESERVA_OR } from './_ia.mjs';
 
 // Em SEGUNDO PLANO: baixa o áudio que o cliente mandou no WhatsApp,
 // transforma em texto e entrega pro robô como se fosse uma mensagem escrita.
@@ -17,9 +18,9 @@ export default async (req) => {
     const buf = Buffer.from(await ra.arrayBuffer());
     if (buf.length > 8 * 1024 * 1024) throw new Error('áudio grande demais');
     const formato = /mpeg|mp3/.test(info.mime_type || '') ? 'mp3' : /wav/.test(info.mime_type || '') ? 'wav' : 'ogg';
-    for (const modelo of ['google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5']) {
+    for (const modelo of ['google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'or:google/gemini-3.6-flash']) {
       try {
-        const r = await fetch('https://api.unifically.com/v1/chat/completions', {
+        const r = await iaFetch('ia', {
           method: 'POST',
           headers: { Authorization: 'Bearer ' + chaveIA, 'Content-Type': 'application/json' },
           body: JSON.stringify({
