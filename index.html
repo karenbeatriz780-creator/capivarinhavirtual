@@ -7977,15 +7977,21 @@ function pnlRoboHtml(){
   var inp=function(id,rot,val,tipo,extra){ return '<label>'+rot+'<input id="'+id+'" type="'+(tipo||'number')+'" value="'+esc(String(val==null?'':val))+'" '+(extra||'')+'></label>'; };
   return '<div class="dsh-card gst-card robo"><div class="dsh-t">🤖 Robô do tráfego <span class="robo-st '+(liga?'on':'')+'">'+(liga?'ligado':'desligado')+'</span></div>'+
     '<div class="robo-res">'+
-      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>Pausa sozinho</b> campanha com <b>R$ '+fmtPreco(c.limiteSemVenda)+'</b> gastos sem venda, que desandou ou com prejuízo 3 dias seguidos</div>'+
-      '<div>'+(c.autoSubir?'✅':'⛔')+' <b>Sobe sozinho +20%</b> quando é seguro (lucro 3 dias, fora do aprendizado, 72 h sem mexer) · teto <b>R$ '+fmtPreco(c.tetoCampanha)+'</b>/dia por campanha e <b>R$ '+fmtPreco(c.tetoTotal)+'</b>/dia no total</div>'+
+      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>Pausa sozinho</b> o que dá prejuízo: 1ª venda não saiu em <b>R$ '+fmtPreco(c.primeiraVendaMax||15)+'</b>, começo ruim (R$ 20+ e venda saindo mais cara que o ticket), dia no prejuízo, desandou ou 3 dias ruins — tudo com imposto</div>'+
+      '<div>'+(c.segundaChance!==false?'✅':'⛔')+' <b>Segunda chance</b>: a campanha pausada volta só nos horários de pico; se falhar de novo, pausa de vez e pede vídeo novo</div>'+
+      '<div>'+(c.autoSubir?'✅':'⛔')+' <b>Sobe sozinho +20%</b> só com custo por venda até <b>R$ '+fmtPreco(c.cpaMax||7)+'</b> (3 dias), fora do aprendizado, 72 h sem mexer · teto <b>R$ '+fmtPreco(c.tetoCampanha)+'</b>/campanha e <b>R$ '+fmtPreco(c.tetoTotal)+'</b> no total</div>'+
+      '<div>'+(c.protecaoQueda!==false?'✅':'⛔')+' <b>Proteção</b>: se a IA do site cair, pausa tudo e religa quando voltar</div>'+
+      '<div>📲 Avisos no WhatsApp: 7h (ontem), 12h, 17h e 19h (hoje), prejuízo, IA abaixo de <b>R$ '+fmtPreco(c.kieMin==null?10:c.kieMin)+'</b></div>'+
       '<div>📣 Anúncio novo começa com <b>R$ '+fmtPreco(c.orcInicial)+'/dia</b></div>'+
     '</div>'+
     '<button type="button" class="cmp-bt" id="roboCfgBt">⚙️ '+(_pnlRoboAberto?'Fechar configurações':'Ajustar regras')+'</button>'+
     (_pnlRoboAberto?'<div class="robo-cfg">'+
       '<label class="robo-sw"><input type="checkbox" id="rbPausar" '+(c.autoPausar?'checked':'')+'> Pausar sozinho o que está ruim</label>'+
       '<label class="robo-sw"><input type="checkbox" id="rbSubir" '+(c.autoSubir?'checked':'')+'> Subir sozinho o que está bom (+20%, seguro)</label>'+
-      '<div class="robo-g">'+inp('rbLimite','Pausar com R$ gastos sem venda',c.limiteSemVenda,'number','min="5" step="1"')+inp('rbOrc','Orçamento inicial (R$/dia)',c.orcInicial,'number','min="6" step="1"')+
+      '<label class="robo-sw"><input type="checkbox" id="rbChance" '+(c.segundaChance!==false?'checked':'')+'> Segunda chance só no horário de pico</label>'+
+      '<label class="robo-sw"><input type="checkbox" id="rbQueda" '+(c.protecaoQueda!==false?'checked':'')+'> Pausar tudo se a IA do site cair</label>'+
+      '<div class="robo-g">'+inp('rbLimite','1ª venda tem que sair em até R$',c.primeiraVendaMax||15,'number','min="5" step="1"')+inp('rbCpa','Só subir com custo por venda até R$',c.cpaMax||7,'number','min="1" step="0.5"')+'</div>'+
+      '<div class="robo-g">'+inp('rbKie','Avisar quando a IA tiver menos de R$',c.kieMin==null?10:c.kieMin,'number','min="0" step="1"')+inp('rbOrc','Orçamento inicial (R$/dia)',c.orcInicial,'number','min="6" step="1"')+'</div><div class="robo-g">'+
         inp('rbTeto','Teto por campanha (R$/dia)',c.tetoCampanha,'number','min="6" step="1"')+inp('rbTotal','Teto total (R$/dia)',c.tetoTotal,'number','min="6" step="1"')+'</div>'+
       inp('rbZap','Seu WhatsApp pros avisos (com 55 + DDD)',c.zapAvisos,'tel','placeholder="5591900000000"')+
       inp('rbTexto','Texto padrão do anúncio',c.textoPadrao,'text')+inp('rbTitulo','Título padrão',c.tituloPadrao,'text')+inp('rbLink','Link do anúncio',c.link,'url')+
@@ -8014,7 +8020,7 @@ function pnlLigarRobo(body){
   var sv=el('rbSalvar'); if(sv) sv.onclick=function(){
     if(!pedirSenhaAdmin()) return;
     var v=function(id){ var e=el(id); return e?e.value:''; };
-    var cfg={autoPausar:el('rbPausar').checked, autoSubir:el('rbSubir').checked, limiteSemVenda:v('rbLimite'), orcInicial:v('rbOrc'), tetoCampanha:v('rbTeto'), tetoTotal:v('rbTotal'),
+    var cfg={autoPausar:el('rbPausar').checked, autoSubir:el('rbSubir').checked, segundaChance:el('rbChance').checked, protecaoQueda:el('rbQueda').checked, primeiraVendaMax:v('rbLimite'), cpaMax:v('rbCpa'), kieMin:v('rbKie'), orcInicial:v('rbOrc'), tetoCampanha:v('rbTeto'), tetoTotal:v('rbTotal'),
       zapAvisos:v('rbZap'), textoPadrao:v('rbTexto'), tituloPadrao:v('rbTitulo'), link:v('rbLink'), pageId:v('rbPage'), igId:v('rbIg'), pixelId:v('rbPixel')};
     sv.disabled=true; sv.textContent='Salvando…';
     post('/.netlify/functions/admin-meta-config',{cfg:cfg}).then(function(d){ _pnlCache.robo.cfg=d.cfg; toast('Regras do robô salvas ✓'); _pnlRoboAberto=false; pnlCarregarRobo(); })
@@ -8031,7 +8037,7 @@ function pnlLigarRobo(body){
   var sm=el('rbSimular'); if(sm) sm.onclick=function(){
     if(!pedirSenhaAdmin()) return; sm.disabled=true; sm.textContent='Analisando…';
     post('/.netlify/functions/admin-meta-config',{acao:'rodar',simular:true}).then(function(d){
-      var f=d.feitas||[]; el('rbSimRes').innerHTML='<div class="robo-sim">'+(f.length?f.map(function(x){ return '<div>'+({pausou:'⏸ Pausaria',subiu:'⬆️ Subiria',teto:'🧱 No teto',erro:'⚠️'}[x.tipo]||x.tipo)+' <b>'+esc(x.camp)+'</b> — '+esc(x.motivo)+'</div>'; }).join(''):'Agora o robô não mexeria em nada. Tudo dentro das regras ✓')+'</div>';
+      var f=d.feitas||[]; el('rbSimRes').innerHTML='<div class="robo-sim">'+(f.length?f.map(function(x){ return '<div>'+({pausou:'⏸ Pausaria',subiu:'⬆️ Subiria',ativou:'▶️ Ligaria',teto:'🧱 No teto',erro:'⚠️'}[x.tipo]||x.tipo)+' <b>'+esc(x.camp)+'</b> — '+esc(x.motivo)+'</div>'; }).join(''):'Agora o robô não mexeria em nada. Tudo dentro das regras ✓')+'</div>';
       sm.disabled=false; sm.textContent='🧪 O que o robô faria agora?';
     }).catch(function(e){ toast(e.message); sm.disabled=false; sm.textContent='🧪 O que o robô faria agora?'; });
   };

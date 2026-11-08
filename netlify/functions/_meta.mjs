@@ -14,7 +14,12 @@ const loja = () => getStore('gastos');
 
 export const CFG_PADRAO = {
   autoPausar: true, autoSubir: true,
-  limiteSemVenda: 25,          // R$ gastos (valor do Gerenciador) sem nenhuma venda → pausa
+  limiteSemVenda: 15,          // (antigo) — agora vale primeiraVendaMax
+  primeiraVendaMax: 15,        // R$ gastos (COM imposto) sem a 1ª venda → pausa
+  cpaMax: 7,                   // custo por venda máximo (COM imposto) pra o robô subir orçamento
+  segundaChance: true,         // campanha pausada por resultado ruim volta SÓ no horário de pico, uma vez
+  kieMin: 10,                  // avisa quando o saldo da IA (Kie) ficar abaixo disso (R$)
+  protecaoQueda: true,         // IA do site caiu → pausa tudo e avisa; voltou → religa
   orcInicial: 45,              // R$/dia de todo anúncio novo publicado pelo painel
   tetoCampanha: 150,           // o robô nunca passa disso por campanha (R$/dia)
   tetoTotal: 400,              // nem disso somando todas as campanhas ativas (R$/dia)
@@ -23,7 +28,7 @@ export const CFG_PADRAO = {
   link: 'https://capivarinhalove.com.br/',
   cta: 'SHOP_NOW',
   pageId: '1267535713110534', igId: '', pixelId: '2102013347063288',
-  zapAvisos: ''                // seu WhatsApp pra receber os avisos do robô (com DDI: 5591...)
+  zapAvisos: '5591988039960'   // seu WhatsApp pra receber os avisos do robô (com DDI: 5591...)
 };
 export async function lerCfg() {
   const c = await loja().get('auto_cfg', { type: 'json' }).catch(() => null);
@@ -34,6 +39,11 @@ export async function salvarCfg(novo) {
   const o = Object.assign({}, c);
   if ('autoPausar' in novo) o.autoPausar = !!novo.autoPausar;
   if ('autoSubir' in novo) o.autoSubir = !!novo.autoSubir;
+  if ('segundaChance' in novo) o.segundaChance = !!novo.segundaChance;
+  if ('protecaoQueda' in novo) o.protecaoQueda = !!novo.protecaoQueda;
+  if (novo.primeiraVendaMax != null && novo.primeiraVendaMax !== '') o.primeiraVendaMax = num(novo.primeiraVendaMax, 5, 500);
+  if (novo.cpaMax != null && novo.cpaMax !== '') o.cpaMax = num(novo.cpaMax, 1, 500);
+  if (novo.kieMin != null && novo.kieMin !== '') o.kieMin = num(novo.kieMin, 0, 5000);
   if (novo.limiteSemVenda != null) o.limiteSemVenda = num(novo.limiteSemVenda, 5, 500);
   if (novo.orcInicial != null) o.orcInicial = num(novo.orcInicial, 6, 1000);
   if (novo.tetoCampanha != null) o.tetoCampanha = num(novo.tetoCampanha, 6, 5000);
@@ -71,10 +81,10 @@ export async function logRobo(item) {
 }
 export async function avisar(texto) {
   try {
-    const cfg = await lerCfg(), n = String(cfg.zapAvisos || process.env.ZAP_ADMIN || '').replace(/\D/g, '');
+    const cfg = await lerCfg(), n = String(cfg.zapAvisos || process.env.ZAP_ADMIN || '5591988039960').replace(/\D/g, '');
     if (n.length < 10) return;
     const { enviarTexto } = await import('./_zap.mjs');
-    await enviarTexto(n, '🤖 *Robô do tráfego*\n\n' + texto);
+    return await enviarTexto(n, '🤖 *Robô do tráfego*\n\n' + texto);
   } catch (e) { console.error('aviso robô:', e && e.message); }
 }
 
@@ -97,6 +107,7 @@ export async function aplicarAcao(c, acao, quem) {
     }
     await registrarAcao(id, 'orcamento', { de: c.orcamentoDia, para: novo, quem });
   }
+  if (quem !== 'robô' && (acao === 'ativar' || acao === 'pausar')) { try { await loja().delete('sc_' + id); } catch (e) {} } // você mandou: sai da segunda chance
   try { await loja().setJSON('meta_cache_zerado', { em: Date.now() }); } catch (e) {}
 }
 
@@ -114,7 +125,7 @@ export async function vendasSitePorCampanha(nDias) {
       if (!camp) return;
       const q = g.pagoEm || g.criadoEm || 0, dia = new Date(q - 3 * 3600000).toISOString().slice(0, 10);
       const o = out[camp] = out[camp] || { vendas: 0, valor: 0, ultima: 0, porDia: {} };
-      o.vendas++; o.valor += Number(g.valor) || 0; o.ultima = Math.max(o.ultima, q);
+      o.vendas++; o.valor += Number((g.pagamento && g.pagamento.valor) || g.valor) || 0; o.ultima = Math.max(o.ultima, q);
       o.porDia[dia] = (o.porDia[dia] || 0) + 1;
     });
   } catch (e) { console.error('vendas por campanha:', e && e.message); }
