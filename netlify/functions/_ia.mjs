@@ -14,7 +14,7 @@ const kieChave = () => (process.env.KIE_API_KEY || '').trim();
 // dois modelos da Kie ao mesmo tempo: usa o que responder primeiro (letra mais rápida; custo < R$ 0,01)
 export const TEXTO_KIE = ['kie:gemini-3-8-flash-openai', 'kie:gemini-3-6-flash-openai'];
 export const RESERVA_OR = ['or:google/gemini-3.6-flash', 'or:anthropic/claude-haiku-4.5'];
-// LETRAS: Claude Haiku 4.5 (OpenRouter) é o PRINCIPAL; se falhar, entra a Kie (Gemini) na hora
+// LETRAS: Claude Haiku 4.5 (OpenRouter) e Gemini (Kie) começam JUNTOS; vale o primeiro que entregar letra boa
 export const TEXTO_TOP = ['top:anthropic/claude-haiku-4.5'];
 
 const ultFalha = [0, 0, 0, 0], ultOk = [0, 0, 0, 0]; // por nível: 0 Haiku ("top:"), 1 Kie, 2 Unifically, 3 OpenRouter
@@ -30,7 +30,7 @@ const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 async function aguardarVez(nv, signal) {
   if (nv === 0) return true;
   const t0 = Date.now(), espera = 4500 * nv;
-  if (nv === 1 && Date.now() - iniTop > 3000) return true; // ninguém pediu Haiku agora (ex.: livro, bot): Kie entra direto
+  if (nv === 1) return true; // Kie (Gemini) corre JUNTO com o Haiku: o que terminar primeiro ganha (letra em ~3-5 s)
   const acimaFalhou = () => Date.now() - ultFalha[nv - 1] < 60000; // o nível logo acima falhou
   const acimaOk = () => { for (let i = 0; i < nv; i++) if (ultOk[i] >= t0) return true; return false; };
   // Unifically sem Kie configurada: entra direto
