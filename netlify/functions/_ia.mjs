@@ -155,8 +155,10 @@ async function verMusicaKie(id) {
     // tenta de novo sozinho (até 2x): 1ª igual/sem nome de artista, 2ª limpando mais
     const tent = (redo && redo.tent) || 0;
     const orig = await L.get('kiecorpo_' + id, { type: 'json' }).catch(() => null);
-    if (orig && orig.corpo && tent < 2) {
+    if (orig && orig.corpo && tent < 3) {
       const corpo = limparCorpo(orig.corpo, tent >= 1 || /SENSITIVE/i.test(st + msg));
+      // erro interno do estúdio: troca de versão do modelo (V5 → V4.5+ → V4.5)
+      if (!/SENSITIVE/i.test(st + msg)) corpo.model = ['V4_5PLUS', 'V4_5', 'V4_5PLUS'][tent] || 'V4_5';
       try {
         const rr = await fetch(KIEAPI + '/api/v1/generate', { method: 'POST', headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
         const dd = await rr.json().catch(() => null);
