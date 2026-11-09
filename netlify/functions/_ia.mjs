@@ -115,7 +115,7 @@ async function criarMusicaKie(input) {
     });
     const d = await r.json().catch(() => null);
     const id = d && d.data && (d.data.taskId || d.data.task_id);
-    if (!r.ok || !id || (d.code && d.code !== 200)) { console.log('Kie música FALHA ' + r.status + ' ' + JSON.stringify(d).slice(0, 300)); return null; }
+    if (!r.ok || !id || (d.code && d.code !== 200)) { console.log('Kie música FALHA ' + r.status + ' ' + JSON.stringify(d).slice(0, 300)); try { await getStore('musicas').setJSON('diag_kie_criar', { em: Date.now(), http: r.status, resp: JSON.stringify(d).slice(0, 400) }); } catch (e) {} return null; }
     console.log('MÚSICA PELA KIE >> ' + id);
     try { await getStore('musicas').setJSON('kiecorpo_' + id, { corpo, em: Date.now() }); } catch (e) {}
     contarUso('musica');
@@ -151,6 +151,7 @@ async function verMusicaKie(id) {
   if (/FAIL|ERROR/.test(st)) {
     const msg = x.errorMessage || st;
     console.log('Kie música falhou (' + real + '): ' + st + ' ' + msg);
+    try { await L.setJSON('diag_kie_falha', { em: Date.now(), id: real, st, msg: String(msg).slice(0, 300) }); } catch (e) {}
     // tenta de novo sozinho (até 2x): 1ª igual/sem nome de artista, 2ª limpando mais
     const tent = (redo && redo.tent) || 0;
     const orig = await L.get('kiecorpo_' + id, { type: 'json' }).catch(() => null);

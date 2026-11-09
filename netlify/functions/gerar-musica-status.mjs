@@ -31,6 +31,12 @@ function acharUrlAudio(data) {
 export default async (req) => {
   try {
     const url = new URL(req.url);
+    if (url.searchParams.get('diag')) { // diagnóstico (sem segredos): últimos erros do estúdio + saldo
+      const L = getStore('musicas'), br = (o) => o && Object.assign({}, o, { em: new Date(o.em - 3 * 3600000).toISOString().slice(0, 19).replace('T', ' ') });
+      const [a, b] = await Promise.all([L.get('diag_kie_criar', { type: 'json' }).catch(() => null), L.get('diag_kie_falha', { type: 'json' }).catch(() => null)]);
+      let saldo = null; try { const { saldoKie } = await import('./_gastos.mjs'); saldo = await saldoKie(); } catch (e) {}
+      return json({ saldoKieCreditos: saldo, ultimoErroAoCriar: br(a), ultimaFalhaNaGeracao: br(b), unifically: !!(process.env.UNIFICALLY_API_KEY || '').trim(), kie: !!(process.env.KIE_API_KEY || '').trim() });
+    }
     const taskId = url.searchParams.get('taskId');
     if (!taskId) return json({ erro: 'Faltou o identificador da tarefa.' }, 400);
 
