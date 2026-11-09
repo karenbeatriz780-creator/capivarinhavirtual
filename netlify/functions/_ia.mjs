@@ -1,3 +1,4 @@
+import { getStore } from '@netlify/blobs';
 // Ponte das IAs — KIE.AI É A PRINCIPAL (texto, música e imagem).
 // Ordem: 1º Kie (KIE_API_KEY) → 2º Unifically (UNIFICALLY_API_KEY) → 3º OpenRouter (OPENROUTER_API_KEY, só texto).
 // Cada reserva só entra quando a anterior falha (ou demora demais), pra não gastar à toa.
@@ -116,21 +117,61 @@ async function criarMusicaKie(input) {
     const id = d && d.data && (d.data.taskId || d.data.task_id);
     if (!r.ok || !id || (d.code && d.code !== 200)) { console.log('Kie música FALHA ' + r.status + ' ' + JSON.stringify(d).slice(0, 300)); return null; }
     console.log('MÚSICA PELA KIE >> ' + id);
+    try { await getStore('musicas').setJSON('kiecorpo_' + id, { corpo, em: Date.now() }); } catch (e) {}
     contarUso('musica');
     return 'kie_' + id;
   } catch (e) { console.log('Kie música FALHA ' + (e && e.message)); return null; }
 }
+// nomes de artistas/bandas que a Suno bloqueia no estilo ("SENSITIVE_WORD") — tira e tenta de novo
+const ARTISTAS = /\b(grupo\s+)?menos\s+[ée]\s+mais\b|thiaguinho|ferrugem|p[ée]ricles|sorriso maroto|turma do pagode|dilsinho|exaltasamba|revela[cç][aã]o|pixote|marília mendonça|marilia mendonca|henrique e juliano|jorge e mateus|gusttavo lima|z[ée] neto|luan santana|anitta|ludmilla|wesley safad[aã]o|jo[aã]o gomes|ana castela|simone e simaria|maiara e maraisa|roberto carlos|tim maia|djavan|ivete|bruno e marrone|matheus e kauan|zezé di camargo|leonardo|eduardo costa|mc [a-z]+|alok/gi;
+function limparCorpo(c, forte) {
+  const x = JSON.parse(JSON.stringify(c));
+  if (x.style) x.style = x.style.replace(ARTISTAS, '').replace(/\b(estilo|igual|tipo|parecid[oa])\s+(a|ao|à|com|do|da|de)\s*(,|$)/gi, '').replace(/\s{2,}/g, ' ').replace(/^[\s,]+|[\s,]+$/g, '');
+  if (forte) {
+    if (x.style) x.style = x.style.split(',').filter((t) => !/[A-Z][a-z]+ [A-Z]/.test(t)).join(',').slice(0, 300) || 'pop romântico brasileiro';
+    if (x.prompt) x.prompt = x.prompt.replace(ARTISTAS, '');
+    if (x.title) x.title = x.title.replace(ARTISTAS, '').trim() || 'Nossa música';
+  }
+  return x;
+}
 async function verMusicaKie(id) {
   const ch = kieChave();
   if (!ch) return jsonResp({ data: { status: 'failed', message: 'sem KIE_API_KEY' } }, 500);
-  const r = await fetch(KIEAPI + '/api/v1/generate/record-info?taskId=' + encodeURIComponent(id), { headers: { Authorization: 'Bearer ' + ch } });
+  // se essa tarefa já foi refeita, acompanha a nova
+  const L = getStore('musicas');
+  const redo = await L.get('kieredo_' + id, { type: 'json' }).catch(() => null);
+  const real = (redo && redo.novo) || id;
+  const r = await fetch(KIEAPI + '/api/v1/generate/record-info?taskId=' + encodeURIComponent(real), { headers: { Authorization: 'Bearer ' + ch } });
   const d = await r.json().catch(() => null);
   const x = (d && d.data) || {};
   const st = String(x.status || '').toUpperCase();
   const faixas = ((x.response && (x.response.sunoData || x.response.suno_data)) || []);
   const au = (f) => f && (f.audio_url || f.audioUrl || f.source_audio_url || f.sourceAudioUrl);
   const c = { status: 'processing', task_id: 'kie_' + id };
-  if (/FAIL|ERROR/.test(st)) { c.status = 'failed'; c.message = x.errorMessage || st; }
+  if (/FAIL|ERROR/.test(st)) {
+    const msg = x.errorMessage || st;
+    console.log('Kie música falhou (' + real + '): ' + st + ' ' + msg);
+    // tenta de novo sozinho (até 2x): 1ª igual/sem nome de artista, 2ª limpando mais
+    const tent = (redo && redo.tent) || 0;
+    const orig = await L.get('kiecorpo_' + id, { type: 'json' }).catch(() => null);
+    if (orig && orig.corpo && tent < 2) {
+      const corpo = limparCorpo(orig.corpo, tent >= 1 || /SENSITIVE/i.test(st + msg));
+      try {
+        const rr = await fetch(KIEAPI + '/api/v1/generate', { method: 'POST', headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+        const dd = await rr.json().catch(() => null);
+        const nid = dd && dd.data && (dd.data.taskId || dd.data.task_id);
+        if (rr.ok && nid && (!dd.code || dd.code === 200)) {
+          await L.setJSON('kieredo_' + id, { novo: nid, tent: tent + 1, motivo: msg, em: Date.now() });
+          console.log('Kie música REFEITA ' + id + ' -> ' + nid + ' (tentativa ' + (tent + 1) + ')');
+          contarUso('musica');
+          return jsonResp({ data: c }, 200); // continua "processando" pro cliente
+        }
+        console.log('Kie refazer FALHA ' + JSON.stringify(dd).slice(0, 300));
+      } catch (e) { console.log('Kie refazer FALHA ' + (e && e.message)); }
+    }
+    c.status = 'failed'; c.message = msg;
+    if (/SENSITIVE|artist|copyright/i.test(st + ' ' + msg)) c.motivo = 'palavra';
+  }
   else if (st === 'SUCCESS' && au(faixas[0])) {
     c.status = 'completed';
     c.audio_url1 = au(faixas[0]); c.audio_url2 = au(faixas[1]) || null;

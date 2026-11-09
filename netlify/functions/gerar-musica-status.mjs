@@ -77,7 +77,9 @@ export default async (req) => {
     const status = (conteudo.status || '').toLowerCase();
     if (status === 'failed' || status === 'error') {
       console.error('Unifically tarefa falhou:', JSON.stringify(conteudo));
-      return json({ pronto: false, falhou: true, erro: 'A geração falhou. Tenta de novo.' });
+      return json({ pronto: false, falhou: true, erro: conteudo.motivo === 'palavra'
+        ? 'O estúdio recusou por causa de um nome de artista ou banda no estilo/letra. Tire o nome (ex.: "igual ao Thiaguinho") e gere de novo.'
+        : 'A geração falhou. Tenta de novo.' });
     }
 
     const audioUrl = acharUrlAudio(conteudo);
