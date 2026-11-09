@@ -295,6 +295,24 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .hn-cta{display:flex;align-items:center;justify-content:center;gap:.45rem;flex-wrap:wrap;border-radius:16px;padding:.9rem;font-weight:800;font-size:.98rem;text-decoration:none;position:relative;overflow:hidden}
 .hn-free{display:inline-block;background:#E8F7EE;color:#1E7A45;font-size:.66rem;font-weight:800;border-radius:999px;padding:.15rem .5rem}
 .hn-uva .hn-free{background:rgba(255,255,255,.18);color:#fff}
+.hn-play{position:relative;border-radius:26px;padding:1.1rem .85rem .5rem;margin-bottom:.9rem;overflow:hidden;background:radial-gradient(120% 90% at 90% 0%,#3d0f33 0%,#1a0718 60%,#0f040e 100%);box-shadow:0 18px 40px rgba(40,6,30,.35),inset 0 0 0 1.5px rgba(245,207,110,.35)}
+.hn-play:before{content:"";position:absolute;width:18rem;height:18rem;right:-7rem;top:-7rem;border-radius:50%;background:radial-gradient(circle,rgba(255,62,158,.28),transparent 65%);pointer-events:none}
+.hn-play-h{position:relative;padding:0 .3rem .8rem;color:#fff}
+.hn-play-h .k{font-size:.7rem;font-weight:800;letter-spacing:.14em;color:#F5CF6E}
+.hn-play-h b{display:block;font-family:'Inter',sans-serif;font-weight:900;font-size:1.45rem;letter-spacing:-.025em;line-height:1.1;margin-top:.25rem}
+.hn-play-h b em{font-style:normal;background:linear-gradient(90deg,#F8DFA0,#FF7AB8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hn-play-h small{display:block;font-size:.8rem;color:#CDB6C8;margin-top:.3rem}
+.hn-play .hn-mus{position:relative;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);box-shadow:none;color:#fff;transition:box-shadow .3s,border-color .3s,background .3s}
+.hn-play .hn-mus small{color:#CDB6C8}
+.hn-play .hn-mus .pl{background:linear-gradient(180deg,#FBE3A0,#D9A13B);box-shadow:0 6px 16px rgba(217,161,59,.4)}
+.hn-play .hn-mus .pl svg{fill:#3a1a05}
+.hn-play .hn-mus .br{background:rgba(255,255,255,.14)}
+.hn-play .hn-mus .br i{background:linear-gradient(90deg,#F5CF6E,#FF7AB8)}
+.hn-play .hn-mus.on{background:linear-gradient(120deg,rgba(226,48,127,.35),rgba(94,26,115,.35));border-color:rgba(245,207,110,.75);box-shadow:0 0 0 1px rgba(245,207,110,.4),0 0 26px rgba(255,79,163,.45)}
+.hn-mus .eqp{display:none;gap:3px;align-items:flex-end;height:22px;flex:none}
+.hn-mus .eqp i{display:block;width:4px;height:100%;border-radius:2px;background:linear-gradient(180deg,#F5CF6E,#FF4FA3);transform-origin:bottom;animation:hxEq .9s ease-in-out infinite alternate}
+.hn-mus .eqp i:nth-child(2){animation-delay:.2s}.hn-mus .eqp i:nth-child(3){animation-delay:.4s}.hn-mus .eqp i:nth-child(4){animation-delay:.1s}
+.hn-mus.on .eqp{display:flex}
 .hn-mus{display:flex;align-items:center;gap:.75rem;background:#fff;border:1px solid #F1E2E7;border-radius:18px;padding:.75rem;margin-bottom:.6rem;box-shadow:0 6px 16px rgba(90,40,60,.06)}
 .hn-mus .pl{width:46px;height:46px;border-radius:50%;border:0;background:linear-gradient(135deg,#FF8DB8,#D63A72);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 14px rgba(214,58,114,.35);cursor:pointer}
 .hn-mus .pl svg{width:18px;height:18px;fill:#fff}
@@ -3325,7 +3343,11 @@ var TRILHAS = [
 /* amostras de música — vitrine premium */
 var AMOSTRAS = [
   {id:'a1', titulo:'Música pra Jesus', sub:'🙏 Louvor · adoração ao vivo', arquivo:'/exemplo-louvor.mp3', grad:'linear-gradient(0deg,rgba(11,8,18,.55),rgba(11,8,18,.1)),url(/louvor-fundo.jpg) center 38%/cover'},
-  {id:'a2', titulo:'Música pra Maria', sub:'🤠 Sertanejo · romântica',      arquivo:'/exemplo-sertanejo.mp3', grad:'linear-gradient(150deg,#E8B44A,#8A5A0B)'}
+  {id:'a2', titulo:'Música pra Maria', sub:'🤠 Sertanejo · romântica',      arquivo:'/exemplo-sertanejo.mp3', grad:'linear-gradient(150deg,#E8B44A,#8A5A0B)'},
+  {id:'a3', titulo:'Música pra Manuela', sub:'🤠 Sertanejo · romântica',    arquivo:'/exemplo-manuela.mp3', grad:'linear-gradient(150deg,#E8B44A,#8A5A0B)'},
+  {id:'a4', titulo:'Música pra Bianca', sub:'🥁 Pagode · romântico',         arquivo:'/exemplo-bianca.mp3', grad:'linear-gradient(150deg,#FF8DB8,#7B2CBF)'},
+  {id:'a5', titulo:'Música pra Letícia', sub:'🤠 Sertanejo · alegre',        arquivo:'/exemplo-leticia.mp3', grad:'linear-gradient(150deg,#FFC94D,#E0602B)'},
+  {id:'a6', titulo:'Música pra Ana', sub:'🤠 Sertanejo · romântica',         arquivo:'/exemplo-ana.mp3', grad:'linear-gradient(150deg,#E8B44A,#8A5A0B)'}
 ];
 function abrirAmostras(){
   var box=document.createElement('div');
@@ -4423,12 +4445,13 @@ function telaHome(){
   '</div></section>'+
 
   '<section class="hn-sec"><div class="shell">'+
-    '<div class="hn-sh"><h2><small>🎵 Músicas</small>Ouça exemplos</h2></div>'+
+    '<div class="hn-play"><div class="hn-play-h"><span class="k">♪ OUÇA EXEMPLOS</span><b>Músicas que já <em>emocionaram</em></b><small>Toque no play e sinta como fica com o nome de quem você ama</small></div>'+
     AMOSTRAS.map(function(a){
-      return '<div class="hn-mus"><button type="button" class="pl" data-hnplay="'+a.id+'" aria-label="Tocar '+esc(a.titulo)+'">'+IC.play+'</button>'+
+      return '<div class="hn-mus" id="hnmus-'+a.id+'"><button type="button" class="pl" data-hnplay="'+a.id+'" aria-label="Tocar '+esc(a.titulo)+'">'+IC.play+'</button>'+
         '<div class="tx"><b>'+esc(a.titulo)+'</b><small>'+esc(a.sub)+'</small><div class="br"><i id="hnbar-'+a.id+'"></i></div></div>'+
+        '<span class="eqp" aria-hidden="true"><i></i><i></i><i></i><i></i></span>'+
         '<audio id="hnau-'+a.id+'" src="'+a.arquivo+'" preload="none"></audio></div>';
-    }).join('')+
+    }).join('')+'</div>'+
     '<a class="hn-cta hn-uva" href="#/criar/musica" style="margin-top:.3rem">🎵 Criar minha música <span class="hn-free">OUÇA ANTES DE PAGAR</span></a>'+
     '<div class="hn-mp" id="meuspresentes"><h3>🎁 Meus presentes</h3>'+
       '<p>Já comprou? Coloque o WhatsApp usado na compra pra ver seus livros e músicas.</p>'+
@@ -4538,11 +4561,11 @@ function ligarHomeNova(){
     }).catch(function(){ box.closest('.hn-sec').style.display='none'; });
   }
   var tocando=null;
-  function parar(){ AMOSTRAS.forEach(function(a){ var au=el('hnau-'+a.id); if(au){ au.pause(); } var b=document.querySelector('[data-hnplay="'+a.id+'"]'); if(b) b.innerHTML=IC.play; }); tocando=null; }
+  function parar(){ AMOSTRAS.forEach(function(a){ var au=el('hnau-'+a.id); if(au){ au.pause(); } var b=document.querySelector('[data-hnplay="'+a.id+'"]'); if(b) b.innerHTML=IC.play; var m=el('hnmus-'+a.id); if(m) m.classList.remove('on'); }); tocando=null; }
   document.querySelectorAll('[data-hnplay]').forEach(function(b){ b.onclick=function(){
     var id=b.dataset.hnplay, au=el('hnau-'+id);
     if(tocando===id){ parar(); return; }
-    parar(); tocando=id; b.innerHTML=IC.pause;
+    parar(); tocando=id; b.innerHTML=IC.pause; var mm=el('hnmus-'+id); if(mm) mm.classList.add('on');
     au.play().catch(function(){ parar(); toast('Não consegui tocar agora.'); });
     au.ontimeupdate=function(){ var bar=el('hnbar-'+id); if(bar && au.duration) bar.style.width=(au.currentTime/au.duration*100)+'%'; };
     au.onended=parar;
