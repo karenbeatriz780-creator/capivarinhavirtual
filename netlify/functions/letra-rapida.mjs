@@ -1,14 +1,14 @@
 import { getStore } from '@netlify/blobs';
 import { montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT } from './gerar-letra.js';
 import { indexarDia } from './_indice.mjs';
-import { iaFetch, RESERVA_OR, TEXTO_KIE } from './_ia.mjs';
+import { iaFetch, RESERVA_OR, TEXTO_KIE, TEXTO_TOP } from './_ia.mjs';
 
 // LETRA RÁPIDA (≈3–5 s): pede a letra a modelos rápidos AO MESMO TEMPO e usa a
 // primeira que chegar completa. Responde direto (sem segundo plano, sem streaming).
 // Também guarda a letra pelo id — se a pessoa sair da aba, o site recupera depois.
 // Se nenhum responder a tempo, o site cai no modo antigo (gerar-letra-background).
 // (nov/2026) a Unifically tirou o GPT-5.4 e o 5.4-mini — por isso a letra parou.
-const MODELOS = [...TEXTO_KIE, 'google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol', ...RESERVA_OR];
+const MODELOS = [...TEXTO_TOP, ...TEXTO_KIE, 'google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol', ...RESERVA_OR];
 const LIMITE_MS = 10000;
 
 function erro(msg, status) {

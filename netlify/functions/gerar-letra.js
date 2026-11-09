@@ -1,5 +1,5 @@
 import { indexarDia } from './_indice.mjs';
-import { iaFetch, RESERVA_OR, TEXTO_KIE } from './_ia.mjs';
+import { iaFetch, RESERVA_OR, TEXTO_KIE, TEXTO_TOP } from './_ia.mjs';
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
@@ -345,7 +345,7 @@ export default async (req) => {
     // RÁPIDO: pede ao GPT-5.4. Se em 6 s ele ainda não respondeu, pede também
     // a um modelo rápido e usa o primeiro que entregar uma letra boa.
     // (o reserva só é chamado quando o 5.4 está lento — não gasta à toa)
-    const principal = primeiroOk([...TEXTO_KIE.map((m) => chamar(m, true)), chamar('openai/gpt-6.1-sol', true)]);
+    const principal = primeiroOk([...TEXTO_TOP.map((m) => chamar(m, true)), ...TEXTO_KIE.map((m) => chamar(m, true)), chamar('openai/gpt-6.1-sol', true)]);
     const reserva = Promise.race([espera(6000), principal]).then((v) => {
       if (v) return null; // o 5.4 já entregou
       console.log('GPT-5.4 lento ou falhou — chamando reserva rápido');
@@ -359,7 +359,7 @@ export default async (req) => {
       rodada++;
       await espera(4000);
       console.log('Letra: tentativa ' + rodada + ' (todos os modelos)');
-      conteudo = await Promise.race([primeiroOk([...TEXTO_KIE.map((m) => chamar(m, true)), chamar('openai/gpt-6.1-sol', true), chamar('google/gemini-3.8-flash', true), chamar('anthropic/claude-haiku-4-5', true), ...RESERVA_OR.map((m) => chamar(m, true))]), espera(resta())]);
+      conteudo = await Promise.race([primeiroOk([...TEXTO_TOP.map((m) => chamar(m, true)), ...TEXTO_KIE.map((m) => chamar(m, true)), chamar('openai/gpt-6.1-sol', true), chamar('google/gemini-3.8-flash', true), chamar('anthropic/claude-haiku-4-5', true), ...RESERVA_OR.map((m) => chamar(m, true))]), espera(resta())]);
     }
     if (!conteudo) {
       return json({ erro: 'Não consegui escrever a letra agora. Tenta de novo em instantes.' }, 502);

@@ -14,9 +14,12 @@ const kieChave = () => (process.env.KIE_API_KEY || '').trim();
 // dois modelos da Kie ao mesmo tempo: usa o que responder primeiro (letra mais rápida; custo < R$ 0,01)
 export const TEXTO_KIE = ['kie:gemini-3-8-flash-openai', 'kie:gemini-3-6-flash-openai'];
 export const RESERVA_OR = ['or:google/gemini-3.6-flash', 'or:anthropic/claude-haiku-4.5'];
+// LETRAS: Claude Haiku 4.5 (OpenRouter) é o PRINCIPAL; se falhar, entra a Kie (Gemini) na hora
+export const TEXTO_TOP = ['top:anthropic/claude-haiku-4.5'];
 
-const ultFalha = [0, 0, 0], ultOk = [0, 0, 0]; // por nível: 0 Kie, 1 Unifically, 2 OpenRouter
-const nivel = (m) => (m.startsWith('kie:') ? 0 : m.startsWith('or:') ? 2 : 1);
+const ultFalha = [0, 0, 0, 0], ultOk = [0, 0, 0, 0]; // por nível: 0 Haiku ("top:"), 1 Kie, 2 Unifically, 3 OpenRouter
+let iniTop = 0; // quando foi o último pedido pro Haiku (nível 0)
+const nivel = (m) => (m.startsWith('top:') ? 0 : m.startsWith('kie:') ? 1 : m.startsWith('or:') ? 3 : 2);
 
 function falso(status, msg) {
   return new Response(JSON.stringify({ error: { message: msg } }), { status, headers: { 'Content-Type': 'application/json' } });
@@ -27,10 +30,11 @@ const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 async function aguardarVez(nv, signal) {
   if (nv === 0) return true;
   const t0 = Date.now(), espera = 4500 * nv;
+  if (nv === 1 && Date.now() - iniTop > 3000) return true; // ninguém pediu Haiku agora (ex.: livro, bot): Kie entra direto
   const acimaFalhou = () => Date.now() - ultFalha[nv - 1] < 60000; // o nível logo acima falhou
   const acimaOk = () => { for (let i = 0; i < nv; i++) if (ultOk[i] >= t0) return true; return false; };
-  // nível 1 (Unifically) sem Kie configurada: entra direto
-  if (nv === 1 && !kieChave()) return true;
+  // Unifically sem Kie configurada: entra direto
+  if (nv === 2 && !kieChave()) return true;
   while (!acimaFalhou() && Date.now() - t0 < espera) {
     if (acimaOk()) return false;
     if (signal && signal.aborted) return false;
@@ -45,10 +49,23 @@ export async function iaFetch(_url, init) {
   try { corpo = JSON.parse(init.body); } catch (e) {}
   const modelo = String(corpo.model || '');
   const nv = nivel(modelo);
+  if (nv === 0) iniTop = Date.now();
   if (!(await aguardarVez(nv, init.signal))) return falso(499, 'reserva não usada');
   let r;
   try {
     if (nv === 0) {
+      const ch = (process.env.OPENROUTER_API_KEY || '').trim();
+      if (!ch) { ultFalha[0] = Date.now(); return falso(503, 'sem OPENROUTER_API_KEY'); }
+      corpo.model = modelo.slice(4);
+      r = await fetch(OR, Object.assign({}, init, {
+        headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://capivarinhalove.com.br', 'X-Title': 'Capivarinha Love' },
+        body: JSON.stringify(corpo)
+      }));
+      const d0 = await r.clone().json().catch(() => null);
+      if (!r.ok || !d0 || !d0.choices) { console.log('Haiku FALHA ' + r.status + ' ' + JSON.stringify(d0).slice(0, 200)); if (r.ok) r = falso(502, 'haiku sem resposta'); }
+      else contarUso('texto');
+    } else if (nv === 1) {
       const ch = kieChave();
       if (!ch) return falso(503, 'sem KIE_API_KEY');
       const nome = modelo.slice(4);
@@ -64,7 +81,7 @@ export async function iaFetch(_url, init) {
         console.log('Kie texto FALHA ' + nome + ' ' + JSON.stringify(d).slice(0, 200));
         r = falso(502, (d && d.msg) || 'kie sem resposta');
       }
-    } else if (nv === 2) {
+    } else if (nv === 3) {
       const ch = (process.env.OPENROUTER_API_KEY || '').trim();
       if (!ch) return falso(503, 'sem OPENROUTER_API_KEY');
       corpo.model = modelo.slice(3);
