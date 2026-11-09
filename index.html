@@ -1286,6 +1286,11 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .qrbox .qr{width:180px;height:180px;margin:0 auto 1rem;background:#fff;padding:9px;border-radius:12px;box-shadow:var(--shadow-sm);}
 .qrbox .qr svg{width:100%;height:100%;display:block;}
 .pix-code{display:flex;gap:.5rem;margin-top:.9rem;}
+.pxc-ok{display:inline-flex;align-items:center;gap:.35rem;background:#E3F7EA;color:#13914F;font-weight:900;font-size:.82rem;border-radius:999px;padding:.35rem .8rem;margin-bottom:.6rem;}
+.pxc-hd{display:flex;justify-content:space-between;align-items:flex-end;gap:.8rem;margin-bottom:.9rem;}
+.pxc-hd .pxc-tit{font-size:1.3rem;margin:.2rem 0 0;}
+.pxc-hd .pxc-pr{margin:0;font-size:1.7rem;white-space:nowrap;}
+#pixArea{scroll-margin-top:90px;margin-bottom:1.2rem}
 .pxc{background:#fff;border:1.5px solid #F3D3E0;border-radius:22px;padding:1.4rem 1.2rem 1.2rem;box-shadow:0 10px 30px rgba(196,24,87,.08);text-align:left;}
 .pxc-eb{font-size:.72rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#C41857;}
 .pxc-tit{font-family:Fraunces,Georgia,serif;font-size:1.6rem;line-height:1.15;color:var(--plum,#3B1527);margin:.3rem 0 .7rem;}
@@ -7080,10 +7085,9 @@ function htmlPixLimpo(payload, valor, teste, info){
   var svg=''; try{ svg=QRCodeGen.toSVG(payload,{ec:'M',quiet:2}); }catch(e){}
   return (teste?'<div class="demo-note info" style="margin-bottom:1rem">'+IC.shield+'<div><b>Modo de homologação da Efí.</b> Nenhum valor real será cobrado.</div></div>':'')+
     '<div class="pxc">'+
-      '<div class="pxc-eb">Pagamento do seu pedido</div>'+
-      '<div class="pxc-tit">'+esc(info.titulo)+'</div>'+
-      '<ul class="pxc-it">'+info.itens.map(function(t){ return '<li><span>✓</span>'+esc(t)+'</li>'; }).join('')+'</ul>'+
-      (valor?'<div class="pxc-pr">R$ '+fmtPreco(valor)+'</div>':'')+
+      '<div class="pxc-ok">✓ Seu Pix está pronto</div>'+
+      '<div class="pxc-hd"><div><div class="pxc-eb">Pagamento do seu pedido</div><div class="pxc-tit">'+esc(info.titulo)+'</div></div>'+
+        (valor?'<div class="pxc-pr">R$ '+fmtPreco(valor)+'</div>':'')+'</div>'+
       '<div class="pxc-box">'+
         '<p class="pxc-txt">Copie o código abaixo, abra o aplicativo do seu banco e escolha <b>Pix Copia e Cola</b>. A aprovação é imediata:</p>'+
         '<div class="pxc-bts"><button type="button" class="pxc-copiar" id="pxCopiar">Copiar código Pix</button>'+
@@ -7093,6 +7097,7 @@ function htmlPixLimpo(payload, valor, teste, info){
         '<textarea class="pxc-cod" id="pxTxt" readonly rows="6">'+esc(payload)+'</textarea>'+
         '<details class="pxc-qr"><summary>Ver QR Code para pagar em outro aparelho</summary>'+(svg?'<div class="qr">'+svg+'</div>':'')+'<p>Escaneie com o app do banco em outro celular.</p></details>'+
       '</div>'+
+      '<ul class="pxc-it" style="margin-top:1rem">'+info.itens.map(function(t){ return '<li><span>✓</span>'+esc(t)+'</li>'; }).join('')+'</ul>'+
       '<div class="pxc-rod">A liberação acontece quando o pagamento é confirmado. Sua música continua salva se você fechar esta página.</div>'+
     '</div>';
 }
@@ -7151,6 +7156,8 @@ function mostrarPix(payload, id, teste, valor){
   if(form) form.style.display='none';
   if(btn) btn.style.display='none';
   area.style.display='block';
+  /* o Pix vai pro TOPO da tela (antes do resumo), pra pessoa ver na hora */
+  try{ var pai=area.parentNode, prim=pai && pai.firstElementChild; if(prim && prim!==area) pai.insertBefore(area, prim); }catch(e){}
   var info=infoPixPedido();
   area.innerHTML=htmlPixLimpo(payload, valor, teste, info)+
     (teste?'<button class="btn btn-primary btn-block" id="simularBtn" style="margin-top:1rem">🧪 Simular pagamento (só teste)</button>':'');
@@ -7168,6 +7175,7 @@ function mostrarPix(payload, id, teste, valor){
     };
   }
   ligarPixLimpo(payload, id, function(){ telaSucesso(id); });
+  try{ window.scrollTo({top:0,behavior:'smooth'}); var sc=area.closest('.wz-body,.wz-scroll'); if(sc) sc.scrollTo({top:0,behavior:'smooth'}); area.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){ window.scrollTo(0,0); }
 }
 
 /* ---------- tela de confirmação: aguarda o webhook e libera o link ---------- */
