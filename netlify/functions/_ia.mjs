@@ -99,15 +99,15 @@ function jsonResp(obj, status) {
 const KIE_IMG = () => (process.env.KIE_MODELO_IMAGEM || 'nano-banana-2-lite').trim();
 const IMG_KIE = { 'google/nano-banana-2.1': 1, 'google/nano-banana-2': 1 };
 
-// "disjuntor": se o V5 deu erro interno nos últimos 20 min, as próximas músicas já começam no V4.5+
-// (sem o cliente esperar a falha). Passados 20 min sem erro, volta pro V5 sozinho.
+// "disjuntor": se o V6 deu erro interno nos últimos 20 min, as próximas músicas já começam no V6 mini
+// (sem o cliente esperar a falha). Passados 20 min sem erro, volta pro V6 sozinho.
 async function v5Ruim() { try { const x = await getStore('musicas').get('kie_v5_ruim', { type: 'json' }); return !!(x && Date.now() - x.em < 20 * 60000); } catch (e) { return false; } }
 async function criarMusicaKie(input) {
   const ch = kieChave();
   if (!ch) return null;
   const custom = !!input.custom;
   const corpo = {
-    customMode: custom, instrumental: false, model: (await v5Ruim()) ? 'V4_5PLUS' : 'V5',
+    customMode: custom, instrumental: false, model: (await v5Ruim()) ? 'V6_MINI' : 'V6',
     callBackUrl: 'https://capivarinhalove.com.br/',
     prompt: custom ? String(input.prompt || '').slice(0, 5000) : String(input.gpt_description_prompt || input.prompt || '').slice(0, 500)
   };
@@ -160,9 +160,9 @@ async function verMusicaKie(id) {
     const orig = await L.get('kiecorpo_' + id, { type: 'json' }).catch(() => null);
     if (orig && orig.corpo && tent < 3) {
       const corpo = limparCorpo(orig.corpo, tent >= 1 || /SENSITIVE/i.test(st + msg));
-      // erro interno do estúdio: troca de versão do modelo (V5 → V4.5+ → V4.5)
-      if (!/SENSITIVE/i.test(st + msg) && (orig.corpo.model || 'V5') === 'V5' && tent === 0) { try { await L.setJSON('kie_v5_ruim', { em: Date.now(), msg: String(msg).slice(0, 200) }); } catch (e) {} }
-      if (!/SENSITIVE/i.test(st + msg)) corpo.model = ['V4_5PLUS', 'V4_5', 'V4_5PLUS'][tent] || 'V4_5';
+      // erro interno do estúdio: troca de versão do modelo (V6 → V6 mini → V4.5+ → V6)
+      if (!/SENSITIVE/i.test(st + msg) && (orig.corpo.model || 'V6') === 'V6' && tent === 0) { try { await L.setJSON('kie_v5_ruim', { em: Date.now(), msg: String(msg).slice(0, 200) }); } catch (e) {} }
+      if (!/SENSITIVE/i.test(st + msg)) corpo.model = ['V6_MINI', 'V4_5PLUS', 'V6'][tent] || 'V6_MINI';
       try {
         const rr = await fetch(KIEAPI + '/api/v1/generate', { method: 'POST', headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
         const dd = await rr.json().catch(() => null);
