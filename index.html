@@ -210,7 +210,7 @@ h1.hero-t .script{color:var(--rose);font-size:1.02em;line-height:1.25;padding-ri
 .hx-vinil:after{content:"";position:absolute;inset:34%;border-radius:50%;background:linear-gradient(135deg,#F5CF6E,#E0A43B)}
 .hx-vinil b{position:absolute;inset:46%;border-radius:50%;background:#140612;z-index:2}
 @keyframes hxGira{to{transform:rotate(360deg)}}
-.hx-masc{position:absolute;right:max(.6rem,calc(50% - 15.5rem));top:5.2rem;width:clamp(96px,27vw,124px);z-index:3;animation:float 6s ease-in-out infinite}
+.hx-masc{position:absolute;right:max(.4rem,calc(50% - 16rem));top:3.4rem;width:clamp(104px,30vw,140px);z-index:3;animation:float 6s ease-in-out infinite}
 .hx-masc img{width:100%;display:block;filter:drop-shadow(0 12px 18px rgba(0,0,0,.5))}
 .hx-fone{position:absolute;left:12%;right:12%;top:-6%;height:42%;border:7px solid #F5CF6E;border-bottom:0;border-radius:999px 999px 0 0;box-shadow:0 0 14px rgba(245,207,110,.5)}
 .hx-fone:before,.hx-fone:after{content:"";position:absolute;bottom:-1.3rem;width:1.15rem;height:1.75rem;border-radius:.55rem;background:linear-gradient(180deg,#F5CF6E,#C9952F);box-shadow:0 4px 10px rgba(0,0,0,.35)}
@@ -250,7 +250,11 @@ h1.hx-t em{font-style:normal;background:linear-gradient(90deg,#F8DFA0,#F5CF6E 40
 .hx-ped{color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)}
 .hx-ped .hx-ic{background:rgba(245,207,110,.14)}
 .hx-conf{display:flex;justify-content:center;flex-wrap:wrap;gap:.35rem .9rem;font-size:.76rem;color:#CDB6C8;font-weight:600;margin-top:.2rem;position:relative;z-index:4}
-@media (prefers-reduced-motion:reduce){.hx-vinil,.hx-eq i,.hx-mus:before,.hx-wv i.on{animation:none}}
+.hx-aura{position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(circle,rgba(245,207,110,.35),rgba(255,79,163,.18) 45%,transparent 70%);z-index:-1}
+.hx-sp{position:absolute;font-style:normal;color:#F8DFA0;text-shadow:0 0 12px rgba(245,207,110,.9);animation:hxPisca 2.4s ease-in-out infinite}
+.hx-sp.s1{left:-14%;top:12%;font-size:1.1rem}.hx-sp.s2{right:-10%;top:-4%;font-size:.8rem;animation-delay:.8s}.hx-sp.s3{right:-12%;top:52%;font-size:1rem;color:#FF9FCC;animation-delay:1.5s}
+@keyframes hxPisca{0%,100%{opacity:.25;transform:scale(.85)}50%{opacity:1;transform:scale(1.1)}}
+@media (prefers-reduced-motion:reduce){.hx-sp,.hx-eq i,.hx-mus:before,.hx-wv i.on{animation:none}}
 .hn-in{position:relative;padding-top:1.4rem;padding-bottom:1.7rem;max-width:34rem}
 .hn-cap{position:absolute;right:max(.2rem,calc(50% - 17rem));top:.7rem;width:clamp(84px,24vw,128px);filter:drop-shadow(0 10px 16px rgba(150,60,80,.2));animation:float 6s ease-in-out infinite;z-index:1}
 .hn-tag{display:inline-flex;gap:.35rem;align-items:center;background:#fff;border:1px solid #F6D4DF;color:#B42357;font-weight:700;font-size:.78rem;border-radius:999px;padding:.4rem .8rem;position:relative;z-index:2}
@@ -4395,8 +4399,8 @@ function telaHome(){
   '</div></header>'+
 
   '<section class="hx"><div class="shell hx-in">'+
-    '<div class="hx-glow"></div><div class="hx-vinil" aria-hidden="true"><b></b></div>'+
-    '<div class="hx-masc" aria-hidden="true"><img src="'+MASCOTE+'" alt="" fetchpriority="high"><span class="hx-fone"></span></div>'+
+    '<div class="hx-glow"></div>'+
+    '<div class="hx-masc" aria-hidden="true"><span class="hx-aura"></span><img src="'+MASCOTE+'" alt="" fetchpriority="high"><i class="hx-sp s1">✦</i><i class="hx-sp s2">✦</i><i class="hx-sp s3">♪</i></div>'+
     '<span class="hx-tag">🎧 Prévia grátis · ouça antes de pagar</span>'+
     '<h1 class="hx-t">A trilha sonora do seu <em>amor</em></h1>'+
     '<div class="hx-eq" aria-hidden="true"><i style="--d:0.00s;--h:10px"></i><i style="--d:0.11s;--h:33px"></i><i style="--d:0.22s;--h:16px"></i><i style="--d:0.33s;--h:32px"></i><i style="--d:0.44s;--h:21px"></i><i style="--d:0.55s;--h:29px"></i><i style="--d:0.66s;--h:26px"></i><i style="--d:0.77s;--h:24px"></i><i style="--d:0.88s;--h:30px"></i><i style="--d:0.99s;--h:19px"></i><i style="--d:1.10s;--h:33px"></i><i style="--d:1.21s;--h:13px"></i><i style="--d:1.32s;--h:33px"></i><i style="--d:1.43s;--h:12px"></i><i style="--d:1.54s;--h:33px"></i><i style="--d:1.65s;--h:18px"></i></div>'+
