@@ -5,7 +5,7 @@
 //  ❌ NUNCA liga campanha (as que você desligou ficam desligadas) — só religa o que ELE pausou na emergência da IA
 //  ❌ NUNCA sobe orçamento — só te AVISA "pode subir" e você sobe
 // QUANDO DESLIGA (campanha ativa):
-//  1) nunca vendeu e já gastou R$ 14
+//  1) campanha nova que nunca vendeu e já gastou R$ 13
 //  2) HOJE gastou R$ 14 e não vendeu nada (campanha que vende bem há 3 dias: 2× o custo dela, ex. R$ 20)
 //  3) HOJE, com 3+ vendas, o custo por venda passou de R$ 13 (com 1-2 vendas: quando nem mais uma venda salva)
 //  4) HOJE o custo por venda está subindo (2 conferências seguidas) e já passou de R$ 12
@@ -28,7 +28,7 @@ export async function rodarRobo(simular) {
   const emerg = await L().get('emergencia', { type: 'json' }).catch(() => null);
   if (emerg && !simular) return { ok: true, motivo: 'modo emergência (IA fora do ar) — robô parado até voltar', feitas: [] };
   const imp = imposto(), tk = TICKET();
-  const prim = cfg.primeiraVendaMax || 14, lim = cfg.cpaLimite || 13, cpaSobe = cfg.cpaMax || 7;
+  const prim = cfg.primeiraVendaMax || 14, nova = cfg.novaSemVenda || 13, lim = cfg.cpaLimite || 13, cpaSobe = cfg.cpaMax || 7;
   const meta = await metaAds(7, null, null, true);
   if (!meta.configurado || meta.erro) { if (meta.erro && !simular) await logRobo({ tipo: 'erro', motivo: meta.erro }); return { ok: false, motivo: meta.erro }; }
   const [acoes, site] = await Promise.all([ultimasAcoes(), vendasSitePorCampanha(31)]);
@@ -46,7 +46,7 @@ export async function rodarRobo(simular) {
     if (cfg.autoPausar && !voceAtivou) {
       // campanha comprovada (vendeu barato nos últimos 3 dias) tem um pouco mais de fôlego no "zero venda hoje": 2 vendas do custo dela
       const k3 = cpa3dias(c, s, 0), folego = k3.vendas >= 5 && k3.cpa && k3.cpa <= lim ? Math.max(prim, 2 * k3.cpa) : prim;
-      if (vT === 0 && gT >= prim) pausar = 'nunca vendeu e já gastou ' + brl(gT);
+      if (vT === 0 && gT >= nova) pausar = 'campanha nova: gastou ' + brl(gT) + ' e não fez nenhuma venda (limite ' + brl(nova) + ')';
       else if (vH === 0 && gH >= folego) pausar = 'hoje gastou ' + brl(gH) + ' e não fez nenhuma venda';
       else if (vH > 0 && vH < 3 && gH >= lim * (vH + 1)) pausar = 'hoje ' + vH + ' venda(s) com ' + brl(gH) + ' — mesmo com mais uma venda passaria do limite de ' + brl(lim);
       else if (vH >= 3 && cpaH > lim) pausar = 'hoje o custo por venda está ' + brl(cpaH) + ' (' + vH + ' vendas, ' + brl(gH) + ') — passou do limite de ' + brl(lim);

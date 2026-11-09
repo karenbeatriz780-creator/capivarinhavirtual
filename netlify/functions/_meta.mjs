@@ -15,6 +15,7 @@ const loja = () => getStore('gastos');
 export const CFG_PADRAO = {
   autoPausar: true, autoSubir: true, // autoSubir = AVISAR que pode subir (o robô nunca sobe sozinho)
   limiteSemVenda: 15,          // (antigo) — agora vale primeiraVendaMax
+  novaSemVenda: 13,            // campanha NOVA (nunca vendeu): R$ 13 gastos sem venda → desliga
   primeiraVendaMax: 14,        // R$ gastos (valor do app do Meta) sem venda → desliga
   cpaLimite: 13,               // custo por venda de HOJE acima disso → desliga
   cpaMax: 7,                   // custo por venda até isso → avisa que PODE SUBIR (quem sobe é você)
@@ -34,7 +35,8 @@ export const CFG_PADRAO = {
 export async function lerCfg() {
   const c = await loja().get('auto_cfg', { type: 'json' }).catch(() => null);
   const o = Object.assign({}, CFG_PADRAO, c || {});
-  if (o.versaoRegras !== 2) Object.assign(o, { versaoRegras: 2, primeiraVendaMax: 14, cpaLimite: 13, segundaChance: false }); // regras novas de 08/11
+  if (o.versaoRegras !== 2 && o.versaoRegras !== 3) Object.assign(o, { primeiraVendaMax: 14, cpaLimite: 13, segundaChance: false });
+  if (o.versaoRegras !== 3) Object.assign(o, { versaoRegras: 3, novaSemVenda: 13 }); // regras novas de 08/11
   return o;
 }
 export async function salvarCfg(novo) {
@@ -46,6 +48,7 @@ export async function salvarCfg(novo) {
   if ('protecaoQueda' in novo) o.protecaoQueda = !!novo.protecaoQueda;
   if (novo.primeiraVendaMax != null && novo.primeiraVendaMax !== '') o.primeiraVendaMax = num(novo.primeiraVendaMax, 5, 500);
   if (novo.cpaMax != null && novo.cpaMax !== '') o.cpaMax = num(novo.cpaMax, 1, 500);
+  if (novo.novaSemVenda != null && novo.novaSemVenda !== '') o.novaSemVenda = num(novo.novaSemVenda, 3, 500);
   if (novo.cpaLimite != null && novo.cpaLimite !== '') o.cpaLimite = num(novo.cpaLimite, 1, 500);
   if (novo.kieMin != null && novo.kieMin !== '') o.kieMin = num(novo.kieMin, 0, 5000);
   if (novo.limiteSemVenda != null) o.limiteSemVenda = num(novo.limiteSemVenda, 5, 500);
