@@ -313,6 +313,17 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .hn-mus .eqp i{display:block;width:4px;height:100%;border-radius:2px;background:linear-gradient(180deg,#F5CF6E,#FF4FA3);transform-origin:bottom;animation:hxEq .9s ease-in-out infinite alternate}
 .hn-mus .eqp i:nth-child(2){animation-delay:.2s}.hn-mus .eqp i:nth-child(3){animation-delay:.4s}.hn-mus .eqp i:nth-child(4){animation-delay:.1s}
 .hn-mus.on .eqp{display:flex}
+.cp-per{display:flex;gap:.4rem;margin:0 0 .7rem}.cp-per button{flex:1;border:1px solid #E7D7DE;background:#fff;border-radius:999px;padding:.45rem .6rem;font-weight:700;font-size:.82rem;color:#5B2148}.cp-per button.on{background:#5B2148;color:#fff;border-color:#5B2148}.cp-per button:last-child{flex:none}
+.cp-ks{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:.6rem}.cp-k{background:#fff;border:1px solid #F1E2E7;border-radius:16px;padding:.7rem .8rem}.cp-k span{display:block;font-size:.72rem;color:#8A7380;font-weight:700}.cp-k b{display:block;font-size:1.25rem;margin:.1rem 0}.cp-k small{font-size:.7rem;color:#8A7380}
+.cp-k.pos b,.pos{color:#13914a}.cp-k.neg b,.neg{color:#D12D4A}
+.cp-proj{background:linear-gradient(120deg,#F7EEFF,#FFF4E2);border:1px solid #E9D7F5;border-radius:14px;padding:.65rem .8rem;font-size:.82rem;line-height:1.45;margin-bottom:.6rem}
+.cp-al{background:#FFF9E6;border:1px solid #F3DFA2;border-radius:14px;padding:.6rem .8rem;font-size:.82rem;line-height:1.45;margin-bottom:.6rem}.cp-al div+div{margin-top:.3rem}
+.cp-f{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.6rem}.cp-f button{border:1px solid #E7D7DE;background:#fff;border-radius:999px;padding:.3rem .65rem;font-size:.76rem;font-weight:700}.cp-f button.on{background:#2B1020;color:#fff}.cp-f i{font-style:normal;opacity:.6}
+.cp-c .cmp-top{display:flex;justify-content:space-between;gap:.5rem;align-items:flex-start}.cp-cat{flex:none;font-size:.72rem;font-weight:800;padding:.2rem .5rem;border-radius:999px;background:#F3EAF0}
+.cat-boa .cp-cat{background:#E3F7EA;color:#13914a}.cat-ruim .cp-cat{background:#FDE7EA;color:#D12D4A}.cat-nova .cp-cat{background:#E8F0FF;color:#2F5BD6}.cat-observar .cp-cat{background:#FFF6DC;color:#9A6B00}
+.cat-boa{border-left:4px solid #2FBF6B}.cat-ruim{border-left:4px solid #E5485F}.cat-nova{border-left:4px solid #4F7BFF}.cat-observar{border-left:4px solid #F2B705}
+.cp-m{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin:.55rem 0}.cp-m span{display:block;font-size:.66rem;color:#8A7380;font-weight:700}.cp-m b{display:block;font-size:.95rem}.cp-m small{font-size:.64rem;color:#8A7380}
+.cp-d{font-size:.78rem;line-height:1.4;color:#4A3A44}.cp-d small{color:#8A7380}.cp-pj{font-size:.76rem;margin-top:.35rem;color:#5B2148}
 .hn-mus{display:flex;align-items:center;gap:.75rem;background:#fff;border:1px solid #F1E2E7;border-radius:18px;padding:.75rem;margin-bottom:.6rem;box-shadow:0 6px 16px rgba(90,40,60,.06)}
 .hn-mus .pl{width:46px;height:46px;border-radius:50%;border:0;background:linear-gradient(135deg,#FF8DB8,#D63A72);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 14px rgba(214,58,114,.35);cursor:pointer}
 .hn-mus .pl svg{width:18px;height:18px;fill:#fff}
@@ -8034,7 +8045,7 @@ function pnlHojeHtml(pedidos, custos){
 function pnlCarregarRobo(){
   fetch('/.netlify/functions/admin-meta-config',{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
     if(!d||!d.cfg) return; _pnlCache.robo=d;
-    if(_pnlAba==='gastos' && !document.activeElement.closest('.robo')){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
+    if((_pnlAba==='gastos'||_pnlAba==='campanhas') && !document.activeElement.closest('.robo')){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
   }).catch(function(){});
 }
 function pnlCarregarGastos(hdr){
@@ -8237,6 +8248,63 @@ function pnlCampanhasAlerta(camps){
     (p.length?'<div>🚨 <b>Pausar agora:</b> '+p.map(function(c){ return esc(c.nome); }).join(', ')+'</div>':'')+
     (s.length?'<div>⬆️ <b>Subir orçamento:</b> '+s.map(function(c){ return esc(c.nome); }).join(', ')+'</div>':'')+'</div>';
 }
+/* ===== ABA CAMPANHAS: desempenho, classificação, projeção e duplicar ===== */
+var _pnlCamp=null, _pnlCampPer='hoje', _pnlCampFiltro='todas', _pnlCampCarr=false;
+function pnlCampCarregar(){
+  if(_pnlCampCarr) return; _pnlCampCarr=true;
+  fetch('/.netlify/functions/admin-campanhas?per='+_pnlCampPer,{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+    _pnlCampCarr=false; _pnlCamp=d; if(_pnlAba==='campanhas'){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
+  }).catch(function(){ _pnlCampCarr=false; _pnlCamp={erro:'Sem conexão.'}; });
+}
+function pnlCampHtml(){
+  var D=_pnlCamp, R=function(v){ return 'R$ '+fmtPreco(Number(v)||0); };
+  var robo=(_pnlCache.robo && _pnlCache.robo.ligado) ? pnlRoboHtml()+pnlNovoAnuncioHtml() : '';
+  var chipsPer='<div class="cp-per">'+[['hoje','Hoje'],['ontem','Ontem'],['7d','7 dias']].map(function(o){ return '<button type="button" data-cpper="'+o[0]+'" class="'+(_pnlCampPer===o[0]?'on':'')+'">'+o[1]+'</button>'; }).join('')+'<button type="button" data-cpper="'+_pnlCampPer+'" title="Atualizar">↻</button></div>';
+  if(!D){ pnlCampCarregar(); return '<div class="cp">'+chipsPer+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>'+robo+'</div>'; }
+  if(D.erro) return '<div class="cp">'+chipsPer+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>'+robo+'</div>';
+  var rs=D.resumo||{}, c=D.cont||{}, pj=D.projConta||{};
+  var lbl={hoje:'hoje',ontem:'ontem','7d':'nos últimos 7 dias'}[D.per]||'';
+  var resumo='<div class="cp-ks">'+
+    '<div class="cp-k"><span>Anúncio '+lbl+'</span><b>'+R(rs.gastoImp)+'</b><small>'+R(rs.gasto)+' no app do Meta</small></div>'+
+    '<div class="cp-k"><span>Vendas</span><b>'+(rs.vendas||0)+'</b><small>'+(rs.cpa?R(rs.cpa)+' por venda':'—')+'</small></div>'+
+    '<div class="cp-k"><span>Faturamento</span><b>'+R(rs.fat)+'</b><small>ticket R$ '+fmtPreco(D.ticket)+'</small></div>'+
+    '<div class="cp-k '+(rs.lucro>=0?'pos':'neg')+'"><span>Lucro</span><b>'+(rs.lucro<0?'-':'')+R(Math.abs(rs.lucro))+'</b><small>já com imposto</small></div></div>'+
+    '<div class="cp-proj">🔮 <b>Projeção dos próximos 7 dias</b> (orçamentos atuais, '+(rs.ativas||0)+' ativas · '+R(rs.orcDia)+'/dia): ~<b>'+(pj.vendas||0)+' vendas</b> · faturamento ~<b>'+R(pj.fat)+'</b> · lucro ~<b class="'+(pj.lucro>=0?'pos':'neg')+'">'+(pj.lucro<0?'-':'')+R(Math.abs(pj.lucro))+'</b></div>';
+  var alertas=(D.alertas||[]).length?'<div class="cp-al">'+D.alertas.map(function(a){ return '<div>'+esc(a)+'</div>'; }).join('')+'</div>':'';
+  var cats=[['todas','Todas',(D.campanhas||[]).length],['boa','🟢 Boas',c.boa||0],['nova','🆕 Novas',c.nova||0],['observar','🟡 Observar',c.observar||0],['ruim','🔴 Ruins',c.ruim||0],['pausada','⏸ Pausadas',c.pausada||0]];
+  var filtro='<div class="cp-f">'+cats.map(function(x){ return '<button type="button" data-cpf="'+x[0]+'" class="'+(_pnlCampFiltro===x[0]?'on':'')+'">'+x[1]+' <i>'+x[2]+'</i></button>'; }).join('')+'</div>';
+  var lista=(D.campanhas||[]).filter(function(x){ return _pnlCampFiltro==='todas'||x.cat===_pnlCampFiltro; }).map(function(x){
+    var p=x.per, pr=x.proj;
+    var bts='';
+    if(x.cat==='boa'||(x.cat==='pausada'&&x.d7.cpa&&x.d7.cpa<=7)) bts+='<button type="button" class="cmp-bt sobe forte" data-cpdup="'+esc(x.id)+'">⧉ Duplicar (cópia idêntica)</button>';
+    if(x.ativa) bts+='<button type="button" class="cmp-bt" data-cmpacao="pausar" data-cmpid="'+esc(x.id)+'">⏸ Pausar</button>';
+    else bts+='<button type="button" class="cmp-bt" data-cmpacao="ativar" data-cmpid="'+esc(x.id)+'">▶️ Ativar</button>';
+    return '<div class="cmp cp-c cat-'+x.cat+'"><div class="cmp-top"><b>'+esc(x.nome)+'</b><span class="cp-cat">'+x.txt+'</span></div>'+
+      '<div class="cp-m"><div><span>Gasto</span><b>'+R(p.gasto)+'</b><small>'+R(p.gastoImp)+' c/ imposto</small></div><div><span>Vendas</span><b>'+p.vendas+'</b><small>'+(p.cpa?R(p.cpa)+'/venda':'—')+'</small></div>'+
+        '<div><span>Lucro</span><b class="'+(p.lucro>=0?'pos':'neg')+'">'+(p.lucro<0?'-':'')+R(Math.abs(p.lucro))+'</b><small>fat. '+R(p.fat)+'</small></div><div><span>Orçamento</span><b>'+(x.orcamentoDia?R(x.orcamentoDia):'—')+'</b><small>/dia</small></div></div>'+
+      '<div class="cp-d">💡 '+esc(x.dica)+' <small>· 7 dias: '+x.d7.vendas+' vendas'+(x.d7.cpa?' a '+R(x.d7.cpa):'')+(x.d3.cpa?' · 3 dias: '+R(x.d3.cpa)+'/venda':'')+'</small></div>'+
+      (pr?'<div class="cp-pj">🔮 Próximos 7 dias: <b>~'+pr.atual.vendas+' vendas</b> · lucro <b class="'+(pr.atual.lucro>=0?'pos':'neg')+'">~'+(pr.atual.lucro<0?'-':'')+R(Math.abs(pr.atual.lucro))+'</b>'+(x.cat==='boa'?' · subindo +20%: ~'+pr.mais20.vendas+' vendas, lucro ~'+R(pr.mais20.lucro):'')+'</div>':'')+
+      '<div class="cmp-bts">'+bts+'</div></div>';
+  }).join('')||'<div class="pnl-nota">Nenhuma campanha nesse filtro.</div>';
+  return '<div class="cp">'+chipsPer+resumo+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
+    '<div class="dsh-nota">Gasto e custo por venda iguais ao app do Meta; lucro já desconta o imposto ('+String(D.imposto).replace('.',',')+'%). Vendas = maior entre Pixel e vendas reais do site. Projeção usa o custo por venda dos últimos 3 dias (ou 7) e o orçamento de hoje: é estimativa.</div></div>'+robo+'</div>';
+}
+function pnlCampLigar(body){
+  body.querySelectorAll('[data-cpper]').forEach(function(b){ b.onclick=function(){ _pnlCampPer=b.dataset.cpper; _pnlCamp=null; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); }; });
+  body.querySelectorAll('[data-cpf]').forEach(function(b){ b.onclick=function(){ _pnlCampFiltro=b.dataset.cpf; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); }; });
+  body.querySelectorAll('[data-cpdup]').forEach(function(b){ b.onclick=function(){
+    var nome=(b.closest('.cmp').querySelector('.cmp-top b')||{}).textContent||'';
+    if(!confirm('Duplicar "'+nome+'"?\n\nCria uma cópia idêntica (mesmo vídeo, público e orçamento), já ligada.')) return;
+    if(!pedirSenhaAdmin()) return;
+    b.disabled=true; b.textContent='Duplicando…';
+    fetch('/.netlify/functions/admin-campanhas',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'duplicar',id:b.dataset.cpdup})})
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,s:r.status,d:d}; }); })
+      .then(function(x){ if(x.s===401){ _pnlChave=''; Store.del('cl_admin_key'); } if(!x.ok){ toast((x.d&&x.d.erro)||'Não deu certo.'); b.disabled=false; b.textContent='⧉ Duplicar (cópia idêntica)'; return; }
+        toast('Cópia criada e ligada ✓'); _pnlCamp=null; pnlCampCarregar(); })
+      .catch(function(){ toast('Sem conexão.'); b.disabled=false; });
+  }; });
+  if(_pnlAba==='campanhas'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlCache.robo) pnlCarregarRobo(); }
+}
 function pnlLigarCampanhas(body){
   body.querySelectorAll('[data-cmpacao]').forEach(function(bt){
     bt.onclick=function(){
@@ -8251,7 +8319,7 @@ function pnlLigarCampanhas(body){
           if(x.s===401){ _pnlChave=''; Store.del('cl_admin_key'); }
           if(!x.ok){ toast((x.d&&x.d.erro)||'Não deu certo.'); bt.disabled=false; bt.textContent=txt; return; }
           toast(ac==='pausar'?'Campanha pausada ✓':ac==='ativar'?'Campanha ativada ✓':'Orçamento atualizado ✓');
-          pnlCarregarGastos({headers:{'x-admin-key':_pnlChave}});
+          pnlCarregarGastos({headers:{'x-admin-key':_pnlChave}}); _pnlCamp=null; if(_pnlAba==='campanhas') pnlCampCarregar();
         }).catch(function(){ toast('Sem conexão.'); bt.disabled=false; bt.textContent=txt; });
     };
   });
@@ -8336,11 +8404,7 @@ function pnlGastosHtml(pedidos){
   return '<div class="gst">'+
     '<div class="gst-top"><div><b>Gastos e lucro</b><span>tudo automático · dólar hoje R$ '+fmtPreco(G.usd)+'</span></div></div>'+
     '<div class="gst-ks">'+kieBox+metaBox+'<div class="gst-k"><span>IA hoje</span><b>R$ '+fmtPreco(gH.kie||0)+'</b><small>'+(usoH.texto||0)+' textos · '+(usoH.musica||0)+' músicas · '+(usoH.imagem||0)+' imagens</small></div></div>'+
-    (G.meta.configurado && !G.meta.erro ? pnlRoboHtml() : '')+
-    (camp?'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas · últimos 7 dias · o que fazer</div>'+
-      pnlCampanhasAlerta(campsV)+'<div class="cmp-leg"><span>🚨 pausar</span><span>⬆️ subir</span><span>🟢 pode subir</span><span>🔒 não mexer</span><span>🟡 observar</span></div>'+camp+
-      '<div class="dsh-nota">Gasto já com o imposto do Meta ('+String(G.impostoMeta!=null?G.impostoMeta:12.15).replace('.',',')+'%). Vendas e valor vêm do Pixel do Meta. Os botões pedem a senha de administrador. Subir é sempre +20% e fica travado em campanha nova, em aprendizado ou mexida há menos de 72 h.</div></div>':'')+
-    (G.meta.configurado && !G.meta.erro ? pnlNovoAnuncioHtml() : '')+
+    (G.meta.configurado && !G.meta.erro ? '<div class="dsh-card gst-card"><div class="dsh-t">📣 Campanhas, robô e anúncio novo</div><div class="dsh-nota">Agora ficam na aba <b>Campanhas</b>.</div><button type="button" class="cmp-bt sobe forte" data-aba="campanhas">Abrir Campanhas</button></div>' : '')+
     '<div class="gst-chips">'+chips+'</div>'+custom+perHtml+
     (!G.meta.configurado?'<div class="dsh-card gst-card"><div class="dsh-t">Como ligar o Meta Ads (uma vez só)</div><ol class="gst-passos">'+
       '<li>Configurações do negócio → <b>Usuários do sistema</b> → crie um usuário e atribua a <b>conta de anúncios</b> e o <b>app</b>.</li>'+
@@ -8725,7 +8789,7 @@ function desenharPainel(pedidos, visitas, musicas){
 
   body.innerHTML=
     '<div class="pnl-abas pnl-abas-main" id="pnlAbas">'+
-      [['hoje','📊','Dashboard'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
+      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
         return '<button type="button" class="pnl-aba'+(_pnlAba===a[0]?' on':'')+'" data-aba="'+a[0]+'"><i>'+a[1]+'</i><span>'+a[2]+'</span></button>'; }).join('')+
     '</div>'+
     '<div class="pnl-abas pnl-abas-mais"><small>Mais:</small>'+
@@ -8739,6 +8803,7 @@ function desenharPainel(pedidos, visitas, musicas){
       '<form class="pnl-busca" id="pnlBusca"><input type="tel" inputmode="numeric" id="pnlBuscaTel" placeholder="Buscar pelo WhatsApp do cliente" value="'+esc(_pnlTel)+'"><button type="submit">Buscar</button>'+(_pnlTel?'<button type="button" id="pnlBuscaLimpa">Limpar</button>':'')+'</form>'+
     '</div></div>'+
     (_pnlAba==='gastos' ? pnlGastosHtml(pedidos) : '')+
+    (_pnlAba==='campanhas' ? pnlCampHtml() : '')+
     (_pnlAba==='hoje' ? pnlHojeHtml(pedidos, _pnlCache.custos||{}) : '')+
     (_pnlAba==='pagos'
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+
@@ -8790,7 +8855,7 @@ function desenharPainel(pedidos, visitas, musicas){
     carregarPainel(_pnlChave||Store.get('cl_admin_key')||'', function(erro){ if(erro){ toast('Não consegui carregar tudo agora.'); _pnlCompleto=false; } });
   };
   ligarHoje(body);
-  pnlLigarCampanhas(body); pnlLigarRobo(body);
+  pnlLigarCampanhas(body); pnlLigarRobo(body); pnlCampLigar(body);
   body.querySelectorAll('[data-gstper]').forEach(function(b){ b.onclick=function(){ _pnlGstPer=b.dataset.gstper; if(_pnlGstPer==='custom' && !_pnlGstDe){ var r=pnlGstRange(); _pnlGstAte=pnlKeyMs(Date.now()); _pnlGstDe=pnlKeyMs(pnlInicioDia(Date.now(),-13)+3600000); } desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); }; });
   var gd=el('gstDatas'); if(gd) gd.onsubmit=function(e){ e.preventDefault(); var a=el('gstDe').value, z=el('gstAte').value; if(!a||!z||a>z){ toast('Escolha a data inicial e a final.'); return; } _pnlGstDe=a; _pnlGstAte=z; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); };
   body.querySelectorAll('[data-expandir]').forEach(function(b){ b.onclick=function(){ var m=b.closest('.pc').querySelector('.pc-mais'); m.hidden=!m.hidden; b.innerHTML=b.innerHTML.replace(m.hidden?'▴':'▾', m.hidden?'▾':'▴'); }; });
@@ -8800,6 +8865,7 @@ function desenharPainel(pedidos, visitas, musicas){
   body.querySelectorAll('[data-aba]').forEach(function(b){
     b.onclick=function(){ _pnlAba=b.dataset.aba; _pnlLimite=30; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas);
       if(_pnlAba==='zap') pnlZapCarregar();
+      if(_pnlAba==='campanhas'){ pnlCampCarregar(); pnlCarregarRobo(); }
       if(_pnlAba==='dados' && !_pnlFunilOk){
         fetch('/.netlify/functions/admin-funil',{headers:{'x-admin-key':_pnlChave}}).then(function(r){ return r.json(); })
           .then(function(d){ if(d && d.visitas){ _pnlFunilOk=true; if(_pnlAba==='dados') desenharPainel(_pnlCache.pedidos,d.visitas,_pnlCache.musicas); } }).catch(function(){});
