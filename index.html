@@ -6757,11 +6757,14 @@ function htmlCombosPrevia(){
   return htmlOpcoesCombo(W.comboDaMusica?W.produto:'musica');
 }
 /* música infantil (estilo infantil ou "pro meu filho/filha") → oferece o Livro Mágico */
-function musicaInfantil(){ return /^infantil/.test(W.musicaEstilo||'') || W.musicaPara==='filho'; }
+/* fora do wizard (link #/ouvir do WhatsApp) não existe W: usa os dados da música desse link */
+var _ouvirMus=null;
+function dadosMusAtual(){ var noOuvir=/^#\/ouvir\//.test(location.hash); if(W && !noOuvir) return W; var m=_ouvirMus||{}; return {musicaEstilo:m.estilo||'', musicaPara:m.relacao||'', musicaParaNome:m.nomes||''}; }
+function musicaInfantil(){ var x=dadosMusAtual(); return /^infantil/.test(x.musicaEstilo||'') || x.musicaPara==='filho' || x.musicaPara==='filha'; }
 function htmlOpcoesCombo(esc1){
   var pm=PACOTES.musica.preco;
   if(musicaInfantil()){
-    var nmK=String(W.musicaParaNome||'').split(/,|\s+e\s+/)[0].trim()||'seu filho';
+    var nmK=String(dadosMusAtual().musicaParaNome||'').split(/,|\s+e\s+/)[0].trim()||'seu filho';
     var opsK=[
       ['musica','🎵','4 Músicas Personalizadas','Estas 2 completas, sem corte + mais 2 liberadas depois do pagamento, com outra letra e outro estilo.',pm,'',''],
       ['livro','📖','2 Músicas + Livro Mágico','Um livro completo com a história e o rostinho de '+esc(nmK)+', pra imprimir ou ler no celular, + 2 músicas personalizadas.',37,'PRESENTE COMPLETO','livro']
@@ -9265,6 +9268,7 @@ function telaOuvir(arg){
       if(d.pago && d.id){ location.hash='#/p/'+d.id+'/c'; return; }
       var para=(d.para||'').trim();
       var valor=d.valor||9.99;
+      _ouvirMus=Object.assign({nomes:para},d.musica||{});
       function versao(u,rot){
         if(!u) return '';
         return '<div class="musica-versao"><div class="mv-topo"><b>'+rot+'</b></div>'+
@@ -9315,7 +9319,7 @@ function telaOuvir(arg){
           .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent=(d.oferta4?'Quero as 4 músicas — pagar R$ ':'Quero minha música — pagar R$ ')+fmtPreco(valor)+' no Pix'; });
       };
     })
-    .catch(function(){ telaPresenteNaoEncontrado(); });
+    .catch(function(e){ console.error('telaOuvir:', e && (e.stack||e.message)); telaPresenteNaoEncontrado(); });
 }
 function telaPresenteNaoEncontrado(){
   el('app').innerHTML='<div class="g-scope"><div class="expired">'+
