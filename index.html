@@ -5259,7 +5259,7 @@ function dispararGeracaoLetra(){
    Se falhar ou passar de 11 s, cai no jeito antigo (segundo plano + conferir). */
 function pedirLetra(dados){
   var id='l'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
-  var ctl=window.AbortController?new AbortController():null, tm=setTimeout(function(){ if(ctl) ctl.abort(); },11000);
+  var ctl=window.AbortController?new AbortController():null, tm=setTimeout(function(){ if(ctl) ctl.abort(); },26000);
   return fetch('/.netlify/functions/letra-rapida',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},dados,{id:id})),signal:ctl?ctl.signal:undefined})
     .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
     .then(function(res){ clearTimeout(tm); if(res.ok && res.d && res.d.letra) return {ok:true, d:{letra:res.d.letra}}; return pedirLetraSegundoPlano(dados); })

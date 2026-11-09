@@ -9,7 +9,7 @@ import { iaFetch, RESERVA_OR, TEXTO_KIE, TEXTO_TOP } from './_ia.mjs';
 // Se nenhum responder a tempo, o site cai no modo antigo (gerar-letra-background).
 // (nov/2026) a Unifically tirou o GPT-5.4 e o 5.4-mini — por isso a letra parou.
 const MODELOS = [...TEXTO_TOP, ...TEXTO_KIE, 'google/gemini-3.8-flash', 'openai/gpt-6.1-terra', 'anthropic/claude-haiku-4-5', 'openai/gpt-6.1-sol', ...RESERVA_OR];
-const LIMITE_MS = 10000;
+const LIMITE_MS = 24000; // espera a IA mais rápida terminar (antes desistia em 10 s e recomeçava do zero no modo lento)
 
 function erro(msg, status) {
   return new Response(JSON.stringify({ erro: msg }), { status, headers: { 'Content-Type': 'application/json' } });
@@ -38,6 +38,10 @@ async function testarModelos() {
 }
 
 export default async (req) => {
+  if (req.method === 'GET' && new URL(req.url).searchParams.get('diag')) {
+    const h = await getStore('letras').get('diag_tempos', { type: 'json' }).catch(() => null);
+    return new Response(JSON.stringify(h || [], null, 1), { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
+  }
   if (req.method === 'GET' && new URL(req.url).searchParams.get('teste')) {
     return new Response(JSON.stringify(await testarModelos(), null, 2), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
   }
@@ -63,7 +67,7 @@ export default async (req) => {
     ' Escreva a música COMPLETA (todas as partes da estrutura pedida), nunca só um trecho.';
 
   const t0 = Date.now();
-  const ctrls = [];
+  const ctrls = [], diag = [];
   async function chamar(m) {
     const ctl = new AbortController(); ctrls.push(ctl);
     try {
@@ -76,12 +80,13 @@ export default async (req) => {
       const d = await r.json().catch(() => null);
       const ch = d && d.choices && d.choices[0];
       const txt = ch && ch.message && ch.message.content;
-      if (!r.ok || !txt || (ch.finish_reason === 'length')) { console.log('letra-rapida FALHA ' + m + ' ' + r.status + ' ' + JSON.stringify(d).slice(0, 200)); return null; }
+      if (!r.ok || !txt || (ch.finish_reason === 'length')) { diag.push({ m, ms: Date.now() - t0, ok: false, erro: (r.status + ' ' + JSON.stringify((d && (d.error || d.msg)) || (ch && ch.finish_reason) || '').slice(0, 160)) }); console.log('letra-rapida FALHA ' + m + ' ' + r.status + ' ' + JSON.stringify(d).slice(0, 200)); return null; }
       const letra = limparResposta(txt);
       if (letra.split('\n').filter((l) => l.trim()).length < 10) { console.log('letra-rapida curta ' + m); return null; }
       console.log('letra-rapida OK ' + m + ' em ' + (Date.now() - t0) + 'ms');
+      diag.push({ m, ms: Date.now() - t0, ok: true });
       return { letra, modelo: m };
-    } catch (e) { return null; }
+    } catch (e) { if (!(e && e.name === 'AbortError')) diag.push({ m, ms: Date.now() - t0, ok: false, erro: String(e && e.message).slice(0, 120) }); return null; }
   }
   // primeiro que entregar uma letra boa ganha; os outros são cancelados
   const vencedor = await new Promise((resolve) => {
@@ -90,6 +95,11 @@ export default async (req) => {
     MODELOS.forEach((m) => chamar(m).then((v) => { if (v) { clearTimeout(tm); resolve(v); } else if (--faltam === 0) { clearTimeout(tm); resolve(null); } }));
   });
   ctrls.forEach((c) => { try { c.abort(); } catch (e) {} });
+  try { // diagnóstico: as últimas 10 letras, com o tempo de cada IA
+    const L = getStore('letras'), h = (await L.get('diag_tempos', { type: 'json' }).catch(() => null)) || [];
+    h.unshift({ em: new Date(Date.now() - 3 * 3600000).toISOString().slice(11, 19), total: Date.now() - t0, venceu: vencedor ? vencedor.modelo : 'NENHUMA (caiu no modo lento)', ias: diag });
+    await L.setJSON('diag_tempos', h.slice(0, 10));
+  } catch (e) {}
   if (!vencedor) return erro('IA lenta agora.', 504);
   try { if (id) await getStore('letras').setJSON(id, { pronto: true, letra: vencedor.letra, em: Date.now(), modelo: vencedor.modelo }); } catch (e) {}
   try { await indexarDia('l'); } catch (e) {}
