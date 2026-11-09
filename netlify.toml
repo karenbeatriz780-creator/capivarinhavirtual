@@ -12,3 +12,15 @@
   from = "/p/*"
   to = "/.netlify/functions/og?id=:splat"
   status = 200
+
+# imagens do site (mascote, depoimentos, medidor): não mudam → guarda no celular por 1 ano
+[[headers]]
+  for = "/a/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# áudios de exemplo e trilhas: guarda por 7 dias
+[[headers]]
+  for = "/*.mp3"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

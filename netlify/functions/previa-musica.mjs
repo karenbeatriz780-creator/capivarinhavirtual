@@ -158,6 +158,13 @@ export default async (req) => {
       } catch (e) {}
     }
 
+    // a prévia de 70 s fica guardada: o celular pede o mesmo áudio várias vezes (pedaços)
+    // e sem isso cada pedaço baixava e cortava a música inteira de novo (gasto na Netlify)
+    const chaveCache = 'pv_' + (pedidoId ? 'p_' + pedidoId : 't_' + taskId) + '_' + v;
+    const cache = getStore('previas');
+    let corte = null;
+    try { const c = await cache.getWithMetadata(chaveCache, { type: 'arrayBuffer' }); if (c && c.data && c.data.byteLength > 50 * 1024) corte = Buffer.from(c.data); } catch (e) {}
+    if (!corte) {
     let buf = null;
     try { const up = await fetch(real); if (up.ok) buf = Buffer.from(await up.arrayBuffer()); } catch (e) {}
     if (!buf || buf.length < 50 * 1024) {
@@ -175,8 +182,10 @@ export default async (req) => {
     // Assim o player mostra a duração verdadeira (ex.: 3:42) e para de cantar no 1:10.
     // O arquivo continua sem o resto da música (quem não pagou nunca recebe ela inteira).
     const so70 = Buffer.from(buf.subarray(0, fim > ini ? fim : buf.length));
-    let corte = so70;
+    corte = so70;
     try { corte = completarComSilencio(buf, ini, so70) || so70; } catch (e) { console.error('previa silêncio:', e && e.message); }
+    try { await cache.set(chaveCache, corte, { metadata: { em: Date.now() } }); } catch (e) {}
+    }
     const total = corte.length;
 
     const headers = {

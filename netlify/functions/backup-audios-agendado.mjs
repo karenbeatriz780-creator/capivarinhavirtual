@@ -12,6 +12,14 @@ export default async () => {
   if (base) {
     try { await fetch(base + '/.netlify/functions/guardar-audios-background', { method: 'POST' }); } catch (e) { console.error('backup-audios-agendado:', e && e.message); }
   }
+  // prévias guardadas (cache do áudio de 70 s): apaga as com mais de 3 dias
+  try {
+    const pv = getStore('previas'), { blobs } = await pv.list({ prefix: 'pv_' });
+    for (const b of blobs.slice(0, 2000)) {
+      const m = await pv.getMetadata(b.key).catch(() => null);
+      if (!m || !m.metadata || Date.now() - (m.metadata.em || 0) > 3 * 86400000) await pv.delete(b.key).catch(() => {});
+    }
+  } catch (e) { console.error('limpar prévias:', e && e.message); }
   try {
     const livros = getStore('livros'), presentes = getStore('presentes');
     const { blobs } = await livros.list({ prefix: 'foto/' });

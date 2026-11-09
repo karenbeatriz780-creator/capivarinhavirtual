@@ -1,4 +1,4 @@
-// AVISOS NO WHATSAPP + PROTEÇÃO CONTRA QUEDA — roda a cada 2 min, cada coisa no seu horário:
+// AVISOS NO WHATSAPP + PROTEÇÃO CONTRA QUEDA — roda a cada 10 min, cada coisa no seu horário:
 //  • 7h: resumo de ONTEM (faturamento, anúncio com imposto, IA, lucro) + saldo da IA
 //  • 12h, 17h e 19h: andamento de HOJE (bom / precisa de atenção)
 //  • na hora: hoje saiu do zero 🎉 · hoje passou de R$ 30 de prejuízo ⚠️ · saldo da IA abaixo de R$ 10 🔻
@@ -10,7 +10,7 @@ import { lerCfg, aplicarAcao, logRobo, avisar } from './_meta.mjs';
 import { resumoDia, textoResumo, saldoKieBRL, diaBR, horaBR, brl, rankingCampanhas } from './_resumo.mjs';
 import { iaFetch, TEXTO_KIE, RESERVA_OR } from './_ia.mjs';
 
-export const config = { schedule: '*/2 * * * *' };
+export const config = { schedule: '*/10 * * * *' };
 const L = () => getStore({ name: 'gastos', consistency: 'strong' });
 const uma = async (k) => { if (await L().get(k).catch(() => null)) return false; await L().set(k, '1').catch(() => {}); return true; }; // só uma vez
 const RODAPE = '\n\n_Responda "ok" pra os avisos continuarem chegando._';
@@ -83,9 +83,9 @@ export async function rodarAvisos(forcar) {
     }
   }
   // a cada 10 min: proteção contra queda
-  if (min % 10 < 2 || forcar === 'saude') { await protecao(cfg); }
+  await protecao(cfg);
   // a cada 10 min (deslocado): saldo da IA, saiu do zero, prejuízo
-  if (min % 10 >= 4 && min % 10 < 6) {
+  {
     const kie = await saldoKieBRL();
     if (kie && kie.reais < (cfg.kieMin || 10) && await uma('av_kie_' + hoje)) await avisar('🔻 *Saldo da IA baixo:* só ' + brl(kie.reais) + ' na Kie (' + Math.round(kie.creditos) + ' créditos). Recarrega pra não parar de gerar música.');
     if (h >= 8) {
