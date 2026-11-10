@@ -8084,7 +8084,7 @@ function pnlRoboHtml(){
   var inp=function(id,rot,val,tipo,extra){ return '<label>'+rot+'<input id="'+id+'" type="'+(tipo||'number')+'" value="'+esc(String(val==null?'':val))+'" '+(extra||'')+'></label>'; };
   return '<div class="dsh-card gst-card robo"><div class="dsh-t">🤖 Robô do tráfego <span class="robo-st '+(liga?'on':'')+'">'+(liga?'ligado':'desligado')+'</span></div>'+
     '<div class="robo-res">'+
-      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>Desliga sozinho</b> campanha ativa ruim: campanha nova com <b>R$ '+fmtPreco(c.novaSemVenda||13)+'</b> sem nenhuma venda, <b>R$ '+fmtPreco(c.primeiraVendaMax||14)+'</b> gastos hoje sem venda, custo por venda de hoje acima de <b>R$ '+fmtPreco(c.cpaLimite||13)+'</b> ou subindo sem parar, prejuízo 3 dias (valores do app do Meta)</div>'+
+      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>Desliga sozinho</b> campanha ativa ruim: olhando só o dia de hoje: <b>R$ '+fmtPreco(c.primeiraVendaMax||15)+'</b> gastos hoje sem nenhuma venda, custo por venda de hoje acima de <b>R$ '+fmtPreco(c.cpaLimite||13)+'</b> (com 1 venda só desliga em R$ 26), prejuízo 3 dias seguidos e hoje também. Se você religar uma campanha, ele não mexe nela até a meia-noite (valores do app do Meta)</div>'+
       '<div>🚫 <b>Nunca liga</b> campanha e <b>nunca sobe</b> orçamento — quem liga e sobe é você</div>'+
       '<div>'+(c.autoSubir?'✅':'⛔')+' <b>Avisa que pode subir</b> quando a campanha vende a até <b>R$ '+fmtPreco(c.cpaMax||7)+'</b> (hoje e 3 dias)</div>'+
       '<div>'+(c.protecaoQueda!==false?'✅':'⛔')+' <b>Proteção</b>: se a IA do site cair, pausa tudo e religa quando voltar</div>'+
@@ -8096,7 +8096,7 @@ function pnlRoboHtml(){
       '<label class="robo-sw"><input type="checkbox" id="rbPausar" '+(c.autoPausar?'checked':'')+'> Pausar sozinho o que está ruim</label>'+
       '<label class="robo-sw"><input type="checkbox" id="rbSubir" '+(c.autoSubir?'checked':'')+'> Me avisar quando uma campanha pode subir</label>'+
       '<label class="robo-sw"><input type="checkbox" id="rbQueda" '+(c.protecaoQueda!==false?'checked':'')+'> Pausar tudo se a IA do site cair</label>'+
-      '<div class="robo-g">'+inp('rbNova','Campanha nova: desligar com R$ sem venda',c.novaSemVenda||13,'number','min="3" step="1"')+'</div><div class="robo-g">'+inp('rbLimite','Desligar com R$ gastos hoje sem venda',c.primeiraVendaMax||14,'number','min="5" step="1"')+inp('rbCpaLim','Desligar se custo/venda de hoje passar de R$',c.cpaLimite||13,'number','min="1" step="0.5"')+'</div>'+
+      '<div class="robo-g">'+inp('rbLimite','Desligar com R$ gastos hoje sem venda',c.primeiraVendaMax||15,'number','min="5" step="1"')+inp('rbCpaLim','Desligar se custo/venda de hoje passar de R$',c.cpaLimite||13,'number','min="1" step="0.5"')+'</div>'+
       '<div class="robo-g">'+inp('rbCpa','Avisar que pode subir com custo/venda até R$',c.cpaMax||7,'number','min="1" step="0.5"')+'</div>'+
       '<div class="robo-g">'+inp('rbKie','Avisar quando a IA tiver menos de R$',c.kieMin==null?10:c.kieMin,'number','min="0" step="1"')+inp('rbOrc','Orçamento inicial (R$/dia)',c.orcInicial,'number','min="6" step="1"')+'</div><div class="robo-g">'+
         inp('rbTeto','Teto por campanha (R$/dia)',c.tetoCampanha,'number','min="6" step="1"')+inp('rbTotal','Teto total (R$/dia)',c.tetoTotal,'number','min="6" step="1"')+'</div>'+
@@ -8127,7 +8127,7 @@ function pnlLigarRobo(body){
   var sv=el('rbSalvar'); if(sv) sv.onclick=function(){
     if(!pedirSenhaAdmin()) return;
     var v=function(id){ var e=el(id); return e?e.value:''; };
-    var cfg={autoPausar:el('rbPausar').checked, autoSubir:el('rbSubir').checked, segundaChance:false, cpaLimite:v('rbCpaLim'), protecaoQueda:el('rbQueda').checked, novaSemVenda:v('rbNova'), primeiraVendaMax:v('rbLimite'), cpaMax:v('rbCpa'), kieMin:v('rbKie'), orcInicial:v('rbOrc'), tetoCampanha:v('rbTeto'), tetoTotal:v('rbTotal'),
+    var cfg={autoPausar:el('rbPausar').checked, autoSubir:el('rbSubir').checked, segundaChance:false, cpaLimite:v('rbCpaLim'), protecaoQueda:el('rbQueda').checked, primeiraVendaMax:v('rbLimite'), cpaMax:v('rbCpa'), kieMin:v('rbKie'), orcInicial:v('rbOrc'), tetoCampanha:v('rbTeto'), tetoTotal:v('rbTotal'),
       zapAvisos:v('rbZap'), textoPadrao:v('rbTexto'), tituloPadrao:v('rbTitulo'), link:v('rbLink'), pageId:v('rbPage'), igId:v('rbIg'), pixelId:v('rbPixel')};
     sv.disabled=true; sv.textContent='Salvando…';
     post('/.netlify/functions/admin-meta-config',{cfg:cfg}).then(function(d){ _pnlCache.robo.cfg=d.cfg; toast('Regras do robô salvas ✓'); _pnlRoboAberto=false; pnlCarregarRobo(); })

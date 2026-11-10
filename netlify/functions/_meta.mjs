@@ -15,8 +15,8 @@ const loja = () => getStore('gastos');
 export const CFG_PADRAO = {
   autoPausar: true, autoSubir: true, // autoSubir = AVISAR que pode subir (o robô nunca sobe sozinho)
   limiteSemVenda: 15,          // (antigo) — agora vale primeiraVendaMax
-  novaSemVenda: 13,            // campanha NOVA (nunca vendeu): R$ 13 gastos sem venda → desliga
-  primeiraVendaMax: 14,        // R$ gastos (valor do app do Meta) sem venda → desliga
+  novaSemVenda: 15,            // (antigo) — o robô agora olha só o dia de hoje
+  primeiraVendaMax: 15,        // R$ gastos (valor do app do Meta) sem venda → desliga
   cpaLimite: 13,               // custo por venda de HOJE acima disso → desliga
   cpaMax: 7,                   // custo por venda até isso → avisa que PODE SUBIR (quem sobe é você)
   segundaChance: false,         // campanha pausada por resultado ruim volta SÓ no horário de pico, uma vez
@@ -36,7 +36,7 @@ export async function lerCfg() {
   const c = await loja().get('auto_cfg', { type: 'json' }).catch(() => null);
   const o = Object.assign({}, CFG_PADRAO, c || {});
   if (o.versaoRegras !== 2 && o.versaoRegras !== 3) Object.assign(o, { primeiraVendaMax: 14, cpaLimite: 13, segundaChance: false });
-  if (o.versaoRegras !== 3) Object.assign(o, { versaoRegras: 3, novaSemVenda: 13 }); // regras novas de 08/11
+  if (o.versaoRegras !== 4) Object.assign(o, { versaoRegras: 4, novaSemVenda: 15, primeiraVendaMax: 15, cpaLimite: 13 }); // regras de 10/11: só o dia de hoje, R$ 15 sem venda
   return o;
 }
 export async function salvarCfg(novo) {
