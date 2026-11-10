@@ -7936,6 +7936,29 @@ function pnlZapHtml(){
   }).join(''):'<div class="sub">Nada ainda.</div>')+'</div>';
   return h;
 }
+/* busca de Pix → pedido (aba Pagos) */
+document.addEventListener('submit',function(e){
+  if(!e.target || e.target.id!=='pnlBuscaPix') return;
+  e.preventDefault();
+  var q=(el('pnlBuscaPixQ').value||'').trim(), out=el('pnlBuscaPixRes'); if(!q) return;
+  if(!pedirSenhaAdmin()) return;
+  out.innerHTML='<div class="sub" style="margin-top:.5rem">Procurando na Efí…</div>';
+  fetch('/.netlify/functions/admin-buscar-pix?q='+encodeURIComponent(q),{headers:{'x-admin-key':_pnlChave}})
+    .then(function(r){ return r.json(); }).then(function(d){
+      if(d.erro){ out.innerHTML='<div class="sub" style="margin-top:.5rem;color:#C62828">'+esc(d.erro)+'</div>'; return; }
+      if(!d.itens.length){ out.innerHTML='<div class="sub" style="margin-top:.5rem">'+esc(d.aviso||'Nada encontrado.')+'</div>'; return; }
+      out.innerHTML=d.itens.map(function(x){
+        var p=x.pedido, h=x.horario?new Date(x.horario).toLocaleString('pt-BR'):'';
+        return '<div style="margin-top:.6rem;padding:.7rem;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);font-size:.85rem;line-height:1.5">'+
+          '<b>'+esc(x.pagador||'(sem nome)')+'</b> · R$ '+esc(String(x.valor).replace('.',','))+' · '+esc(h)+'<br><span style="opacity:.7;font-size:.75rem">'+esc(x.e2e)+'</span><br>'+
+          (p?'Pedido <b>'+esc(p.id)+'</b>'+(p.para?' · música pra <b>'+esc(p.para)+'</b>':'')+(p.whatsapp?' · WhatsApp '+esc(p.whatsapp):'')+(p.pago?' · ✅ pago':'')+
+            '<br>Link: <a href="'+esc(p.link)+'" target="_blank" style="color:#F0C987;word-break:break-all">'+esc(p.link)+'</a> '+
+            '<button type="button" class="cmp-bt" data-copiar="'+esc(p.link)+'" style="margin-top:.4rem">Copiar link</button>'
+           :'<span style="color:#F0C987">Esse Pix não está ligado a nenhum pedido.</span>')+'</div>';
+      }).join('');
+      out.querySelectorAll('[data-copiar]').forEach(function(b){ b.onclick=function(){ copiar(b.dataset.copiar,'Link copiado!'); }; });
+    }).catch(function(){ out.innerHTML='<div class="sub" style="margin-top:.5rem">Sem conexão.</div>'; });
+});
 function pnlZapLigar(body){
   var rv=body.querySelector('#zapReenv');
   if(rv) rv.onclick=function(){
@@ -9166,6 +9189,8 @@ function desenharPainel(pedidos, visitas, musicas){
     (_pnlAba==='pagos'
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+
         '<div class="pnl-sec"><div class="pnl-cards">'+cards+'</div></div>'+
+        '<div class="pnl-sec"><h2>🔎 Achar o pedido de um Pix</h2><div class="sub">Cole o <b>ID do Pix</b> (começa com E, vem no e-mail da Efí) ou digite o <b>nome de quem pagou</b>.</div>'+
+          '<form class="pnl-busca" id="pnlBuscaPix" style="margin-top:.5rem"><input type="text" id="pnlBuscaPixQ" placeholder="Ex.: E6070119… ou Jean Carlos"><button type="submit">Buscar</button></form><div id="pnlBuscaPixRes"></div></div>'+
         pnlPixSemPedidoHtml()+
         pnlAudiosHtml()+
         '<div class="pnl-sec"><h2>Pedidos pagos</h2><div class="sub">Mais recentes primeiro.</div>'+
