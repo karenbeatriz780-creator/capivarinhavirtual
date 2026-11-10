@@ -4,16 +4,17 @@
 //   POST {acao:'foto', id, k, img}  → guarda 1 foto (dataURL jpeg). k=0 é a capa (alta resolução, vai pro quadro)
 //   POST {acao:'salvar', id, ...}   → guarda nomes, dedicatória, música, tema e quantas fotos
 // O id do pedido é o "segredo" (mesmo esquema do link da música).
+// As fotos podem chegar ANTES do pagamento (escolhidas na hora do Pix); o clipe só abre depois de pago.
 import { getStore } from '@netlify/blobs';
 
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const st = () => getStore({ name: 'clipes', consistency: 'strong' });
 const limpa = (x, n) => String(x == null ? '' : x).replace(/[<>]/g, '').trim().slice(0, n);
 
-async function pedido(id) {
+async function pedido(id, exigePago) {
   if (!id || id.length > 100 || !/^[\w.-]+$/.test(id)) return null;
   const g = await getStore('presentes').get(id, { type: 'json' });
-  if (!g || !g.pago || g.cancelado) return null;
+  if (!g || g.cancelado || (exigePago && !g.pago)) return null;
   const ex = Array.isArray(g.extrasPix) ? g.extrasPix : [];
   if (ex.indexOf('clipe') < 0 && ex.indexOf('quadro') < 0) return null;
   return { g, clipe: ex.indexOf('clipe') >= 0, quadro: ex.indexOf('quadro') >= 0 };
@@ -30,7 +31,7 @@ export default async (req) => {
   try {
     if (req.method === 'GET') {
       const u = new URL(req.url), id = (u.searchParams.get('id') || '').trim(), f = u.searchParams.get('f');
-      const p = await pedido(id);
+      const p = await pedido(id, true);
       if (!p) return json({ erro: 'Clipe não encontrado.' }, 404);
       if (f != null) {
         const k = parseInt(f, 10);
@@ -52,7 +53,7 @@ export default async (req) => {
     if (req.method !== 'POST') return json({ erro: 'Método não permitido.' }, 405);
     let b = {}; try { b = await req.json(); } catch (e) { return json({ erro: 'Pedido inválido.' }, 400); }
     const id = String(b.id || '').trim();
-    const p = await pedido(id);
+    const p = await pedido(id, false);
     if (!p) return json({ erro: 'Esse pedido não tem clipe nem quadro.' }, 404);
     const max = p.clipe ? 8 : 1;
     if (b.acao === 'foto') {
