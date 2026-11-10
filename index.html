@@ -990,6 +990,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .dsh-k b{white-space:nowrap;font-size:clamp(1.15rem,6vw,1.6rem);font-weight:900;color:#7A0A2E;font-variant-numeric:tabular-nums;}
 .dsh-k small{font-size:.76rem;color:#9A7A88;}
 .dsh-k.proj{background:linear-gradient(160deg,#F0407C,#B5124E);border-color:transparent;}
+.dsh-k .dsh-lp{color:#fff;margin-top:.55rem;padding-top:.5rem;border-top:1px solid rgba(255,255,255,.35);font-size:.8rem;font-weight:700;line-height:1.25}.dsh-k .dsh-lp b{display:block;font-size:1.35rem;font-weight:900;letter-spacing:-.02em}.dsh-k .dsh-lp small{display:block;opacity:.85;font-weight:500}
 .dsh-k.proj span,.dsh-k.proj small{color:#FFE3EE;}
 .dsh-k.proj b{color:#fff;}
 .dsh-proj{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;}
@@ -7975,7 +7976,7 @@ function pnlHojeHtml(pedidos, custos){
   if(GA.meta!=null) ads=GA.meta;
   var lucro=rec-custoIA-taxa-ads;
   var escala = rec>0 ? proj/rec : (frac>0?1/frac:1);
-  var lucroProj=proj-custoIA*escala-(vendas*escala)*cfg.pix-ads;
+  var lucroProj=proj-custoIA*escala-(vendas*escala)*cfg.pix-ads*escala; /* anúncio também segue gastando até 23:59 */
   var semCusto=!cfg.musica && !cfg.letra && GA.kie==null;
   /* projeção do MÊS */
   var dT=pnlDiasTodos(pagos), kMesH=kHoje.slice(0,7), recMes=pnlSomaDias(dT,function(k){ return k.slice(0,7)===kMesH; }).vl;
@@ -8006,11 +8007,11 @@ function pnlHojeHtml(pedidos, custos){
     '<div class="dsh-top"><div><b>Hoje</b><span>atualizado às '+hora+'</span></div><button type="button" class="dsh-att" id="dshAtt">↻ Atualizar</button></div>'+
     '<div class="dsh-hero">'+
       '<div class="dsh-k"><span>Faturado hoje</span><b>R$ '+fmtPreco(rec)+'</b><small>'+vendas+' venda'+(vendas===1?'':'s')+(vendas?' · ticket R$ '+fmtPreco(rec/vendas):'')+'</small></div>'+
-      '<div class="dsh-k proj"><span>Projeção até 23:59</span><b>R$ '+fmtPreco(proj)+'</b><small>'+(med7>0?'≈ '+Math.round(proj/Math.max(1,(rec/Math.max(1,vendas))||9.99))+' vendas no dia':'ainda sem histórico pra comparar')+'</small></div>'+
+      '<div class="dsh-k proj"><span>Projeção até 23:59</span><b>R$ '+fmtPreco(proj)+'</b><small>'+(med7>0?'≈ '+Math.round(proj/Math.max(1,(rec/Math.max(1,vendas))||9.99))+' vendas no dia':'ainda sem histórico pra comparar')+'</small><div class="dsh-lp">💰 Lucro previsto <b>'+(lucroProj<0?'-':'')+'R$ '+fmtPreco(Math.abs(lucroProj))+'</b><small>agora: '+(lucro<0?'-':'')+'R$ '+fmtPreco(Math.abs(lucro))+'</small></div></div>'+
     '</div>'+
     '<div class="dsh-hero dsh-hero2">'+
       '<div class="dsh-k"><span>Faturado no mês</span><b>R$ '+fmtPreco(recMes)+'</b><small>'+(gMes.tem?'gastos R$ '+fmtPreco(gMes.total)+' · lucro R$ '+fmtPreco(recMes-gMes.total):'dia '+dHoje.getUTCDate()+' de '+diasMes)+'</small></div>'+
-      '<div class="dsh-k proj"><span>Projeção do mês</span><b>R$ '+fmtPreco(projMes)+'</b><small>no ritmo atual, até o dia '+diasMes+'</small></div>'+
+      '<div class="dsh-k proj"><span>Projeção do mês</span><b>R$ '+fmtPreco(projMes)+'</b><small>no ritmo atual, até o dia '+diasMes+'</small>'+(gMes.tem?(function(){ var lm=(recMes-gMes.total)/diasPass*diasMes; return '<div class="dsh-lp">💰 Lucro previsto <b>'+(lm<0?'-':'')+'R$ '+fmtPreco(Math.abs(lm))+'</b><small>≈ R$ '+fmtPreco(lm/diasMes)+' por dia</small></div>'; })():'')+'</div>'+
     '</div>'+
     pnlSplitHtml([0,1,2,3,4,5,6].reduce(function(a,i){ return a.concat(dia(i)); },[]), hoje)+
     cmpHtml+
