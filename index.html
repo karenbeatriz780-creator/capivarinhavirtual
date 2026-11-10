@@ -8715,8 +8715,8 @@ function pnlCampHtml(){
     var p=x.per, pr=x.proj;
     var bts='';
     if(x.subir&&x.subir.agora) bts+='<button type="button" class="cmp-bt sobe forte" data-cmpacao="subir" data-cmpid="'+esc(x.id)+'" data-cmpval="'+x.subir.novo+'">⬆️ Subir para '+R(x.subir.novo)+'/dia</button>';
-    if(x.cat==='boa'||(x.cat==='pausada'&&x.d7.cpa&&x.d7.cpa<=7)) bts+='<button type="button" class="cmp-bt sobe forte" data-cpdup="'+esc(x.id)+'">⧉ Duplicar (cópia idêntica)</button>';
-    if(!x.programada&&(x.cat==='boa'||x.cat==='observar'||x.cat==='nova'||(x.cat==='pausada'&&x.d7.cpa&&x.d7.cpa<=7))) bts+='<button type="button" class="cmp-bt" data-cpprog="'+esc(x.id)+'" data-cporc="'+(x.orcamentoDia||'')+'">⏰ Duplicar como programada</button>';
+    bts+='<button type="button" class="cmp-bt'+(x.cat==='boa'?' sobe forte':'')+'" data-cpdup="'+esc(x.id)+'">⧉ Duplicar (cópia idêntica)</button>';
+    if(!x.programada) bts+='<button type="button" class="cmp-bt" data-cpprog="'+esc(x.id)+'" data-cporc="'+(x.orcamentoDia||'')+'">⏰ Duplicar como programada</button>';
     if(x.ativa) bts+='<button type="button" class="cmp-bt" data-cmpacao="pausar" data-cmpid="'+esc(x.id)+'">⏸ Pausar</button>';
     else bts+='<button type="button" class="cmp-bt" data-cmpacao="ativar" data-cmpid="'+esc(x.id)+'">▶️ Ativar</button>';
     return '<div class="cmp cp-c cat-'+x.cat+'"><div class="cmp-top"><b>'+esc(x.nome)+'</b><span class="cp-cat">'+x.txt+(x.programada?'<span class="cp-prog">⏰ programada</span>':'')+'</span></div>'+
@@ -8738,7 +8738,7 @@ function pnlCampLigar(body){
   body.querySelectorAll('[data-cpf]').forEach(function(b){ b.onclick=function(){ _pnlCampFiltro=b.dataset.cpf; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); }; });
   body.querySelectorAll('[data-cpdup]').forEach(function(b){ b.onclick=function(){
     var nome=(b.closest('.cmp').querySelector('.cmp-top b')||{}).textContent||'';
-    if(!confirm('Duplicar "'+nome+'"?\n\nCria uma cópia idêntica (mesmo vídeo, público e orçamento), já ligada.')) return;
+    if(!confirm('Duplicar "'+nome+'"?\n\nCria uma cópia idêntica: mesmo post (curtidas e comentários), mesmo público e orçamento, já ligada. A original não muda.')) return;
     if(!pedirSenhaAdmin()) return;
     b.disabled=true; b.textContent='Duplicando…';
     fetch('/.netlify/functions/admin-campanhas',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'duplicar',id:b.dataset.cpdup})})
