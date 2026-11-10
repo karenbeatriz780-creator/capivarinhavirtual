@@ -141,7 +141,7 @@ export async function metaAds(dias, deX, ateX, semCache) {
       return { id: x.campaign_id, nome: x.campaign_name, gasto: Number(x.spend) || 0, cliques: Number(x.clicks) || 0,
         cpc: Number(x.cpc) || 0, ctr: Number(x.ctr) || 0, compras: acao(x.actions, COMPRA), valor: acao(x.action_values, COMPRA),
         status: i.effective_status || '', criada: i.start_time || i.created_time || null,
-        orcamentoDia: orc ? orc / 100 : null,
+        orcamentoDia: orc ? orc / 100 : null, orcamentoTotal: Number(i.lifetime_budget || 0) / 100 || null,
         aprendendo: ss.some((a) => a.learning_stage_info && /LEARNING/.test(String(a.learning_stage_info.status || '')) && !/FAIL|LIMITED/.test(String(a.learning_stage_info.status || ''))),
         aprendizadoLimitado: ss.some((a) => a.learning_stage_info && /FAIL|LIMITED/.test(String(a.learning_stage_info.status || ''))),
         orcamentoNaCampanha: !!Number(i.daily_budget || 0),

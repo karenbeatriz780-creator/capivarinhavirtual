@@ -323,6 +323,12 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .cat-boa .cp-cat{background:#E3F7EA;color:#13914a}.cat-ruim .cp-cat{background:#FDE7EA;color:#D12D4A}.cat-nova .cp-cat{background:#E8F0FF;color:#2F5BD6}.cat-observar .cp-cat{background:#FFF6DC;color:#9A6B00}
 .cat-boa{border-left:4px solid #2FBF6B}.cat-ruim{border-left:4px solid #E5485F}.cat-nova{border-left:4px solid #4F7BFF}.cat-observar{border-left:4px solid #F2B705}
 .cp-m{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin:.55rem 0}.cp-m span{display:block;font-size:.66rem;color:#8A7380;font-weight:700}.cp-m b{display:block;font-size:.95rem}.cp-m small{font-size:.64rem;color:#8A7380}
+.cp-hor .hb{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin:.5rem 0 .2rem}.cp-hor .hb i{display:block;height:34px;border-radius:4px;font-style:normal;font-size:.55rem;display:flex;align-items:flex-end;justify-content:center;color:#fff;font-weight:800;padding-bottom:2px}
+.cp-hor .hb .verde{background:#16a34a}.cp-hor .hb .amarelo{background:#eab308}.cp-hor .hb .vermelho{background:#dc2626}.cp-hor .hb .sel{outline:2px solid #111;outline-offset:1px}
+.cp-hor .hl{display:grid;grid-template-columns:repeat(24,1fr);font-size:.55rem;text-align:center;opacity:.6}
+.cp-hor .op{display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0}.cp-hor .op label{flex:1 1 140px;border:2px solid rgba(0,0,0,.12);border-radius:12px;padding:.45rem .55rem;cursor:pointer;font-size:.78rem}.cp-hor .op label.on{border-color:#7c3aed;background:rgba(124,58,237,.07)}.cp-hor .op input{margin-right:.3rem}
+.cp-hor table{width:100%;font-size:.74rem;border-collapse:collapse}.cp-hor td,.cp-hor th{padding:.2rem .3rem;text-align:right}.cp-hor td:first-child,.cp-hor th:first-child{text-align:left}
+.cp-prog{display:inline-block;background:#7c3aed;color:#fff;border-radius:99px;padding:.05rem .45rem;font-size:.68rem;font-weight:800;margin-left:.3rem}
 .cp-box{border-radius:16px;padding:.7rem .8rem;margin-bottom:.6rem;font-size:.82rem;line-height:1.4}.cp-box h4{margin:0 0 .45rem;font-size:.92rem;font-family:inherit;font-weight:800}
 .cp-sobe{background:#E9F9EF;border:1px solid #9FE0B5}.cp-logo{background:#EEF3FF;border:1px solid #BFD0FF}.cp-dup{background:#F6EEFF;border:1px solid #D6BDF5}
 .cp-it{display:flex;align-items:center;gap:.5rem;justify-content:space-between;padding:.45rem 0;border-top:1px dashed rgba(0,0,0,.1)}.cp-it:first-of-type{border-top:0}
@@ -8628,6 +8634,33 @@ function pnlCampCarregar(){
     _pnlCampCarr=false; _pnlCamp=d; if(_pnlAba==='campanhas'){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
   }).catch(function(){ _pnlCampCarr=false; _pnlCamp={erro:'Sem conexão.'}; });
 }
+var _pnlHor=null,_pnlHorCarr=false,_pnlHorEsc='melhores';
+function pnlHorCarregar(novo){
+  if(_pnlHorCarr) return; _pnlHorCarr=true;
+  fetch('/.netlify/functions/admin-horarios?dias=14'+(novo?'&novo=1':''),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+    _pnlHorCarr=false; _pnlHor=d; if(_pnlAba==='campanhas'){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
+  }).catch(function(){ _pnlHorCarr=false; _pnlHor={erro:'Sem conexão.'}; });
+}
+function pnlHorJanelas(){ var H=_pnlHor||{}; return _pnlHorEsc==='sua'?((H.sua||{}).janelas||[[6,8],[11,14],[18,25]]):((H.melhores||{}).janelas||[]); }
+function pnlHorHtml(){
+  var H=_pnlHor, R=function(v){ return 'R$ '+fmtPreco(Number(v)||0); };
+  if(!H){ pnlHorCarregar(); return '<div class="cp-box cp-hor"><h4>⏰ Melhores horários</h4><div class="pnl-nota">Calculando custo por venda de cada hora…</div></div>'; }
+  if(H.erro) return '<div class="cp-box cp-hor"><h4>⏰ Melhores horários</h4><div class="pnl-nota">⚠️ '+esc(H.erro)+'</div></div>';
+  var sel={}; (function(){ pnlHorJanelas().forEach(function(j){ for(var h=j[0];h<j[1];h++) sel[h%24]=1; }); })();
+  var bar='<div class="hb">'+H.porHora.map(function(x){ return '<i class="'+x.cor+(sel[x.h]?' sel':'')+'" title="'+x.h+'h · gasto '+R(x.gasto)+' · '+x.vendas+' vendas'+(x.cpa?' · '+R(x.cpa)+'/venda':'')+'">'+(x.vendas||'')+'</i>'; }).join('')+'</div>'+
+    '<div class="hl">'+H.porHora.map(function(x){ return '<span>'+(x.h%3===0?x.h:'')+'</span>'; }).join('')+'</div>';
+  var lin=function(o){ return (o.cpa?'<b>'+R(o.cpa)+'</b> por venda':'sem vendas')+' · '+o.horas+' h/dia · '+o.parteVendas+'% das vendas'; };
+  var ops='<div class="op">'+
+    '<label class="'+(_pnlHorEsc==='melhores'?'on':'')+'"><input type="radio" name="cphor" value="melhores"'+(_pnlHorEsc==='melhores'?' checked':'')+'><b>🏆 Melhores (pelos números)</b><br>'+esc(H.melhores.txt||'—')+'<br><small>'+lin(H.melhores)+'</small></label>'+
+    '<label class="'+(_pnlHorEsc==='sua'?'on':'')+'"><input type="radio" name="cphor" value="sua"'+(_pnlHorEsc==='sua'?' checked':'')+'><b>🙋 Sua sugestão</b><br>'+esc(H.sua.txt)+'<br><small>'+lin(H.sua)+'</small></label></div>';
+  var tab='<details class="cp-dd"><summary>📋 Hora a hora (últimos '+H.dias+' dias)</summary><table><tr><th>Hora</th><th>Gasto</th><th>Vendas</th><th>R$/venda</th></tr>'+
+    H.porHora.map(function(x){ return '<tr><td>'+({verde:'🟢',amarelo:'🟡',vermelho:'🔴'}[x.cor])+' '+x.h+'h</td><td>'+R(x.gasto)+'</td><td>'+x.vendas+'</td><td>'+(x.cpa?R(x.cpa):'—')+'</td></tr>'; }).join('')+'</table></details>';
+  return '<div class="cp-box cp-hor"><h4>⏰ Melhores horários <small style="font-weight:600;opacity:.7">· últimos '+H.dias+' dias · horário de Brasília</small> <button type="button" class="cmp-bt" data-cphornovo style="float:right;padding:.1rem .5rem">↻</button></h4>'+
+    '<div>Dia todo: '+lin(H.diaTodo)+(H.pagamNaHora!=null?' · <b>'+H.pagamNaHora+'%</b> pagam em até 30 min':'')+'</div>'+bar+
+    '<small>🟢 vende barato · 🟡 médio · 🔴 gasta e quase não vende · número = vendas na hora · contorno = horas que a programada vai usar</small>'+
+    (H.poucosDados?'<div class="pnl-nota">⚠️ Ainda poucos dados ('+H.diaTodo.vendas+' vendas de anúncio). Os horários ficam mais certos com o tempo.</div>':'')+ops+tab+
+    '<div class="pnl-nota">Use <b>⏰ Duplicar como programada</b> numa campanha boa: cria uma cópia que só roda nesses horários (a original continua normal pra comparar).</div></div>';
+}
 function pnlCampHtml(){
   var D=_pnlCamp, R=function(v){ return 'R$ '+fmtPreco(Number(v)||0); };
   var robo=(_pnlCache.robo && _pnlCache.robo.ligado) ? pnlRoboHtml()+pnlNovoAnuncioHtml() : '';
@@ -8654,11 +8687,12 @@ function pnlCampHtml(){
     var bts='';
     if(x.subir&&x.subir.agora) bts+='<button type="button" class="cmp-bt sobe forte" data-cmpacao="subir" data-cmpid="'+esc(x.id)+'" data-cmpval="'+x.subir.novo+'">⬆️ Subir para '+R(x.subir.novo)+'/dia</button>';
     if(x.cat==='boa'||(x.cat==='pausada'&&x.d7.cpa&&x.d7.cpa<=7)) bts+='<button type="button" class="cmp-bt sobe forte" data-cpdup="'+esc(x.id)+'">⧉ Duplicar (cópia idêntica)</button>';
+    if(!x.programada&&(x.cat==='boa'||x.cat==='observar'||x.cat==='nova'||(x.cat==='pausada'&&x.d7.cpa&&x.d7.cpa<=7))) bts+='<button type="button" class="cmp-bt" data-cpprog="'+esc(x.id)+'" data-cporc="'+(x.orcamentoDia||'')+'">⏰ Duplicar como programada</button>';
     if(x.ativa) bts+='<button type="button" class="cmp-bt" data-cmpacao="pausar" data-cmpid="'+esc(x.id)+'">⏸ Pausar</button>';
     else bts+='<button type="button" class="cmp-bt" data-cmpacao="ativar" data-cmpid="'+esc(x.id)+'">▶️ Ativar</button>';
-    return '<div class="cmp cp-c cat-'+x.cat+'"><div class="cmp-top"><b>'+esc(x.nome)+'</b><span class="cp-cat">'+x.txt+'</span></div>'+
+    return '<div class="cmp cp-c cat-'+x.cat+'"><div class="cmp-top"><b>'+esc(x.nome)+'</b><span class="cp-cat">'+x.txt+(x.programada?'<span class="cp-prog">⏰ programada</span>':'')+'</span></div>'+
       '<div class="cp-m"><div><span>Gasto</span><b>'+R(p.gasto)+'</b><small>'+R(p.gastoImp)+' c/ imposto</small></div><div><span>Vendas</span><b>'+p.vendas+'</b><small>'+(p.cpa?R(p.cpa)+'/venda':'—')+'</small></div>'+
-        '<div><span>Lucro</span><b class="'+(p.lucro>=0?'pos':'neg')+'">'+(p.lucro<0?'-':'')+R(Math.abs(p.lucro))+'</b><small>fat. '+R(p.fat)+'</small></div><div><span>Orçamento</span><b>'+(x.orcamentoDia?R(x.orcamentoDia):'—')+'</b><small>/dia</small></div></div>'+
+        '<div><span>Lucro</span><b class="'+(p.lucro>=0?'pos':'neg')+'">'+(p.lucro<0?'-':'')+R(Math.abs(p.lucro))+'</b><small>fat. '+R(p.fat)+'</small></div><div><span>Orçamento</span><b>'+(x.orcamentoDia?R(x.orcamentoDia):x.orcamentoTotal?R(x.orcamentoTotal):'—')+'</b><small>'+(x.orcamentoDia||!x.orcamentoTotal?'/dia':'total')+'</small></div></div>'+
       '<div class="cp-d">💡 '+esc(x.dica)+' <small>· 7 dias: '+x.d7.vendas+' vendas'+(x.d7.cpa?' a '+R(x.d7.cpa):'')+(x.d3.cpa?' · 3 dias: '+R(x.d3.cpa)+'/venda':'')+'</small></div>'+
       (pr?'<div class="cp-pj">🔮 Próximos 7 dias: <b>~'+pr.atual.vendas+' vendas</b> · lucro <b class="'+(pr.atual.lucro>=0?'pos':'neg')+'">~'+(pr.atual.lucro<0?'-':'')+R(Math.abs(pr.atual.lucro))+'</b>'+(x.cat==='boa'?' · subindo +20%: ~'+pr.mais20.vendas+' vendas, lucro ~'+R(pr.mais20.lucro):'')+'</div>':'')+
       (x.subir&&!x.subir.agora?'<div class="cp-pj">📅 Pode subir <b>'+dtH(x.subir.quando)+'</b></div>':'')+
@@ -8667,7 +8701,7 @@ function pnlCampHtml(){
         (x.media?'<tr class="md"><td>Média/dia</td><td>'+R(x.media.gasto)+'</td><td>'+String(x.media.vendas).replace('.',',')+'</td><td>'+(x.media.cpa?R(x.media.cpa):'—')+'</td><td class="'+(x.media.lucro>=0?'pos':'neg')+'">'+(x.media.lucro<0?'-':'')+R(Math.abs(x.media.lucro))+'</td></tr>':'')+'</table></details>':'')+
       '<div class="cmp-bts">'+bts+'</div></div>';
   }).join('')||'<div class="pnl-nota">Nenhuma campanha nesse filtro.</div>';
-  return '<div class="cp">'+chipsPer+resumo+boxSobe+boxLogo+boxDup+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
+  return '<div class="cp">'+chipsPer+resumo+boxSobe+boxLogo+boxDup+pnlHorHtml()+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
     '<div class="dsh-nota">Gasto e custo por venda iguais ao app do Meta; lucro já desconta o imposto ('+String(D.imposto).replace('.',',')+'%). Vendas = maior entre Pixel e vendas reais do site. Projeção usa o custo por venda dos últimos 3 dias (ou 7) e o orçamento de hoje: é estimativa.</div></div>'+robo+'</div>';
 }
 function pnlCampLigar(body){
@@ -8683,6 +8717,24 @@ function pnlCampLigar(body){
       .then(function(x){ if(x.s===401){ _pnlChave=''; Store.del('cl_admin_key'); } if(!x.ok){ toast((x.d&&x.d.erro)||'Não deu certo.'); b.disabled=false; b.textContent='⧉ Duplicar (cópia idêntica)'; return; }
         toast('Cópia criada e ligada ✓'); _pnlCamp=null; pnlCampCarregar(); })
       .catch(function(){ toast('Sem conexão.'); b.disabled=false; });
+  }; });
+  body.querySelectorAll('input[name=cphor]').forEach(function(r){ r.onchange=function(){ _pnlHorEsc=r.value; var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }; });
+  body.querySelectorAll('[data-cphornovo]').forEach(function(b){ b.onclick=function(){ _pnlHor=null; pnlHorCarregar(true); }; });
+  body.querySelectorAll('[data-cpprog]').forEach(function(b){ b.onclick=function(){
+    var nome=(b.closest('.cmp').querySelector('.cmp-top b')||{}).textContent||'';
+    var js=pnlHorJanelas(); if(!js.length){ toast('Ainda não tenho horários calculados.'); return; }
+    var txt=js.map(function(j){ return j[0]+'h–'+(j[1]%24)+'h'; }).join(', ');
+    var v=prompt('Cópia PROGRAMADA de "'+nome+'"\n\nHorários: '+txt+' (Brasília)\n\nQuanto por dia? (R$)',b.dataset.cporc||'45'); if(v===null) return;
+    var orc=Number(String(v).replace(',','.')); if(!(orc>=6)){ toast('Valor inválido (mínimo R$ 6).'); return; }
+    var d=prompt('Por quantos dias? (3 a 30)','7'); if(d===null) return; var dias=parseInt(d,10); if(!(dias>=3&&dias<=30)){ toast('Entre 3 e 30 dias.'); return; }
+    if(!confirm('Criar a programada?\n\n• Só roda: '+txt+'\n• R$ '+fmtPreco(orc)+'/dia × '+dias+' dias = R$ '+fmtPreco(orc*dias)+' no total\n• Mesmo vídeo e público da original\n• A original continua normal\n\nJá entra ligada.')) return;
+    if(!pedirSenhaAdmin()) return;
+    b.disabled=true; b.textContent='Criando…';
+    fetch('/.netlify/functions/admin-horarios',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'programar',id:b.dataset.cpprog,janelas:js,orcDia:orc,dias:dias})})
+      .then(function(r){ return r.json().then(function(dd){ return {ok:r.ok,s:r.status,d:dd}; }); })
+      .then(function(x){ if(x.s===401){ _pnlChave=''; Store.del('cl_admin_key'); } if(!x.ok){ toast((x.d&&x.d.erro)||'Não deu certo.'); b.disabled=false; b.textContent='⏰ Duplicar como programada'; return; }
+        toast('Programada criada e ligada ✓ ('+x.d.janelas+')'); _pnlCamp=null; pnlCampCarregar(); })
+      .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent='⏰ Duplicar como programada'; });
   }; });
   if(_pnlAba==='campanhas'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlCache.robo) pnlCarregarRobo(); }
 }
