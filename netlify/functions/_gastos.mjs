@@ -86,14 +86,15 @@ export async function metaAds(dias, deX, ateX, semCache) {
   try {
     const tk = '&access_token=' + encodeURIComponent(c.tk);
     const tr7 = encodeURIComponent(JSON.stringify({ since: diaBR(Date.now() - 6 * 864e5), until: ate }));
-    const [rc, rd, rcamp, rcd, rlist, rsets, rtot] = await Promise.all([
+    const [rc, rd, rcamp, rcd, rlist, rsets, rtot, ract] = await Promise.all([
       fetch(base + '?fields=name,currency,account_status' + tk),
       fetch(base + '/insights?level=account&time_increment=1&time_range=' + tr + '&fields=' + campos + '&limit=500' + tk),
       fetch(base + '/insights?level=campaign&time_range=' + tr7 + '&fields=campaign_id,campaign_name,' + campos + '&limit=200' + tk), // 7 dias INCLUINDO hoje
       fetch(base + '/insights?level=campaign&time_increment=1&time_range=' + tr7 + '&fields=campaign_id,spend,actions,action_values&limit=500' + tk),
       fetch(base + '/campaigns?fields=name,effective_status,created_time,start_time,daily_budget,lifetime_budget&limit=200' + tk),
       fetch(base + '/adsets?fields=id,campaign_id,effective_status,daily_budget,learning_stage_info&limit=300' + tk),
-      fetch(base + '/insights?level=campaign&date_preset=maximum&fields=campaign_id,spend,actions&limit=200' + tk)
+      fetch(base + '/insights?level=campaign&date_preset=maximum&fields=campaign_id,spend,actions&limit=200' + tk),
+      fetch(base + '/activities?fields=event_type,event_time,object_id&since=' + Math.floor((Date.now() - 4 * 864e5) / 1000) + '&limit=500' + tk).catch(() => null) // histórico: quando mexeram no orçamento (inclusive pelo app do Meta)
     ]);
     const conta = await rc.json(), dd = await rd.json(), dc = await rcamp.json();
     const dcd = await rcd.json().catch(() => ({})), dlist = await rlist.json().catch(() => ({})), dsets = await rsets.json().catch(() => ({}));
@@ -123,6 +124,17 @@ export async function metaAds(dias, deX, ateX, semCache) {
       if (x.effective_status === 'ACTIVE' || Date.parse(x.created_time || 0) >= limite7)
         (dc.data = dc.data || []).push({ campaign_id: x.id, campaign_name: x.name, spend: 0, clicks: 0, cpc: 0, ctr: 0, actions: [], action_values: [] });
     });
+    // última mudança de orçamento por campanha (campanha ou conjunto) — vale a que veio do app do Meta também
+    const orcMexido = {}, setCamp = {};
+    (dsets.data || []).forEach((x) => { setCamp[x.id] = x.campaign_id; });
+    try {
+      const dact = ract ? await ract.json() : {};
+      (dact.data || []).forEach((e) => {
+        if (!/budget/i.test(String(e.event_type || ''))) return;
+        const cid = setCamp[e.object_id] || e.object_id, t = Date.parse(e.event_time || 0);
+        if (t && (!orcMexido[cid] || t > orcMexido[cid])) orcMexido[cid] = t;
+      });
+    } catch (e) {}
     const campanhas = (dc.data || []).map((x) => {
       const i = info[x.campaign_id] || {}, ss = (sets[x.campaign_id] || []).filter((a) => a.effective_status === 'ACTIVE');
       const orc = Number(i.daily_budget || 0) || ss.reduce((t, a) => t + (Number(a.daily_budget) || 0), 0);
@@ -134,7 +146,7 @@ export async function metaAds(dias, deX, ateX, semCache) {
         aprendizadoLimitado: ss.some((a) => a.learning_stage_info && /FAIL|LIMITED/.test(String(a.learning_stage_info.status || ''))),
         orcamentoNaCampanha: !!Number(i.daily_budget || 0),
         conjuntos: ss.map((a) => ({ id: a.id, orcamentoDia: Number(a.daily_budget || 0) / 100 })),
-        dias: diaCamp[x.campaign_id] || {}, total: tot[x.campaign_id] || null };
+        dias: diaCamp[x.campaign_id] || {}, total: tot[x.campaign_id] || null, orcMexidoEm: orcMexido[x.campaign_id] || null };
     }).sort((a, b) => b.gasto - a.gasto);
     const dados = { configurado: true, conta: conta.name, moeda: conta.currency || 'BRL', porDia, campanhas };
     await L.setJSON(ckey, { em: Date.now(), dados }).catch(() => {});
@@ -180,12 +192,12 @@ export function avaliarSubir(c, porDiaSite, acao, cpaMax, agora) {
   const cpa = v ? g / v : null, bom = v >= 5 && cpa != null && cpa <= cpaMax;
   const novo = c.orcamentoDia ? Math.floor(c.orcamentoDia * (1 + SUBIR_MAX)) : null;
   const criadaEm = c.criada ? new Date(c.criada).getTime() : 0, idadeH = criadaEm ? (agora - criadaEm) / 3600000 : 999;
-  const mexeuH = acao && acao.orcEm ? (agora - acao.orcEm) / 3600000 : 999;
+  const ultOrc = Math.max((acao && acao.orcEm) || 0, c.orcMexidoEm || 0), mexeuH = ultOrc ? (agora - ultOrc) / 3600000 : 999;
   let trava = '', quando = null;
   if (c.status && c.status !== 'ACTIVE') trava = 'está desligada';
   else if (!c.orcamentoDia) trava = 'não achei o orçamento diário';
   else if (idadeH < TRAVA_H) { trava = 'campanha nova — o Meta precisa de 3 dias pra aprender'; quando = criadaEm + TRAVA_H * 3600000; }
-  else if (mexeuH < TRAVA_H) { trava = 'o orçamento foi mexido há ' + Math.round(mexeuH) + ' h — espere 72 h'; quando = acao.orcEm + TRAVA_H * 3600000; }
+  else if (mexeuH < TRAVA_H) { trava = 'o orçamento foi mexido há ' + Math.round(mexeuH) + ' h — espere 72 h'; quando = ultOrc + TRAVA_H * 3600000; }
   else if (c.aprendendo) trava = 'o Meta ainda está aprendendo';
   return { agora: bom && !trava, bom, novo, cpa, vendas: v, trava, quando };
 }
