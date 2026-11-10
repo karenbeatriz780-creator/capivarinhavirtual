@@ -21,6 +21,11 @@
 
 # áudios de exemplo e trilhas: guarda por 7 dias
 [[headers]]
+  for = "/clipe-ex/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
   for = "/*.mp3"
   [headers.values]
     Cache-Control = "public, max-age=604800"
