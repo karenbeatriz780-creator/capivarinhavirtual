@@ -153,6 +153,8 @@ export async function duplicarProgramada(id, janelas, orcDia, dias) {
     return { ok: true, nova: camp.id, nome, total: total / 100, fim: fim.getTime(), janelas: txtJanelas(janelas) };
   } catch (e) {
     console.error('programada erro:', e && e.message, JSON.stringify((e && e.meta) || {}));
+    const m = (e && e.meta) || {};
+    e.message = (e.message || 'erro') + ' [código ' + (m.code || '?') + '/' + (m.error_subcode || '?') + ' · horas da conta: ' + sched.map(([x, y]) => x + '-' + y).join(',') + ' · fuso ' + desloc + ']';
     if (camp) { try { await graph('DELETE', camp.id, {}); } catch (x) { try { await graph('POST', camp.id, { status: 'PAUSED' }); } catch (y) {} } }
     throw e;
   }
