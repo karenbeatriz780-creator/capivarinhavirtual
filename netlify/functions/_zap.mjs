@@ -37,7 +37,7 @@ async function chamar(corpo) {
     }
     // guarda o que foi enviado pra aparecer na conversa do painel
     try {
-      const resumo = corpo.type === 'text' ? corpo.text.body : corpo.type === 'interactive' ? corpo.interactive.body.text + ' [botões]' : corpo.type === 'audio' ? '[áudio]' : corpo.type === 'image' ? '[imagem] ' + ((corpo.image && corpo.image.caption) || '') : corpo.type === 'document' ? '[PDF] ' + ((corpo.document && corpo.document.filename) || '') : '[' + corpo.type + ']';
+      const resumo = corpo.type === 'text' ? corpo.text.body : corpo.type === 'interactive' ? corpo.interactive.body.text + ' [botões]' : corpo.type === 'audio' ? '[áudio]' : corpo.type === 'image' ? '[imagem] ' + ((corpo.image && corpo.image.caption) || '') : corpo.type === 'document' ? '[PDF] ' + ((corpo.document && corpo.document.filename) || '') : corpo.type === 'template' ? '[aviso pago: música pronta] ' + corpo.template.name : '[' + corpo.type + ']';
       await getStore('whatsapp').setJSON('out_' + chaveNum(corpo.to) + '_' + Date.now(), { para: String(corpo.to), txt: String(resumo).slice(0, 1000), em: Date.now() });
     } catch (e) {}
     return true;
@@ -118,7 +118,7 @@ export const linkPedido = (g) => SITE + '/#/p/' + g.id + (g.produto === 'musica'
 export async function entregarAudiosPagos(para, g, comTexto = true) {
   const vs = versoes(g);
   if (!vs.length) return false;
-  if (comTexto) await enviarTexto(para, '🎧 Aqui estão suas músicas completas pra ouvir e guardar! 💗\n\nTambém ficam salvas no link:\n' + linkPedido(g));
+  if (comTexto) await enviarTexto(para, '🎧 Aqui estão suas músicas completas pra ouvir e guardar! 💗\n\nTambém ficam salvas no link:\n' + linkPedido(g) + '\n\n' + textoIndica(g));
   for (const v of vs) await enviarAudio(para, SITE + '/.netlify/functions/baixar-musica?id=' + encodeURIComponent(g.id) + '&v=' + v);
   if (ehInfantil(g)) await oferecerLivro(para, g); else await oferecerPromo(para, g);
   return true;
@@ -171,3 +171,73 @@ async function oferecerPromo(para, g) {
   } catch (e) {}
 }
 
+
+// ===== MÚSICA PAGA → WhatsApp de quem NÃO conversou com o número (modelo de UTILIDADE, ~R$ 0,08, 1 vez só) =====
+// Modelo só com o aviso do pedido (sem promoção — senão a Meta reclassifica como marketing e cobra mais).
+// Botões: "Ouvir minha música" (link) e "Receber os áudios aqui" (abre a conversa → áudios grátis).
+export const MODELO_PAGO = 'musica_pronta_v1';
+const corpoModelo = () => ({
+  name: MODELO_PAGO, language: 'pt_BR', category: 'UTILITY',
+  components: [
+    { type: 'BODY', text: 'Olá, {{1}}! Seu pagamento foi confirmado ✅\n\nA música para {{2}} está pronta. Toque no botão abaixo para ouvir e baixar as versões completas.\n\nSe preferir receber os áudios aqui no WhatsApp, toque em "Receber os áudios aqui".',
+      example: { body_text: [['Ana', 'Rafael']] } },
+    { type: 'BUTTONS', buttons: [
+      { type: 'URL', text: 'Ouvir minha música', url: SITE + '/m/{{1}}', example: [SITE + '/m/abc123'] },
+      { type: 'QUICK_REPLY', text: 'Receber os áudios aqui' }
+    ] }
+  ]
+});
+async function wabaId(token) {
+  const env = (process.env.WHATSAPP_WABA_ID || '').trim();
+  if (env) return env;
+  const loja = getStore('whatsapp');
+  const c = await loja.get('waba_id', { type: 'json' }).catch(() => null);
+  if (c && c.id) return c.id;
+  const r = await fetch('https://graph.facebook.com/' + VERSAO + '/debug_token?input_token=' + encodeURIComponent(token) + '&access_token=' + encodeURIComponent(token));
+  const d = await r.json().catch(() => ({}));
+  const gs = (d.data && d.data.granular_scopes) || [];
+  const s = gs.find((x) => x.scope === 'whatsapp_business_management') || gs.find((x) => x.scope === 'whatsapp_business_messaging');
+  const id = s && s.target_ids && s.target_ids[0];
+  if (id) await loja.setJSON('waba_id', { id, em: Date.now() }).catch(() => {});
+  return id || null;
+}
+// 'APPROVED' | 'PENDING' | 'REJECTED' | 'sem' (cria) | 'erro' — confere no máximo a cada 20 min
+export async function statusModeloPago(forcar) {
+  const loja = getStore('whatsapp'), k = 'modelo_' + MODELO_PAGO;
+  const c = await loja.get(k, { type: 'json' }).catch(() => null);
+  if (!forcar && c && (c.status === 'APPROVED' ? Date.now() - c.em < 6 * 3600e3 : Date.now() - c.em < 20 * 60e3)) return c.status;
+  const token = (process.env.WHATSAPP_TOKEN || '').trim();
+  let status = 'erro', motivo = '';
+  try {
+    const w = await wabaId(token);
+    if (!w) throw new Error('não achei a conta do WhatsApp Business (coloque WHATSAPP_WABA_ID no Netlify)');
+    const g = await (await fetch('https://graph.facebook.com/' + VERSAO + '/' + w + '/message_templates?name=' + MODELO_PAGO + '&fields=name,status,category,rejected_reason', { headers: { Authorization: 'Bearer ' + token } })).json();
+    const t = (g.data || []).find((x) => x.name === MODELO_PAGO);
+    if (t) { status = t.status; motivo = t.rejected_reason || ''; if (t.category && t.category !== 'UTILITY') motivo = 'a Meta mudou a categoria pra ' + t.category; }
+    else if (g.error) throw new Error(g.error.message);
+    else {
+      const cr = await (await fetch('https://graph.facebook.com/' + VERSAO + '/' + w + '/message_templates', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(corpoModelo()) })).json();
+      if (cr.error) throw new Error(cr.error.error_user_msg || cr.error.message);
+      status = cr.status || 'PENDING';
+      if (cr.category && cr.category !== 'UTILITY') motivo = 'a Meta mudou a categoria pra ' + cr.category;
+      await registrar('modelo', { erro: 'Modelo "música pronta" enviado pra aprovação da Meta (' + status + ')' });
+    }
+  } catch (e) { motivo = String(e.message || e).slice(0, 200); }
+  await loja.setJSON(k, { status, motivo, em: Date.now() }).catch(() => {});
+  if ((status === 'erro' || status === 'REJECTED' || motivo) && (!c || c.status !== status || c.motivo !== motivo))
+    await registrar('falha', { erro: 'Modelo do WhatsApp (música paga): ' + status + (motivo ? ' — ' + motivo : '') });
+  return status;
+}
+// manda o modelo (1 vez por pedido). Volta true se a Meta aceitou.
+export async function enviarModeloPago(para, g) {
+  if ((await statusModeloPago()) !== 'APPROVED') return false;
+  const nome = String(g.meuNome || '').trim().split(/\s+/)[0] || 'tudo bem';
+  const quem = String(g.musicaParaNome || g.parceiroNome || '').split(/,|\s+e\s+/)[0].trim() || 'quem você ama';
+  return chamar({ to: String(para), type: 'template', template: { name: MODELO_PAGO, language: { code: 'pt_BR' }, components: [
+    { type: 'body', parameters: [{ type: 'text', text: nome.slice(0, 30) }, { type: 'text', text: quem.slice(0, 40) }] },
+    { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: String(g.id) }] },
+    { type: 'button', sub_type: 'quick_reply', index: '1', parameters: [{ type: 'payload', payload: 'audios:' + g.id }] }
+  ] } });
+}
+// "Indica e ganha" — só em mensagem GRÁTIS (conversa aberta)
+export const textoIndica = (g) => '🎁 *Indica e ganha:* cada amigo que comprar pelo seu link vale *1 música grátis* pra você (2 versões).\nSeu link: ' + SITE + '/#/criar/musica/r.' + g.id;

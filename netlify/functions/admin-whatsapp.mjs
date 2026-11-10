@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { enviarTexto, chaveNum, registrar, entregarMusica } from './_zap.mjs';
+import { enviarTexto, chaveNum, registrar, entregarMusica, statusModeloPago } from './_zap.mjs';
 
 // Painel → aba 🤖 WhatsApp: o que o robô fez, falhas, conversas e responder clientes.
 // GET: lê (aberto como o resto do painel). POST: responder / pausar robô (pede a senha).
@@ -88,5 +88,7 @@ export default async (req) => {
       msgs
     };
   }));
-  return json({ eventos, conversas, agora });
+  let modelo = null; try { modelo = await Promise.race([statusModeloPago(), new Promise((r) => setTimeout(() => r(null), 4000))]); } catch (e) {}
+  const mc = await loja.get('modelo_musica_pronta_v1', { type: 'json' }).catch(() => null);
+  return json({ eventos, conversas, agora, modelo: modelo || (mc && mc.status) || null, modeloMotivo: (mc && mc.motivo) || '' });
 };

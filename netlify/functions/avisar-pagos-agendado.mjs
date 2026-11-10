@@ -1,11 +1,13 @@
 import { getStore } from '@netlify/blobs';
 import { idsDoDia, diaBR } from './_indice.mjs';
-import { enviarTexto, conversaAberta, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE } from './_zap.mjs';
+import { enviarTexto, conversaAberta, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE, enviarModeloPago, textoIndica } from './_zap.mjs';
 import { avancarLivro, entregarLivroZap } from './_livros.mjs';
 
 // A CADA MINUTO: quem PAGOU recebe no WhatsApp o link das músicas + os áudios completos.
-// - Só pra quem conversou com o número nas últimas 24 h → manda grátis (texto + áudios).
-// - Quem não conversou NÃO recebe nada agora; se mandar mensagem em até 7 dias, recebe na hora.
+// - Quem conversou com o número nas últimas 24 h → manda GRÁTIS (texto + áudios + indica e ganha).
+// - Quem NÃO conversou → 1 mensagem de UTILIDADE (modelo aprovado, ~R$ 0,08) com o link e o botão
+//   "Receber os áudios aqui". Se tocar/responder em até 7 dias, recebe os áudios grátis (whatsapp-webhook).
+// - Quem não pagou: nada (só quem conversou recebe lembrete, de graça).
 export const config = { schedule: '*/3 * * * *' };
 
 const JANELA = 6 * 3600 * 1000; // só pedidos pagos nas últimas 6 h (não dispara pra pedidos antigos)
@@ -55,13 +57,14 @@ export default async () => {
       const aberta = await conversaAberta(num);
       if (aberta) {
         await enviarTexto(aberta, '🎉 *Pagamento confirmado!*' + (nome ? ' Obrigado, ' + nome + '!' : '') + ' 💗\n\n' +
-          'Suas músicas já estão liberadas, sem corte.' + (g.quatro && !g.ofertaM1 ? ' E as *outras 2 músicas* do seu pacote você cria no mesmo link:' : ' Ficam salvas aqui:') + '\n' + linkPedido(g));
+          'Suas músicas já estão liberadas, sem corte.' + (g.quatro && !g.ofertaM1 ? ' E as *outras 2 músicas* do seu pacote você cria no mesmo link:' : ' Ficam salvas aqui:') + '\n' + linkPedido(g) + '\n\n' + textoIndica(g));
         await entregarAudiosPagos(aberta, g, false);
         await registrar('pago_enviado', { para: aberta, pedido: id, nome: g.musicaParaNome || nome, via: 'grátis' });
       } else {
-        // não conversou com o número: NÃO manda nada (sem modelo pago).
-        // Se ela mandar mensagem em até 7 dias, recebe a música na hora (whatsapp-webhook).
+        // não conversou com o número: 1 aviso de utilidade (pago, ~R$ 0,08) com o link da música.
+        // Se tocar em "Receber os áudios aqui" (ou responder) em até 7 dias, recebe os áudios grátis.
         await loja.setJSON('pagoaud_' + chaveNum(num), { id, em: agora });
+        if (await enviarModeloPago(num, g)) await registrar('pago_enviado', { para: num, pedido: id, nome: g.musicaParaNome || nome, via: 'utilidade' });
       }
     } catch (e) { console.error('avisar-pagos:', id, e && e.message); }
   }

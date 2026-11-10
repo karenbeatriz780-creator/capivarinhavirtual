@@ -8,6 +8,12 @@
   # o desenho das páginas do PDF do livro usa um módulo nativo: não pode ser empacotado
   external_node_modules = ["@napi-rs/canvas"]
 
+# link curto da mensagem de "música pronta" no WhatsApp → página das músicas do pedido
+[[redirects]]
+  from = "/m/:id"
+  to = "/#/p/:id/c"
+  status = 302
+
 [[redirects]]
   from = "/p/*"
   to = "/.netlify/functions/og?id=:splat"

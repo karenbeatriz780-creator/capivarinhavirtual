@@ -7908,6 +7908,7 @@ function pnlZapHtml(){
       '<div class="pnl-card"><b>'+(conta('pago_enviado',+hoje0)+conta('reenviou',+hoje0)+conta('pago_audios',+hoje0))+'</b><span>músicas entregues no WhatsApp hoje · '+(conta('pago_enviado',0)+conta('reenviou',0)+conta('pago_audios',0))+' na semana</span></div>'+
       '<div class="pnl-card"><b style="color:'+(falhas.length?'#FF9B93':'#6BE8AB')+'">'+falhas.length+'</b><span>falhas na semana</span></div>'+
     '</div>'+
+    (_pnlZap.modelo?'<div class="sub" style="margin-top:.7rem">📨 Aviso de <b>música pronta</b> pra quem pagou e não conversou (utilidade, ~R$ 0,08): '+({APPROVED:'<b style="color:#1F9D55">✅ aprovado, enviando</b>',PENDING:'<b>⏳ em análise na Meta</b> (leva de minutos até 24 h)',REJECTED:'<b style="color:#C62828">❌ recusado</b>',erro:'<b style="color:#C62828">⚠️ erro</b>'}[_pnlZap.modelo]||esc(_pnlZap.modelo))+(_pnlZap.modeloMotivo?' · '+esc(_pnlZap.modeloMotivo):'')+'</div>':'')+
     '<div style="margin-top:.8rem"><button type="button" class="cmp-bt" id="zapReenv">🔁 Reenviar o link pra quem pediu nas últimas 8 h</button>'+
     '<div class="sub" style="margin-top:.35rem">Use quando o WhatsApp ficou parado (ex.: pagamento pendente no Meta). Só manda pra quem ainda não pagou e cuja música já está pronta.</div></div>'+
   '</div>';
