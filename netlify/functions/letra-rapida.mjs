@@ -99,6 +99,7 @@ export default async (req) => {
     const L = getStore('letras'), h = (await L.get('diag_tempos', { type: 'json' }).catch(() => null)) || [];
     h.unshift({ em: new Date(Date.now() - 3 * 3600000).toISOString().slice(11, 19), total: Date.now() - t0, venceu: vencedor ? vencedor.modelo : 'NENHUMA (caiu no modo lento)', ias: diag });
     await L.setJSON('diag_tempos', h.slice(0, 10));
+    if (vencedor) await L.setJSON('ultimo_ok_letra', { em: Date.now() }); // prova de vida da IA (proteção contra queda)
   } catch (e) {}
   if (!vencedor) return erro('IA lenta agora.', 504);
   try { if (id) await getStore('letras').setJSON(id, { pronto: true, letra: vencedor.letra, em: Date.now(), modelo: vencedor.modelo }); } catch (e) {}

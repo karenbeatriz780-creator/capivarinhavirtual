@@ -2,31 +2,40 @@
 //  • 7h: resumo de ONTEM (faturamento, anúncio com imposto, IA, lucro) + saldo da IA
 //  • 12h, 17h e 19h: andamento de HOJE (bom / precisa de atenção)
 //  • na hora: hoje saiu do zero 🎉 · hoje passou de R$ 30 de prejuízo ⚠️ · saldo da IA abaixo de R$ 10 🔻
-//  • IA do site fora do ar (2 testes seguidos, 10 min de intervalo) → pausa TODAS as campanhas e avisa;
+//  • IA do site fora do ar DE VERDADE (3 testes seguidos, ~20-30 min, E nenhuma letra/música de cliente pronta
+//    nos últimos 15 min) → pausa TODAS as campanhas e avisa;
 //    voltou → religa as mesmas e avisa
 import { getStore } from '@netlify/blobs';
 import { metaAds } from './_gastos.mjs';
 import { lerCfg, aplicarAcao, logRobo, avisar } from './_meta.mjs';
 import { resumoDia, textoResumo, saldoKieBRL, diaBR, horaBR, brl, rankingCampanhas } from './_resumo.mjs';
-import { iaFetch, TEXTO_KIE, RESERVA_OR } from './_ia.mjs';
+import { iaFetch, TEXTO_KIE, RESERVA_OR, TEXTO_TOP } from './_ia.mjs';
 
 export const config = { schedule: '*/10 * * * *' };
 const L = () => getStore({ name: 'gastos', consistency: 'strong' });
 const uma = async (k) => { if (await L().get(k).catch(() => null)) return false; await L().set(k, '1').catch(() => {}); return true; }; // só uma vez
 const RODAPE = '\n\n_Responda "ok" pra os avisos continuarem chegando._';
 
+// a IA funciona se: algum cliente recebeu letra ou música nos últimos 15 min (uso real),
+// OU qualquer uma das IAs do site responde (testadas AO MESMO TEMPO, começando pela que o site usa primeiro)
 async function iaFunciona() {
-  for (const m of [TEXTO_KIE[0], TEXTO_KIE[1], RESERVA_OR[0]]) {
+  try {
+    const Lt = getStore('letras');
+    const [a, b] = await Promise.all([Lt.get('ultimo_ok_letra', { type: 'json' }).catch(() => null), Lt.get('ultimo_ok_musica', { type: 'json' }).catch(() => null)]);
+    const ult = Math.max((a && a.em) || 0, (b && b.em) || 0);
+    if (Date.now() - ult < 15 * 60 * 1000) return true;
+  } catch (e) {}
+  const testar = async (m) => {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 14000);
     try {
-      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 9000);
       const r = await iaFetch('ia', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: m, max_tokens: 20, messages: [{ role: 'user', content: 'Responda só: ok' }] }) });
-      clearTimeout(t);
       const d = await r.json().catch(() => null);
       if (r.ok && d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) return true;
-    } catch (e) {}
-  }
-  return false;
+    } catch (e) {} finally { clearTimeout(t); }
+    throw new Error('falhou');
+  };
+  try { return await Promise.any([TEXTO_TOP[0], TEXTO_KIE[0], TEXTO_KIE[1], RESERVA_OR[0], RESERVA_OR[1]].filter(Boolean).map(testar)); } catch (e) { return false; }
 }
 
 async function protecao(cfg) {
@@ -46,7 +55,7 @@ async function protecao(cfg) {
     return;
   }
   s.falhas = (s.falhas || 0) + 1; s.em = Date.now(); await L().setJSON('saude', s);
-  if (s.falhas < 2 || emerg || !cfg.protecaoQueda) return;
+  if (s.falhas < 3 || emerg || !cfg.protecaoQueda) return; // só com certeza: 3 testes seguidos (~20-30 min fora)
   const meta = await metaAds(7, null, null, true);
   const ativas = (meta.campanhas || []).filter((c) => c.status === 'ACTIVE'), ids = [];
   for (const c of ativas) { try { await aplicarAcao(c, 'pausar', 'robô'); ids.push(c.id); } catch (e) {} }

@@ -107,6 +107,7 @@ export default async (req) => {
           .map((x) => x.toLowerCase()).filter((x, i, arr) => x !== String(taskId).toLowerCase() && arr.indexOf(x) === i).slice(0, 8);
         if (reg && (!reg.url || (ids.length && !(reg.ids && reg.ids.length)) || (conteudo.audio_url2 && !reg.url2))) {
           if (!reg.url) { reg.url = audioUrl; reg.letra = letra || null; reg.prontoEm = Date.now(); }
+          try { await getStore('letras').setJSON('ultimo_ok_musica', { em: Date.now() }); } catch (e) {} // prova de vida da IA
           if (!reg.url2) reg.url2 = conteudo.audio_url2 || null;
           if (ids.length) reg.ids = ids;
           await store.setJSON(taskId, reg);
