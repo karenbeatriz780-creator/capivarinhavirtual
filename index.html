@@ -323,6 +323,11 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .cat-boa .cp-cat{background:#E3F7EA;color:#13914a}.cat-ruim .cp-cat{background:#FDE7EA;color:#D12D4A}.cat-nova .cp-cat{background:#E8F0FF;color:#2F5BD6}.cat-observar .cp-cat{background:#FFF6DC;color:#9A6B00}
 .cat-boa{border-left:4px solid #2FBF6B}.cat-ruim{border-left:4px solid #E5485F}.cat-nova{border-left:4px solid #4F7BFF}.cat-observar{border-left:4px solid #F2B705}
 .cp-m{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin:.55rem 0}.cp-m span{display:block;font-size:.66rem;color:#8A7380;font-weight:700}.cp-m b{display:block;font-size:.95rem}.cp-m small{font-size:.64rem;color:#8A7380}
+.cp-hor .hg{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:.35rem 0 0}.cp-hor .hc{border:0;border-radius:8px;padding:.3rem 0 .25rem;color:#fff;display:flex;flex-direction:column;align-items:center;line-height:1.05;cursor:pointer;opacity:.45;font-family:inherit}
+.cp-hor .hc b{font-size:.66rem}.cp-hor .hc span{font-size:.6rem;font-weight:700}.cp-hor .hc small{font-size:.5rem;opacity:.9;min-height:.6rem}
+.cp-hor .hc.verde{background:#16a34a}.cp-hor .hc.amarelo{background:#ca8a04}.cp-hor .hc.vermelho{background:#dc2626}.cp-hor .hc.sel{opacity:1;box-shadow:0 0 0 2px #111 inset,0 2px 6px rgba(0,0,0,.25)}
+.cp-hor .ha{display:flex;flex-wrap:wrap;gap:.3rem;margin:.5rem 0 .3rem}.cp-hor .ha button{border:1.5px solid rgba(0,0,0,.15);background:#fff;border-radius:99px;padding:.25rem .6rem;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit}.cp-hor .ha button.on{background:#7c3aed;border-color:#7c3aed;color:#fff}
+.cp-hor .hres{margin:.5rem 0 .2rem;padding:.45rem .6rem;border-radius:10px;background:rgba(124,58,237,.08);font-size:.8rem}
 .cp-hor .hb{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin:.5rem 0 .2rem}.cp-hor .hb i{display:block;height:34px;border-radius:4px;font-style:normal;font-size:.55rem;display:flex;align-items:flex-end;justify-content:center;color:#fff;font-weight:800;padding-bottom:2px}
 .cp-hor .hb .verde{background:#16a34a}.cp-hor .hb .amarelo{background:#eab308}.cp-hor .hb .vermelho{background:#dc2626}.cp-hor .hb .sel{outline:2px solid #111;outline-offset:1px}
 .cp-hor .hl{display:grid;grid-template-columns:repeat(24,1fr);font-size:.55rem;text-align:center;opacity:.6}
@@ -8634,32 +8639,56 @@ function pnlCampCarregar(){
     _pnlCampCarr=false; _pnlCamp=d; if(_pnlAba==='campanhas'){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
   }).catch(function(){ _pnlCampCarr=false; _pnlCamp={erro:'Sem conexão.'}; });
 }
-var _pnlHor=null,_pnlHorCarr=false,_pnlHorEsc='melhores';
+var _pnlHor=null,_pnlHorCarr=false,_pnlHorEsc='sua',_pnlHorMao=null;
+try{ var _hs=JSON.parse(Store.get('cl_hor_sel')||'null'); if(_hs&&_hs.esc){ _pnlHorEsc=_hs.esc; _pnlHorMao=_hs.mao||null; } }catch(e){}
+function pnlHorSalvar(){ try{ Store.set('cl_hor_sel',JSON.stringify({esc:_pnlHorEsc,mao:_pnlHorMao})); }catch(e){} }
 function pnlHorCarregar(novo){
   if(_pnlHorCarr) return; _pnlHorCarr=true;
   fetch('/.netlify/functions/admin-horarios?dias=14'+(novo?'&novo=1':''),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
-    _pnlHorCarr=false; _pnlHor=d; if(_pnlAba==='campanhas'){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
+    _pnlHorCarr=false; _pnlHor=d; if(_pnlAba==='campanhas') pnlRedesenhar();
   }).catch(function(){ _pnlHorCarr=false; _pnlHor={erro:'Sem conexão.'}; });
 }
-function pnlHorJanelas(){ var H=_pnlHor||{}; return _pnlHorEsc==='sua'?((H.sua||{}).janelas||[[6,8],[11,14],[18,25]]):((H.melhores||{}).janelas||[]); }
+function pnlRedesenhar(){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
+/* horas de cada atalho (0..23, horário de Brasília) */
+function pnlHorAtalho(esc){
+  var P=(_pnlHor&&_pnlHor.porHora)||[], tot=P.reduce(function(t,x){ return t+x.vendas; },0);
+  if(esc==='sua') return [6,7,11,12,13,18,19,20,21,22,23,0];
+  if(esc==='mao') return (_pnlHorMao||[]).slice();
+  var baratas=P.filter(function(x){ return x.cor==='verde'; }).map(function(x){ return x.h; });
+  if(baratas.length<3) baratas=P.filter(function(x){ return x.vendas>=1&&x.cpa; }).sort(function(a,b){ return a.cpa-b.cpa; }).slice(0,6).map(function(x){ return x.h; });
+  var vendem=[], acc=0; P.slice().sort(function(a,b){ return b.vendas-a.vendas||(a.cpa||99)-(b.cpa||99); }).forEach(function(x){ if(x.vendas>0&&(acc<tot*0.6||vendem.length<4)){ vendem.push(x.h); acc+=x.vendas; } });
+  if(esc==='baratas') return baratas;
+  if(esc==='vendem') return vendem;
+  if(esc==='ambas'){ var u={}; baratas.concat(vendem).forEach(function(h){ u[h]=1; }); return Object.keys(u).map(Number); }
+  return [];
+}
+function pnlHorSel(){ var o={}; pnlHorAtalho(_pnlHorEsc).forEach(function(h){ o[h]=1; }); return o; }
+function pnlHorJanelas(){
+  var on=[]; for(var h=0;h<24;h++) on.push(!!pnlHorSel()[h]);
+  if(on.every(Boolean)) return [[0,24]];
+  var ini=on.indexOf(false), out=[], a=null;
+  if(ini<0) return [];
+  for(var k=1;k<=24;k++){ var hh=(ini+k)%24, ab=ini+k; if(on[hh]&&a===null) a=ab; if(!on[hh]&&a!==null){ out.push([a,ab]); a=null; } }
+  return out.map(function(j){ return j[0]>=24?[j[0]-24,j[1]-24]:j; }).sort(function(x,y){ return x[0]-y[0]; });
+}
+function pnlHorTxt(js){ return js.map(function(j){ return j[0]+'h–'+(j[1]%24)+'h'; }).join(', '); }
 function pnlHorHtml(){
   var H=_pnlHor, R=function(v){ return 'R$ '+fmtPreco(Number(v)||0); };
   if(!H){ pnlHorCarregar(); return '<div class="cp-box cp-hor"><h4>⏰ Melhores horários</h4><div class="pnl-nota">Calculando custo por venda de cada hora…</div></div>'; }
   if(H.erro) return '<div class="cp-box cp-hor"><h4>⏰ Melhores horários</h4><div class="pnl-nota">⚠️ '+esc(H.erro)+'</div></div>';
-  var sel={}; (function(){ pnlHorJanelas().forEach(function(j){ for(var h=j[0];h<j[1];h++) sel[h%24]=1; }); })();
-  var bar='<div class="hb">'+H.porHora.map(function(x){ return '<i class="'+x.cor+(sel[x.h]?' sel':'')+'" title="'+x.h+'h · gasto '+R(x.gasto)+' · '+x.vendas+' vendas'+(x.cpa?' · '+R(x.cpa)+'/venda':'')+'">'+(x.vendas||'')+'</i>'; }).join('')+'</div>'+
-    '<div class="hl">'+H.porHora.map(function(x){ return '<span>'+(x.h%3===0?x.h:'')+'</span>'; }).join('')+'</div>';
-  var lin=function(o){ return (o.cpa?'<b>'+R(o.cpa)+'</b> por venda':'sem vendas')+' · '+o.horas+' h/dia · '+o.parteVendas+'% das vendas'; };
-  var ops='<div class="op">'+
-    '<label class="'+(_pnlHorEsc==='melhores'?'on':'')+'"><input type="radio" name="cphor" value="melhores"'+(_pnlHorEsc==='melhores'?' checked':'')+'><b>🏆 Melhores (pelos números)</b><br>'+esc(H.melhores.txt||'—')+'<br><small>'+lin(H.melhores)+'</small></label>'+
-    '<label class="'+(_pnlHorEsc==='sua'?'on':'')+'"><input type="radio" name="cphor" value="sua"'+(_pnlHorEsc==='sua'?' checked':'')+'><b>🙋 Sua sugestão</b><br>'+esc(H.sua.txt)+'<br><small>'+lin(H.sua)+'</small></label></div>';
-  var tab='<details class="cp-dd"><summary>📋 Hora a hora (últimos '+H.dias+' dias)</summary><table><tr><th>Hora</th><th>Gasto</th><th>Vendas</th><th>R$/venda</th></tr>'+
-    H.porHora.map(function(x){ return '<tr><td>'+({verde:'🟢',amarelo:'🟡',vermelho:'🔴'}[x.cor])+' '+x.h+'h</td><td>'+R(x.gasto)+'</td><td>'+x.vendas+'</td><td>'+(x.cpa?R(x.cpa):'—')+'</td></tr>'; }).join('')+'</table></details>';
-  return '<div class="cp-box cp-hor"><h4>⏰ Melhores horários <small style="font-weight:600;opacity:.7">· últimos '+H.dias+' dias · horário de Brasília</small> <button type="button" class="cmp-bt" data-cphornovo style="float:right;padding:.1rem .5rem">↻</button></h4>'+
-    '<div>Dia todo: '+lin(H.diaTodo)+(H.pagamNaHora!=null?' · <b>'+H.pagamNaHora+'%</b> pagam em até 30 min':'')+'</div>'+bar+
-    '<small>🟢 vende barato · 🟡 médio · 🔴 gasta e quase não vende · número = vendas na hora · contorno = horas que a programada vai usar</small>'+
-    (H.poucosDados?'<div class="pnl-nota">⚠️ Ainda poucos dados ('+H.diaTodo.vendas+' vendas de anúncio). Os horários ficam mais certos com o tempo.</div>':'')+ops+tab+
-    '<div class="pnl-nota">Use <b>⏰ Duplicar como programada</b> numa campanha boa: cria uma cópia que só roda nesses horários (a original continua normal pra comparar).</div></div>';
+  var P=H.porHora, sel=pnlHorSel(), tot=P.reduce(function(t,x){ return t+x.vendas; },0);
+  var sg=0,sv=0,sn=0; P.forEach(function(x){ if(sel[x.h]){ sg+=x.gasto; sv+=x.vendas; sn++; } });
+  var cel=function(x){ return '<button type="button" class="hc '+x.cor+(sel[x.h]?' sel':'')+'" data-cphr="'+x.h+'"><b>'+x.h+'h</b><span>'+(x.vendas?x.vendas+' v':'—')+'</span><small>'+(x.cpa?R(x.cpa).replace('R$ ',''):'')+'</small></button>'; };
+  var grade='<div class="hg">'+P.slice(0,12).map(cel).join('')+'</div><div class="hg">'+P.slice(12).map(cel).join('')+'</div>';
+  var at=[['baratas','🟢 Mais baratas'],['vendem','🔥 Que mais vendem'],['ambas','⭐ Baratas + que mais vendem'],['sua','🙋 Sua sugestão'],['mao','✋ Marquei na mão']];
+  var ops='<div class="ha">'+at.map(function(o){ return '<button type="button" data-cphesc="'+o[0]+'" class="'+(_pnlHorEsc===o[0]?'on':'')+'">'+o[1]+'</button>'; }).join('')+'</div>';
+  var js=pnlHorJanelas();
+  var res='<div class="hres">'+(sn?'<b>Programada vai rodar:</b> '+esc(pnlHorTxt(js))+'<br>'+sn+' h/dia · '+(sv?'<b>'+R(sg/sv)+'</b> por venda':'sem vendas nessas horas')+' · pega <b>'+(tot?Math.round(sv/tot*100):0)+'%</b> das vendas':'Nenhuma hora marcada. Toque nas horas ou escolha um atalho.')+'</div>';
+  return '<div class="cp-box cp-hor"><h4>⏰ Melhores horários <small style="font-weight:600;opacity:.7">· últimos '+H.dias+' dias · Brasília</small> <button type="button" class="cmp-bt" data-cphornovo style="float:right;padding:.1rem .5rem">↻</button></h4>'+
+    '<div>Dia todo: '+(H.diaTodo.cpa?'<b>'+R(H.diaTodo.cpa)+'</b> por venda':'—')+' · '+H.diaTodo.vendas+' vendas'+(H.pagamNaHora!=null?' · <b>'+H.pagamNaHora+'%</b> pagam em até 30 min':'')+'</div>'+
+    ops+grade+'<small>🟢 barato · 🟡 médio · 🔴 gasta e quase não vende · "v" = vendas · embaixo = R$ por venda · <b>toque na hora pra marcar/desmarcar</b></small>'+
+    (H.poucosDados?'<div class="pnl-nota">⚠️ Ainda poucos dados ('+H.diaTodo.vendas+' vendas de anúncio). Os horários ficam mais certos com o tempo.</div>':'')+res+
+    '<div class="pnl-nota">Depois toque em <b>⏰ Duplicar como programada</b> na campanha: ela usa exatamente as horas marcadas aqui.</div></div>';
 }
 function pnlCampHtml(){
   var D=_pnlCamp, R=function(v){ return 'R$ '+fmtPreco(Number(v)||0); };
@@ -8718,12 +8747,13 @@ function pnlCampLigar(body){
         toast('Cópia criada e ligada ✓'); _pnlCamp=null; pnlCampCarregar(); })
       .catch(function(){ toast('Sem conexão.'); b.disabled=false; });
   }; });
-  body.querySelectorAll('input[name=cphor]').forEach(function(r){ r.onchange=function(){ _pnlHorEsc=r.value; var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }; });
+  body.querySelectorAll('[data-cphesc]').forEach(function(b){ b.onclick=function(){ var e=b.dataset.cphesc; if(e==='mao'&&!_pnlHorMao) _pnlHorMao=pnlHorAtalho(_pnlHorEsc); _pnlHorEsc=e; pnlHorSalvar(); pnlRedesenhar(); }; });
+  body.querySelectorAll('[data-cphr]').forEach(function(b){ b.onclick=function(){ var h=Number(b.dataset.cphr); var cur=pnlHorAtalho(_pnlHorEsc); var i=cur.indexOf(h); if(i>=0) cur.splice(i,1); else cur.push(h); _pnlHorMao=cur.sort(function(x,y){ return x-y; }); _pnlHorEsc='mao'; pnlHorSalvar(); pnlRedesenhar(); }; });
   body.querySelectorAll('[data-cphornovo]').forEach(function(b){ b.onclick=function(){ _pnlHor=null; pnlHorCarregar(true); }; });
   body.querySelectorAll('[data-cpprog]').forEach(function(b){ b.onclick=function(){
     var nome=(b.closest('.cmp').querySelector('.cmp-top b')||{}).textContent||'';
-    var js=pnlHorJanelas(); if(!js.length){ toast('Ainda não tenho horários calculados.'); return; }
-    var txt=js.map(function(j){ return j[0]+'h–'+(j[1]%24)+'h'; }).join(', ');
+    var js=pnlHorJanelas(); if(!_pnlHor||_pnlHor.erro){ toast('Os horários ainda não carregaram.'); return; } if(!js.length){ toast('Marque as horas no quadro ⏰ Melhores horários primeiro.'); return; }
+    var txt=pnlHorTxt(js);
     var v=prompt('Cópia PROGRAMADA de "'+nome+'"\n\nHorários: '+txt+' (Brasília)\n\nQuanto por dia? (R$)',b.dataset.cporc||'45'); if(v===null) return;
     var orc=Number(String(v).replace(',','.')); if(!(orc>=6)){ toast('Valor inválido (mínimo R$ 6).'); return; }
     var d=prompt('Por quantos dias? (3 a 30)','7'); if(d===null) return; var dias=parseInt(d,10); if(!(dias>=3&&dias<=30)){ toast('Entre 3 e 30 dias.'); return; }
