@@ -88,7 +88,7 @@ export default async (req) => {
       msgs
     };
   }));
-  let modelo = null; try { modelo = await Promise.race([statusModeloPago(), new Promise((r) => setTimeout(() => r(null), 4000))]); } catch (e) {}
+  let modelo = null; try { modelo = await Promise.race([statusModeloPago(), new Promise((r) => setTimeout(() => r(null), 8500))]); } catch (e) {}
   const mc = await loja.get('modelo_musica_pronta_v1', { type: 'json' }).catch(() => null);
   return json({ eventos, conversas, agora, modelo: modelo || (mc && mc.status) || null, modeloMotivo: (mc && mc.motivo) || '' });
 };

@@ -205,6 +205,8 @@ async function wabaId(token) {
 export async function statusModeloPago(forcar) {
   const loja = getStore('whatsapp'), k = 'modelo_' + MODELO_PAGO;
   const c = await loja.get(k, { type: 'json' }).catch(() => null);
+  // erro de "não achei a conta" com a variável já colocada → confere de novo na hora
+  if (c && c.status === 'erro' && /não achei a conta/.test(c.motivo || '') && (process.env.WHATSAPP_WABA_ID || '').trim()) forcar = true;
   if (!forcar && c && (c.status === 'APPROVED' ? Date.now() - c.em < 6 * 3600e3 : Date.now() - c.em < 20 * 60e3)) return c.status;
   const token = (process.env.WHATSAPP_TOKEN || '').trim();
   let status = 'erro', motivo = '';
