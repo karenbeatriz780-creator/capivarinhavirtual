@@ -10,7 +10,7 @@
 //  3) prejuízo 3 dias seguidos E hoje também no prejuízo
 // Se VOCÊ religar uma campanha (pelo painel OU pelo app do Meta), o robô não mexe nela até a meia-noite.
 import { getStore } from '@netlify/blobs';
-import { metaAds, recomendar, ultimasAcoes, SUBIR_MAX, TICKET } from './_gastos.mjs';
+import { metaAds, recomendar, ultimasAcoes, TICKET, avaliarSubir } from './_gastos.mjs';
 import { lerCfg, aplicarAcao, logRobo, avisar, vendasSitePorCampanha } from './_meta.mjs';
 import { registrarAcao } from './_gastos.mjs';
 import { diaBR, brl, imposto, cpa3dias } from './_resumo.mjs';
@@ -66,15 +66,13 @@ export async function rodarRobo(simular) {
       continue;
     }
     // PODE SUBIR? só avisa (quem sobe é você) — 1 aviso por dia por campanha
-    if (cfg.autoSubir && c.orcamentoDia && vH >= 5 && cpaH && cpaH <= cpaSobe) {
-      const k3 = cpa3dias(Object.assign({}, c), s, 0); // 3 dias, valor do Meta
-      const r = c._rec || recomendar(Object.assign({}, c, { gasto: c.gasto * (1 + imp) }), a, agora);
-      if (k3.cpa && k3.cpa <= cpaSobe && !r.trava) {
-        const novo = Math.floor(c.orcamentoDia * (1 + SUBIR_MAX));
+    if (cfg.autoSubir && c.orcamentoDia) {
+      const av = avaliarSubir(c, s.porDia, a, cpaSobe, agora);
+      if (av.agora) {
         const k = 'podesubir_' + c.id + '_' + hoje;
         if (simular || !(await L().get(k).catch(() => null))) {
           if (!simular) await L().set(k, '1').catch(() => {});
-          feitas.push({ tipo: 'podeSubir', camp: c.nome, id: c.id, aviso: true, motivo: 'está vendendo barato: hoje ' + vH + ' vendas a ' + brl(cpaH) + ', e ' + brl(k3.cpa) + ' nos últimos 3 dias. Pode subir de ' + brl(c.orcamentoDia) + ' para ' + brl(novo) + '/dia (+20%).' });
+          feitas.push({ tipo: 'podeSubir', camp: c.nome, id: c.id, aviso: true, motivo: 'está vendendo barato: ' + av.vendas + ' vendas a ' + brl(av.cpa) + ' nos últimos 3 dias' + (vH ? ' (hoje ' + vH + ' a ' + brl(cpaH) + ')' : '') + '. Pode subir de ' + brl(c.orcamentoDia) + ' para ' + brl(av.novo) + '/dia (+20%) — tem o botão na aba Campanhas do painel.' });
         }
       }
     }

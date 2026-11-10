@@ -3,7 +3,7 @@
 //   GET  ?per=hoje|ontem|7d
 //   POST {acao:'duplicar', id}   (senha de administrador)
 // Valores de gasto: o do app do Meta (sem imposto) e o real (com imposto). Lucro = faturamento − anúncio com imposto.
-import { metaAds, ultimasAcoes, TICKET } from './_gastos.mjs';
+import { metaAds, ultimasAcoes, TICKET, avaliarSubir } from './_gastos.mjs';
 import { lerCfg, graph, logRobo, vendasSitePorCampanha } from './_meta.mjs';
 import { diaBR, imposto, cpa3dias } from './_resumo.mjs';
 
@@ -59,7 +59,27 @@ export default async (req) => {
       const pr = (orc) => { const vd = orc / base, fat = vd * tk * 7, custo = orc * (1 + imp) * 7; return { vendas: Math.round(vd * 7), fat: r2(fat), lucro: r2(fat - custo) }; };
       proj = { atual: pr(c.orcamentoDia), mais20: pr(Math.floor(c.orcamentoDia * 1.2)) };
     }
-    return { id: c.id, nome: c.nome, status: c.status, ativa, criada: c.criada, idadeH: Math.round(idadeH), orcamentoDia: c.orcamentoDia,
+    // dia a dia (7 dias, com hoje) e média por dia (só dias que rodaram, sem contar hoje)
+    const diasLista = [];
+    for (let i = 0; i < 7; i++) {
+      const k = diaBR(agora - i * 864e5), d = (c.dias || {})[k] || {}, gd = d.gasto || 0, vd = Math.max(d.compras || 0, s.porDia[k] || 0);
+      if (i === 0 || gd > 0 || vd > 0) diasLista.push({ dia: k, hoje: i === 0, gasto: r2(gd), vendas: vd, cpa: vd ? r2(gd / vd) : null, lucro: r2(vd * tk - gd * (1 + imp)) });
+    }
+    const passados = diasLista.filter((d) => !d.hoje && d.gasto > 0);
+    const media = passados.length ? { dias: passados.length, gasto: r2(passados.reduce((t, d) => t + d.gasto, 0) / passados.length),
+      vendas: Math.round(passados.reduce((t, d) => t + d.vendas, 0) / passados.length * 10) / 10,
+      cpa: (() => { const g = passados.reduce((t, d) => t + d.gasto, 0), v = passados.reduce((t, d) => t + d.vendas, 0); return v ? r2(g / v) : null; })(),
+      lucro: r2(passados.reduce((t, d) => t + d.lucro, 0) / passados.length) } : null;
+    // SUBIR: mesma regra do botão e do aviso do robô (avaliarSubir)
+    let subir = null;
+    if (ativa && c.orcamentoDia) {
+      const av = avaliarSubir(c, s.porDia, acoes[c.id], cpaMax, agora);
+      const brl2 = (x) => 'R$ ' + x.toFixed(2).replace('.', ',');
+      if (av.agora) subir = { agora: true, novo: av.novo, porque: av.vendas + ' vendas a ' + brl2(av.cpa) + ' nos últimos 3 dias' };
+      else if (av.trava && (av.bom || (cat === 'nova' || cat === 'boa') && v7 >= 3 && cpa7 && cpa7 <= cpaMax))
+        subir = { agora: false, novo: av.novo, quando: av.quando, porque: av.trava };
+    }
+    return { id: c.id, nome: c.nome, diasLista, media, subir, status: c.status, ativa, criada: c.criada, idadeH: Math.round(idadeH), orcamentoDia: c.orcamentoDia,
       aprendendo: !!c.aprendendo, cat, txt, dica,
       per: { gasto: r2(g), gastoImp: r2(g * (1 + imp)), vendas: v, cpa: v ? r2(g / v) : null, fat: r2(v * tk), lucro: r2(v * tk - g * (1 + imp)) },
       d7: { gasto: r2(g7), vendas: v7, cpa: cpa7 ? r2(cpa7) : null }, d3: { cpa: k3.cpa ? r2(k3.cpa) : null, vendas: k3.vendas },
@@ -78,7 +98,9 @@ export default async (req) => {
   // projeção da conta (só ativas com custo por venda conhecido)
   const pj = at.filter((x) => x.proj).reduce((t, x) => ({ vendas: t.vendas + x.proj.atual.vendas, fat: t.fat + x.proj.atual.fat, lucro: t.lucro + x.proj.atual.lucro }), { vendas: 0, fat: 0, lucro: 0 });
   const alertas = [];
-  lista.filter((x) => x.cat === 'boa').slice(0, 3).forEach((x) => alertas.push('🟢 "' + x.nome + '" está vendendo a R$ ' + String(x.d3.cpa || x.d7.cpa).replace('.', ',') + '. Vale DUPLICAR (cópia idêntica) e/ou subir +20%.'));
   lista.filter((x) => x.cat === 'ruim' && x.ativa).slice(0, 3).forEach((x) => alertas.push('🔴 "' + x.nome + '" está no prejuízo. O robô desliga sozinho se continuar.'));
-  return json({ per, resumo, cont, projConta: { vendas: pj.vendas, fat: r2(pj.fat), lucro: r2(pj.lucro) }, alertas, campanhas: lista, imposto: imp * 100, ticket: tk });
+  const podeSubir = lista.filter((x) => x.subir && x.subir.agora).map((x) => ({ id: x.id, nome: x.nome, orc: x.orcamentoDia, novo: x.subir.novo, porque: x.subir.porque }));
+  const logoSobe = lista.filter((x) => x.subir && !x.subir.agora).map((x) => ({ id: x.id, nome: x.nome, quando: x.subir.quando, porque: x.subir.porque }));
+  const duplicar = lista.filter((x) => x.cat === 'boa').slice(0, 3).map((x) => ({ id: x.id, nome: x.nome, cpa: x.d3.cpa || x.d7.cpa }));
+  return json({ podeSubir, logoSobe, duplicar, per, resumo, cont, projConta: { vendas: pj.vendas, fat: r2(pj.fat), lucro: r2(pj.lucro) }, alertas, campanhas: lista, imposto: imp * 100, ticket: tk });
 };

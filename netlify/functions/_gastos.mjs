@@ -89,9 +89,9 @@ export async function metaAds(dias, deX, ateX, semCache) {
     const [rc, rd, rcamp, rcd, rlist, rsets, rtot] = await Promise.all([
       fetch(base + '?fields=name,currency,account_status' + tk),
       fetch(base + '/insights?level=account&time_increment=1&time_range=' + tr + '&fields=' + campos + '&limit=500' + tk),
-      fetch(base + '/insights?level=campaign&date_preset=last_7d&fields=campaign_id,campaign_name,' + campos + '&limit=100' + tk),
+      fetch(base + '/insights?level=campaign&time_range=' + tr7 + '&fields=campaign_id,campaign_name,' + campos + '&limit=200' + tk), // 7 dias INCLUINDO hoje
       fetch(base + '/insights?level=campaign&time_increment=1&time_range=' + tr7 + '&fields=campaign_id,spend,actions,action_values&limit=500' + tk),
-      fetch(base + '/campaigns?fields=name,effective_status,created_time,start_time,daily_budget,lifetime_budget&limit=100' + tk),
+      fetch(base + '/campaigns?fields=name,effective_status,created_time,start_time,daily_budget,lifetime_budget&limit=200' + tk),
       fetch(base + '/adsets?fields=id,campaign_id,effective_status,daily_budget,learning_stage_info&limit=300' + tk),
       fetch(base + '/insights?level=campaign&date_preset=maximum&fields=campaign_id,spend,actions&limit=200' + tk)
     ]);
@@ -115,6 +115,14 @@ export async function metaAds(dias, deX, ateX, semCache) {
     (dsets.data || []).forEach((x) => { (sets[x.campaign_id] = sets[x.campaign_id] || []).push(x); });
     const diaCamp = {};
     (dcd.data || []).forEach((x) => { (diaCamp[x.campaign_id] = diaCamp[x.campaign_id] || {})[x.date_start] = { gasto: Number(x.spend) || 0, compras: acao(x.actions, COMPRA), valor: acao(x.action_values, COMPRA) }; });
+    // campanhas ativas (ou criadas nos últimos 7 dias) que ainda não gastaram nada também aparecem
+    const comGasto = new Set((dc.data || []).map((x) => String(x.campaign_id)));
+    const limite7 = Date.now() - 7 * 864e5;
+    (dlist.data || []).forEach((x) => {
+      if (comGasto.has(String(x.id))) return;
+      if (x.effective_status === 'ACTIVE' || Date.parse(x.created_time || 0) >= limite7)
+        (dc.data = dc.data || []).push({ campaign_id: x.id, campaign_name: x.name, spend: 0, clicks: 0, cpc: 0, ctr: 0, actions: [], action_values: [] });
+    });
     const campanhas = (dc.data || []).map((x) => {
       const i = info[x.campaign_id] || {}, ss = (sets[x.campaign_id] || []).filter((a) => a.effective_status === 'ACTIVE');
       const orc = Number(i.daily_budget || 0) || ss.reduce((t, a) => t + (Number(a.daily_budget) || 0), 0);
@@ -160,6 +168,26 @@ export async function registrarAcao(id, tipo, extra) {
   const ant = a[id] || {};
   a[id] = Object.assign({}, ant, { tipo, em: Date.now() }, extra || {}, tipo === 'orcamento' ? { orcEm: Date.now() } : {});
   await L.setJSON('meta_acoes', a);
+}
+// QUANDO SUBIR (+20%) — regra única do aviso do robô, da lista do painel e do botão:
+// últimos 3 dias completos com 5+ vendas e custo por venda até R$ cpaMax (valor do app do Meta),
+// campanha com 3+ dias, fora do aprendizado e sem mexer no orçamento há 72 h.
+export function avaliarSubir(c, porDiaSite, acao, cpaMax, agora) {
+  agora = agora || Date.now();
+  const hoje = diaBR(agora), ps = porDiaSite || {};
+  let g = 0, v = 0;
+  Object.keys(c.dias || {}).filter((k) => k < hoje).sort().reverse().slice(0, 3).forEach((k) => { g += c.dias[k].gasto || 0; v += Math.max(c.dias[k].compras || 0, ps[k] || 0); });
+  const cpa = v ? g / v : null, bom = v >= 5 && cpa != null && cpa <= cpaMax;
+  const novo = c.orcamentoDia ? Math.floor(c.orcamentoDia * (1 + SUBIR_MAX)) : null;
+  const criadaEm = c.criada ? new Date(c.criada).getTime() : 0, idadeH = criadaEm ? (agora - criadaEm) / 3600000 : 999;
+  const mexeuH = acao && acao.orcEm ? (agora - acao.orcEm) / 3600000 : 999;
+  let trava = '', quando = null;
+  if (c.status && c.status !== 'ACTIVE') trava = 'está desligada';
+  else if (!c.orcamentoDia) trava = 'não achei o orçamento diário';
+  else if (idadeH < TRAVA_H) { trava = 'campanha nova — o Meta precisa de 3 dias pra aprender'; quando = criadaEm + TRAVA_H * 3600000; }
+  else if (mexeuH < TRAVA_H) { trava = 'o orçamento foi mexido há ' + Math.round(mexeuH) + ' h — espere 72 h'; quando = acao.orcEm + TRAVA_H * 3600000; }
+  else if (c.aprendendo) trava = 'o Meta ainda está aprendendo';
+  return { agora: bom && !trava, bom, novo, cpa, vendas: v, trava, quando };
 }
 export function recomendar(c, acao, agora) {
   agora = agora || Date.now();

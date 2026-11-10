@@ -1,6 +1,5 @@
-import { metaAds, recomendar, ultimasAcoes } from './_gastos.mjs';
+import { metaAds, avaliarSubir, ultimasAcoes } from './_gastos.mjs';
 import { aplicarAcao, logRobo, lerCfg, vendasSitePorCampanha } from './_meta.mjs';
-import { cpa3dias } from './_resumo.mjs';
 // Painel → botões das campanhas: pausar, ativar e subir orçamento (+20% no máximo).
 // Precisa: senha de administrador (x-admin-key = ADMIN_SENHA) e token do Meta com ads_management.
 // A estratégia é conferida AQUI no servidor: campanha travada não sobe orçamento.
@@ -22,10 +21,11 @@ export default async (req) => {
       dias: Object.fromEntries(Object.entries(c0.dias || {}).map(([k, v]) => [k, Object.assign({}, v, { gasto: v.gasto * (1 + imp) })])) });
     const acoes = await ultimasAcoes();
     if (acao === 'subir') {
-      const rec = recomendar(c, acoes[id]);
-      if (!rec.podeSubir || !rec.novoOrcamento) return json({ erro: 'Bloqueado: ' + (rec.trava || rec.motivo || 'essa campanha não deve subir agora') }, 409);
-      const cfg = await lerCfg(), site = await vendasSitePorCampanha(10), k3 = cpa3dias(c0, site[id], imp);
-      if (!(k3.cpa && k3.cpa <= (cfg.cpaMax || 7))) return json({ erro: 'Bloqueado: custo por venda nos últimos 3 dias ' + (k3.cpa ? 'R$ ' + k3.cpa.toFixed(2).replace('.', ',') : 'sem vendas') + ' — só sobe com até R$ ' + (cfg.cpaMax || 7) + ' por venda' }, 409);
+      const cfg = await lerCfg(), site = await vendasSitePorCampanha(10);
+      const av = avaliarSubir(c0, (site[id] || {}).porDia, acoes[id], cfg.cpaMax || 7);
+      if (av.trava) return json({ erro: 'Bloqueado: ' + av.trava }, 409);
+      if (!av.agora) return json({ erro: 'Bloqueado: nos últimos 3 dias ' + (av.vendas ? av.vendas + ' vendas a R$ ' + av.cpa.toFixed(2).replace('.', ',') : 'sem vendas') + ' — só sobe com 5+ vendas a até R$ ' + (cfg.cpaMax || 7) + ' por venda' }, 409);
+      const rec = { novoOrcamento: av.novo };
       await aplicarAcao(Object.assign({}, c0, { novoOrcamento: rec.novoOrcamento }), 'subir', 'você');
       await logRobo({ tipo: 'subiu', camp: c0.nome, id, motivo: 'você subiu de R$ ' + c0.orcamentoDia + ' para R$ ' + rec.novoOrcamento + '/dia pelo painel' });
     } else {

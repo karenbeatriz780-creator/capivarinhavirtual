@@ -323,6 +323,12 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .cat-boa .cp-cat{background:#E3F7EA;color:#13914a}.cat-ruim .cp-cat{background:#FDE7EA;color:#D12D4A}.cat-nova .cp-cat{background:#E8F0FF;color:#2F5BD6}.cat-observar .cp-cat{background:#FFF6DC;color:#9A6B00}
 .cat-boa{border-left:4px solid #2FBF6B}.cat-ruim{border-left:4px solid #E5485F}.cat-nova{border-left:4px solid #4F7BFF}.cat-observar{border-left:4px solid #F2B705}
 .cp-m{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin:.55rem 0}.cp-m span{display:block;font-size:.66rem;color:#8A7380;font-weight:700}.cp-m b{display:block;font-size:.95rem}.cp-m small{font-size:.64rem;color:#8A7380}
+.cp-box{border-radius:16px;padding:.7rem .8rem;margin-bottom:.6rem;font-size:.82rem;line-height:1.4}.cp-box h4{margin:0 0 .45rem;font-size:.92rem;font-family:inherit;font-weight:800}
+.cp-sobe{background:#E9F9EF;border:1px solid #9FE0B5}.cp-logo{background:#EEF3FF;border:1px solid #BFD0FF}.cp-dup{background:#F6EEFF;border:1px solid #D6BDF5}
+.cp-it{display:flex;align-items:center;gap:.5rem;justify-content:space-between;padding:.45rem 0;border-top:1px dashed rgba(0,0,0,.1)}.cp-it:first-of-type{border-top:0}
+.cp-it .cmp-top{display:block;flex:1;min-width:0}.cp-it .cmp-top b{display:block;font-size:.84rem;overflow-wrap:anywhere}.cp-it small{color:#5d5560}.cp-it .cmp-bt{flex:none;margin:0}
+.cp-dd{margin-top:.45rem;font-size:.78rem}.cp-dd summary{cursor:pointer;font-weight:700;color:#5B2148}.cp-dd table{width:100%;border-collapse:collapse;margin-top:.35rem;font-size:.72rem}
+.cp-dd td,.cp-dd th{padding:.26rem .12rem;text-align:right;border-bottom:1px solid rgba(0,0,0,.06);white-space:nowrap}.cp-dd td:first-child,.cp-dd th:first-child{text-align:left}.cp-dd tr.hj td{font-weight:700;background:#FFF5FA}.cp-dd tr.md td{font-weight:700;background:#F3F0F5}
 .cp-d{font-size:.78rem;line-height:1.4;color:#4A3A44}.cp-d small{color:#8A7380}.cp-pj{font-size:.76rem;margin-top:.35rem;color:#5B2148}
 .hn-mus{display:flex;align-items:center;gap:.75rem;background:#fff;border:1px solid #F1E2E7;border-radius:18px;padding:.75rem;margin-bottom:.6rem;box-shadow:0 6px 16px rgba(90,40,60,.06)}
 .hn-mus .pl{width:46px;height:46px;border-radius:50%;border:0;background:linear-gradient(135deg,#FF8DB8,#D63A72);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 14px rgba(214,58,114,.35);cursor:pointer}
@@ -8278,12 +8284,17 @@ function pnlCampHtml(){
     '<div class="cp-k"><span>Faturamento</span><b>'+R(rs.fat)+'</b><small>ticket R$ '+fmtPreco(D.ticket)+'</small></div>'+
     '<div class="cp-k '+(rs.lucro>=0?'pos':'neg')+'"><span>Lucro</span><b>'+(rs.lucro<0?'-':'')+R(Math.abs(rs.lucro))+'</b><small>já com imposto</small></div></div>'+
     '<div class="cp-proj">🔮 <b>Projeção dos próximos 7 dias</b> (orçamentos atuais, '+(rs.ativas||0)+' ativas · '+R(rs.orcDia)+'/dia): ~<b>'+(pj.vendas||0)+' vendas</b> · faturamento ~<b>'+R(pj.fat)+'</b> · lucro ~<b class="'+(pj.lucro>=0?'pos':'neg')+'">'+(pj.lucro<0?'-':'')+R(Math.abs(pj.lucro))+'</b></div>';
+  var dtH=function(t){ if(!t) return 'quando o Meta terminar o aprendizado'; var d=new Date(t); return ['dom','seg','ter','qua','qui','sex','sáb'][d.getDay()]+' '+('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' a partir das '+('0'+d.getHours()).slice(-2)+'h'; };
+  var boxSobe=(D.podeSubir||[]).length?'<div class="cp-box cp-sobe"><h4>⬆️ Pode subir agora (+20%)</h4>'+D.podeSubir.map(function(x){ return '<div class="cmp cp-it"><div class="cmp-top"><b>'+esc(x.nome)+'</b><small>'+esc(x.porque)+' · '+R(x.orc)+' → '+R(x.novo)+'/dia</small></div><button type="button" class="cmp-bt sobe forte" data-cmpacao="subir" data-cmpid="'+esc(x.id)+'" data-cmpval="'+x.novo+'">⬆️ Subir</button></div>'; }).join('')+'</div>':'';
+  var boxLogo=(D.logoSobe||[]).length?'<div class="cp-box cp-logo"><h4>📅 Quando subir (estão boas, mas ainda não pode mexer)</h4>'+D.logoSobe.map(function(x){ return '<div class="cp-it"><div><b>'+esc(x.nome)+'</b><br><small>pode subir <b>'+dtH(x.quando)+'</b> · '+esc(x.porque||'')+'</small></div></div>'; }).join('')+'</div>':'';
+  var boxDup=(D.duplicar||[]).length?'<div class="cp-box cp-dup"><h4>⧉ Vale duplicar (cópia idêntica)</h4>'+D.duplicar.map(function(x){ return '<div class="cmp cp-it"><div class="cmp-top"><b>'+esc(x.nome)+'</b><small>'+(x.cpa?'vendendo a '+R(x.cpa)+' por venda':'')+'</small></div><button type="button" class="cmp-bt" data-cpdup="'+esc(x.id)+'">⧉ Duplicar</button></div>'; }).join('')+'</div>':'';
   var alertas=(D.alertas||[]).length?'<div class="cp-al">'+D.alertas.map(function(a){ return '<div>'+esc(a)+'</div>'; }).join('')+'</div>':'';
   var cats=[['todas','Todas',(D.campanhas||[]).length],['boa','🟢 Boas',c.boa||0],['nova','🆕 Novas',c.nova||0],['observar','🟡 Observar',c.observar||0],['ruim','🔴 Ruins',c.ruim||0],['pausada','⏸ Pausadas',c.pausada||0]];
   var filtro='<div class="cp-f">'+cats.map(function(x){ return '<button type="button" data-cpf="'+x[0]+'" class="'+(_pnlCampFiltro===x[0]?'on':'')+'">'+x[1]+' <i>'+x[2]+'</i></button>'; }).join('')+'</div>';
   var lista=(D.campanhas||[]).filter(function(x){ return _pnlCampFiltro==='todas'||x.cat===_pnlCampFiltro; }).map(function(x){
     var p=x.per, pr=x.proj;
     var bts='';
+    if(x.subir&&x.subir.agora) bts+='<button type="button" class="cmp-bt sobe forte" data-cmpacao="subir" data-cmpid="'+esc(x.id)+'" data-cmpval="'+x.subir.novo+'">⬆️ Subir para '+R(x.subir.novo)+'/dia</button>';
     if(x.cat==='boa'||(x.cat==='pausada'&&x.d7.cpa&&x.d7.cpa<=7)) bts+='<button type="button" class="cmp-bt sobe forte" data-cpdup="'+esc(x.id)+'">⧉ Duplicar (cópia idêntica)</button>';
     if(x.ativa) bts+='<button type="button" class="cmp-bt" data-cmpacao="pausar" data-cmpid="'+esc(x.id)+'">⏸ Pausar</button>';
     else bts+='<button type="button" class="cmp-bt" data-cmpacao="ativar" data-cmpid="'+esc(x.id)+'">▶️ Ativar</button>';
@@ -8292,9 +8303,13 @@ function pnlCampHtml(){
         '<div><span>Lucro</span><b class="'+(p.lucro>=0?'pos':'neg')+'">'+(p.lucro<0?'-':'')+R(Math.abs(p.lucro))+'</b><small>fat. '+R(p.fat)+'</small></div><div><span>Orçamento</span><b>'+(x.orcamentoDia?R(x.orcamentoDia):'—')+'</b><small>/dia</small></div></div>'+
       '<div class="cp-d">💡 '+esc(x.dica)+' <small>· 7 dias: '+x.d7.vendas+' vendas'+(x.d7.cpa?' a '+R(x.d7.cpa):'')+(x.d3.cpa?' · 3 dias: '+R(x.d3.cpa)+'/venda':'')+'</small></div>'+
       (pr?'<div class="cp-pj">🔮 Próximos 7 dias: <b>~'+pr.atual.vendas+' vendas</b> · lucro <b class="'+(pr.atual.lucro>=0?'pos':'neg')+'">~'+(pr.atual.lucro<0?'-':'')+R(Math.abs(pr.atual.lucro))+'</b>'+(x.cat==='boa'?' · subindo +20%: ~'+pr.mais20.vendas+' vendas, lucro ~'+R(pr.mais20.lucro):'')+'</div>':'')+
+      (x.subir&&!x.subir.agora?'<div class="cp-pj">📅 Pode subir <b>'+dtH(x.subir.quando)+'</b></div>':'')+
+      ((x.diasLista||[]).length?'<details class="cp-dd"><summary>📊 Dia a dia'+(x.media?' · média '+R(x.media.gasto)+'/dia, '+String(x.media.vendas).replace('.',',')+' vendas/dia':'')+'</summary><table><tr><th>Dia</th><th>Gasto</th><th>Vendas</th><th>R$/venda</th><th>Lucro</th></tr>'+
+        x.diasLista.map(function(d){ return '<tr class="'+(d.hoje?'hj':'')+'"><td>'+(d.hoje?'Hoje':d.dia.slice(8,10)+'/'+d.dia.slice(5,7))+'</td><td>'+R(d.gasto)+'</td><td>'+d.vendas+'</td><td>'+(d.cpa?R(d.cpa):'—')+'</td><td class="'+(d.lucro>=0?'pos':'neg')+'">'+(d.lucro<0?'-':'')+R(Math.abs(d.lucro))+'</td></tr>'; }).join('')+
+        (x.media?'<tr class="md"><td>Média/dia</td><td>'+R(x.media.gasto)+'</td><td>'+String(x.media.vendas).replace('.',',')+'</td><td>'+(x.media.cpa?R(x.media.cpa):'—')+'</td><td class="'+(x.media.lucro>=0?'pos':'neg')+'">'+(x.media.lucro<0?'-':'')+R(Math.abs(x.media.lucro))+'</td></tr>':'')+'</table></details>':'')+
       '<div class="cmp-bts">'+bts+'</div></div>';
   }).join('')||'<div class="pnl-nota">Nenhuma campanha nesse filtro.</div>';
-  return '<div class="cp">'+chipsPer+resumo+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
+  return '<div class="cp">'+chipsPer+resumo+boxSobe+boxLogo+boxDup+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
     '<div class="dsh-nota">Gasto e custo por venda iguais ao app do Meta; lucro já desconta o imposto ('+String(D.imposto).replace('.',',')+'%). Vendas = maior entre Pixel e vendas reais do site. Projeção usa o custo por venda dos últimos 3 dias (ou 7) e o orçamento de hoje: é estimativa.</div></div>'+robo+'</div>';
 }
 function pnlCampLigar(body){
