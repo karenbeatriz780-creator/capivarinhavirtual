@@ -118,7 +118,7 @@ export async function duplicarProgramada(id, janelas, orcDia, dias) {
   const total = Math.round(orcDia * dias * 100);
   const nomeBase = String(orig.name || 'Campanha').replace(/^⏰ PROG · /, '').slice(0, 70);
   const nome = '⏰ PROG · ' + nomeBase;
-  const inicio = new Date(Date.now() + 5 * 60000), fim = new Date(inicio.getTime() + dias * 86400000);
+  const inicio = new Date(Math.ceil((Date.now() + 2 * 60000) / 60000) * 60000), fim = new Date(inicio.getTime() + dias * 86400000);
   let camp = null;
   try {
     camp = await graphConta('POST', 'campaigns', { name: nome, objective: orig.objective || 'OUTCOME_SALES', status: 'PAUSED',
@@ -127,10 +127,11 @@ export async function duplicarProgramada(id, janelas, orcDia, dias) {
     const criados = [];
     for (const s of setsOk) {
       const corpo = { name: nome, campaign_id: camp.id, billing_event: s.billing_event || 'IMPRESSIONS', optimization_goal: s.optimization_goal || 'OFFSITE_CONVERSIONS',
-        targeting: s.targeting, promoted_object: s.promoted_object, start_time: inicio.toISOString(), end_time: fim.toISOString(),
+        targeting: s.targeting, promoted_object: s.promoted_object, start_time: String(Math.floor(inicio.getTime() / 1000)), end_time: String(Math.floor(fim.getTime() / 1000)),
         pacing_type: ['day_parting'], adset_schedule, status: 'PAUSED' };
       if (s.destination_type) corpo.destination_type = s.destination_type;
       if (s.attribution_spec) corpo.attribution_spec = s.attribution_spec;
+      console.log('programada adset:', JSON.stringify({ sched: adset_schedule, ini: corpo.start_time, fim: corpo.end_time, desloc, horas }));
       const ns = await graphConta('POST', 'adsets', corpo);
       for (const ad of ads.filter((x) => x.adset_id === s.id && x.creative && x.creative.id)) {
         const na = await graphConta('POST', 'ads', { name: nome, adset_id: ns.id, creative: { creative_id: ad.creative.id }, status: 'PAUSED' });
@@ -151,6 +152,7 @@ export async function duplicarProgramada(id, janelas, orcDia, dias) {
     await logRobo({ tipo: 'publicou', camp: nome, id: camp.id, motivo: 'você duplicou como PROGRAMADA (' + txtJanelas(janelas) + ', R$ ' + orcDia + '/dia por ' + dias + ' dias = R$ ' + (total / 100) + ' no total)' });
     return { ok: true, nova: camp.id, nome, total: total / 100, fim: fim.getTime(), janelas: txtJanelas(janelas) };
   } catch (e) {
+    console.error('programada erro:', e && e.message, JSON.stringify((e && e.meta) || {}));
     if (camp) { try { await graph('DELETE', camp.id, {}); } catch (x) { try { await graph('POST', camp.id, { status: 'PAUSED' }); } catch (y) {} } }
     throw e;
   }
