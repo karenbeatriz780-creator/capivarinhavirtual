@@ -95,67 +95,87 @@ export async function calcHorarios(nDias, semCache) {
   return dados;
 }
 
-// ---------- duplicar como PROGRAMADA ----------
-// cria campanha nova (pausada) → conjunto(s) com o mesmo público/pixel/posicionamentos + horário → anúncio(s) com o MESMO criativo
-// confere → liga. Qualquer erro: apaga o que criou. A original não é mexida.
-export async function duplicarProgramada(id, janelas, orcDia, dias) {
+// ---------- DUPLICAR (normal ou PROGRAMADA) ----------
+// Cópia peça por peça (o Meta não deixa "copiar tudo de uma vez" campanha+conjunto+anúncio).
+// Anúncio usa o MESMO criativo → mesmo post (curtidas/comentários). A original não é mexida.
+// prog = { janelas, orcDia, dias } → programada: orçamento TOTAL no conjunto + horários (como o Gerenciador faz)
+// prog = null → cópia idêntica: mesmo orçamento diário (na campanha ou nos conjuntos, igual à original)
+export async function duplicarCampanha(id, prog) {
   const acc = await graphConta('GET', '', { fields: 'timezone_offset_hours_utc' });
   const desloc = Math.round(Number(acc.timezone_offset_hours_utc || BR) - BR);
-  const horas = horasDe(janelas);
-  if (horas.length < 3 || horas.length > 22) throw new Error('escolha entre 3 e 22 horas por dia');
-  // horas de Brasília → minutos no fuso da conta, em blocos contínuos dentro de 0..1440
-  const hc = horas.map((h) => ((h + desloc) % 24 + 24) % 24).sort((a, b) => a - b);
-  const sched = []; let a = null, p = null;
-  hc.forEach((h) => { if (a === null) { a = h; p = h; } else if (h === p + 1) p = h; else { sched.push([a, p + 1]); a = h; p = h; } });
-  if (a !== null) sched.push([a, p + 1]);
-  const adset_schedule = sched.map(([x, y]) => ({ start_minute: x * 60, end_minute: y * 60, days: [0, 1, 2, 3, 4, 5, 6], timezone_type: 'ADVERTISER' }));
-
-  const orig = await graph('GET', id, { fields: 'name,objective,bid_strategy,special_ad_categories,buying_type' });
-  const sets = (await graph('GET', id + '/adsets', { fields: 'id,name,targeting,promoted_object,optimization_goal,billing_event,destination_type,attribution_spec,bid_strategy,bid_amount,effective_status', limit: 50 })).data || [];
+  let adset_schedule = null, sched = [];
+  if (prog) {
+    const horas = horasDe(prog.janelas);
+    if (horas.length < 3 || horas.length > 22) throw new Error('escolha entre 3 e 22 horas por dia');
+    const hc = horas.map((h) => ((h + desloc) % 24 + 24) % 24).sort((x, y) => x - y);
+    let a = null, p = null;
+    hc.forEach((h) => { if (a === null) { a = h; p = h; } else if (h === p + 1) p = h; else { sched.push([a, p + 1]); a = h; p = h; } });
+    if (a !== null) sched.push([a, p + 1]);
+    adset_schedule = sched.map(([x, y]) => ({ start_minute: x * 60, end_minute: y * 60, days: [0, 1, 2, 3, 4, 5, 6], timezone_type: 'ADVERTISER' }));
+  }
+  const orig = await graph('GET', id, { fields: 'name,objective,bid_strategy,special_ad_categories,daily_budget,lifetime_budget' });
+  const sets = (await graph('GET', id + '/adsets', { fields: 'id,name,targeting,promoted_object,optimization_goal,billing_event,destination_type,attribution_spec,bid_strategy,bid_amount,daily_budget,lifetime_budget,effective_status', limit: 50 })).data || [];
   const ads = (await graph('GET', id + '/ads', { fields: 'id,name,adset_id,creative{id},effective_status', limit: 100 })).data || [];
-  const setsOk = sets.filter((s) => ads.some((x) => x.adset_id === s.id && x.creative && x.creative.id));
+  const temAd = (s) => ads.some((x) => x.adset_id === s.id && x.creative && x.creative.id);
+  let setsOk = sets.filter((s) => temAd(s) && s.effective_status !== 'DELETED' && s.effective_status !== 'ARCHIVED');
+  if (!setsOk.length) setsOk = sets.filter(temAd);
   if (!setsOk.length) throw new Error('não achei conjunto com anúncio nessa campanha');
-  const total = Math.round(orcDia * dias * 100);
-  const nomeBase = String(orig.name || 'Campanha').replace(/^⏰ PROG · /, '').slice(0, 70);
-  const nome = '⏰ PROG · ' + nomeBase;
-  const inicio = new Date(Math.ceil((Date.now() + 2 * 60000) / 60000) * 60000), fim = new Date(inicio.getTime() + dias * 86400000);
+  const base = String(orig.name || 'Campanha').replace(/^⏰ PROG · /, '').replace(/ · cópia$/, '').slice(0, 70);
+  const nome = prog ? '⏰ PROG · ' + base : base + ' · cópia';
+  const cbo = !prog && Number(orig.daily_budget || 0) > 0;
+  const inicio = new Date(Math.ceil((Date.now() + 2 * 60000) / 60000) * 60000);
+  const fim = prog ? new Date(inicio.getTime() + prog.dias * 86400000) : null;
+  const totalProg = prog ? Math.round(prog.orcDia * prog.dias * 100) : 0;
   let camp = null;
   try {
-    camp = await graphConta('POST', 'campaigns', { name: nome, objective: orig.objective || 'OUTCOME_SALES', status: 'PAUSED',
-      special_ad_categories: orig.special_ad_categories || [], buying_type: 'AUCTION', lifetime_budget: String(total),
-      bid_strategy: orig.bid_strategy || 'LOWEST_COST_WITHOUT_CAP' });
+    const cc = { name: nome, objective: orig.objective || 'OUTCOME_SALES', status: 'PAUSED', special_ad_categories: orig.special_ad_categories || [], buying_type: 'AUCTION' };
+    if (cbo) Object.assign(cc, { daily_budget: String(orig.daily_budget), bid_strategy: orig.bid_strategy || 'LOWEST_COST_WITHOUT_CAP' });
+    else cc.is_adset_budget_sharing_enabled = false;
+    camp = await graphConta('POST', 'campaigns', cc);
     const criados = [];
     for (const s of setsOk) {
       const corpo = { name: nome, campaign_id: camp.id, billing_event: s.billing_event || 'IMPRESSIONS', optimization_goal: s.optimization_goal || 'OFFSITE_CONVERSIONS',
-        targeting: s.targeting, promoted_object: s.promoted_object, start_time: String(Math.floor(inicio.getTime() / 1000)), end_time: String(Math.floor(fim.getTime() / 1000)),
-        pacing_type: ['day_parting'], adset_schedule, status: 'PAUSED' };
+        targeting: s.targeting, promoted_object: s.promoted_object, start_time: String(Math.floor(inicio.getTime() / 1000)), status: 'PAUSED' };
       if (s.destination_type) corpo.destination_type = s.destination_type;
       if (s.attribution_spec) corpo.attribution_spec = s.attribution_spec;
-      console.log('programada adset:', JSON.stringify({ sched: adset_schedule, ini: corpo.start_time, fim: corpo.end_time, desloc, horas }));
+      if (!cbo) {
+        corpo.bid_strategy = s.bid_strategy || orig.bid_strategy || 'LOWEST_COST_WITHOUT_CAP';
+        if (s.bid_amount && /CAP|BID/.test(corpo.bid_strategy) && corpo.bid_strategy !== 'LOWEST_COST_WITHOUT_CAP') corpo.bid_amount = s.bid_amount;
+        if (prog) Object.assign(corpo, { lifetime_budget: String(Math.round(totalProg / setsOk.length)), end_time: String(Math.floor(fim.getTime() / 1000)), pacing_type: ['day_parting'], adset_schedule });
+        else {
+          const d = Number(s.daily_budget || 0) || Math.round(Number(orig.daily_budget || 0) / setsOk.length) || Math.round(45 * 100 / setsOk.length);
+          corpo.daily_budget = String(d);
+        }
+      }
+      console.log('duplicar adset:', JSON.stringify({ prog: !!prog, cbo, sched, desloc }));
       const ns = await graphConta('POST', 'adsets', corpo);
       for (const ad of ads.filter((x) => x.adset_id === s.id && x.creative && x.creative.id)) {
         const na = await graphConta('POST', 'ads', { name: nome, adset_id: ns.id, creative: { creative_id: ad.creative.id }, status: 'PAUSED' });
         criados.push({ set: ns.id, ad: na.id });
       }
     }
-    // confere
-    const conf = await graph('GET', criados[0].set, { fields: 'adset_schedule,pacing_type,end_time' });
-    if (!Array.isArray(conf.adset_schedule) || !conf.adset_schedule.length) throw new Error('o Meta não gravou o horário programado');
-    const cc = await graph('GET', camp.id, { fields: 'lifetime_budget' });
-    if (Number(cc.lifetime_budget) !== total) throw new Error('orçamento total diferente do pedido');
-    // liga
+    if (!criados.length) throw new Error('nenhum anúncio copiado');
+    if (prog) {
+      const conf = await graph('GET', criados[0].set, { fields: 'adset_schedule,end_time' });
+      if (!Array.isArray(conf.adset_schedule) || !conf.adset_schedule.length) throw new Error('o Meta não gravou o horário programado');
+    }
     for (const x of criados) await graph('POST', x.ad, { status: 'ACTIVE' });
     for (const s of [...new Set(criados.map((x) => x.set))]) await graph('POST', s, { status: 'ACTIVE' });
     await graph('POST', camp.id, { status: 'ACTIVE' });
-    await loja().setJSON('prog_' + camp.id, { origem: id, janelas, orcDia, dias, criadaEm: Date.now(), fim: fim.getTime() });
     try { await registrarAcao(camp.id, 'criada', { quem: 'painel' }); await loja().setJSON('meta_cache_zerado', { em: Date.now() }); } catch (e) {}
-    await logRobo({ tipo: 'publicou', camp: nome, id: camp.id, motivo: 'você duplicou como PROGRAMADA (' + txtJanelas(janelas) + ', R$ ' + orcDia + '/dia por ' + dias + ' dias = R$ ' + (total / 100) + ' no total)' });
-    return { ok: true, nova: camp.id, nome, total: total / 100, fim: fim.getTime(), janelas: txtJanelas(janelas) };
+    if (prog) {
+      await loja().setJSON('prog_' + camp.id, { origem: id, janelas: prog.janelas, orcDia: prog.orcDia, dias: prog.dias, criadaEm: Date.now(), fim: fim.getTime() });
+      await logRobo({ tipo: 'publicou', camp: nome, id: camp.id, motivo: 'você duplicou como PROGRAMADA (' + txtJanelas(prog.janelas) + ', R$ ' + prog.orcDia + '/dia por ' + prog.dias + ' dias = R$ ' + (totalProg / 100) + ' no total)' });
+      return { ok: true, nova: camp.id, nome, total: totalProg / 100, fim: fim.getTime(), janelas: txtJanelas(prog.janelas) };
+    }
+    await logRobo({ tipo: 'publicou', camp: nome, id: camp.id, motivo: 'você duplicou pelo painel (cópia idêntica, mesmo post, já ligada)' });
+    return { ok: true, nova: camp.id, nome };
   } catch (e) {
-    console.error('programada erro:', e && e.message, JSON.stringify((e && e.meta) || {}));
+    console.error('duplicar erro:', e && e.message, JSON.stringify((e && e.meta) || {}));
     const m = (e && e.meta) || {};
-    e.message = (e.message || 'erro') + ' [código ' + (m.code || '?') + '/' + (m.error_subcode || '?') + ' · horas da conta: ' + sched.map(([x, y]) => x + '-' + y).join(',') + ' · fuso ' + desloc + ']';
+    e.message = (e.message || 'erro') + ' [código ' + (m.code || '?') + '/' + (m.error_subcode || '?') + (prog ? ' · horas da conta: ' + sched.map(([x, y]) => x + '-' + y).join(',') + ' · fuso ' + desloc : '') + ']';
     if (camp) { try { await graph('DELETE', camp.id, {}); } catch (x) { try { await graph('POST', camp.id, { status: 'PAUSED' }); } catch (y) {} } }
     throw e;
   }
 }
+export const duplicarProgramada = (id, janelas, orcDia, dias) => duplicarCampanha(id, { janelas, orcDia, dias });

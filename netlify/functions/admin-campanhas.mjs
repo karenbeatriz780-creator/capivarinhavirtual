@@ -6,6 +6,7 @@
 import { metaAds, ultimasAcoes, TICKET, avaliarSubir } from './_gastos.mjs';
 import { lerCfg, graph, logRobo, vendasSitePorCampanha } from './_meta.mjs';
 import { diaBR, imposto, cpa3dias } from './_resumo.mjs';
+import { duplicarCampanha } from './_horarios.mjs';
 
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const r2 = (x) => Math.round((Number(x) || 0) * 100) / 100;
@@ -19,12 +20,8 @@ export default async (req) => {
     const id = String(b.id || '');
     if (b.acao !== 'duplicar' || !/^\d{5,30}$/.test(id)) return json({ erro: 'Pedido inválido.' }, 400);
     try {
-      const orig = await graph('GET', id, { fields: 'name' });
-      const d = await graph('POST', id + '/copies', { deep_copy: true, status_option: 'ACTIVE',
-        rename_options: { rename_strategy: 'DEEP_RENAME', rename_suffix: ' · cópia' } });
-      const nova = d.copied_campaign_id || (d.ad_object_ids && d.ad_object_ids[0] && d.ad_object_ids[0].copied_id) || null;
-      await logRobo({ tipo: 'publicou', camp: (orig.name || id) + ' · cópia', id: nova, motivo: 'você duplicou pelo painel (cópia idêntica, já ligada)' });
-      return json({ ok: true, nova });
+      const r = await duplicarCampanha(id, null);
+      return json({ ok: true, nova: r.nova });
     } catch (e) { return json({ erro: 'O Meta não deixou duplicar: ' + e.message }, 502); }
   }
 
