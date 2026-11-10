@@ -1170,11 +1170,13 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .me-rodape{font-size:.72rem;color:#7C6670;margin-top:1.8rem;}
 .me-vazio{max-width:22rem;color:#C6A9B6;font-size:.88rem;line-height:1.6;margin-top:1rem;}
 /* tela premium de composição da música */
+.zap-espera{margin:.9rem 0 .2rem}.zap-espera .mp-zap{margin-top:0!important;font-size:1.02rem!important;padding:1rem!important;animation:zapPulso 1.8s ease-in-out infinite}.zap-espera .hint{color:#E9D3DF!important;font-size:.8rem}
+@keyframes zapPulso{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.55)}60%{box-shadow:0 0 0 12px rgba(37,211,102,0)}}
 .mc-premium{background:linear-gradient(165deg,#2A1620,#140A11);border-radius:var(--r-lg);
-  padding:2rem 1.3rem 1.5rem;text-align:center;color:#fff;
+  padding:1.4rem 1.3rem 1.3rem;text-align:center;color:#fff;
   box-shadow:0 16px 40px rgba(20,10,17,.35);}
 .mc-palco{position:relative;display:flex;align-items:center;justify-content:center;
-  height:120px;margin-bottom:1.2rem;}
+  height:104px;margin-bottom:.7rem;}
 .mc-disco{width:96px;height:96px;border-radius:50%;
   background:conic-gradient(from 0deg,#3a1f2e,#5a2f44,#3a1f2e,#5a2f44,#3a1f2e);
   display:flex;align-items:center;justify-content:center;
@@ -3690,7 +3692,8 @@ function htmlMusicaCompondo(){
     '<div class="mc-fase" id="mcFase">Lendo a história de vocês...</div>'+
     '<div class="mc-bar"><i id="mcBarFill" style="width:0%"></i></div>'+
     '<div class="mc-pct" id="mcPct">0%</div>'+
-    '<div class="mc-fica"><b>Leva menos de 1 minuto.</b> Se preferir, receba no WhatsApp pelo botão verde.<br>'+
+    '<div id="mcZap"></div>'+
+    '<div class="mc-fica"><b>Leva menos de 1 minuto.</b><br>'+
     '<b>Você vai receber 2 versões diferentes</b> pra escolher a que mais emocionar.</div>'+
   '</div>';
 }
@@ -5453,7 +5456,11 @@ function dispararGeracao(gerarBtn){
         gerarBtn.textContent='Compondo...';
         W.musicaGerandoId=res.d.taskId;
         var _rz=el('musicaResultado');
-        if(_rz && !el('zapEspera')) _rz.insertAdjacentHTML('beforeend','<div id="zapEspera" style="margin-top:.9rem">'+htmlBotaoZap(res.d.taskId,true)+'</div>');
+        if(!el('zapEspera')){
+          var _mz=el('mcZap'), _hz='<div id="zapEspera" class="zap-espera">'+htmlBotaoZap(res.d.taskId,true)+'</div>';
+          /* botão do WhatsApp DENTRO do cartão "Produzindo", logo abaixo da porcentagem (antes ficava escondido embaixo) */
+          if(_mz) _mz.innerHTML=_hz; else if(_rz) _rz.insertAdjacentHTML('afterbegin',_hz);
+        }
         var tentativas=0, MAX_TENTATIVAS=200; // ~200 x 3s = 10 minutos
         (function checar(){
           fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(res.d.taskId))
