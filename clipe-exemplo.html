@@ -123,6 +123,6 @@ $('trk').onclick=function(e){var r=this.getBoundingClientRect();au.currentTime=(
 function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('on')},2600)}
 $('bx').onclick=function(){toast('No seu clipe, este botão baixa o vídeo pra postar no Status e no Reels 🎬')};
 $('env').onclick=function(){toast('No seu clipe, você manda o link direto no WhatsApp de quem você ama 💌')};
-$('voltar').onclick=function(){au.pause();if(history.length>1)history.back();else location.href='/'};
+$('voltar').onclick=function(){au.pause();if(window.parent!==window){window.parent.postMessage('fecharExemplo','*');return}if(history.length>1)history.back();else location.href='/'};
 foto(0);requestAnimationFrame(loop);
 </script></body></html>

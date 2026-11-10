@@ -21,6 +21,11 @@
 
 # áudios de exemplo e trilhas: guarda por 7 dias
 [[headers]]
+  for = "/fontes/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
   for = "/clipe-ex/*"
   [headers.values]
     Cache-Control = "public, max-age=604800"

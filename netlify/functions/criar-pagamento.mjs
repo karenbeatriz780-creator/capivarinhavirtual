@@ -19,6 +19,8 @@ const PRECO_PACOTE6 = 19.99; // 6 músicas (3 letras × 2 versões) — tem que 
 // Produtos que aceitam a música personalizada como adicional pago.
 const PRODUTOS_COM_ADDON_MUSICA = ['completo', 'carta'];
 const PRECO_ADDON_MUSICA = 10;
+// EXTRAS NA HORA DO PIX (música): tem que bater com EXTRAS_PIX no index.html
+const EXTRAS_PIX = { clipe: { preco: 4.90, nome: 'Clipe com fotos' }, quadro: { preco: 4.90, nome: 'Quadro QR' } };
 // Combo iniciado pela Música: ela mantém os R$9,99 e o presente entra
 // com desconto, sempre vitalício. Tem que bater com precoTotal() no index.html.
 const COMBO_DA_MUSICA = { carta: 7.99, completo: 24.99 };
@@ -137,9 +139,16 @@ export default async (req) => {
     const temAddonMusica = !!presente.musicaOn && PRODUTOS_COM_ADDON_MUSICA.indexOf(presente.produto) !== -1;
     const comboDaMusica = !!presente.comboDaMusica && COMBO_DA_MUSICA[presente.produto] != null;
     const precoBase = (duracao === 'h48' && pacote.preco48 != null) ? pacote.preco48 : pacote.preco;
-    const precoFinal = pacote6 ? PRECO_PACOTE6 : comboDaMusica
+    const precoProduto = pacote6 ? PRECO_PACOTE6 : comboDaMusica
       ? (PACOTES.musica.preco + COMBO_DA_MUSICA[presente.produto])
       : (precoBase + (temAddonMusica ? PRECO_ADDON_MUSICA : 0));
+    // extras escolhidos na hora do Pix (só pedido de música pago normal)
+    const extrasOk = presente.produto === 'musica' && !comboDaMusica && !presente.bonusDe && !presente.dobroDe;
+    const extrasPix = extrasOk && Array.isArray(presente.extrasPix)
+      ? presente.extrasPix.filter((k, i, a) => EXTRAS_PIX[k] && a.indexOf(k) === i) : [];
+    presente.extrasPix = extrasPix;
+    const valorExtras = extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0);
+    const precoFinal = Math.round((precoProduto + valorExtras) * 100) / 100;
     const txid = criarTxid(presente.id);
     const criadoEm = Date.now();
     // pedido de música normal = 4 músicas: as 2 da prévia + 2 liberadas depois do Pix
@@ -147,7 +156,7 @@ export default async (req) => {
     const salvo = Object.assign({}, presente, {
       pago: false, quatro,
       criadoEm,
-      pagamento: { provedor: 'efi', txid, status: 'ATIVA', valor: precoFinal, duracao, addonMusica: temAddonMusica }
+      pagamento: { provedor: 'efi', txid, status: 'ATIVA', valor: precoFinal, duracao, addonMusica: temAddonMusica, extras: extrasPix, valorExtras }
     });
 
     try {
@@ -166,7 +175,7 @@ export default async (req) => {
       } catch (e) {}
 
       const token = await obterToken();
-      const nomeCobranca = (pacote6 ? '6 Músicas Personalizadas' : comboDaMusica ? ('4 Músicas + ' + pacote.nome) : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '');
+      const nomeCobranca = (pacote6 ? '6 Músicas Personalizadas' : comboDaMusica ? ('4 Músicas + ' + pacote.nome) : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '') + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('');
       const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
         method: 'PUT', token,
         body: {

@@ -662,6 +662,64 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .upsell-op.destaque .uo-pr{color:var(--rose-deep);}
 .upsell-nao{display:block;width:100%;text-align:center;font-size:.83rem;color:var(--muted);
   padding:.9rem;margin-top:.2rem;}
+/* ===== EXTRAS NA HORA DO PIX (clipe + quadro) ===== */
+.mt{min-height:100vh;background:linear-gradient(180deg,#FFF1F6,#FFF8FB 40%)}.mt-in{max-width:520px;margin:0 auto;padding:1rem 1rem 3rem}
+.mt-load{padding:3rem 1rem;text-align:center;color:var(--muted)}
+.mt-vt{display:inline-block;font-size:.85rem;color:var(--plum);font-weight:700;text-decoration:none;margin-bottom:.6rem}
+.mt-h{font-family:'Fraunces';font-size:1.5rem;color:var(--plum);line-height:1.15;margin:0}.mt-s{color:var(--muted);font-size:.9rem;margin:.35rem 0 .9rem;line-height:1.45}
+.mt-fotos{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.mt-f{position:relative;aspect-ratio:1/1;border-radius:14px;overflow:hidden;background:#eee}.mt-f img{width:100%;height:100%;object-fit:cover;display:block}
+.mt-f.capa{outline:3px solid var(--rose);outline-offset:-3px}.mt-f span{position:absolute;left:6px;bottom:6px;font-size:.6rem;font-weight:800;letter-spacing:.08em;background:var(--rose);color:#fff;padding:2px 7px;border-radius:999px}
+.mt-rm,.mt-cap{position:absolute;top:5px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:1rem;line-height:1;cursor:pointer}.mt-rm{right:5px}.mt-cap{left:5px;font-size:.8rem}
+.mt-add{aspect-ratio:1/1;border-radius:14px;border:2px dashed #E7B3CB;background:#fff;color:var(--plum);font-weight:700;font-size:.8rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}.mt-add b{font-size:1.8rem;line-height:1;color:var(--rose)}.mt-add small{color:var(--muted);font-weight:500}
+.mt-campos{display:flex;flex-direction:column;gap:.7rem;margin-top:1.1rem}
+.mt-campos label{display:flex;flex-direction:column;gap:.3rem;font-size:.82rem;font-weight:700;color:var(--plum)}.mt-campos small{font-weight:500;color:var(--muted)}
+.mt-campos input,.mt-campos textarea,.mt-campos select{font:inherit;font-weight:500;font-size:1rem;padding:.75rem .85rem;border-radius:12px;border:1.5px solid #EED3DF;background:#fff;color:#2a1a22}
+.mt-go{display:block;width:100%;margin-top:1.1rem;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.3);cursor:pointer}.mt-go:disabled{opacity:.6}
+.mt-msg{margin-top:.7rem;text-align:center;font-size:.88rem;color:var(--plum);font-weight:600}
+.mt-ok{margin-top:1.2rem;background:#fff;border:1.5px solid #F1D5E2;border-radius:20px;padding:1rem}.mt-ok b{display:block;font-size:1.05rem;color:var(--plum)}.mt-ok>span{display:block;font-size:.84rem;color:var(--muted);margin-top:.25rem;line-height:1.4}
+.mt-bts{display:flex;gap:.5rem;margin-top:.8rem}.mt-b1,.mt-b2{flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;border:0;border-radius:999px;padding:.85rem;font-weight:800;font-size:.92rem;text-decoration:none;cursor:pointer}
+.mt-b1{background:var(--rose);color:#fff}.mt-b2{background:#25D366;color:#fff}.mt-b2 svg{width:18px;height:18px}
+.mt-cp{display:block;margin:.5rem auto 0;background:none;border:0;color:var(--muted);text-decoration:underline;font-size:.84rem;cursor:pointer}
+.mt-temas{display:flex;gap:.45rem;margin-top:.8rem}.mt-tema{flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.55rem;border-radius:12px;border:1.5px solid #EED3DF;background:#fff;font-weight:700;font-size:.82rem;color:var(--plum);cursor:pointer}.mt-tema.on{border-color:var(--rose);background:#FFF0F6}
+.mt-tema i{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}.t-creme{background:#F4EEE5}.t-noite{background:#151114}.t-rose{background:#F2DDDF}
+.mt-qd{position:relative;margin-top:.8rem;border-radius:8px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.18);background:#eee;aspect-ratio:2480/3508}.mt-qd canvas{width:100%;height:100%;display:block}
+.mt-qd-l{position:absolute;inset:0;display:grid;place-items:center;font-size:.9rem;color:var(--muted);background:rgba(255,255,255,.7)}.mt-qd-l[hidden]{display:none}
+.mx-libera.mx-extras{background:linear-gradient(135deg,rgba(255,79,154,.22),rgba(194,24,91,.18));border-color:rgba(255,140,190,.55)}
+.xp-fundo{position:fixed;inset:0;z-index:95;background:rgba(20,10,17,.66);display:flex;align-items:flex-end;justify-content:center;animation:xpIn .25s ease}
+@keyframes xpIn{from{opacity:0}to{opacity:1}}
+.xp{width:100%;max-width:480px;max-height:94vh;overflow:auto;background:#FFF8FB;border-radius:24px 24px 0 0;padding:.9rem 1rem calc(1rem + env(safe-area-inset-bottom));animation:xpSobe .32s cubic-bezier(.2,.9,.3,1.1)}
+@keyframes xpSobe{from{transform:translateY(40px)}to{transform:none}}
+.xp-top{display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem}
+.xp-vt{width:38px;height:38px;flex:none;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid #F1D5E2;color:var(--plum);font-size:1.25rem;line-height:1;cursor:pointer}
+.xp-top b{font-family:'Fraunces';font-size:1.18rem;color:var(--plum);line-height:1.15}
+.xp-sub{font-size:.82rem;color:var(--muted);margin:0 0 .8rem 3rem;line-height:1.4}
+.xp-op{position:relative;display:flex;gap:.75rem;background:#fff;border:2px solid #F1D5E2;border-radius:18px;padding:.75rem;margin-bottom:.7rem;transition:border-color .2s,box-shadow .2s}
+.xp-op.on{border-color:var(--rose);box-shadow:0 8px 24px rgba(227,43,109,.18)}
+.xp-th{flex:none;width:84px;height:110px;border-radius:12px;overflow:hidden;position:relative;background:#2a1622}
+.xp-th img{width:100%;height:100%;object-fit:cover;display:block}
+.xp-th .pl{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.45))}
+.xp-th .pl i{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center}
+.xp-th .pl i:after{content:"";border-left:11px solid #C2185B;border-top:7px solid transparent;border-bottom:7px solid transparent;margin-left:3px}
+.xp-th.mosaico{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#fff}
+.xp-tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.xp-tx b{font-size:.95rem;color:var(--plum);line-height:1.2}
+.xp-tx small{font-size:.76rem;color:var(--muted);line-height:1.35;margin-top:.2rem}
+.xp-pr{margin-top:.35rem;font-size:.78rem;color:var(--muted)}.xp-pr s{margin-right:.3rem}.xp-pr b{font-family:'Fraunces';font-size:1.15rem;color:var(--rose-deep)}
+.xp-bts{display:flex;gap:.45rem;margin-top:.5rem;flex-wrap:wrap}
+.xp-ex{font-size:.78rem;font-weight:700;color:var(--plum);background:#FBEAF2;border:0;border-radius:999px;padding:.45rem .7rem;cursor:pointer}
+.xp-add{font-size:.8rem;font-weight:800;color:#fff;background:var(--rose);border:0;border-radius:999px;padding:.45rem .85rem;cursor:pointer}
+.xp-op.on .xp-add{background:#1F9D55}
+.xp-tag{position:absolute;top:-9px;right:12px;font-size:.62rem;font-weight:800;letter-spacing:.06em;background:#FFE45C;color:#3a0a2a;padding:3px 8px;border-radius:999px}
+.xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
+.xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
+.xp-nao{display:block;width:100%;margin-top:.55rem;background:none;border:0;font-size:.85rem;color:var(--muted);text-decoration:underline;padding:.5rem;cursor:pointer}
+.xp-exv{position:fixed;inset:0;z-index:100;background:#120a10;display:flex;flex-direction:column}
+.xp-exv iframe{flex:1;border:0;width:100%}
+.xp-exv .xp-x{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#5B2148;font-size:1.4rem;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.xp-exv.img{overflow:auto;align-items:center;padding:60px 16px 24px;background:#2b2227}
+.xp-exv.img img{width:100%;max-width:440px;border-radius:6px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.xp-exv.img p{color:#fff;font-size:.9rem;text-align:center;max-width:360px;margin:.9rem auto 0;line-height:1.45;opacity:.9}
 .zap-card .inp{text-align:center;font-size:1.05rem;letter-spacing:.02em;}
 .zap-err{font-size:.78rem;color:var(--rose-deep);font-weight:700;min-height:1.2em;margin-top:.4rem;text-align:center;}
 .zap-ok{display:flex;align-items:center;gap:.6rem;background:#E3F6EC;border:1px solid #B8E6CC;
@@ -3480,12 +3538,23 @@ function quatroAtivo(W){ return !!W && W.produto==='musica' && !W.ofertaDe && !W
 function temLiberadas(g){ return !!(g && g.pago && g.quatro && !g.dobroDe && !g.cancelado); }
 function precoTotal(W){
   if(W.bonusDe || W.dobroDe) return 0;
+  return Math.round((precoTotalBase(W)+precoExtras(W))*100)/100;
+}
+function precoTotalBase(W){
   if(W.pacote6 && W.ofertaM1 && W.ofertaM2) return PRECO_PACOTE6;
   if(W.comboDaMusica && COMBO_DA_MUSICA[W.produto]!=null){
     return PACOTES.musica.preco + COMBO_DA_MUSICA[W.produto];
   }
   return precoDe(W.produto, W.duracao) + (temAddonMusica(W) ? PRECO_MUSICA_ADDON : 0);
 }
+/* EXTRAS NA HORA DO PIX — tem que bater com EXTRAS_PIX em criar-pagamento.mjs */
+var EXTRAS_PIX = {
+  clipe:  {preco:4.90, de:9.90, nome:'Clipe com as fotos de vocês'},
+  quadro: {preco:4.90, de:9.90, nome:'Quadro com QR Code pra imprimir'}
+};
+function extrasElegivel(w){ return !!(w && w.produto==='musica' && !w.bonusDe && !w.dobroDe && !w.comboDaMusica); }
+function extrasValidos(w){ return extrasElegivel(w) ? (w.extrasPix||[]).filter(function(k,i,a){ return EXTRAS_PIX[k] && a.indexOf(k)===i; }) : []; }
+function precoExtras(w){ return extrasValidos(w).reduce(function(t,k){ return t+EXTRAS_PIX[k].preco; },0); }
 var PRECO_PACOTE6 = 19.99; /* 6 músicas (3 letras × 2 versões) — tem que bater com criar-pagamento.mjs */
 function numMusicaAtual(){ return W.ofertaM2 ? 3 : (W.ofertaM1 ? 2 : 1); }
 var ZAP_API='5511924826268';
@@ -4269,6 +4338,7 @@ function navegar(){
   if(r.nome==='p' && r.arg){ telaPresente(r.arg); return; }
   if(r.nome==='pago' && r.arg){ telaConfirmando(r.arg); return; }
   if(r.nome==='pagar' && r.arg){ telaPagar(r.arg); return; }
+  if(r.nome==='montar' && r.arg){ telaMontarExtras(r.arg); return; }
   if(r.nome==='extras' && r.arg){ telaExtras(r.arg); return; }
   if(r.nome==='sucesso' && r.arg){ telaSucesso(r.arg); return; }
   if(r.nome==='criar'){
@@ -7031,8 +7101,193 @@ function finalizar(){
     if(wIn){ wIn.focus(); wIn.classList.add('erro'); }
     return;
   }
-  if(W.ofertaDe || W.bonusDe || W.dobroDe || W.pacote6){ finalizarDeVerdade(); return; }
-  abrirUpsell(function(){ finalizarDeVerdade(); });
+  if(W.bonusDe || W.dobroDe){ finalizarDeVerdade(); return; }
+  if(W.ofertaDe || W.pacote6){ abrirExtrasPix(finalizarDeVerdade); return; }
+  abrirUpsell(function(){ abrirExtrasPix(finalizarDeVerdade); });
+}
+/* ===== Oferta de extras na hora do Pix: clipe com fotos + quadro com QR (R$ 4,90 cada) ===== */
+function abrirExtrasPix(seguir){
+  if(!extrasElegivel(W)){ seguir(); return; }
+  var esc1={}; extrasValidos(W).forEach(function(k){ esc1[k]=true; });
+  var EX=['1','2','3','4'].map(function(n){ return '/clipe-ex/'+n+'.webp'; });
+  var ops=[
+    {k:'clipe', tag:'MAIS ESCOLHIDO', th:'<div class="xp-th mosaico">'+EX.map(function(u){ return '<img src="'+u+'" alt="">'; }).join('')+'<span class="pl"><i></i></span></div>',
+      t:'📸 Clipe com as fotos de vocês', d:'Até 8 fotos passando com a música, igual app de música, com dedicatória. E ainda dá pra baixar o vídeo pro Status.'},
+    {k:'quadro', tag:'', th:'<div class="xp-th"><img src="/clipe-ex/quadro-mini.jpg" alt=""></div>',
+      t:'🖼️ Quadro com QR Code', d:'Arte linda com a foto de vocês pra imprimir e dar de presente. Aponta a câmera e a música toca.'}
+  ];
+  var box=document.createElement('div'); box.className='xp-fundo'; box.id='xpFundo';
+  function total(){ var t=precoTotalBase(W); Object.keys(esc1).forEach(function(k){ if(esc1[k]) t+=EXTRAS_PIX[k].preco; }); return Math.round(t*100)/100; }
+  function desenhar(){
+    box.innerHTML='<div class="xp" role="dialog" aria-label="Adicionais">'+
+      '<div class="xp-top"><button type="button" class="xp-vt" id="xpVt" aria-label="Voltar">‹</button><b>✨ Deixe o presente inesquecível</b></div>'+
+      '<p class="xp-sub">Adicione agora com desconto. Esse preço é só nesta tela.</p>'+
+      ops.map(function(o){ var x=EXTRAS_PIX[o.k], on=!!esc1[o.k];
+        return '<div class="xp-op'+(on?' on':'')+'">'+(o.tag?'<span class="xp-tag">'+o.tag+'</span>':'')+o.th+
+          '<div class="xp-tx"><b>'+o.t+'</b><small>'+o.d+'</small>'+
+            '<div class="xp-pr"><s>R$ '+fmtPreco(x.de)+'</s><b>R$ '+fmtPreco(x.preco)+'</b></div>'+
+            '<div class="xp-bts"><button type="button" class="xp-ex" data-xpex="'+o.k+'">▶ Ver exemplo</button>'+
+            '<button type="button" class="xp-add" data-xpadd="'+o.k+'">'+(on?'✓ Adicionado':'+ Adicionar')+'</button></div></div></div>'; }).join('')+
+      '<div class="xp-tot"><span>Total do seu pedido</span><b>R$ '+fmtPreco(total())+'</b></div>'+
+      '<button type="button" class="xp-go" id="xpGo">Gerar Pix · R$ '+fmtPreco(total())+'</button>'+
+      '<button type="button" class="xp-nao" id="xpNao">Agora não, só as músicas</button>'+
+    '</div>';
+    el('xpVt').onclick=function(){ gaEvento('extras_voltou',{}); fechar(); };
+    el('xpNao').onclick=function(){ gaEvento('extras_recusou',{}); W.extrasPix=[]; fechar(); seguir(); };
+    el('xpGo').onclick=function(){
+      W.extrasPix=Object.keys(esc1).filter(function(k){ return esc1[k]; });
+      if(W.extrasPix.length) gaEvento('extras_aceitou',{itens:W.extrasPix.join(','), valor:precoExtras(W)});
+      fechar(); seguir();
+    };
+    box.querySelectorAll('[data-xpadd]').forEach(function(b){ b.onclick=function(){ var k=b.dataset.xpadd; esc1[k]=!esc1[k]; if(esc1[k]) gaEvento('extras_add',{item:k}); desenhar(); }; });
+    box.querySelectorAll('[data-xpex]').forEach(function(b){ b.onclick=function(){ verExemploExtra(b.dataset.xpex); }; });
+  }
+  function fechar(){ box.remove(); }
+  box.addEventListener('click',function(e){ if(e.target===box) fechar(); });
+  document.body.appendChild(box); desenhar();
+  gaEvento('extras_viu',{});
+}
+/* ===== #/montar/<id>: cliente monta o CLIPE (até 8 fotos) e/ou o QUADRO (1 foto) ===== */
+var _mt=null;
+function carregarQuadroJs(){ return window.desenharQuadro ? Promise.resolve() : new Promise(function(ok,er){ var sc=document.createElement('script'); sc.src='/quadro.js?v=1'; sc.onload=ok; sc.onerror=er; document.head.appendChild(sc); }); }
+function telaMontarExtras(id){
+  document.body.style.overflow='auto';
+  el('app').innerHTML='<div class="mt"><div class="mt-in"><div class="mt-load">Carregando seus extras…</div></div></div>';
+  Promise.all([
+    fetch('/.netlify/functions/clipe?id='+encodeURIComponent(id),{cache:'no-store'}).then(function(r){ return r.json(); }),
+    fetch('/.netlify/functions/presente?id='+encodeURIComponent(id),{cache:'no-store'}).then(function(r){ return r.json(); }).catch(function(){ return {}; })
+  ]).then(function(r){
+    var x=r[0];
+    if(!x || !x.ok){ el('app').innerHTML='<div class="mt"><div class="mt-in"><div class="mt-load">Esse pedido não tem clipe nem quadro. <a href="#/meus">Ver meus pedidos</a></div></div></div>'; return; }
+    var d=x.dados||{};
+    _mt={id:id, tem:x.tem, versoes:x.versoes, montado:!!x.montado, max:x.tem.clipe?8:1,
+      fotos:(x.fotos||[]).map(function(u,k){ return {url:u, nova:false, origK:k, t:(d.tf&&d.tf[k])||d.ts}; }),
+      para:d.para||x.sugestao.para||'', de:d.de||x.sugestao.de||'', titulo:d.titulo||'', data:d.data||'', dedicatoria:d.dedicatoria||'',
+      v:d.v||x.versoes[0], tema:d.tema||'creme', g:(r[1]&&r[1].presente)||null};
+    desenharMontar(_mt.montado);
+  }).catch(function(){ el('app').innerHTML='<div class="mt"><div class="mt-in"><div class="mt-load">Sem conexão. Tente de novo.</div></div></div>'; });
+}
+function desenharMontar(prontoPrimeiro){
+  var m=_mt, ambos=m.tem.clipe&&m.tem.quadro;
+  var nomeV=function(v){ return 'Música '+v; };
+  el('app').innerHTML='<div class="mt"><div class="mt-in">'+
+    '<a class="mt-vt" href="#/p/'+encodeURIComponent(m.id)+'/c">‹ Voltar pras músicas</a>'+
+    '<h1 class="mt-h">'+(ambos?'📸 Seu clipe e 🖼️ seu quadro':m.tem.clipe?'📸 Seu clipe com fotos':'🖼️ Seu quadro com QR Code')+'</h1>'+
+    '<p class="mt-s">'+(m.tem.clipe?'Escolha até 8 fotos de vocês. A primeira é a capa'+(m.tem.quadro?' e vai no quadro':'')+'.':'Escolha a foto de vocês que vai no quadro.')+'</p>'+
+    '<div class="mt-fotos" id="mtFotos"></div>'+
+    '<input type="file" id="mtFile" accept="image/*" '+(m.max>1?'multiple':'')+' hidden>'+
+    '<div class="mt-campos">'+
+      '<label>Pra quem é<input id="mtPara" maxlength="40" value="'+esc(m.para)+'" placeholder="Ex.: Manuela"></label>'+
+      '<label>De quem<input id="mtDe" maxlength="40" value="'+esc(m.de)+'" placeholder="Ex.: Rafael"></label>'+
+      '<label>Nome da música<input id="mtTit" maxlength="48" value="'+esc(m.titulo)+'" placeholder="'+esc('Pra '+(m.para||'Manuela'))+'"></label>'+
+      (m.tem.quadro?'<label>Data especial <small>(opcional, vai no quadro)</small><input id="mtData" maxlength="40" value="'+esc(m.data)+'" placeholder="Ex.: Desde 14.02.2023"></label>':'')+
+      (m.tem.clipe?'<label>Dedicatória <small>(aparece no clipe)</small><textarea id="mtDed" maxlength="400" rows="4" placeholder="Escreva uma mensagem curtinha pra quem vai receber…">'+esc(m.dedicatoria)+'</textarea></label>':'')+
+      (m.versoes.length>1?'<label>Qual música vai tocar<select id="mtV">'+m.versoes.map(function(v){ return '<option value="'+v+'"'+(v==m.v?' selected':'')+'>'+nomeV(v)+'</option>'; }).join('')+'</select></label>':'')+
+    '</div>'+
+    '<button type="button" class="mt-go" id="mtGo">'+(m.montado?'💾 Salvar alterações':'✨ Criar meu '+(m.tem.clipe?'clipe':'quadro'))+'</button>'+
+    '<div class="mt-msg" id="mtMsg" hidden></div>'+
+    '<div id="mtPronto"></div>'+
+  '</div></div>';
+  desenharFotosMt();
+  el('mtFile').onchange=function(){ adicionarFotosMt(this.files); this.value=''; };
+  el('mtGo').onclick=salvarMontar;
+  if(prontoPrimeiro) mostrarProntoMt();
+}
+function desenharFotosMt(){
+  var m=_mt, h='';
+  m.fotos.forEach(function(f,k){ h+='<div class="mt-f'+(k===0?' capa':'')+'"><img src="'+esc(f.url)+'" alt="">'+(k===0?'<span>CAPA</span>':'<button type="button" class="mt-cap" data-cap="'+k+'" title="Usar como capa">★</button>')+'<button type="button" class="mt-rm" data-rm="'+k+'" aria-label="Tirar">×</button></div>'; });
+  if(m.fotos.length<m.max) h+='<button type="button" class="mt-add" id="mtAdd"><b>+</b>'+(m.fotos.length?'Mais fotos':'Escolher '+(m.max>1?'fotos':'a foto'))+'<small>'+m.fotos.length+' de '+m.max+'</small></button>';
+  el('mtFotos').innerHTML=h;
+  if(el('mtAdd')) el('mtAdd').onclick=function(){ el('mtFile').click(); };
+  el('mtFotos').querySelectorAll('[data-rm]').forEach(function(b){ b.onclick=function(){ m.fotos.splice(+b.dataset.rm,1); desenharFotosMt(); }; });
+  el('mtFotos').querySelectorAll('[data-cap]').forEach(function(b){ b.onclick=function(){ var k=+b.dataset.cap, f=m.fotos.splice(k,1)[0]; f.capaRefazer=true; m.fotos.unshift(f); desenharFotosMt(); }; });
+}
+function adicionarFotosMt(files){
+  var m=_mt, lista=[].slice.call(files||[]).slice(0, m.max-m.fotos.length);
+  if(!lista.length) return;
+  toast('Preparando as fotos…');
+  lista.reduce(function(pr,file){ return pr.then(function(){
+    return Promise.all([comprimir(file,2200,.86),comprimir(file,1280,.8)]).then(function(r){ m.fotos.push({url:r[1], alta:r[0], media:r[1], nova:true}); desenharFotosMt(); }).catch(function(){ toast('Não consegui abrir uma das fotos.'); });
+  }); }, Promise.resolve());
+}
+function salvarMontar(){
+  var m=_mt, msg=el('mtMsg'), bt=el('mtGo');
+  if(!m.fotos.length){ toast('Escolha pelo menos 1 foto.'); return; }
+  m.para=el('mtPara').value.trim(); m.de=el('mtDe').value.trim(); m.titulo=el('mtTit').value.trim();
+  if(el('mtData')) m.data=el('mtData').value.trim(); if(el('mtDed')) m.dedicatoria=el('mtDed').value.trim(); if(el('mtV')) m.v=+el('mtV').value;
+  if(!m.para){ toast('Coloque o nome de quem vai receber.'); el('mtPara').focus(); return; }
+  bt.disabled=true; msg.hidden=false;
+  var feitas=0;
+  function pegaDataUrl(f,k){
+    var u=k===0?(f.alta||f.media||f.url):(f.media||f.url);
+    if(/^data:/.test(u)) return Promise.resolve(u);
+    return fetch(u).then(function(r){ return r.blob(); }).then(function(b){ return new Promise(function(ok){ var fr=new FileReader(); fr.onload=function(){ ok(fr.result); }; fr.readAsDataURL(b); }); });
+  }
+  /* cada posição é um arquivo no servidor: sobe a foto nova ou que mudou de lugar */
+  var envios=m.fotos.map(function(f,k){ return k; }).filter(function(k){ var f=m.fotos[k]; return f.nova || f.capaRefazer || f.origK!==k; });
+  msg.textContent='Enviando as fotos… 0 de '+envios.length;
+  var tf=m.fotos.map(function(f){ return f.t||Date.now(); });
+  envios.reduce(function(pr,k){ return pr.then(function(){
+    return pegaDataUrl(m.fotos[k],k).then(function(du){
+      return fetch('/.netlify/functions/clipe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'foto',id:m.id,k:k,img:du})}).then(function(r){ return r.json(); });
+    }).then(function(d){ if(!d || !d.ok) throw new Error((d&&d.erro)||'falha'); tf[k]=d.t; feitas++; msg.textContent='Enviando as fotos… '+feitas+' de '+envios.length; });
+  }); }, Promise.resolve()).then(function(){
+    msg.textContent='Salvando…';
+    return fetch('/.netlify/functions/clipe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'salvar',id:m.id,n:m.fotos.length,tf:tf,para:m.para,de:m.de,titulo:m.titulo||('Pra '+m.para),data:m.data,dedicatoria:m.dedicatoria,v:m.v,tema:m.tema})}).then(function(r){ return r.json(); });
+  }).then(function(d){
+    if(!d || !d.ok) throw new Error((d&&d.erro)||'falha');
+    gaEvento('extras_montou',{clipe:m.tem.clipe?1:0, quadro:m.tem.quadro?1:0, fotos:m.fotos.length});
+    m.fotos.forEach(function(f,k){ f.nova=false; f.capaRefazer=false; f.origK=k; f.t=tf[k]; });
+    m.montado=true; msg.hidden=true; bt.disabled=false; bt.textContent='💾 Salvar alterações';
+    mostrarProntoMt(); setTimeout(function(){ var p=el('mtPronto'); if(p) p.scrollIntoView({behavior:'smooth'}); },100);
+  }).catch(function(e){ bt.disabled=false; msg.hidden=false; msg.textContent='Não deu pra salvar: '+e.message+'. Tente de novo.'; });
+}
+function mostrarProntoMt(){
+  var m=_mt, link=location.origin+'/clipe.html?id='+encodeURIComponent(m.id);
+  var h='';
+  if(m.tem.clipe) h+='<div class="mt-ok"><b>🎬 Seu clipe está pronto!</b><span>Mande o link pra quem vai receber. Lá também dá pra baixar o vídeo pro Status.</span>'+
+    '<div class="mt-bts"><a class="mt-b1" href="'+esc(link)+'" target="_blank" rel="noopener">▶ Abrir o clipe</a><a class="mt-b2" href="https://wa.me/?text='+encodeURIComponent('Fiz uma surpresa pra você 🎵💝 '+link)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar</a></div>'+
+    '<button type="button" class="mt-cp" id="mtCp">Copiar link</button></div>';
+  if(m.tem.quadro) h+='<div class="mt-ok"><b>🖼️ Seu quadro</b><span>Escolha a cor e baixe em alta qualidade. Imprima em A4 (papel fotográfico fica lindo).</span>'+
+    '<div class="mt-temas">'+['creme','noite','rose'].map(function(t){ return '<button type="button" class="mt-tema'+(m.tema===t?' on':'')+'" data-tema="'+t+'"><i class="t-'+t+'"></i>'+({creme:'Creme',noite:'Noite',rose:'Rosé'})[t]+'</button>'; }).join('')+'</div>'+
+    '<div class="mt-qd"><canvas id="mtCv"></canvas><div class="mt-qd-l" id="mtQdL">Montando o quadro…</div></div>'+
+    '<div class="mt-bts"><button type="button" class="mt-b1" id="mtBx">⬇ Baixar quadro (alta qualidade)</button></div></div>';
+  el('mtPronto').innerHTML=h;
+  if(el('mtCp')) el('mtCp').onclick=function(){ copiar(link,'Link do clipe copiado!'); };
+  if(m.tem.quadro){
+    var desenhar=function(){
+      el('mtQdL').hidden=false;
+      carregarQuadroJs().then(function(){
+        var f=m.fotos[0], u=f.alta||f.media||f.url;
+        return desenharQuadro(el('mtCv'),{foto:u, titulo:m.titulo||('Pra '+m.para), sub:(m.de?m.de+' & ':'')+m.para, data:m.data, qr:QRCodeGen.build(link,'M')}, m.tema);
+      }).then(function(){ el('mtQdL').hidden=true; }).catch(function(){ el('mtQdL').textContent='Não consegui montar o quadro. Atualize a página.'; });
+    };
+    el('mtPronto').querySelectorAll('[data-tema]').forEach(function(b){ b.onclick=function(){
+      m.tema=b.dataset.tema; el('mtPronto').querySelectorAll('[data-tema]').forEach(function(x){ x.classList.toggle('on',x===b); }); desenhar();
+      fetch('/.netlify/functions/clipe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'salvar',id:m.id,n:m.fotos.length,tf:m.fotos.map(function(f){ return f.t; }),para:m.para,de:m.de,titulo:m.titulo||('Pra '+m.para),data:m.data,dedicatoria:m.dedicatoria,v:m.v,tema:m.tema})}).catch(function(){});
+    }; });
+    el('mtBx').onclick=function(){
+      var cv=el('mtCv'); if(!cv.width){ toast('Espere o quadro terminar de montar.'); return; }
+      cv.toBlob(function(b){ var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='quadro-'+String(m.para||'musica').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); },4000); gaEvento('extras_baixou_quadro',{tema:m.tema}); toast('Quadro baixado! 🖼️'); },'image/png');
+    };
+    desenhar();
+  }
+}
+function verExemploExtra(k){
+  gaEvento('extras_exemplo',{item:k});
+  var v=document.createElement('div');
+  if(k==='clipe'){
+    v.className='xp-exv';
+    v.innerHTML='<button type="button" class="xp-x" aria-label="Fechar">×</button><iframe src="/clipe-exemplo.html?de=pix" allow="autoplay" title="Exemplo do clipe"></iframe>';
+  } else {
+    v.className='xp-exv img';
+    v.innerHTML='<button type="button" class="xp-x" aria-label="Fechar">×</button><img src="/clipe-ex/quadro-exemplo.jpg" alt="Exemplo do quadro"><p>Você escolhe a foto, o nome e a cor (creme, noite ou rosé). Baixa em alta qualidade pra imprimir em qualquer gráfica ou papelaria. O QR Code toca a música de vocês.</p>';
+  }
+  function fechar(){ window.removeEventListener('message',msg); v.remove(); }
+  function msg(e){ if(e && e.data==='fecharExemplo') fechar(); }
+  window.addEventListener('message',msg);
+  v.querySelector('.xp-x').onclick=fechar;
+  document.body.appendChild(v);
 }
 function finalizarDeVerdade(){
   gaEvento('begin_checkout',{produto:W.produto, duracao:W.duracao, valor:precoTotal(W)});
@@ -7080,6 +7335,11 @@ function finalizarDeVerdade(){
    Fica salvo no aparelho: se a pessoa atualizar a página, volta pra esta tela
    (#/pagar/<id>) em vez de voltar pro começo. */
 function infoPixPedido(){
+  var inf=infoPixPedidoBase(), ex=extrasValidos(W);
+  if(ex.length){ inf=Object.assign({},inf,{itens:inf.itens.concat(ex.map(function(k){ return '+ '+EXTRAS_PIX[k].nome; }))}); }
+  return inf;
+}
+function infoPixPedidoBase(){
   if(W && W.produto==='musica' && (W.quatro || quatroAtivo(W))) return {titulo:'4 Músicas Personalizadas', itens:['2 músicas prontas pra ouvir agora','+ 2 músicas com outra letra e outro estilo','MP3 pra baixar e mandar no WhatsApp']};
   if(W && W.comboDaMusica && W.produto!=='musica' && PACOTES[W.produto]) return {titulo:'4 Músicas + '+PACOTES[W.produto].nome, itens:['Suas 4 músicas personalizadas',PACOTES[W.produto].nome+' pra sempre no ar','Liberado assim que o Pix cair']};
   if(W && W.pacote6) return {titulo:'6 Músicas Personalizadas', itens:['3 letras diferentes, 2 versões de cada','MP3 pra baixar e mandar no WhatsApp']};
@@ -9912,6 +10172,11 @@ function montarMusicaEntrega(g, opts){
         ((g.ofertaM1&&g.ofertaM1.letra) ? '<details class="mx-letra"><summary>📝 Letra '+(g.ofertaM2?'1':'da música 1')+'</summary><pre>'+esc(g.ofertaM1.letra)+'</pre></details>' : '')+
         ((g.ofertaM2&&g.ofertaM2.letra) ? '<details class="mx-letra"><summary>📝 Letra 2</summary><pre>'+esc(g.ofertaM2.letra)+'</pre></details>' : '')+
         (letra ? '<details class="mx-letra"><summary>📝 '+(g.ofertaM2?'Letra 3':g.ofertaM1?'Letra da música 2':'Ver a letra')+'</summary><pre>'+esc(letra)+'</pre></details>' : '')+
+        (cliente && g.pago && (g.extrasPix||[]).length
+          ? '<div class="mx-libera mx-extras"><span class="mx-lb-tag">🎁 SEUS EXTRAS</span><b>'+((g.extrasPix.indexOf('clipe')>=0&&g.extrasPix.indexOf('quadro')>=0)?'Monte seu clipe e seu quadro':(g.extrasPix.indexOf('clipe')>=0?'Monte seu clipe com fotos':'Monte seu quadro com QR Code'))+'</b>'+
+              '<span>Escolha as fotos de vocês e pronto. Leva 1 minutinho.</span>'+
+              '<a class="mx-btn mx-btn-ouro" href="#/montar/'+encodeURIComponent(g.id)+'">'+(g.extrasPix.indexOf('clipe')>=0?'📸 Montar meu clipe':'🖼️ Montar meu quadro')+'</a></div>'
+          : '')+
         (cliente && temLiberadas(g)
           ? (g.dobroUsado
               ? '<div class="mx-libera feito"><b>🎵 Suas outras 2 músicas</b><span>Você já criou as suas 2 músicas extras.</span><a class="mx-btn mx-btn-ouro" href="#/p/'+encodeURIComponent(g.dobroUsado)+'/c">Ouvir as outras 2 músicas</a></div>'
