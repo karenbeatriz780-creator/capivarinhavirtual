@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { enviarTexto, chaveNum, registrar } from './_zap.mjs';
+import { enviarTexto, chaveNum, registrar, entregarMusica } from './_zap.mjs';
 
 // Painel → aba 🤖 WhatsApp: o que o robô fez, falhas, conversas e responder clientes.
 // GET: lê (aberto como o resto do painel). POST: responder / pausar robô (pede a senha).
@@ -18,6 +18,30 @@ export default async (req) => {
     const senha = (process.env.ADMIN_SENHA || '').trim();
     if (!senha || (req.headers.get('x-admin-key') || '') !== senha) return json({ erro: 'Senha incorreta.' }, 401);
     let b = {}; try { b = await req.json(); } catch (e) {}
+    // REENVIAR: manda de novo o link da música pra quem pediu/recebeu nas últimas X horas
+    // (ex.: quando o WhatsApp ficou bloqueado e as mensagens não chegaram). 12 por chamada; o painel repete até acabar.
+    if (b.acao === 'reenviar') {
+      const horas = Math.max(1, Math.min(48, Number(b.horas) || 8)), desde = Date.now() - horas * 3600 * 1000;
+      const evK = (await listar(loja, 'ev_')).filter((k) => tsDe(k) >= desde);
+      const evs = (await Promise.all(evK.map((k) => loja.get(k, { type: 'json' }).catch(() => null)))).filter(Boolean);
+      const alvo = {};
+      evs.filter((e) => (e.t === 'pediu_site' || e.t === 'enviou') && e.taskId).sort((x, y) => x.em - y.em)
+        .forEach((e) => { alvo[e.taskId] = String(e.para || e.numero || (alvo[e.taskId] || '')); });
+      const musicas = getStore('musicas'); let feitos = 0, pulou = 0; const res = [];
+      const ids = Object.keys(alvo);
+      let restam = 0;
+      for (const tid of ids) {
+        if (await loja.get('reenv_' + tid + '_' + Math.floor(desde / 3600000), { type: 'json' }).catch(() => null)) continue;
+        if (feitos >= 12) { restam++; continue; }
+        const m = await musicas.get(tid, { type: 'json' }).catch(() => null);
+        await loja.setJSON('reenv_' + tid + '_' + Math.floor(desde / 3600000), { em: Date.now() }).catch(() => {});
+        if (!m || !m.url || m.pago || !alvo[tid]) { pulou++; continue; }
+        await loja.delete('env_' + tid).catch(() => {});
+        const r = await entregarMusica(tid, alvo[tid]);
+        res.push({ tid, r }); feitos++;
+      }
+      return json({ ok: true, enviados: res.filter((x) => x.r === 'enviado').length, tentou: feitos, pulou, restam, total: ids.length });
+    }
     const para = String(b.para || '').replace(/\D/g, '');
     if (para.length < 10) return json({ erro: 'Número inválido.' }, 400);
     if (b.acao === 'liberar') { await loja.delete('humano_' + chaveNum(para)).catch(() => {}); return json({ ok: true }); }

@@ -119,6 +119,14 @@ async function processar(corpo) {
         }
         for (const st of v.statuses || []) {
           console.log('WHATSAPP STATUS ' + st.status + ' para ' + st.recipient_id + (st.errors ? ' erro: ' + JSON.stringify(st.errors).slice(0, 300) : ''));
+          // a Meta aceitou e depois NÃO entregou → aparece em "Falhas" no painel (antes ficava escondido)
+          if (st.status === 'failed') {
+            const e0 = (st.errors && st.errors[0]) || {};
+            const motivo = e0.code === 131042 ? 'WhatsApp BLOQUEADO: pagamento pendente na conta do WhatsApp Business (Meta → Cobrança e pagamentos)'
+              : e0.code === 131047 ? 'Não entregou: passou de 24 h desde a última mensagem da pessoa'
+              : 'O WhatsApp não entregou: ' + String(e0.title || e0.message || 'erro ' + (e0.code || '')).slice(0, 150);
+            await registrar('falha', { para: String(st.recipient_id), erro: motivo, codigo: e0.code || null });
+          }
         }
       }
     }

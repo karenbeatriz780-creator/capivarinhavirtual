@@ -7900,7 +7900,10 @@ function pnlZapHtml(){
       '<div class="pnl-card"><b>'+conta('enviou',+hoje0)+'</b><span>prévias enviadas hoje · '+conta('enviou',0)+' na semana</span></div>'+
       '<div class="pnl-card"><b>'+(conta('pago_enviado',+hoje0)+conta('reenviou',+hoje0)+conta('pago_audios',+hoje0))+'</b><span>músicas entregues no WhatsApp hoje · '+(conta('pago_enviado',0)+conta('reenviou',0)+conta('pago_audios',0))+' na semana</span></div>'+
       '<div class="pnl-card"><b style="color:'+(falhas.length?'#FF9B93':'#6BE8AB')+'">'+falhas.length+'</b><span>falhas na semana</span></div>'+
-    '</div></div>';
+    '</div>'+
+    '<div style="margin-top:.8rem"><button type="button" class="cmp-bt" id="zapReenv">🔁 Reenviar o link pra quem pediu nas últimas 8 h</button>'+
+    '<div class="sub" style="margin-top:.35rem">Use quando o WhatsApp ficou parado (ex.: pagamento pendente no Meta). Só manda pra quem ainda não pagou e cuja música já está pronta.</div></div>'+
+  '</div>';
   if(falhas.length) h+='<div class="pnl-sec"><h2>⚠️ Falhas</h2><div class="sub">O que deu errado. Se repetir muito, me manda print.</div>'+
     falhas.slice(0,30).map(function(e){ return '<div class="zap-ev falha"><span class="h">'+hora(e.em)+'</span><span>'+
       (e.t==='naoenviou' ? 'Música de '+tel(e.numero)+' ficou pronta mas não deu pra enviar (a pessoa não abriu conversa nas 24 h)'+linkMus(e.taskId) : e.t==='pago_sem_aviso' ? esc(e.nome||'Cliente')+' pagou mas não recebeu no WhatsApp: '+esc(e.motivo||'')+' · '+tel(e.para) : esc(e.erro||'erro')+(e.para?' · '+tel(e.para):''))+'</span></div>'; }).join('')+'</div>';
@@ -7926,6 +7929,23 @@ function pnlZapHtml(){
   return h;
 }
 function pnlZapLigar(body){
+  var rv=body.querySelector('#zapReenv');
+  if(rv) rv.onclick=function(){
+    if(!pedirSenhaAdmin()) return;
+    if(!confirm('Reenviar o link da música pra todo mundo que pediu no WhatsApp nas últimas 8 horas e ainda não pagou?')) return;
+    rv.disabled=true; var tot=0;
+    (function rodada(){
+      rv.textContent='Reenviando… '+tot+' enviados';
+      fetch('/.netlify/functions/admin-whatsapp',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'reenviar',horas:8})})
+        .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+        .then(function(res){
+          if(!res.ok){ toast((res.d&&res.d.erro)||'Não deu.'); rv.disabled=false; rv.textContent='🔁 Reenviar o link pra quem pediu nas últimas 8 h'; return; }
+          tot+=res.d.enviados||0;
+          if(res.d.restam>0) return rodada();
+          rv.textContent='✓ Pronto: '+tot+' link(s) reenviado(s)'; toast('Reenviado pra '+tot+' pessoa(s) ✓'); pnlZapCarregar();
+        }).catch(function(){ toast('Sem conexão.'); rv.disabled=false; });
+    })();
+  };
   var rec=body.querySelector('#zapRecarregar'); if(rec) rec.onclick=function(ev){ ev.preventDefault(); _pnlZap=null; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); pnlZapCarregar(); };
   body.querySelectorAll('[data-zapenv]').forEach(function(b){ b.onclick=function(){
     var n=b.dataset.zapenv, ta=body.querySelector('[data-zapt="'+n+'"]'), t=(ta&&ta.value||'').trim();
