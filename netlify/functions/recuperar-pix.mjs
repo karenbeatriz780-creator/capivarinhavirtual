@@ -10,6 +10,8 @@ import { indexar, indexarDia, chaveTel, lerIndice, idsDoTel } from './_indice.mj
 // Quem só gerou a música (sem pedido) ganha um pedido na hora, com a música dele.
 
 const PRECO_MUSICA = 9.99;
+// EXTRAS NA HORA DO PIX — tem que bater com EXTRAS_PIX no index.html e em criar-pagamento.mjs
+const EXTRAS_PIX = { clipe: { preco: 4.90, nome: 'Clipe com fotos' }, quadro: { preco: 4.90, nome: 'Quadro QR' } };
 function previa(g, t, v) {
   const base = '/.netlify/functions/previa-musica?';
   return g.id ? base + 'id=' + encodeURIComponent(g.id) + '&v=' + v
@@ -135,7 +137,12 @@ export default async (req) => {
     const chavePix = (process.env.EFI_PIX_KEY || '').trim();
     if (!chavePix) return json({ erro: 'Servidor sem EFI_PIX_KEY configurada.' }, 500);
 
-    const valor = Number((g.pagamento && g.pagamento.valor) || PRECO_MUSICA);
+    const pg0 = g.pagamento || {};
+    const base = Math.round((Number(pg0.valor || PRECO_MUSICA) - Number(pg0.valorExtras || 0)) * 100) / 100 || PRECO_MUSICA;
+    const extrasOk = (g.produto || 'musica') === 'musica' && !g.comboDaMusica && !g.bonusDe && !g.dobroDe;
+    const extrasPix = extrasOk && Array.isArray(body.extras) ? body.extras.filter((k, i, a) => EXTRAS_PIX[k] && a.indexOf(k) === i) : [];
+    const valorExtras = Math.round(extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0) * 100) / 100;
+    const valor = Math.round((base + valorExtras) * 100) / 100;
     const oferta4 = quatroOk(g) || await ofertaRec(String(body.t || ''));
     const txid = criarTxid(g.id);
     const token = await obterToken();
@@ -145,7 +152,7 @@ export default async (req) => {
         calendario: { expiracao: 7200 },
         valor: { original: valor.toFixed(2) },
         chave: chavePix,
-        solicitacaoPagador: (oferta4 ? '4 Músicas Personalizadas' : 'Música Personalizada') + ' - Capivarinha Love',
+        solicitacaoPagador: (oferta4 ? '4 Músicas Personalizadas' : 'Música Personalizada') + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('') + ' - Capivarinha Love',
         infoAdicionais: [{ nome: 'Pedido', valor: String(g.id).slice(0, 50) }]
       }
     });
@@ -163,8 +170,9 @@ export default async (req) => {
       recuperadoEm: agora,
       // 4 músicas: estas 2 + mais 2 (liberadas depois do Pix)
       ...(oferta4 ? { quatro: true } : {}),
+      extrasPix,
       pagamento: Object.assign({}, g.pagamento || {}, {
-        provedor: 'efi', txid, status: 'ATIVA', valor,
+        provedor: 'efi', txid, status: 'ATIVA', valor, extras: extrasPix, valorExtras,
         duracao: (g.pagamento && g.pagamento.duracao) || 'vitalicio',
         efiConferidoEm: 0
       })

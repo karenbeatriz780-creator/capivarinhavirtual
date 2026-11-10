@@ -7138,7 +7138,7 @@ function enviarFotosExtras(id, w){
   }).then(function(){ toast('📸 Suas fotos foram salvas! O clipe fica pronto quando o Pix cair.'); gaEvento('extras_fotos_salvas',{n:fotos.length}); })
     .catch(function(){ toast('Não consegui salvar as fotos agora. Depois de pagar, você manda de novo em "Seus extras".'); });
 }
-function abrirExtrasPix(seguir){
+function abrirExtrasPix(seguir, base){
   if(!extrasElegivel(W)){ seguir(); return; }
   var esc1={}; extrasValidos(W).forEach(function(k){ esc1[k]=true; });
   var EX=['1','2','3','4'].map(function(n){ return '/clipe-ex/'+n+'.webp'; });
@@ -7149,7 +7149,7 @@ function abrirExtrasPix(seguir){
       t:'🖼️ Quadro com QR Code', d:'Arte linda com a foto de vocês pra imprimir e dar de presente. Aponta a câmera e a música toca.'}
   ];
   var box=document.createElement('div'); box.className='xp-fundo'; box.id='xpFundo';
-  function total(){ var t=precoTotalBase(W); Object.keys(esc1).forEach(function(k){ if(esc1[k]) t+=EXTRAS_PIX[k].preco; }); return Math.round(t*100)/100; }
+  function total(){ var t=(base!=null?Number(base):precoTotalBase(W)); Object.keys(esc1).forEach(function(k){ if(esc1[k]) t+=EXTRAS_PIX[k].preco; }); return Math.round(t*100)/100; }
   function desenhar(){
     box.innerHTML='<div class="xp" role="dialog" aria-label="Adicionais">'+
       '<div class="xp-top"><button type="button" class="xp-vt" id="xpVt" aria-label="Voltar">‹</button><b>✨ Deixe o presente inesquecível</b></div>'+
@@ -9914,9 +9914,15 @@ function telaOuvir(arg){
       _ouvir={d:d, sel:'musica', valor:valor};
       el('ouvirPagar').onclick=function(){
         if(_ouvir && _ouvir.sel!=='musica'){ ouvirMontarCombo(); return; }
+        /* oferta do clipe + quadro antes do Pix (igual ao checkout do site) */
+        W=novoEstado('musica'); Object.assign(W,{musicaParaNome:para, musicaPreviewId:d.t||'', meuNome:''}); W.extrasPix=[];
+        abrirExtrasPix(gerarPixOuvir, valor);
+      };
+      function gerarPixOuvir(){
+        var ex=extrasValidos(W), valorTot=Math.round((valor+precoExtras(W))*100)/100;
         var b=el('ouvirPagar'); b.disabled=true; b.textContent='Gerando o Pix...';
         fbEvento('InitiateCheckout',{value:valor, currency:'BRL', content_name:'musica', content_type:'product'});
-        fetch('/.netlify/functions/recuperar-pix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo)})
+        fetch('/.netlify/functions/recuperar-pix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},corpo,{extras:ex}))})
           .then(function(r){ return r.json().then(function(x){ return {ok:r.ok,d:x}; }); })
           .then(function(res){
             if(res.d && res.d.pago && res.d.id){ location.hash='#/p/'+res.d.id+'/c'; return; }
@@ -9928,9 +9934,13 @@ function telaOuvir(arg){
             b.style.display='none';
             var area=el('ouvirPix'); area.style.display='block';
             var infoR=d.oferta4 ? {titulo:'4 Músicas Personalizadas', itens:['Estas 2 músicas completas, sem corte','+ 2 músicas com outra letra e estilo','MP3 pra baixar e mandar no WhatsApp']} : {titulo:'Música Personalizada', itens:['As músicas completas, sem corte','MP3 pra baixar e mandar no WhatsApp']};
-            area.innerHTML=htmlPixLimpo(payload, valor, false, infoR);
-            guardarPixPendente(id, payload, valor, false, infoR);
+            if(ex.length){ infoR.itens=infoR.itens.concat(ex.map(function(k){ return '+ '+EXTRAS_PIX[k].nome; })); }
+            var vPix=Number(res.d.valor)||valorTot;
+            area.innerHTML=htmlPixLimpo(payload, vPix, false, infoR);
+            guardarPixPendente(id, payload, vPix, false, infoR);
             ligarPixLimpo(payload, id, function(){ telaSucesso(id); });
+            W.id=id; enviarFotosExtras(id, W);
+            try{ area.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
           })
           .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent=(d.oferta4?'Quero as 4 músicas — pagar R$ ':'Quero minha música — pagar R$ ')+fmtPreco(valor)+' no Pix'; });
       };
