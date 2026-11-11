@@ -323,6 +323,15 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .cat-boa .cp-cat{background:#E3F7EA;color:#13914a}.cat-ruim .cp-cat{background:#FDE7EA;color:#D12D4A}.cat-nova .cp-cat{background:#E8F0FF;color:#2F5BD6}.cat-observar .cp-cat{background:#FFF6DC;color:#9A6B00}
 .cat-boa{border-left:4px solid #2FBF6B}.cat-ruim{border-left:4px solid #E5485F}.cat-nova{border-left:4px solid #4F7BFF}.cat-observar{border-left:4px solid #F2B705}
 .cp-m{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin:.55rem 0}.cp-m span{display:block;font-size:.66rem;color:#8A7380;font-weight:700}.cp-m b{display:block;font-size:.95rem}.cp-m small{font-size:.64rem;color:#8A7380}
+.cp-plc h4 small{font-weight:600;opacity:.7}.plc-saldo{border-radius:14px;padding:.6rem .75rem;margin:.4rem 0 .6rem;background:rgba(22,163,74,.08);display:grid}.plc-saldo.neg{background:rgba(220,38,38,.08)}
+.plc-saldo span{font-size:.75rem;font-weight:700;opacity:.75}.plc-saldo b{font-size:1.5rem}.plc-saldo small{font-size:.74rem;font-weight:600}
+.plc-g{display:grid;grid-template-columns:1fr;gap:.6rem}@media(min-width:720px){.plc-g{grid-template-columns:1fr 1fr}}
+.plc-col{border-radius:14px;border:1.5px solid rgba(22,163,74,.35);background:#fff;padding:.5rem .55rem}.plc-col.ruins{border-color:rgba(220,38,38,.35)}
+.plc-h{font-weight:800;font-size:.85rem;margin-bottom:.3rem;display:flex;justify-content:space-between}.plc-h span{background:rgba(0,0,0,.07);border-radius:99px;padding:0 .5rem;font-size:.72rem}
+.plc-i{display:flex;justify-content:space-between;gap:.5rem;align-items:center;padding:.35rem 0;border-top:1px solid rgba(0,0,0,.06);cursor:pointer}.plc-i b{font-size:.78rem;display:block;word-break:break-word}.plc-i em{font-size:.66rem;font-style:normal;background:rgba(0,0,0,.08);border-radius:6px;padding:0 .3rem}
+.plc-i small{font-size:.68rem;opacity:.7;display:block}.plc-i>i{font-style:normal;font-weight:800;font-size:.85rem;white-space:nowrap}.plc-v{font-size:.76rem;opacity:.65;padding:.3rem 0}
+.plc-s{display:flex;justify-content:space-between;border-top:2px solid rgba(0,0,0,.1);margin-top:.2rem;padding-top:.35rem;font-size:.85rem}.plc-mais{border:0;background:none;color:#7c3aed;font:inherit;font-size:.74rem;font-weight:700;padding:.3rem 0;cursor:pointer}
+.cp-plc .pos{color:#15803d}.cp-plc .neg{color:#b91c1c}.cp-c.plc-flash{outline:3px solid #7c3aed;outline-offset:2px}
 .na-blk{margin:.6rem 0;padding:.55rem .6rem;border:1px solid rgba(0,0,0,.08);border-radius:12px;background:rgba(255,255,255,.6)}.na-blk>b{font-size:.84rem}.na-blk a{font-size:.75rem}
 .na-pos{display:grid;grid-template-columns:1fr 1fr;gap:.25rem .6rem;margin-top:.35rem}.na-blk .na-ck{font-size:.78rem;display:flex!important;flex-direction:row!important;align-items:center;gap:.35rem;margin:0!important;text-align:left;font-weight:600}.na-blk .na-ck input{width:auto!important;margin:0;flex:none}
 .na-ints{display:flex;flex-wrap:wrap;gap:.3rem;margin:.4rem 0}.na-chip{background:#7c3aed;color:#fff;border-radius:99px;padding:.15rem .25rem .15rem .6rem;font-size:.74rem;display:inline-flex;align-items:center;gap:.2rem}.na-chip button{border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:50%;width:1.2rem;height:1.2rem;cursor:pointer;line-height:1}
@@ -8694,6 +8703,20 @@ function pnlCampanhasAlerta(camps){
     (s.length?'<div>⬆️ <b>Subir orçamento:</b> '+s.map(function(c){ return esc(c.nome); }).join(', ')+'</div>':'')+'</div>';
 }
 /* ===== ABA CAMPANHAS: desempenho, classificação, projeção e duplicar ===== */
+function pnlPlacarHtml(D,lbl,R){
+  var P=D.placar; if(!P) return '';
+  var Rs=function(v){ return (v<0?'-':'+')+R(Math.abs(v)); };
+  var item=function(x){ return '<div class="plc-i" data-plcid="'+esc(x.id)+'"><div><b>'+esc(x.nome)+'</b>'+(x.ativa?'':' <em>desligada</em>')+'<small>'+R(x.gastoImp)+' gasto · '+x.vendas+' venda'+(x.vendas===1?'':'s')+(x.cpa?' · '+R(x.cpa)+'/venda':'')+'</small></div><i class="'+(x.lucro>=0?'pos':'neg')+'">'+Rs(x.lucro)+'</i></div>'; };
+  var col=function(cls,tit,L,soma,vazio){ var k='plc_'+cls, aberto=_pnlPlcAberto[k], mostra=aberto?L:L.slice(0,6);
+    return '<div class="plc-col '+cls+'"><div class="plc-h">'+tit+' <span>'+L.length+'</span></div>'+(L.length?mostra.map(item).join(''):'<div class="plc-v">'+vazio+'</div>')+
+      (L.length>6?'<button type="button" class="plc-mais" data-plcmais="'+k+'">'+(aberto?'mostrar menos':'ver todas ('+L.length+')')+'</button>':'')+
+      '<div class="plc-s"><span>Soma</span><b class="'+(soma>=0?'pos':'neg')+'">'+Rs(soma)+'</b></div></div>'; };
+  return '<div class="cp-box cp-plc"><h4>🏆 Placar das campanhas <small>· '+esc(lbl)+'</small></h4>'+
+    '<div class="plc-saldo '+(P.saldo>=0?'pos':'neg')+'"><span>Saldo '+esc(lbl)+'</span><b>'+Rs(P.saldo)+'</b><small>🟢 '+P.boas.length+' boa'+(P.boas.length===1?'':'s')+' '+Rs(P.somaBoas)+' &nbsp;·&nbsp; 🔴 '+P.ruins.length+' '+(P.ruins.length===1?'ruim':'ruins')+' '+Rs(P.somaRuins)+(P.zeradas?' &nbsp;·&nbsp; ⚪ '+P.zeradas+' sem gasto':'')+'</small></div>'+
+    '<div class="plc-g">'+col('boas','🟢 Lucrando',P.boas,P.somaBoas,'Nenhuma no lucro ainda.')+col('ruins','🔴 No prejuízo',P.ruins,P.somaRuins,'Nenhuma no prejuízo 🎉')+'</div>'+
+    '<div class="pnl-nota">Lucro = vendas × R$ '+fmtPreco(D.ticket)+' − gasto com imposto. Inclui as desligadas que gastaram nesse período. Toque numa campanha pra ir até ela.</div></div>';
+}
+var _pnlPlcAberto={};
 var _pnlCamp=null, _pnlCampPer='hoje', _pnlCampFiltro='todas', _pnlCampCarr=false;
 function pnlCampCarregar(){
   if(_pnlCampCarr) return; _pnlCampCarr=true;
@@ -8861,11 +8884,12 @@ function pnlPubHtml(){
 function pnlCampHtml(){
   var D=_pnlCamp, R=function(v){ return 'R$ '+fmtPreco(Number(v)||0); };
   var robo=(_pnlCache.robo && _pnlCache.robo.ligado) ? pnlRoboHtml()+pnlNovoAnuncioHtml() : '';
-  var chipsPer='<div class="cp-per">'+[['hoje','Hoje'],['ontem','Ontem'],['7d','7 dias']].map(function(o){ return '<button type="button" data-cpper="'+o[0]+'" class="'+(_pnlCampPer===o[0]?'on':'')+'">'+o[1]+'</button>'; }).join('')+'<button type="button" data-cpper="'+_pnlCampPer+'" title="Atualizar">↻</button></div>';
+  var chipsPer='<div class="cp-per">'+[['hoje','Hoje'],['ontem','Ontem'],['7d','7 dias'],['30d','30 dias']].map(function(o){ return '<button type="button" data-cpper="'+o[0]+'" class="'+(_pnlCampPer===o[0]?'on':'')+'">'+o[1]+'</button>'; }).join('')+'<button type="button" data-cpper="'+_pnlCampPer+'" title="Atualizar">↻</button></div>';
   if(!D){ pnlCampCarregar(); return '<div class="cp">'+chipsPer+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>'+robo+'</div>'; }
   if(D.erro) return '<div class="cp">'+chipsPer+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>'+robo+'</div>';
   var rs=D.resumo||{}, c=D.cont||{}, pj=D.projConta||{};
-  var lbl={hoje:'hoje',ontem:'ontem','7d':'nos últimos 7 dias'}[D.per]||'';
+  var lbl={hoje:'hoje',ontem:'ontem','7d':'nos últimos 7 dias','30d':'nos últimos 30 dias'}[D.per]||'';
+  var placar=pnlPlacarHtml(D,lbl,R);
   var resumo='<div class="cp-ks">'+
     '<div class="cp-k"><span>Anúncio '+lbl+'</span><b>'+R(rs.gastoImp)+'</b><small>'+R(rs.gasto)+' no app do Meta</small></div>'+
     '<div class="cp-k"><span>Vendas</span><b>'+(rs.vendas||0)+'</b><small>'+(rs.cpa?R(rs.cpa)+' por venda':'—')+'</small></div>'+
@@ -8887,7 +8911,7 @@ function pnlCampHtml(){
     if(!x.programada) bts+='<button type="button" class="cmp-bt" data-cpprog="'+esc(x.id)+'" data-cporc="'+(x.orcamentoDia||'')+'">⏰ Duplicar como programada</button>';
     if(x.ativa) bts+='<button type="button" class="cmp-bt" data-cmpacao="pausar" data-cmpid="'+esc(x.id)+'">⏸ Pausar</button>';
     else bts+='<button type="button" class="cmp-bt" data-cmpacao="ativar" data-cmpid="'+esc(x.id)+'">▶️ Ativar</button>';
-    return '<div class="cmp cp-c cat-'+x.cat+'"><div class="cmp-top"><b>'+esc(x.nome)+'</b><span class="cp-cat">'+x.txt+(x.programada?'<span class="cp-prog">⏰ programada</span>':'')+'</span></div>'+
+    return '<div class="cmp cp-c cat-'+x.cat+'" data-cpid="'+esc(x.id)+'"><div class="cmp-top"><b>'+esc(x.nome)+'</b><span class="cp-cat">'+x.txt+(x.programada?'<span class="cp-prog">⏰ programada</span>':'')+'</span></div>'+
       '<div class="cp-m"><div><span>Gasto</span><b>'+R(p.gasto)+'</b><small>'+R(p.gastoImp)+' c/ imposto</small></div><div><span>Vendas</span><b>'+p.vendas+'</b><small>'+(p.cpa?R(p.cpa)+'/venda':'—')+'</small></div>'+
         '<div><span>Lucro</span><b class="'+(p.lucro>=0?'pos':'neg')+'">'+(p.lucro<0?'-':'')+R(Math.abs(p.lucro))+'</b><small>fat. '+R(p.fat)+'</small></div><div><span>Orçamento</span><b>'+(x.orcamentoDia?R(x.orcamentoDia):x.orcamentoTotal?R(x.orcamentoTotal):'—')+'</b><small>'+(x.orcamentoDia||!x.orcamentoTotal?'/dia':'total')+'</small></div></div>'+
       '<div class="cp-d">💡 '+esc(x.dica)+' <small>· 7 dias: '+x.d7.vendas+' vendas'+(x.d7.cpa?' a '+R(x.d7.cpa):'')+(x.d3.cpa?' · 3 dias: '+R(x.d3.cpa)+'/venda':'')+'</small></div>'+
@@ -8898,7 +8922,7 @@ function pnlCampHtml(){
         (x.media?'<tr class="md"><td>Média/dia</td><td>'+R(x.media.gasto)+'</td><td>'+String(x.media.vendas).replace('.',',')+'</td><td>'+(x.media.cpa?R(x.media.cpa):'—')+'</td><td class="'+(x.media.lucro>=0?'pos':'neg')+'">'+(x.media.lucro<0?'-':'')+R(Math.abs(x.media.lucro))+'</td></tr>':'')+'</table></details>':'')+
       '<div class="cmp-bts">'+bts+'</div></div>';
   }).join('')||'<div class="pnl-nota">Nenhuma campanha nesse filtro.</div>';
-  return '<div class="cp">'+chipsPer+resumo+boxSobe+boxLogo+boxDup+pnlHorHtml()+pnlPubHtml()+pnlPosHtml()+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
+  return '<div class="cp">'+chipsPer+resumo+placar+boxSobe+boxLogo+boxDup+pnlHorHtml()+pnlPubHtml()+pnlPosHtml()+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
     '<div class="dsh-nota">Gasto e custo por venda iguais ao app do Meta; lucro já desconta o imposto ('+String(D.imposto).replace('.',',')+'%). Vendas = maior entre Pixel e vendas reais do site. Projeção usa o custo por venda dos últimos 3 dias (ou 7) e o orçamento de hoje: é estimativa.</div></div>'+robo+'</div>';
 }
 function pnlCampLigar(body){
@@ -8918,6 +8942,10 @@ function pnlCampLigar(body){
   body.querySelectorAll('[data-cphesc]').forEach(function(b){ b.onclick=function(){ var e=b.dataset.cphesc; if(e==='mao'&&!_pnlHorMao) _pnlHorMao=pnlHorAtalho(_pnlHorEsc); _pnlHorEsc=e; pnlHorSalvar(); pnlRedesenhar(); }; });
   body.querySelectorAll('[data-cphr]').forEach(function(b){ b.onclick=function(){ var h=Number(b.dataset.cphr); var cur=pnlHorAtalho(_pnlHorEsc); var i=cur.indexOf(h); if(i>=0) cur.splice(i,1); else cur.push(h); _pnlHorMao=cur.sort(function(x,y){ return x-y; }); _pnlHorEsc='mao'; pnlHorSalvar(); pnlRedesenhar(); }; });
   pnlNaLigarExtras(); pnlPosLigar();
+  body.querySelectorAll('[data-plcmais]').forEach(function(b){ b.onclick=function(){ _pnlPlcAberto[b.dataset.plcmais]=!_pnlPlcAberto[b.dataset.plcmais]; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); }; });
+  body.querySelectorAll('[data-plcid]').forEach(function(b){ b.onclick=function(){ var c=document.querySelector('.cp-c[data-cpid="'+b.dataset.plcid+'"]');
+    if(!c&&_pnlCampFiltro!=='todas'){ _pnlCampFiltro='todas'; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); c=document.querySelector('.cp-c[data-cpid="'+b.dataset.plcid+'"]'); }
+    if(c){ c.scrollIntoView({behavior:'smooth',block:'center'}); c.classList.add('plc-flash'); setTimeout(function(){ c.classList.remove('plc-flash'); },1600); } else toast('Essa campanha não está na lista de agora (só aparece no período de 30 dias).'); }; });
   body.querySelectorAll('[data-cppubnovo]').forEach(function(b){ b.onclick=function(){ _pnlPub=null; pnlPubCarregar(true); }; });
   body.querySelectorAll('[data-cphornovo]').forEach(function(b){ b.onclick=function(){ _pnlHor=null; pnlHorCarregar(true); }; });
   body.querySelectorAll('[data-cpprog]').forEach(function(b){ b.onclick=function(){

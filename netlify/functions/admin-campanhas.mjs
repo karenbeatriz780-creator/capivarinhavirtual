@@ -1,6 +1,6 @@
 // Painel → aba CAMPANHAS: desempenho de cada campanha (hoje / ontem / 7 dias),
 // classificação (nova · boa · observar · ruim · pausada), projeção de 7 dias e DUPLICAR.
-//   GET  ?per=hoje|ontem|7d
+//   GET  ?per=hoje|ontem|7d|30d
 //   POST {acao:'duplicar', id}   (senha de administrador)
 // Valores de gasto: o do app do Meta (sem imposto) e o real (com imposto). Lucro = faturamento − anúncio com imposto.
 import { metaAds, ultimasAcoes, TICKET, avaliarSubir } from './_gastos.mjs';
@@ -25,8 +25,9 @@ export default async (req) => {
     } catch (e) { return json({ erro: 'O Meta não deixou duplicar: ' + e.message }, 502); }
   }
 
-  const per = new URL(req.url).searchParams.get('per') || 'hoje';
-  const [meta, site, cfg, acoes] = await Promise.all([metaAds(7, null, null, false), vendasSitePorCampanha(10), lerCfg(), ultimasAcoes()]);
+  const per = ['hoje', 'ontem', '7d', '30d'].indexOf(new URL(req.url).searchParams.get('per')) >= 0 ? new URL(req.url).searchParams.get('per') : 'hoje';
+  const [meta, site, cfg, acoes, meta30, site30] = await Promise.all([metaAds(7, null, null, false), vendasSitePorCampanha(10), lerCfg(), ultimasAcoes(),
+    per === '30d' ? metaAds(30, null, null, false) : null, per === '30d' ? vendasSitePorCampanha(32) : null]);
   if (!meta.configurado || meta.erro) return json({ erro: meta.erro || 'Meta não ligado' }, 502);
   const imp = imposto(), tk = TICKET(), cpaMax = cfg.cpaMax || 7, empate = tk / (1 + imp);
   const hoje = diaBR(), ontem = diaBR(Date.now() - 864e5), agora = Date.now();
@@ -36,6 +37,8 @@ export default async (req) => {
     const s = site[c.id] || { vendas: 0, porDia: {} };
     let g = 0, v = 0;
     if (dias) dias.forEach((k) => { const d = (c.dias || {})[k] || {}; g += d.gasto || 0; v += Math.max(d.compras || 0, s.porDia[k] || 0); });
+    else if (per === '30d') { const c3 = ((meta30 && meta30.campanhas) || []).find((y) => y.id === c.id) || {}, s3 = (site30 || {})[c.id] || { porDia: {} };
+      g = c3.gasto || 0; v = Math.max(c3.compras || 0, Object.keys(c3.dias || {}).reduce((t, k) => t + (s3.porDia[k] || 0), 0)); }
     else { g = c.gasto || 0; v = Math.max(c.compras || 0, Object.keys(c.dias || {}).reduce((t, k) => t + (s.porDia[k] || 0), 0)); }
     const g7 = c.gasto || 0, v7 = Math.max(c.compras || 0, Object.keys(c.dias || {}).reduce((t, k) => t + (s.porDia[k] || 0), 0));
     const k3 = cpa3dias(c, s, 0), cpa7 = v7 ? g7 / v7 : null;
@@ -88,6 +91,19 @@ export default async (req) => {
   const at = lista.filter((x) => x.ativa);
   const resumo = { gasto: 0, gastoImp: 0, vendas: 0, fat: 0, lucro: 0 };
   lista.forEach((x) => { resumo.gasto += x.per.gasto; resumo.gastoImp += x.per.gastoImp; resumo.vendas += x.per.vendas; resumo.fat += x.per.fat; resumo.lucro += x.per.lucro; });
+  // 🏆 PLACAR do período: todas que gastaram/venderam (ativas ou desligadas)
+  let base = lista.map((x) => ({ id: x.id, nome: x.nome, ativa: x.ativa, gasto: x.per.gasto, gastoImp: x.per.gastoImp, vendas: x.per.vendas, cpa: x.per.cpa, fat: x.per.fat, lucro: x.per.lucro }));
+  if (per === '30d' && meta30 && meta30.campanhas) {
+    const ja = {}; base.forEach((x) => { ja[x.id] = 1; });
+    meta30.campanhas.filter((c) => !ja[c.id]).forEach((c) => { const s3 = (site30 || {})[c.id] || { porDia: {} }, g = c.gasto || 0;
+      const v = Math.max(c.compras || 0, Object.keys(c.dias || {}).reduce((t, k) => t + (s3.porDia[k] || 0), 0));
+      if (g > 0 || v > 0) base.push({ id: c.id, nome: c.nome, ativa: c.status === 'ACTIVE', fora: true, gasto: r2(g), gastoImp: r2(g * (1 + imp)), vendas: v, cpa: v ? r2(g / v) : null, fat: r2(v * tk), lucro: r2(v * tk - g * (1 + imp)) }); });
+    base.filter((x) => x.fora).forEach((x) => { resumo.gasto += x.gasto; resumo.gastoImp += x.gastoImp; resumo.vendas += x.vendas; resumo.fat += x.fat; resumo.lucro += x.lucro; });
+  }
+  const boas = base.filter((x) => x.lucro > 0.004).sort((a, b) => b.lucro - a.lucro), ruins = base.filter((x) => x.lucro < -0.004).sort((a, b) => a.lucro - b.lucro);
+  const placar = { boas, ruins, zeradas: base.length - boas.length - ruins.length,
+    somaBoas: r2(boas.reduce((t, x) => t + x.lucro, 0)), somaRuins: r2(ruins.reduce((t, x) => t + x.lucro, 0)) };
+  placar.saldo = r2(placar.somaBoas + placar.somaRuins);
   Object.keys(resumo).forEach((k) => { resumo[k] = r2(resumo[k]); });
   resumo.cpa = resumo.vendas ? r2(resumo.gasto / resumo.vendas) : null;
   resumo.ativas = at.length; resumo.orcDia = r2(at.reduce((t, x) => t + (x.orcamentoDia || 0), 0));
@@ -99,5 +115,5 @@ export default async (req) => {
   const podeSubir = lista.filter((x) => x.subir && x.subir.agora).map((x) => ({ id: x.id, nome: x.nome, orc: x.orcamentoDia, novo: x.subir.novo, porque: x.subir.porque }));
   const logoSobe = lista.filter((x) => x.subir && !x.subir.agora).map((x) => ({ id: x.id, nome: x.nome, quando: x.subir.quando, porque: x.subir.porque }));
   const duplicar = lista.filter((x) => x.cat === 'boa').slice(0, 3).map((x) => ({ id: x.id, nome: x.nome, cpa: x.d3.cpa || x.d7.cpa }));
-  return json({ podeSubir, logoSobe, duplicar, per, resumo, cont, projConta: { vendas: pj.vendas, fat: r2(pj.fat), lucro: r2(pj.lucro) }, alertas, campanhas: lista, imposto: imp * 100, ticket: tk });
+  return json({ podeSubir, logoSobe, duplicar, per, resumo, placar, cont, projConta: { vendas: pj.vendas, fat: r2(pj.fat), lucro: r2(pj.lucro) }, alertas, campanhas: lista, imposto: imp * 100, ticket: tk });
 };
