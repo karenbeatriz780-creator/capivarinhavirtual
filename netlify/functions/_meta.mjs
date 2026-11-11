@@ -255,7 +255,13 @@ export async function publicarAnuncio(cfg, a, etapa) {
   const orc = Math.max(6, Number(a.orcamento || cfg.orcInicial || 45));
   const dataTxt = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10).split('-').reverse().join('/');
   const L = loja(), seq = ((await L.get('anuncio_seq', { type: 'json' }).catch(() => null)) || { n: 0 }).n + 1;
-  const nome = 'Capivarinha #' + String(seq).padStart(3, '0') + ' · ' + String(a.nome || 'Criativo').slice(0, 40) + ' · ' + dataTxt;
+  // público: idade/sexo escolhidos no painel. Restringiu → público fixo (sem "Advantage+", senão o Meta trata idade máx. só como sugestão)
+  const iMin = Math.max(18, Math.min(65, parseInt(a.idadeMin, 10) || 18));
+  let iMax = parseInt(a.idadeMax, 10) || null; if (iMax && (iMax >= 65 || iMax < iMin)) iMax = null;
+  const gen = [1, 2].indexOf(parseInt(a.genero, 10)) >= 0 ? parseInt(a.genero, 10) : null;
+  const restrito = iMin > 18 || !!iMax || !!gen;
+  const pubTxt = restrito ? (iMin + (iMax ? '-' + iMax : '+') + (gen === 1 ? ' H' : gen === 2 ? ' M' : '')) : '';
+  const nome = 'Capivarinha #' + String(seq).padStart(3, '0') + ' · ' + String(a.nome || 'Criativo').slice(0, 40) + (pubTxt ? ' · ' + pubTxt : '') + ' · ' + dataTxt;
   const link = cfg.link || 'https://capivarinhalove.com.br/';
   const video = a.tipo === 'video';
 
@@ -310,7 +316,8 @@ export async function publicarAnuncio(cfg, a, etapa) {
       name: nome, campaign_id: camp.id, billing_event: 'IMPRESSIONS', optimization_goal: 'OFFSITE_CONVERSIONS',
       destination_type: 'WEBSITE', is_dynamic_creative: 'false',
       promoted_object: { pixel_id: pixel, custom_event_type: 'PURCHASE' },
-      targeting: Object.assign({ geo_locations: { countries: ['BR'] }, age_min: 18, targeting_automation: { advantage_audience: 1 } }, POSICOES),
+      targeting: Object.assign({ geo_locations: { countries: ['BR'] }, age_min: iMin }, iMax ? { age_max: iMax } : {}, gen ? { genders: [gen] } : {},
+        { targeting_automation: { advantage_audience: restrito ? 0 : 1 } }, POSICOES),
       status: 'PAUSED'
     });
     await etapa('Criando o anúncio…');
@@ -328,6 +335,8 @@ export async function publicarAnuncio(cfg, a, etapa) {
       probs.push('posicionamentos diferentes dos 6 pedidos: ' + JSON.stringify({ fb: tg.facebook_positions, ig: tg.instagram_positions }));
     if (String(cs.promoted_object && cs.promoted_object.pixel_id) !== String(pixel)) probs.push('pixel errado no conjunto');
     if (Number(cc.daily_budget) !== Math.round(orc * 100)) probs.push('orçamento diferente do pedido');
+    if (Number(tg.age_min || 18) !== iMin || (iMax && Number(tg.age_max) !== iMax)) probs.push('idade diferente da pedida (' + (tg.age_min || '?') + '-' + (tg.age_max || '65+') + ')');
+    if (gen && !(Array.isArray(tg.genders) && tg.genders.length === 1 && Number(tg.genders[0]) === gen)) probs.push('sexo diferente do pedido');
     if (probs.length) throw new Error('conferência falhou — ' + probs.join('; '));
     const fs = (cr.degrees_of_freedom_spec && cr.degrees_of_freedom_spec.creative_features_spec) || {};
     const ligados = Object.keys(fs).filter((k) => fs[k] && fs[k].enroll_status === 'OPT_IN');
@@ -340,7 +349,7 @@ export async function publicarAnuncio(cfg, a, etapa) {
     await graph('POST', camp.id, { status: 'ACTIVE' });
     await L.setJSON('anuncio_seq', { n: seq });
     try { await registrarAcao(camp.id, 'criada', { quem: 'painel' }); } catch (e) {}
-    return { campanha: camp.id, conjunto: adset.id, criativo: criativo.id, anuncio: ad.id, nome, orcamento: orc,
+    return { campanha: camp.id, conjunto: adset.id, criativo: criativo.id, anuncio: ad.id, nome, orcamento: orc, publico: pubTxt || 'todos (18+)',
       conferido: { posicionamentos: 6, aprimoramentosDesligados: desligados, aprimoramentosQueOMetaNaoDeixouDesligar: tirar.concat(ligados) } };
   } catch (e) { await desfazer(); throw e; }
 }

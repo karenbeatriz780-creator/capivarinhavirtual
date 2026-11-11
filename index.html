@@ -323,6 +323,12 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .cat-boa .cp-cat{background:#E3F7EA;color:#13914a}.cat-ruim .cp-cat{background:#FDE7EA;color:#D12D4A}.cat-nova .cp-cat{background:#E8F0FF;color:#2F5BD6}.cat-observar .cp-cat{background:#FFF6DC;color:#9A6B00}
 .cat-boa{border-left:4px solid #2FBF6B}.cat-ruim{border-left:4px solid #E5485F}.cat-nova{border-left:4px solid #4F7BFF}.cat-observar{border-left:4px solid #F2B705}
 .cp-m{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin:.55rem 0}.cp-m span{display:block;font-size:.66rem;color:#8A7380;font-weight:700}.cp-m b{display:block;font-size:.95rem}.cp-m small{font-size:.64rem;color:#8A7380}
+.cp-pub .pb{margin:.5rem 0 .2rem;display:grid;gap:4px}.cp-pub .pb-s{margin-top:.5rem}.cp-pub .pb-l{display:grid;grid-template-columns:4.4rem minmax(2rem,1fr) auto auto;align-items:center;gap:.4rem;font-size:.74rem;white-space:nowrap}
+.cp-pub .pb-b{height:14px;border-radius:7px;background:rgba(0,0,0,.06);overflow:hidden}.cp-pub .pb-b i{display:block;height:100%;border-radius:7px;background:#ca8a04}
+.cp-pub .verde .pb-b i{background:#16a34a}.cp-pub .vermelho .pb-b i{background:#dc2626}.cp-pub .pb-c{text-align:right;font-weight:700}
+.cp-pub table{width:100%;font-size:.72rem;border-collapse:collapse}.cp-pub td,.cp-pub th{padding:.2rem .25rem;text-align:right}.cp-pub td:first-child,.cp-pub th:first-child{text-align:left}
+.cp-pub .hres{margin:.5rem 0 .2rem;padding:.45rem .6rem;border-radius:10px;background:rgba(22,163,74,.09);font-size:.8rem}
+.na-pub select{width:100%;padding:.45rem;border-radius:10px;border:1px solid rgba(0,0,0,.15);font:inherit;background:#fff}
 .cp-hor .hg{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:.35rem 0 0}.cp-hor .hc{border:0;border-radius:8px;padding:.3rem 0 .25rem;color:#fff;display:flex;flex-direction:column;align-items:center;line-height:1.05;cursor:pointer;opacity:.45;font-family:inherit}
 .cp-hor .hc b{font-size:.66rem}.cp-hor .hc span{font-size:.6rem;font-weight:700}.cp-hor .hc small{font-size:.5rem;opacity:.9;min-height:.6rem}
 .cp-hor .hc.verde{background:#16a34a}.cp-hor .hc.amarelo{background:#ca8a04}.cp-hor .hc.vermelho{background:#dc2626}.cp-hor .hc.sel{opacity:1;box-shadow:0 0 0 2px #111 inset,0 2px 6px rgba(0,0,0,.25)}
@@ -8492,6 +8498,14 @@ function pnlNovoAnuncioHtml(){
       '<label>Nome (só pra você)<input type="text" id="naNome" maxlength="50" placeholder="Ex.: Black Friday neon"></label>'+
       '<label>Texto do anúncio<textarea id="naTexto" rows="3">'+esc(c.textoPadrao||'')+'</textarea></label>'+
       '<div class="robo-g"><label>Título<input type="text" id="naTitulo" value="'+esc(c.tituloPadrao||'')+'"></label><label>Orçamento (R$/dia)<input type="number" id="naOrc" min="6" step="1" value="'+(c.orcInicial||45)+'"></label></div>'+
+      (function(){ var pv={}; try{ pv=JSON.parse(Store.get('cl_pub')||'{}')||{}; }catch(e){}
+        var opM=[18,25,35,45,55,65].map(function(v){ return '<option value="'+v+'"'+(Number(pv.min||18)===v?' selected':'')+'>'+v+'</option>'; }).join('');
+        var opX=[[24,'24'],[34,'34'],[44,'44'],[54,'54'],[64,'64'],[0,'65+ (sem limite)']].map(function(o){ return '<option value="'+o[0]+'"'+(Number(pv.max||0)===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('');
+        var opG=[[0,'Todos'],[2,'Mulheres'],[1,'Homens']].map(function(o){ return '<option value="'+o[0]+'"'+(Number(pv.gen||0)===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('');
+        var sg=_pnlPub&&_pnlPub.sugestao;
+        return '<div class="robo-g na-pub"><label>Idade mínima<select id="naIMin">'+opM+'</select></label><label>Idade máxima<select id="naIMax">'+opX+'</select></label><label>Sexo<select id="naGen">'+opG+'</select></label></div>'+
+          '<small class="na-info" id="naPubDica">'+(sg?'💡 Pelos seus dados, quem mais compra barato: <b>'+esc(sg.txt)+'</b> ('+(sg.cpa?'R$ '+fmtPreco(sg.cpa)+'/venda · ':'')+sg.parte+'% das vendas). <a href="#" id="naUsarSug">Usar</a>':'Deixe 18 a 65+ e Todos pra público aberto (o Meta procura sozinho).')+'</small>';
+      })()+
       '<div class="cmp-bts"><button type="button" class="cmp-bt" id="naChecar">✅ Checar tudo antes</button><button type="button" class="cmp-bt sobe forte" id="naPub">🚀 Publicar anúncio</button></div><div id="naChk"></div><div id="naSt" class="na-st"></div>'+
     '</div></div>';
 }
@@ -8547,6 +8561,7 @@ function pnlLigarRobo(body){
     });
   }
   var ck=el('naChecar'); if(ck) ck.onclick=function(){ if(!pedirSenhaAdmin()) return; ck.disabled=true; checar().catch(function(e){ toast(e.message); }).then(function(){ ck.disabled=false; }); };
+  var us=el('naUsarSug'); if(us) us.onclick=function(e){ e.preventDefault(); var sg=_pnlPub&&_pnlPub.sugestao; if(!sg) return; el('naIMin').value=String([18,25,35,45,55,65].indexOf(sg.min)>=0?sg.min:18); el('naIMax').value=String(sg.max||0); toast('Idade '+sg.txt+' selecionada ✓'); };
   var pub=el('naPub'); if(pub) pub.onclick=function(){
     var fF=el('naFeed').files[0], fV=el('naVert').files[0], st=el('naSt');
     if(!fF||!fV){ toast('Anexe os 2 arquivos: um pro Feed e um pro Reels/Stories.'); return; }
@@ -8555,10 +8570,14 @@ function pnlLigarRobo(body){
     var orc=Number(el('naOrc').value)||0; if(orc<6){ toast('Orçamento mínimo R$ 6/dia.'); return; }
     Promise.all([medir(fF),medir(fV)]).then(function(ms){
       var e=proporcaoOk('feed',ms[0])||proporcaoOk('vert',ms[1]); if(e){ toast('⚠️ '+e); return; }
-      if(!confirm('Publicar este anúncio com R$ '+fmtPreco(orc)+' por dia?\n\nFeed: '+fF.name+'\nReels/Stories: '+fV.name)) return;
+      var _im=Number(el('naIMin').value)||18, _ix=Number(el('naIMax').value)||0, _ig=Number(el('naGen').value)||0;
+      var pubTxt=(_im===18&&!_ix&&!_ig)?'todos (18+), o Meta procura sozinho':(_im+(_ix?' a '+_ix:'+')+' anos'+(_ig===2?', só mulheres':_ig===1?', só homens':''));
+      if(_ix && _ix<_im){ toast('A idade máxima precisa ser maior que a mínima.'); return; }
+      if(!confirm('Publicar este anúncio com R$ '+fmtPreco(orc)+' por dia?\n\nPúblico: '+pubTxt+'\nFeed: '+fF.name+'\nReels/Stories: '+fV.name)) return;
       if(!pedirSenhaAdmin()) return;
       pub.disabled=true;
-      var info={nome:el('naNome').value||fF.name.replace(/\.[^.]+$/,''), texto:el('naTexto').value, titulo:el('naTitulo').value, orcamento:orc};
+      var info={nome:el('naNome').value||fF.name.replace(/\.[^.]+$/,''), texto:el('naTexto').value, titulo:el('naTitulo').value, orcamento:orc, idadeMin:Number(el('naIMin').value)||18, idadeMax:Number(el('naIMax').value)||null, genero:Number(el('naGen').value)||null};
+      try{ Store.set('cl_pub',JSON.stringify({min:info.idadeMin,max:info.idadeMax||0,gen:info.genero||0})); }catch(e){}
       function falhou(e){ st.textContent='⚠️ '+e.message; pub.disabled=false; }
       function b64de(blob){ return new Promise(function(ok,no){ var fr=new FileReader(); fr.onload=function(){ ok(String(fr.result).split(',')[1]); }; fr.onerror=no; fr.readAsDataURL(blob); }); }
       /* foto: vai sem recorte (só reduz se for enorme), pra não mudar a arte */
@@ -8690,6 +8709,39 @@ function pnlHorHtml(){
     (H.poucosDados?'<div class="pnl-nota">⚠️ Ainda poucos dados ('+H.diaTodo.vendas+' vendas de anúncio). Os horários ficam mais certos com o tempo.</div>':'')+res+
     '<div class="pnl-nota">Depois toque em <b>⏰ Duplicar como programada</b> na campanha: ela usa exatamente as horas marcadas aqui.</div></div>';
 }
+var _pnlPub=null,_pnlPubCarr=false;
+function pnlPubCarregar(novo){
+  if(_pnlPubCarr) return; _pnlPubCarr=true;
+  fetch('/.netlify/functions/admin-publico?dias=30'+(novo?'&novo=1':''),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){ _pnlPubCarr=false; _pnlPub=d; pnlPubAtualizar(); })
+    .catch(function(){ _pnlPubCarr=false; _pnlPub={erro:'Sem conexão.'}; });
+}
+/* atualiza só o quadro e a dica (sem redesenhar o painel, pra não perder arquivos já anexados no Novo anúncio) */
+function pnlPubAtualizar(){
+  var bx=document.querySelector('.cp-pub'); if(bx){ var t=document.createElement('div'); t.innerHTML=pnlPubHtml(); bx.replaceWith(t.firstChild);
+    var rb=document.querySelector('[data-cppubnovo]'); if(rb) rb.onclick=function(){ _pnlPub=null; pnlPubCarregar(true); }; }
+  var dc=el('naPubDica'), sg=_pnlPub&&_pnlPub.sugestao;
+  if(dc&&sg){ dc.innerHTML='💡 Pelos seus dados, quem mais compra barato: <b>'+esc(sg.txt)+'</b> ('+(sg.cpa?'R$ '+fmtPreco(sg.cpa)+'/venda · ':'')+sg.parte+'% das vendas). <a href="#" id="naUsarSug">Usar</a>';
+    el('naUsarSug').onclick=function(e){ e.preventDefault(); el('naIMin').value=String([18,25,35,45,55,65].indexOf(sg.min)>=0?sg.min:18); el('naIMax').value=String(sg.max||0); toast('Idade '+sg.txt+' selecionada ✓'); }; }
+}
+function pnlPubHtml(){
+  var P=_pnlPub, R=function(v){ return 'R$ '+fmtPreco(Number(v)||0); };
+  if(!P){ pnlPubCarregar(); return '<div class="cp-box cp-pub"><h4>👥 Quem compra (idade e sexo)</h4><div class="pnl-nota">Buscando no Meta…</div></div>'; }
+  if(P.erro) return '<div class="cp-box cp-pub"><h4>👥 Quem compra (idade e sexo)</h4><div class="pnl-nota">⚠️ '+esc(P.erro)+'</div></div>';
+  var mx=Math.max.apply(null,P.idade.map(function(x){ return x.compras; }).concat([1]));
+  var linhaHtml=function(x,rot){ return '<div class="pb-l '+(x.cor||'')+'"><span class="pb-r">'+esc(rot||x.rot)+'</span><span class="pb-b"><i style="width:'+Math.max(2,Math.round(x.compras/mx*100))+'%"></i></span><span class="pb-n"><b>'+x.compras+'</b> vendas · '+x.parte+'%</span><span class="pb-c">'+(x.cpa?R(x.cpa):'—')+'</span></div>'; };
+  var cor={verde:'🟢',amarelo:'🟡',vermelho:'🔴'};
+  var funil='<details class="cp-dd"><summary>🔻 Funil por idade (cliques → visitas → Pix gerado → compra)</summary><table><tr><th>Idade</th><th>Gasto</th><th>Cliques</th><th>Visitas</th><th>Pix</th><th>Compras</th><th>Conv.</th></tr>'+
+    P.idade.map(function(x){ return '<tr><td>'+(cor[x.cor]||'')+' '+x.rot+'</td><td>'+R(x.gasto)+'</td><td>'+x.cliques+'</td><td>'+x.visitas+'</td><td>'+x.checkouts+'</td><td>'+x.compras+'</td><td>'+(x.conv!=null?x.conv+'%':'—')+'</td></tr>'; }).join('')+'</table>'+
+    (P.cruz&&P.cruz.length?'<div style="margin-top:.4rem"><b>Top idade × sexo:</b> '+P.cruz.slice(0,5).map(function(x){ var p=x.rot.split('|'); return p[0]+' '+({female:'mulheres',male:'homens'}[p[1]]||'?')+' ('+x.compras+' · '+(x.cpa?R(x.cpa):'—')+')'; }).join(' · ')+'</div>':'')+'</details>';
+  var sg=P.sugestao;
+  return '<div class="cp-box cp-pub"><h4>👥 Quem compra <small style="font-weight:600;opacity:.7">· últimos '+P.dias+' dias · pelo Pixel do Meta</small> <button type="button" class="cmp-bt" data-cppubnovo style="float:right;padding:.1rem .5rem">↻</button></h4>'+
+    '<div>Conta toda: <b>'+P.totalCompras+'</b> vendas'+(P.cpaConta?' a <b>'+R(P.cpaConta)+'</b>':'')+'</div>'+
+    '<div class="pb">'+P.idade.map(function(x){ return linhaHtml(x,x.rot+' anos'); }).join('')+'</div>'+
+    '<div class="pb pb-s">'+P.sexo.map(function(x){ return linhaHtml(x); }).join('')+'</div>'+
+    (P.poucosDados?'<div class="pnl-nota">⚠️ Ainda poucos dados ('+P.totalCompras+' compras). Use como pista, não como regra.</div>':'')+
+    (sg?'<div class="hres">💡 <b>Sugestão pra campanha nova: '+esc(sg.txt)+'</b>'+(P.melhorSexo?' · melhor custo: <b>'+esc(P.melhorSexo)+'</b>':'')+'<br>Essa faixa fez <b>'+sg.parte+'%</b> das vendas'+(sg.cpa?' a <b>'+R(sg.cpa)+'</b>/venda':'')+'. No 📣 Novo anúncio, escolha a idade (ou toque em "Usar").</div>':'')+
+    funil+'<small>🟢 vende barato · 🟡 médio · 🔴 gasta e não vende. Dica: restrinja só uma parte das campanhas e compare com as abertas.</small></div>';
+}
 function pnlCampHtml(){
   var D=_pnlCamp, R=function(v){ return 'R$ '+fmtPreco(Number(v)||0); };
   var robo=(_pnlCache.robo && _pnlCache.robo.ligado) ? pnlRoboHtml()+pnlNovoAnuncioHtml() : '';
@@ -8730,7 +8782,7 @@ function pnlCampHtml(){
         (x.media?'<tr class="md"><td>Média/dia</td><td>'+R(x.media.gasto)+'</td><td>'+String(x.media.vendas).replace('.',',')+'</td><td>'+(x.media.cpa?R(x.media.cpa):'—')+'</td><td class="'+(x.media.lucro>=0?'pos':'neg')+'">'+(x.media.lucro<0?'-':'')+R(Math.abs(x.media.lucro))+'</td></tr>':'')+'</table></details>':'')+
       '<div class="cmp-bts">'+bts+'</div></div>';
   }).join('')||'<div class="pnl-nota">Nenhuma campanha nesse filtro.</div>';
-  return '<div class="cp">'+chipsPer+resumo+boxSobe+boxLogo+boxDup+pnlHorHtml()+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
+  return '<div class="cp">'+chipsPer+resumo+boxSobe+boxLogo+boxDup+pnlHorHtml()+pnlPubHtml()+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
     '<div class="dsh-nota">Gasto e custo por venda iguais ao app do Meta; lucro já desconta o imposto ('+String(D.imposto).replace('.',',')+'%). Vendas = maior entre Pixel e vendas reais do site. Projeção usa o custo por venda dos últimos 3 dias (ou 7) e o orçamento de hoje: é estimativa.</div></div>'+robo+'</div>';
 }
 function pnlCampLigar(body){
@@ -8749,6 +8801,7 @@ function pnlCampLigar(body){
   }; });
   body.querySelectorAll('[data-cphesc]').forEach(function(b){ b.onclick=function(){ var e=b.dataset.cphesc; if(e==='mao'&&!_pnlHorMao) _pnlHorMao=pnlHorAtalho(_pnlHorEsc); _pnlHorEsc=e; pnlHorSalvar(); pnlRedesenhar(); }; });
   body.querySelectorAll('[data-cphr]').forEach(function(b){ b.onclick=function(){ var h=Number(b.dataset.cphr); var cur=pnlHorAtalho(_pnlHorEsc); var i=cur.indexOf(h); if(i>=0) cur.splice(i,1); else cur.push(h); _pnlHorMao=cur.sort(function(x,y){ return x-y; }); _pnlHorEsc='mao'; pnlHorSalvar(); pnlRedesenhar(); }; });
+  body.querySelectorAll('[data-cppubnovo]').forEach(function(b){ b.onclick=function(){ _pnlPub=null; pnlPubCarregar(true); }; });
   body.querySelectorAll('[data-cphornovo]').forEach(function(b){ b.onclick=function(){ _pnlHor=null; pnlHorCarregar(true); }; });
   body.querySelectorAll('[data-cpprog]').forEach(function(b){ b.onclick=function(){
     var nome=(b.closest('.cmp').querySelector('.cmp-top b')||{}).textContent||'';
