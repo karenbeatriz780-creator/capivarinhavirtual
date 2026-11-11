@@ -8517,8 +8517,9 @@ function pnlNovoAnuncioHtml(){
       '<label>Texto do anúncio<textarea id="naTexto" rows="3">'+esc(c.textoPadrao||'')+'</textarea></label>'+
       '<div class="robo-g"><label>Título<input type="text" id="naTitulo" value="'+esc(c.tituloPadrao||'')+'"></label><label>Orçamento (R$/dia)<input type="number" id="naOrc" min="6" step="1" value="'+(c.orcInicial||45)+'"></label></div>'+
       (function(){ var pv={}; try{ pv=JSON.parse(Store.get('cl_pub')||'{}')||{}; }catch(e){}
-        var opM=[18,25,35,45,55,65].map(function(v){ return '<option value="'+v+'"'+(Number(pv.min||18)===v?' selected':'')+'>'+v+'</option>'; }).join('');
-        var opX=[[24,'24'],[34,'34'],[44,'44'],[54,'54'],[64,'64'],[0,'65+ (sem limite)']].map(function(o){ return '<option value="'+o[0]+'"'+(Number(pv.max||0)===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('');
+        var idd=[]; for(var ii=18;ii<=65;ii++) idd.push(ii);
+        var opM=idd.map(function(v){ return '<option value="'+v+'"'+(Number(pv.min||18)===v?' selected':'')+'>'+v+(v===65?'+':'')+'</option>'; }).join('');
+        var opX=idd.slice(0,-1).map(function(v){ return [v,String(v)]; }).concat([[0,'65+ (sem limite)']]).map(function(o){ return '<option value="'+o[0]+'"'+(Number(pv.max||0)===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('');
         var opG=[[0,'Todos'],[2,'Mulheres'],[1,'Homens']].map(function(o){ return '<option value="'+o[0]+'"'+(Number(pv.gen||0)===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('');
         var sg=_pnlPub&&_pnlPub.sugestao;
         return '<div class="robo-g na-pub"><label>Idade mínima<select id="naIMin">'+opM+'</select></label><label>Idade máxima<select id="naIMax">'+opX+'</select></label><label>Sexo<select id="naGen">'+opG+'</select></label></div>'+
@@ -8579,7 +8580,7 @@ function pnlLigarRobo(body){
     });
   }
   var ck=el('naChecar'); if(ck) ck.onclick=function(){ if(!pedirSenhaAdmin()) return; ck.disabled=true; checar().catch(function(e){ toast(e.message); }).then(function(){ ck.disabled=false; }); };
-  var us=el('naUsarSug'); if(us) us.onclick=function(e){ e.preventDefault(); var sg=_pnlPub&&_pnlPub.sugestao; if(!sg) return; el('naIMin').value=String([18,25,35,45,55,65].indexOf(sg.min)>=0?sg.min:18); el('naIMax').value=String(sg.max||0); toast('Idade '+sg.txt+' selecionada ✓'); };
+  var us=el('naUsarSug'); if(us) us.onclick=function(e){ e.preventDefault(); var sg=_pnlPub&&_pnlPub.sugestao; if(!sg) return; el('naIMin').value=String(sg.min||18); el('naIMax').value=String(sg.max||0); toast('Idade '+sg.txt+' selecionada ✓'); };
   var pub=el('naPub'); if(pub) pub.onclick=function(){
     var fF=el('naFeed').files[0], fV=el('naVert').files[0], st=el('naSt');
     if(!fF||!fV){ toast('Anexe os 2 arquivos: um pro Feed e um pro Reels/Stories.'); return; }
@@ -8739,7 +8740,7 @@ function pnlPubAtualizar(){
     var rb=document.querySelector('[data-cppubnovo]'); if(rb) rb.onclick=function(){ _pnlPub=null; pnlPubCarregar(true); }; }
   var dc=el('naPubDica'), sg=_pnlPub&&_pnlPub.sugestao;
   if(dc&&sg){ dc.innerHTML='💡 Pelos seus dados, quem mais compra barato: <b>'+esc(sg.txt)+'</b> ('+(sg.cpa?'R$ '+fmtPreco(sg.cpa)+'/venda · ':'')+sg.parte+'% das vendas). <a href="#" id="naUsarSug">Usar</a>';
-    el('naUsarSug').onclick=function(e){ e.preventDefault(); el('naIMin').value=String([18,25,35,45,55,65].indexOf(sg.min)>=0?sg.min:18); el('naIMax').value=String(sg.max||0); toast('Idade '+sg.txt+' selecionada ✓'); }; }
+    el('naUsarSug').onclick=function(e){ e.preventDefault(); el('naIMin').value=String(sg.min||18); el('naIMax').value=String(sg.max||0); toast('Idade '+sg.txt+' selecionada ✓'); }; }
 }
 function pnlPubHtml(){
   var P=_pnlPub, R=function(v){ return 'R$ '+fmtPreco(Number(v)||0); };
