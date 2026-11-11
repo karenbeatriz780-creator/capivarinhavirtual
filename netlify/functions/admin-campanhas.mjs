@@ -81,7 +81,7 @@ export default async (req) => {
       else if (av.trava && (av.bom || (cat === 'nova' || cat === 'boa') && v7 >= 3 && cpa7 && cpa7 <= cpaMax))
         subir = { agora: false, novo: av.novo, quando: av.quando, porque: av.trava };
     }
-    return { id: c.id, nome: c.nome, diasLista, media, subir, status: c.status, ativa, criada: c.criada, idadeH: Math.round(idadeH), orcamentoDia: c.orcamentoDia, orcamentoTotal: c.orcamentoTotal || null, programada: /^⏰ PROG/.test(c.nome || ''), modoHorario: !!(modoHor[c.id] && !modoHor[c.id].fim),
+    return { id: c.id, nome: c.nome, diasLista, media, subir, status: c.status, ativa, criada: c.criada, idadeH: Math.round(idadeH), orcamentoDia: c.orcamentoDia, orcamentoTotal: c.orcamentoTotal || null, programada: /^⏰ PROG/.test(c.nome || ''), modoHorario: !!(modoHor[c.id] && !modoHor[c.id].fim), atencao: (() => { const d = (c.dias || {})[hoje] || {}; return ativa && (d.gasto || 0) >= 6 && !Math.max(d.compras || 0, s.porDia[hoje] || 0) ? +(d.gasto || 0).toFixed(2) : 0; })(),
       aprendendo: !!c.aprendendo, cat, txt, dica,
       per: { gasto: r2(g), gastoImp: r2(g * (1 + imp)), vendas: v, cpa: v ? r2(g / v) : null, fat: r2(v * tk), lucro: r2(v * tk - g * (1 + imp)) },
       d7: { gasto: r2(g7), vendas: v7, cpa: cpa7 ? r2(cpa7) : null }, d3: { cpa: k3.cpa ? r2(k3.cpa) : null, vendas: k3.vendas },

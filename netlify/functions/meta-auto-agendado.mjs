@@ -4,6 +4,9 @@
 //  ✅ DESLIGAR campanha ATIVA que está ruim
 //  ❌ NUNCA liga campanha (as que você desligou ficam desligadas) — só religa o que ELE pausou na emergência da IA
 //  ❌ NUNCA sobe orçamento — só te AVISA "pode subir" e você sobe
+// REGRA ATUAL (11/11 19h) — SÓ O DIA DE HOJE: R$ 10 gastos sem venda → desliga; com venda e LUCRO DE HOJE negativo
+// (vendas × ticket − gasto com imposto) → desliga. 1 centavo de lucro → continua. À MEIA-NOITE religa as que ele desligou.
+// (regras antigas abaixo, de 10/11, ficaram só como histórico)
 // QUANDO DESLIGA (campanha ativa) — olhando SÓ O DIA DE HOJE (regra de 10/11):
 //  1) HOJE gastou R$ 15 e não vendeu nada
 //  2) HOJE, com 3+ vendas, o custo por venda passou de R$ 13 (com 1-2 vendas: só quando nem mais uma venda salva — 1 venda: R$ 26; 2 vendas: R$ 39)
@@ -20,6 +23,7 @@ import { registrarAcao } from './_gastos.mjs';
 import { diaBR, brl, imposto, cpa3dias } from './_resumo.mjs';
 import { calcHorarios } from './_horarios.mjs';
 
+const HB_LIGADO = false; // modo horário barato desligado na regra de 11/11 19h (prejuízo → desliga até meia-noite)
 const HB_ENTRA = 9, HB_SAI = 8.5, QUEM_HB = 'robô (horário)';
 const horaBR = (t) => new Date((t || Date.now()) - 3 * 3600000).getUTCHours();
 export async function horasBaratas() {
@@ -42,7 +46,7 @@ export async function rodarRobo(simular) {
   const emerg = await L().get('emergencia', { type: 'json' }).catch(() => null);
   if (emerg && !simular) return { ok: true, motivo: 'modo emergência (IA fora do ar) — robô parado até voltar', feitas: [] };
   const imp = imposto(), tk = TICKET();
-  const prim = cfg.primeiraVendaMax || 15, lim = cfg.cpaLimite || 13, cpaSobe = cfg.cpaMax || 7;
+  const prim = 10, lim = cfg.cpaLimite || 13, cpaSobe = cfg.cpaMax || 7;
   const meta = await metaAds(7, null, null, true);
   if (!meta.configurado || meta.erro) { if (meta.erro && !simular) await logRobo({ tipo: 'erro', motivo: meta.erro }); return { ok: false, motivo: meta.erro }; }
   const [acoes, site] = await Promise.all([ultimasAcoes(), vendasSitePorCampanha(31)]);
@@ -62,6 +66,14 @@ export async function rodarRobo(simular) {
     m.fim = true;
   }
   if (!simular && Object.keys(modoOntem).length) await L().setJSON('modohor_' + ontem, modoOntem).catch(() => {});
+  // 🌙 MEIA-NOITE: religa as que o ROBÔ desligou ontem (as que VOCÊ desligou ficam desligadas)
+  if (cfg.autoPausar && agora >= Date.parse('2026-11-12T03:00:00Z')) for (const c of (meta.campanhas || [])) { // começa na meia-noite de 12/11
+    const a = acoes[c.id];
+    if (c.status === 'ACTIVE' || !a || a.tipo !== 'pausar' || !/^robô/.test(a.quem || '') || diaBR(a.em) !== ontem) continue;
+    try { if (!simular) { await aplicarAcao(c, 'ativar', 'robô (meia-noite)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (meia-noite)', em: agora }; } c.status = 'ACTIVE'; c._religada = true;
+      feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: 'dia novo: religuei (ontem eu tinha desligado)' }); }
+    catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui religar à meia-noite: ' + e.message }); }
+  }
   const ativas = (meta.campanhas || []).filter((c) => c.status === 'ACTIVE' || (modo[c.id] && !modo[c.id].fim));
   const fotos = (await L().get('cpa_hist_' + hoje, { type: 'json' }).catch(() => null)) || {}; // custo por venda de hoje a cada conferência
   for (const c of ativas) {
@@ -84,18 +96,16 @@ export async function rodarRobo(simular) {
     if (c.status !== 'ACTIVE' && !m) continue;
     const voceAtivou = a && a.tipo === 'ativar' && !/^robô/.test(a.quem || '') && diaBR(a.em) === hoje;
     let pausar = null;
-    if (cfg.autoPausar && !voceAtivou) {
+    const lucroH = vH * tk - gH * (1 + imp);
+    if (cfg.autoPausar && !voceAtivou) { // REGRA DE 11/11 (19h): só o dia de hoje
       if (vH === 0 && gH >= prim) pausar = 'hoje gastou ' + brl(gH) + ' e não fez nenhuma venda (limite ' + brl(prim) + ')';
-      else if (vH > 0 && vH < 3 && gH >= lim * (vH + 1)) pausar = 'hoje ' + vH + ' venda(s) com ' + brl(gH) + ' — mesmo com mais uma venda passaria do limite de ' + brl(lim);
-      else if (vH >= 3 && cpaH > lim) pausar = 'hoje o custo por venda está ' + brl(cpaH) + ' (' + vH + ' vendas, ' + brl(gH) + ') — passou do limite de ' + brl(lim);
-      const hojeLucro = vH > 0 && cpaH <= tk / (1 + imp);
-      if (!pausar && !hojeLucro) { // prejuízo 3 dias seguidos (com imposto) — só se HOJE também não está dando lucro
-        const cImp = Object.assign({}, c, { gasto: c.gasto * (1 + imp), compras: Math.max(c.compras, Object.keys(c.dias || {}).reduce((t, k) => t + (s.porDia[k] || 0), 0)),
-          dias: Object.fromEntries(Object.entries(c.dias || {}).map(([k, v]) => [k, Object.assign({}, v, { gasto: v.gasto * (1 + imp), compras: Math.max(v.compras || 0, s.porDia[k] || 0) })])) });
-        const r = recomendar(cImp, a, agora);
-        if (r.nivel === 'pausar' && /3 dias/.test(r.motivo)) pausar = r.motivo;
-        c._rec = r;
-      }
+      else if (vH > 0 && lucroH < 0) pausar = 'hoje está no prejuízo: ' + vH + ' venda(s) a ' + brl(cpaH) + ' (gasto ' + brl(gH) + ', com imposto ' + brl(gH * (1 + imp)) + ') → ' + brl(lucroH);
+    }
+    // estava no modo horário (regra antiga) e NÃO está no prejuízo → volta a rodar o dia todo
+    if (m && !pausar) {
+      m.fim = true; m.saiu = 'regra nova (lucro)';
+      if (c.status !== 'ACTIVE') { try { if (!simular) await aplicarAcao(c, 'ativar', QUEM_HB); c.status = 'ACTIVE'; feitas.push({ tipo: 'horario', camp: c.nome, id: c.id, aviso: true, motivo: 'hoje está no lucro (' + brl(lucroH) + '): saiu do modo horário e voltou a rodar o dia todo' }); } catch (e) {} }
+      m = null;
     }
     if (pausar) {
       if (m) { m.fim = true; m.saiu = 'bateu o limite'; }
@@ -106,7 +116,7 @@ export async function rodarRobo(simular) {
     }
     // ⏰ MODO HORÁRIO BARATO
     if (cfg.autoPausar && !voceAtivou) {
-      if (!m && c.status === 'ACTIVE' && vH >= 2 && cpaH > HB_ENTRA) {
+      if (HB_LIGADO && !m && c.status === 'ACTIVE' && vH >= 2 && cpaH > HB_ENTRA) {
         const hb = await pegaBaratas();
         if (hb.length >= 3) {
           m = modo[c.id] = { desde: agora, ultimo: 'on', cpaEntrou: +cpaH.toFixed(2) };

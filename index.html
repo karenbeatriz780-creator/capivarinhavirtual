@@ -8516,9 +8516,9 @@ function pnlRoboHtml(){
   var inp=function(id,rot,val,tipo,extra){ return '<label>'+rot+'<input id="'+id+'" type="'+(tipo||'number')+'" value="'+esc(String(val==null?'':val))+'" '+(extra||'')+'></label>'; };
   return '<div class="dsh-card gst-card robo"><div class="dsh-t">🤖 Robô do tráfego <span class="robo-st '+(liga?'on':'')+'">'+(liga?'ligado':'desligado')+'</span></div>'+
     '<div class="robo-res">'+
-      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>Desliga sozinho</b> campanha ativa ruim: olhando só o dia de hoje: <b>R$ '+fmtPreco(c.primeiraVendaMax||15)+'</b> gastos hoje sem nenhuma venda, custo por venda de hoje acima de <b>R$ '+fmtPreco(c.cpaLimite||13)+'</b> (com 1 venda só desliga em R$ 26), prejuízo 3 dias seguidos e hoje também. Se você religar uma campanha, ele não mexe nela até a meia-noite (valores do app do Meta)</div>'+
-      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>⏰ Modo horário barato</b>: campanha com 2+ vendas hoje e custo acima de <b>R$ 9</b> passa a ficar ligada só nas horas baratas (verdes do quadro ⏰) e desligada nas caras. Se baixar pra R$ 8,50 volta ao normal; se bater o limite, desliga de vez. À meia-noite volta ao normal.</div>'+
-      '<div>🚫 <b>Nunca liga</b> campanha que você desligou e <b>nunca sobe</b> orçamento (só liga/desliga as que ele colocou no modo horário barato)</div>'+
+      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>Desliga sozinho</b>, olhando só o dia de hoje: <b>R$ 10</b> gastos sem nenhuma venda, ou campanha <b>no prejuízo hoje</b> (vendas × R$ '+fmtPreco(9.99)+' menos o gasto com imposto abaixo de zero). Com 1 centavo de lucro, continua. 👀 Com R$ 6 sem venda, fica em atenção no painel.</div>'+
+      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>🌙 Meia-noite</b>: religa as campanhas que <b>ele</b> desligou no dia. As que <b>você</b> desligou ficam desligadas. Se você religar uma, ele não mexe nela até a meia-noite.</div>'+
+      '<div>🚫 <b>Nunca sobe</b> orçamento — só avisa e quem sobe é você</div>'+
       '<div>'+(c.autoSubir?'✅':'⛔')+' <b>Avisa que pode subir</b> quando a campanha vende a até <b>R$ '+fmtPreco(c.cpaMax||7)+'</b> (hoje e 3 dias)</div>'+
       '<div>'+(c.protecaoQueda!==false?'✅':'⛔')+' <b>Proteção</b>: se a IA do site cair, pausa tudo e religa quando voltar</div>'+
       '<div>📲 Avisos no WhatsApp: 7h (ontem), 12h, 17h e 19h (hoje), prejuízo, IA abaixo de <b>R$ '+fmtPreco(c.kieMin==null?10:c.kieMin)+'</b></div>'+
@@ -8536,7 +8536,7 @@ function pnlRoboHtml(){
       inp('rbZap','Seu WhatsApp pros avisos (com 55 + DDD)',c.zapAvisos,'tel','placeholder="5591900000000"')+
       inp('rbTexto','Texto padrão do anúncio',c.textoPadrao,'text')+inp('rbTitulo','Título padrão',c.tituloPadrao,'text')+inp('rbLink','Link do anúncio',c.link,'url')+
       '<div class="robo-g">'+inp('rbPage','ID da Página',c.pageId,'text')+inp('rbIg','ID do Instagram',c.igId,'text')+inp('rbPixel','ID do Pixel',c.pixelId,'text')+'</div>'+
-      '<div class="cmp-bts"><button type="button" class="cmp-bt" id="rbDetectar">🔎 Detectar Página, Instagram e Pixel</button><button type="button" class="cmp-bt sobe forte" id="rbSalvar">Salvar</button><button type="button" class="cmp-bt" id="rbSimular">🧪 O que o robô faria agora?</button></div>'+
+      '<div class="cmp-bts"><button type="button" class="cmp-bt" id="rbDetectar">🔎 Detectar Página, Instagram e Pixel</button><button type="button" class="cmp-bt sobe forte" id="rbSalvar">Salvar</button><button type="button" class="cmp-bt sobe" id="rbRodar">▶️ Rodar o robô agora</button><button type="button" class="cmp-bt" id="rbSimular">🧪 O que o robô faria agora?</button></div>'+
       '<div id="rbSimRes"></div></div>':'')+
     '<div class="robo-log"><div class="robo-lt">Histórico</div>'+log+'</div></div>';
 }
@@ -8590,6 +8590,15 @@ function pnlLigarRobo(body){
       toast('Página: '+((x.paginas[0]||{}).nome||'não achei')+' · Instagram: '+((x.instagrams[0]||{}).nome||'não achei')+' · Pixel: '+((x.pixels[0]||{}).nome||'não achei'));
       desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas);
     }).catch(function(e){ toast(e.message); dt.disabled=false; dt.textContent='🔎 Detectar Página, Instagram e Pixel'; });
+  };
+  var rr=el('rbRodar'); if(rr) rr.onclick=function(){
+    if(!confirm('Rodar o robô agora de verdade? Ele vai desligar/religar as campanhas conforme as regras.')) return;
+    if(!pedirSenhaAdmin()) return; rr.disabled=true; rr.textContent='Rodando…';
+    post('/.netlify/functions/admin-meta-config',{acao:'rodar',simular:false}).then(function(d){
+      var f=(d.feitas||[]).filter(function(x){ return x.tipo!=='horario'||x.aviso; });
+      el('rbSimRes').innerHTML='<div class="robo-sim"><b>Robô rodou ✓</b>'+(f.length?f.map(function(x){ return '<div>'+({pausou:'⏸ Desliguei',religou:'▶️ Religuei',podeSubir:'🟢 Pode subir',horario:'⏰',erro:'⚠️'}[x.tipo]||x.tipo)+' <b>'+esc(x.camp||'')+'</b> — '+esc(x.motivo||'')+'</div>'; }).join(''):'<div>Nada pra fazer agora: nenhuma campanha bateu as regras.</div>')+(d.motivo?'<div>'+esc(d.motivo)+'</div>':'')+'</div>';
+      rr.disabled=false; rr.textContent='▶️ Rodar o robô agora'; _pnlCamp=null;
+    }).catch(function(e){ toast(e.message); rr.disabled=false; rr.textContent='▶️ Rodar o robô agora'; });
   };
   var sm=el('rbSimular'); if(sm) sm.onclick=function(){
     if(!pedirSenhaAdmin()) return; sm.disabled=true; sm.textContent='Analisando…';
@@ -9024,7 +9033,7 @@ function pnlCampHtml(){
     if(!x.programada) bts+='<button type="button" class="cmp-bt" data-cpprog="'+esc(x.id)+'" data-cporc="'+(x.orcamentoDia||'')+'">⏰ Duplicar como programada</button>';
     if(x.ativa) bts+='<button type="button" class="cmp-bt" data-cmpacao="pausar" data-cmpid="'+esc(x.id)+'">⏸ Pausar</button>';
     else bts+='<button type="button" class="cmp-bt" data-cmpacao="ativar" data-cmpid="'+esc(x.id)+'">▶️ Ativar</button>';
-    return '<div class="cmp cp-c cat-'+x.cat+'" data-cpid="'+esc(x.id)+'"><div class="cmp-top"><b>'+esc(x.nome)+'</b><span class="cp-cat">'+x.txt+(x.programada?'<span class="cp-prog">⏰ programada</span>':'')+(x.modoHorario?'<span class="cp-prog hb">⏰ modo horário barato</span>':'')+'</span></div>'+
+    return '<div class="cmp cp-c cat-'+x.cat+'" data-cpid="'+esc(x.id)+'"><div class="cmp-top"><b>'+esc(x.nome)+'</b><span class="cp-cat">'+x.txt+(x.programada?'<span class="cp-prog">⏰ programada</span>':'')+(x.modoHorario?'<span class="cp-prog hb">⏰ modo horário barato</span>':'')+(x.atencao?'<span class="cp-prog hb">👀 atenção: R$ '+fmtPreco(x.atencao)+' sem venda hoje (desliga em R$ 10)</span>':'')+'</span></div>'+
       '<div class="cp-m"><div><span>Gasto</span><b>'+R(p.gasto)+'</b><small>'+R(p.gastoImp)+' c/ imposto</small></div><div><span>Vendas</span><b>'+p.vendas+'</b><small>'+(p.cpa?R(p.cpa)+'/venda':'—')+'</small></div>'+
         '<div><span>Lucro</span><b class="'+(p.lucro>=0?'pos':'neg')+'">'+(p.lucro<0?'-':'')+R(Math.abs(p.lucro))+'</b><small>fat. '+R(p.fat)+'</small></div><div><span>Orçamento</span><b>'+(x.orcamentoDia?R(x.orcamentoDia):x.orcamentoTotal?R(x.orcamentoTotal):'—')+'</b><small>'+(x.orcamentoDia||!x.orcamentoTotal?'/dia':'total')+'</small></div></div>'+
       '<div class="cp-d">💡 '+esc(x.dica)+' <small>· 7 dias: '+x.d7.vendas+' vendas'+(x.d7.cpa?' a '+R(x.d7.cpa):'')+(x.d3.cpa?' · 3 dias: '+R(x.d3.cpa)+'/venda':'')+'</small></div>'+
