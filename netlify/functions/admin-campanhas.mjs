@@ -7,6 +7,7 @@ import { metaAds, ultimasAcoes, TICKET, avaliarSubir } from './_gastos.mjs';
 import { lerCfg, graph, logRobo, vendasSitePorCampanha } from './_meta.mjs';
 import { diaBR, imposto, cpa3dias } from './_resumo.mjs';
 import { duplicarCampanha, montarRep } from './_horarios.mjs';
+import { getStore } from '@netlify/blobs';
 
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const r2 = (x) => Math.round((Number(x) || 0) * 100) / 100;
@@ -26,6 +27,7 @@ export default async (req) => {
   }
 
   const per = ['hoje', 'ontem', '7d', '30d'].indexOf(new URL(req.url).searchParams.get('per')) >= 0 ? new URL(req.url).searchParams.get('per') : 'hoje';
+  const modoHor = (await getStore('gastos').get('modohor_' + diaBR(), { type: 'json' }).catch(() => null)) || {};
   const [meta, site, cfg, acoes, meta30, site30] = await Promise.all([metaAds(7, null, null, false), vendasSitePorCampanha(10), lerCfg(), ultimasAcoes(),
     per === '30d' ? metaAds(30, null, null, false) : null, per === '30d' ? vendasSitePorCampanha(32) : null]);
   if (!meta.configurado || meta.erro) return json({ erro: meta.erro || 'Meta não ligado' }, 502);
@@ -79,7 +81,7 @@ export default async (req) => {
       else if (av.trava && (av.bom || (cat === 'nova' || cat === 'boa') && v7 >= 3 && cpa7 && cpa7 <= cpaMax))
         subir = { agora: false, novo: av.novo, quando: av.quando, porque: av.trava };
     }
-    return { id: c.id, nome: c.nome, diasLista, media, subir, status: c.status, ativa, criada: c.criada, idadeH: Math.round(idadeH), orcamentoDia: c.orcamentoDia, orcamentoTotal: c.orcamentoTotal || null, programada: /^⏰ PROG/.test(c.nome || ''),
+    return { id: c.id, nome: c.nome, diasLista, media, subir, status: c.status, ativa, criada: c.criada, idadeH: Math.round(idadeH), orcamentoDia: c.orcamentoDia, orcamentoTotal: c.orcamentoTotal || null, programada: /^⏰ PROG/.test(c.nome || ''), modoHorario: !!(modoHor[c.id] && !modoHor[c.id].fim),
       aprendendo: !!c.aprendendo, cat, txt, dica,
       per: { gasto: r2(g), gastoImp: r2(g * (1 + imp)), vendas: v, cpa: v ? r2(g / v) : null, fat: r2(v * tk), lucro: r2(v * tk - g * (1 + imp)) },
       d7: { gasto: r2(g7), vendas: v7, cpa: cpa7 ? r2(cpa7) : null }, d3: { cpa: k3.cpa ? r2(k3.cpa) : null, vendas: k3.vendas },

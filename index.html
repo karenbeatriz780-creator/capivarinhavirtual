@@ -336,6 +336,7 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .pos-rk{margin:.6rem 0;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:.45rem .55rem;background:#fff}.pos-ri{display:grid;grid-template-columns:1.6rem 1fr auto;column-gap:.4rem;align-items:center;padding:.3rem 0;border-top:1px solid rgba(0,0,0,.05);font-size:.78rem}
 .pos-ri span{font-weight:800;opacity:.6}.pos-ri i{font-style:normal;font-weight:800}.pos-ri small{grid-column:2/4;font-size:.66rem;opacity:.65}.pos-ri.b i{color:#15803d}.pos-ri.c i{color:#b91c1c}
 .rp-sug{border:2px solid #7c3aed;background:rgba(124,58,237,.06);border-radius:14px;padding:.55rem .65rem;margin:.55rem 0;font-size:.78rem}.rp-sug>small{opacity:.7}.rp-sl div{margin:.3rem 0;line-height:1.35}.rp-sl small{opacity:.7}.rp-sug a{font-size:.74rem;font-weight:700}
+.cp-prog.hb{background:#fef3c7;color:#92400e}
 .rp-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center}
 .rp-bx{background:#faf8ff;width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:.9rem .9rem 1.4rem;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
 .rp-h{display:flex;justify-content:space-between;align-items:center;font-size:1.05rem}.rp-x{border:0;background:rgba(0,0,0,.07);border-radius:50%;width:2rem;height:2rem;font-size:1.2rem;cursor:pointer}
@@ -8510,13 +8511,14 @@ var _pnlRoboAberto=false;
 function pnlRoboHtml(){
   var R=_pnlCache.robo; if(!R) return '<div class="dsh-card gst-card robo"><div class="dsh-t">🤖 Robô do tráfego</div><div class="pnl-nota">Carregando…</div></div>';
   var c=R.cfg, liga=c.autoPausar||c.autoSubir;
-  var ICL={pausou:'⏸',subiu:'⬆️',ativou:'▶️',publicou:'🚀',erro:'⚠️',teto:'🧱',config:'⚙️'};
+  var ICL={horario:'⏰',pausou:'⏸',subiu:'⬆️',ativou:'▶️',publicou:'🚀',erro:'⚠️',teto:'🧱',config:'⚙️'};
   var log=(R.log||[]).slice(0,12).map(function(l){ return '<div class="robo-l"><i>'+(ICL[l.tipo]||'•')+'</i><div><b>'+esc(l.camp||'')+'</b> '+esc(l.motivo||'')+'<small>'+pnlFmt(l.em).slice(0,17)+'</small></div></div>'; }).join('')||'<div class="pnl-nota">Nada ainda. O robô confere as campanhas de hora em hora.</div>';
   var inp=function(id,rot,val,tipo,extra){ return '<label>'+rot+'<input id="'+id+'" type="'+(tipo||'number')+'" value="'+esc(String(val==null?'':val))+'" '+(extra||'')+'></label>'; };
   return '<div class="dsh-card gst-card robo"><div class="dsh-t">🤖 Robô do tráfego <span class="robo-st '+(liga?'on':'')+'">'+(liga?'ligado':'desligado')+'</span></div>'+
     '<div class="robo-res">'+
       '<div>'+(c.autoPausar?'✅':'⛔')+' <b>Desliga sozinho</b> campanha ativa ruim: olhando só o dia de hoje: <b>R$ '+fmtPreco(c.primeiraVendaMax||15)+'</b> gastos hoje sem nenhuma venda, custo por venda de hoje acima de <b>R$ '+fmtPreco(c.cpaLimite||13)+'</b> (com 1 venda só desliga em R$ 26), prejuízo 3 dias seguidos e hoje também. Se você religar uma campanha, ele não mexe nela até a meia-noite (valores do app do Meta)</div>'+
-      '<div>🚫 <b>Nunca liga</b> campanha e <b>nunca sobe</b> orçamento — quem liga e sobe é você</div>'+
+      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>⏰ Modo horário barato</b>: campanha com 2+ vendas hoje e custo acima de <b>R$ 9</b> passa a ficar ligada só nas horas baratas (verdes do quadro ⏰) e desligada nas caras. Se baixar pra R$ 8,50 volta ao normal; se bater o limite, desliga de vez. À meia-noite volta ao normal.</div>'+
+      '<div>🚫 <b>Nunca liga</b> campanha que você desligou e <b>nunca sobe</b> orçamento (só liga/desliga as que ele colocou no modo horário barato)</div>'+
       '<div>'+(c.autoSubir?'✅':'⛔')+' <b>Avisa que pode subir</b> quando a campanha vende a até <b>R$ '+fmtPreco(c.cpaMax||7)+'</b> (hoje e 3 dias)</div>'+
       '<div>'+(c.protecaoQueda!==false?'✅':'⛔')+' <b>Proteção</b>: se a IA do site cair, pausa tudo e religa quando voltar</div>'+
       '<div>📲 Avisos no WhatsApp: 7h (ontem), 12h, 17h e 19h (hoje), prejuízo, IA abaixo de <b>R$ '+fmtPreco(c.kieMin==null?10:c.kieMin)+'</b></div>'+
@@ -9022,7 +9024,7 @@ function pnlCampHtml(){
     if(!x.programada) bts+='<button type="button" class="cmp-bt" data-cpprog="'+esc(x.id)+'" data-cporc="'+(x.orcamentoDia||'')+'">⏰ Duplicar como programada</button>';
     if(x.ativa) bts+='<button type="button" class="cmp-bt" data-cmpacao="pausar" data-cmpid="'+esc(x.id)+'">⏸ Pausar</button>';
     else bts+='<button type="button" class="cmp-bt" data-cmpacao="ativar" data-cmpid="'+esc(x.id)+'">▶️ Ativar</button>';
-    return '<div class="cmp cp-c cat-'+x.cat+'" data-cpid="'+esc(x.id)+'"><div class="cmp-top"><b>'+esc(x.nome)+'</b><span class="cp-cat">'+x.txt+(x.programada?'<span class="cp-prog">⏰ programada</span>':'')+'</span></div>'+
+    return '<div class="cmp cp-c cat-'+x.cat+'" data-cpid="'+esc(x.id)+'"><div class="cmp-top"><b>'+esc(x.nome)+'</b><span class="cp-cat">'+x.txt+(x.programada?'<span class="cp-prog">⏰ programada</span>':'')+(x.modoHorario?'<span class="cp-prog hb">⏰ modo horário barato</span>':'')+'</span></div>'+
       '<div class="cp-m"><div><span>Gasto</span><b>'+R(p.gasto)+'</b><small>'+R(p.gastoImp)+' c/ imposto</small></div><div><span>Vendas</span><b>'+p.vendas+'</b><small>'+(p.cpa?R(p.cpa)+'/venda':'—')+'</small></div>'+
         '<div><span>Lucro</span><b class="'+(p.lucro>=0?'pos':'neg')+'">'+(p.lucro<0?'-':'')+R(Math.abs(p.lucro))+'</b><small>fat. '+R(p.fat)+'</small></div><div><span>Orçamento</span><b>'+(x.orcamentoDia?R(x.orcamentoDia):x.orcamentoTotal?R(x.orcamentoTotal):'—')+'</b><small>'+(x.orcamentoDia||!x.orcamentoTotal?'/dia':'total')+'</small></div></div>'+
       '<div class="cp-d">💡 '+esc(x.dica)+' <small>· 7 dias: '+x.d7.vendas+' vendas'+(x.d7.cpa?' a '+R(x.d7.cpa):'')+(x.d3.cpa?' · 3 dias: '+R(x.d3.cpa)+'/venda':'')+'</small></div>'+

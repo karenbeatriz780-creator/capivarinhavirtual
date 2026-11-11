@@ -114,7 +114,7 @@ export async function aplicarAcao(c, acao, quem) {
     }
     await registrarAcao(id, 'orcamento', { de: c.orcamentoDia, para: novo, quem });
   }
-  if (quem !== 'robô' && (acao === 'ativar' || acao === 'pausar')) { try { await loja().delete('sc_' + id); } catch (e) {} } // você mandou: sai da segunda chance
+  if (!/^robô/.test(quem || '') && (acao === 'ativar' || acao === 'pausar')) { try { await loja().delete('sc_' + id); } catch (e) {} } // você mandou: sai da segunda chance
   try { await loja().setJSON('meta_cache_zerado', { em: Date.now() }); } catch (e) {}
 }
 
