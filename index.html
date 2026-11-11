@@ -8350,14 +8350,31 @@ function pnlHojeHtml(pedidos, custos){
   if(GA.meta!=null) ads=GA.meta;
   var lucro=rec-custoIA-taxa-ads;
   var escala = rec>0 ? proj/rec : (frac>0?1/frac:1);
-  var lucroProj=proj-custoIA*escala-(vendas*escala)*cfg.pix-ads*escala; /* anúncio também segue gastando até 23:59 */
+  /* anúncio gasta quase em linha reta ao longo do dia (as vendas não: concentram à noite).
+     Por isso o gasto previsto segue a HORA do dia, e não o ritmo das vendas; e nunca passa da soma dos orçamentos ligados (+10%). */
+  var fracDia=Math.max(0.12, passou/864e5), adsProj=Math.max(ads, ads/fracDia);
+  var orcAtivo=_pnlCamp&&_pnlCamp.resumo&&Number(_pnlCamp.resumo.orcDia)||0;
+  if(orcAtivo>0) adsProj=Math.max(ads, Math.min(adsProj, orcAtivo*(1+((_pnlCamp&&_pnlCamp.imposto)||12.15)/100)*1.1));
+  var lucroProj=proj-custoIA*escala-(vendas*escala)*cfg.pix-adsProj;
   var semCusto=!cfg.musica && !cfg.letra && GA.kie==null;
   /* projeção do MÊS */
   var dT=pnlDiasTodos(pagos), kMesH=kHoje.slice(0,7), recMes=pnlSomaDias(dT,function(k){ return k.slice(0,7)===kMesH; }).vl;
   var dHoje=pnlDt(agora), diasMes=new Date(Date.UTC(dHoje.getUTCFullYear(),dHoje.getUTCMonth()+1,0)).getUTCDate();
   var diasPass=(dHoje.getUTCDate()-1)+Math.max(0.15,passou/864e5);
-  var projMes=diasPass>0?recMes/diasPass*diasMes:recMes;
   var gMes=pnlGastosPeriodo(function(k){ return k.slice(0,7)===kMesH; });
+  /* projeção do mês = o que já foi (dias fechados) + hoje (previsto) + dias que faltam no RITMO DOS ÚLTIMOS 3 DIAS.
+     Se os últimos dias estão melhores que o começo do mês, a projeção sobe junto. */
+  function diaInfo(k){ var r=(dT[k]&&dT[k].vl)||0, n=(dT[k]&&dT[k].ct)||0, cd=custos[k]||{m:0,l:0};
+    var cia=cd.m*cfg.musica+cd.l*cfg.letra, ad=pnlGastoGet(k), gd=pnlGastosDia(k); if(gd.kie!=null) cia=gd.kie; if(gd.meta!=null) ad=gd.meta;
+    return {rec:r, lucro:r-cia-n*cfg.pix-ad}; }
+  var diaN=dHoje.getUTCDate(), fech=[];
+  for(var dd=diaN-1; dd>=1; dd--){ var kk=kMesH+'-'+String(dd).padStart(2,'0'); fech.push(diaInfo(kk)); }
+  var recFech=fech.reduce(function(t,x){ return t+x.rec; },0), lucFech=fech.reduce(function(t,x){ return t+x.lucro; },0);
+  var ult=fech.slice(0,3), nU=ult.length||1;
+  var ritRec=ult.length?ult.reduce(function(t,x){ return t+x.rec; },0)/nU:proj, ritLuc=ult.length?ult.reduce(function(t,x){ return t+x.lucro; },0)/nU:lucroProj;
+  var medLucMes=fech.length?lucFech/fech.length:lucroProj, faltam=diasMes-diaN;
+  var projMes=recFech+proj+ritRec*faltam;
+  var lucroMesProj=lucFech+lucroProj+ritLuc*faltam;
   /* origem */
   var org={meta:0,organico:0,indicacao:0,social:0,sem:0};
   hoje.forEach(function(p){ if(p.refDe) org.indicacao++; else if(!p.trafego) org.sem++; else if(org[p.trafego]!=null) org[p.trafego]++; else org.organico++; });
@@ -8385,7 +8402,8 @@ function pnlHojeHtml(pedidos, custos){
     '</div>'+
     '<div class="dsh-hero dsh-hero2">'+
       '<div class="dsh-k"><span>Faturado no mês</span><b>R$ '+fmtPreco(recMes)+'</b><small>'+(gMes.tem?'gastos R$ '+fmtPreco(gMes.total)+' · lucro R$ '+fmtPreco(recMes-gMes.total):'dia '+dHoje.getUTCDate()+' de '+diasMes)+'</small></div>'+
-      '<div class="dsh-k proj"><span>Projeção do mês</span><b>R$ '+fmtPreco(projMes)+'</b><small>no ritmo atual, até o dia '+diasMes+'</small>'+(gMes.tem?(function(){ var lm=(recMes-gMes.total)/diasPass*diasMes; return '<div class="dsh-lp">💰 Lucro previsto <b>'+(lm<0?'-':'')+'R$ '+fmtPreco(Math.abs(lm))+'</b><small>≈ R$ '+fmtPreco(lm/diasMes)+' por dia</small></div>'; })():'')+'</div>'+
+      '<div class="dsh-k proj"><span>Projeção do mês</span><b>R$ '+fmtPreco(projMes)+'</b><small>no ritmo dos últimos 3 dias, até o dia '+diasMes+'</small>'+(gMes.tem?(function(){ var lm=lucroMesProj, up=ritLuc>=medLucMes;
+        return '<div class="dsh-lp">💰 Lucro previsto <b>'+(lm<0?'-':'')+'R$ '+fmtPreco(Math.abs(lm))+'</b><small>últimos 3 dias: R$ '+fmtPreco(ritLuc)+'/dia '+(fech.length>=3?(up?'▲':'▼'):'')+' · média do mês: R$ '+fmtPreco(medLucMes)+'/dia</small></div>'; })():'')+'</div>'+
     '</div>'+
     pnlSplitHtml([0,1,2,3,4,5,6].reduce(function(a,i){ return a.concat(dia(i)); },[]), hoje)+
     cmpHtml+
