@@ -323,6 +323,20 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .cat-boa .cp-cat{background:#E3F7EA;color:#13914a}.cat-ruim .cp-cat{background:#FDE7EA;color:#D12D4A}.cat-nova .cp-cat{background:#E8F0FF;color:#2F5BD6}.cat-observar .cp-cat{background:#FFF6DC;color:#9A6B00}
 .cat-boa{border-left:4px solid #2FBF6B}.cat-ruim{border-left:4px solid #E5485F}.cat-nova{border-left:4px solid #4F7BFF}.cat-observar{border-left:4px solid #F2B705}
 .cp-m{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin:.55rem 0}.cp-m span{display:block;font-size:.66rem;color:#8A7380;font-weight:700}.cp-m b{display:block;font-size:.95rem}.cp-m small{font-size:.64rem;color:#8A7380}
+.na-blk{margin:.6rem 0;padding:.55rem .6rem;border:1px solid rgba(0,0,0,.08);border-radius:12px;background:rgba(255,255,255,.6)}.na-blk>b{font-size:.84rem}.na-blk a{font-size:.75rem}
+.na-pos{display:grid;grid-template-columns:1fr 1fr;gap:.25rem .6rem;margin-top:.35rem}.na-blk .na-ck{font-size:.78rem;display:flex!important;flex-direction:row!important;align-items:center;gap:.35rem;margin:0!important;text-align:left;font-weight:600}.na-blk .na-ck input{width:auto!important;margin:0;flex:none}
+.na-ints{display:flex;flex-wrap:wrap;gap:.3rem;margin:.4rem 0}.na-chip{background:#7c3aed;color:#fff;border-radius:99px;padding:.15rem .25rem .15rem .6rem;font-size:.74rem;display:inline-flex;align-items:center;gap:.2rem}.na-chip button{border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:50%;width:1.2rem;height:1.2rem;cursor:pointer;line-height:1}
+.na-busca{display:flex;gap:.3rem;flex-wrap:wrap}.na-busca input{flex:1 1 10rem;padding:.45rem .6rem;border-radius:10px;border:1px solid rgba(0,0,0,.15);font:inherit}
+.na-intres{display:flex;flex-direction:column;gap:.25rem;margin-top:.35rem;max-height:16rem;overflow:auto}.na-res{text-align:left;border:1px solid rgba(0,0,0,.1);background:#fff;border-radius:10px;padding:.35rem .55rem;cursor:pointer;font:inherit}.na-res b{display:block;font-size:.8rem}.na-res small{opacity:.7;font-size:.7rem}
+.na-top{display:flex;flex-direction:column;gap:.3rem;background:rgba(124,58,237,.06)}.na-top small{font-size:.72rem;opacity:.75}
+.cp-sel{width:100%;padding:.4rem .5rem;border-radius:10px;border:1px solid rgba(0,0,0,.15);font:inherit;margin:.3rem 0;background:#fff}
+.pos-pl{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.5rem 0}.pos-c{position:relative;border:2px solid rgba(0,0,0,.08);border-radius:14px;padding:.55rem .6rem;background:#fff;font-size:.76rem}.pos-c.win{border-color:#16a34a;background:rgba(22,163,74,.05)}
+.pos-c>b{font-size:.95rem;display:block;margin-bottom:.25rem}.pos-c div{display:flex;justify-content:space-between}.pos-c i{font-style:normal;font-weight:800}.pos-w{position:absolute;top:-.7rem;right:.5rem;background:#16a34a;color:#fff;border-radius:99px;padding:.05rem .45rem;font-size:.66rem;font-weight:800}
+.pos-g{margin:.5rem 0}.pos-gt{font-size:.76rem;font-weight:800;margin-bottom:.3rem}.pos-gl{display:grid;grid-template-columns:9.2rem minmax(2rem,1fr) auto;gap:.4rem;align-items:center;font-size:.72rem;margin:3px 0;white-space:nowrap}
+.pos-gr{overflow:hidden;text-overflow:ellipsis}.pos-gb{height:14px;border-radius:7px;background:rgba(0,0,0,.06);overflow:hidden}.pos-gb i{display:block;height:100%;border-radius:7px}.pos-gb i.p{background:#16a34a}.pos-gb i.n{background:#dc2626}
+.pos-gl.amarelo .pos-gb i.p{background:#ca8a04}.pos-gv{font-weight:800;text-align:right}.cp-pos .pos{color:#15803d}.cp-pos .neg{color:#b91c1c}
+.cp-pos table{width:100%;font-size:.7rem;border-collapse:collapse}.cp-pos td,.cp-pos th{padding:.2rem .25rem;text-align:right}.cp-pos td:first-child,.cp-pos th:first-child{text-align:left}
+.cp-pos .hres{margin:.5rem 0 .2rem;padding:.45rem .6rem;border-radius:10px;background:rgba(22,163,74,.09);font-size:.8rem}
 .cp-pub .pb{margin:.5rem 0 .2rem;display:grid;gap:4px}.cp-pub .pb-s{margin-top:.5rem}.cp-pub .pb-l{display:grid;grid-template-columns:4.4rem minmax(2rem,1fr) auto auto;align-items:center;gap:.4rem;font-size:.74rem;white-space:nowrap}
 .cp-pub .pb-b{height:14px;border-radius:7px;background:rgba(0,0,0,.06);overflow:hidden}.cp-pub .pb-b i{display:block;height:100%;border-radius:7px;background:#ca8a04}
 .cp-pub .verde .pb-b i{background:#16a34a}.cp-pub .vermelho .pb-b i{background:#dc2626}.cp-pub .pb-c{text-align:right;font-weight:700}
@@ -8509,7 +8523,7 @@ function pnlRoboHtml(){
 function pnlNovoAnuncioHtml(){
   var c=(_pnlCache.robo&&_pnlCache.robo.cfg)||{};
   return '<div class="dsh-card gst-card robo"><div class="dsh-t">📣 Novo anúncio</div>'+
-    '<div class="dsh-nota" style="margin:0 0 .5rem">Mande <b>2 arquivos do mesmo anúncio</b>: um pro Feed e outro pro Reels/Stories (os dois foto ou os dois vídeo). Vai só nos <b>6 posicionamentos</b> (Feed, Stories e Reels do Facebook e do Instagram), <b>sem nenhum aprimoramento automático</b> do Meta, botão <b>Comprar</b> levando pro site, 1 campanha → 1 conjunto → 1 anúncio, orçamento na campanha.</div>'+
+    '<div class="dsh-nota" style="margin:0 0 .5rem">Mande <b>2 arquivos do mesmo anúncio</b>: um pro Feed e outro pro Reels/Stories (os dois foto ou os dois vídeo). Vai nas posições que você marcar em <b>📍 Onde aparecer</b> (até 6: Feed, Stories e Reels do Facebook e do Instagram), <b>sem nenhum aprimoramento automático</b> do Meta, botão <b>Comprar</b> levando pro site, 1 campanha → 1 conjunto → 1 anúncio, orçamento na campanha.</div>'+
     '<div class="robo-cfg">'+
       '<label>📱 Feed — proporção 4:5 ou 1:1<input type="file" id="naFeed" accept="image/*,video/*"><small id="naFeedInfo" class="na-info"></small></label>'+
       '<label>🎬 Reels e Stories — proporção 9:16<input type="file" id="naVert" accept="image/*,video/*"><small id="naVertInfo" class="na-info"></small></label>'+
@@ -8524,6 +8538,14 @@ function pnlNovoAnuncioHtml(){
         var sg=_pnlPub&&_pnlPub.sugestao;
         return '<div class="robo-g na-pub"><label>Idade mínima<select id="naIMin">'+opM+'</select></label><label>Idade máxima<select id="naIMax">'+opX+'</select></label><label>Sexo<select id="naGen">'+opG+'</select></label></div>'+
           '<small class="na-info" id="naPubDica">'+(sg?'💡 Pelos seus dados, quem mais compra barato: <b>'+esc(sg.txt)+'</b> ('+(sg.cpa?'R$ '+fmtPreco(sg.cpa)+'/venda · ':'')+sg.parte+'% das vendas). <a href="#" id="naUsarSug">Usar</a>':'Deixe 18 a 65+ e Todos pra público aberto (o Meta procura sozinho).')+'</small>';
+      })()+
+      (function(){ var ps=pnlNaPos(); var NM=[['ig_reels','Reels do Instagram'],['ig_story','Stories do Instagram'],['ig_feed','Feed do Instagram'],['fb_reels','Reels do Facebook'],['fb_story','Stories do Facebook'],['fb_feed','Feed do Facebook']];
+        return '<div class="na-blk"><b>📍 Onde aparecer</b> <a href="#" id="naPosTodas">todas</a>'+(_pnlPos&&_pnlPos.melhores&&_pnlPos.melhores.length?' · <a href="#" id="naPosMelhores">só as que vendem</a>':'')+
+          '<div class="na-pos">'+NM.map(function(o){ return '<label class="na-ck"><input type="checkbox" data-napos="'+o[0]+'"'+(ps.indexOf(o[0])>=0?' checked':'')+'> '+o[1]+'</label>'; }).join('')+'</div></div>'+
+          '<div class="na-blk"><b>🎯 Interesses (detalhamento)</b> <small>opcional · fecha o público nesses interesses</small>'+
+          '<div class="na-ints" id="naInts">'+pnlNaIntsHtml()+'</div>'+
+          '<div class="na-busca"><input type="text" id="naIntQ" placeholder="Buscar: namoro, casamento, noivado…"><button type="button" class="cmp-bt" id="naIntBusca">🔎</button><button type="button" class="cmp-bt" id="naIntPac">💞 Pacote Relacionamento</button></div><div id="naIntRes" class="na-intres"></div></div>'+
+          '<div class="na-blk na-top"><button type="button" class="cmp-bt sobe forte" id="naTop">⭐ Montar campanha top</button><small>Preenche com o que mais vende nos seus dados: idade, posições e o pacote de interesses de relacionamento. Você pode mexer depois.</small></div>';
       })()+
       '<div class="cmp-bts"><button type="button" class="cmp-bt" id="naChecar">✅ Checar tudo antes</button><button type="button" class="cmp-bt sobe forte" id="naPub">🚀 Publicar anúncio</button></div><div id="naChk"></div><div id="naSt" class="na-st"></div>'+
     '</div></div>';
@@ -8592,10 +8614,12 @@ function pnlLigarRobo(body){
       var _im=Number(el('naIMin').value)||18, _ix=Number(el('naIMax').value)||0, _ig=Number(el('naGen').value)||0;
       var pubTxt=(_im===18&&!_ix&&!_ig)?'todos (18+), o Meta procura sozinho':(_im+(_ix?' a '+_ix:'+')+' anos'+(_ig===2?', só mulheres':_ig===1?', só homens':''));
       if(_ix && _ix<_im){ toast('A idade máxima precisa ser maior que a mínima.'); return; }
-      if(!confirm('Publicar este anúncio com R$ '+fmtPreco(orc)+' por dia?\n\nPúblico: '+pubTxt+'\nFeed: '+fF.name+'\nReels/Stories: '+fV.name)) return;
+      var _np=document.querySelectorAll('[data-napos]:checked').length, _ni=pnlNaInts().length;
+      if(_ni) pubTxt=pubTxt.replace(', o Meta procura sozinho','')+' · '+_ni+' interesses (público fechado)';
+      if(!confirm('Publicar este anúncio com R$ '+fmtPreco(orc)+' por dia?\n\nPúblico: '+pubTxt+'\nPosições: '+_np+' de 6\nFeed: '+fF.name+'\nReels/Stories: '+fV.name)) return;
       if(!pedirSenhaAdmin()) return;
       pub.disabled=true;
-      var info={nome:el('naNome').value||fF.name.replace(/\.[^.]+$/,''), texto:el('naTexto').value, titulo:el('naTitulo').value, orcamento:orc, idadeMin:Number(el('naIMin').value)||18, idadeMax:Number(el('naIMax').value)||null, genero:Number(el('naGen').value)||null};
+      var info={nome:el('naNome').value||fF.name.replace(/\.[^.]+$/,''), texto:el('naTexto').value, titulo:el('naTitulo').value, orcamento:orc, idadeMin:Number(el('naIMin').value)||18, idadeMax:Number(el('naIMax').value)||null, genero:Number(el('naGen').value)||null, posicoes:[].slice.call(document.querySelectorAll('[data-napos]:checked')).map(function(x){ return x.dataset.napos; }), interesses:pnlNaInts().slice()};
       try{ Store.set('cl_pub',JSON.stringify({min:info.idadeMin,max:info.idadeMax||0,gen:info.genero||0})); }catch(e){}
       function falhou(e){ st.textContent='⚠️ '+e.message; pub.disabled=false; }
       function b64de(blob){ return new Promise(function(ok,no){ var fr=new FileReader(); fr.onload=function(){ ok(String(fr.result).split(',')[1]); }; fr.onerror=no; fr.readAsDataURL(blob); }); }
@@ -8728,6 +8752,79 @@ function pnlHorHtml(){
     (H.poucosDados?'<div class="pnl-nota">⚠️ Ainda poucos dados ('+H.diaTodo.vendas+' vendas de anúncio). Os horários ficam mais certos com o tempo.</div>':'')+res+
     '<div class="pnl-nota">Depois toque em <b>⏰ Duplicar como programada</b> na campanha: ela usa exatamente as horas marcadas aqui.</div></div>';
 }
+var _naInts=null;
+function pnlNaPos(){ try{ var v=JSON.parse(Store.get('cl_napos')||'null'); if(Array.isArray(v)&&v.length) return v; }catch(e){} return ['ig_reels','ig_story','ig_feed','fb_reels','fb_story','fb_feed']; }
+function pnlNaInts(){ if(_naInts) return _naInts; try{ _naInts=JSON.parse(Store.get('cl_naints')||'[]')||[]; }catch(e){ _naInts=[]; } return _naInts; }
+function pnlNaIntsSalvar(){ try{ Store.set('cl_naints',JSON.stringify(_naInts||[])); }catch(e){} var b=el('naInts'); if(b){ b.innerHTML=pnlNaIntsHtml(); pnlNaIntsLigar(); } }
+function pnlNaIntsHtml(){ var L=pnlNaInts(); if(!L.length) return '<small class="na-info">Nenhum interesse: o Meta procura sozinho (público aberto).</small>';
+  return L.map(function(x,k){ return '<span class="na-chip" title="'+esc(x.caminho||x.tipo||'')+'">'+esc(x.nome)+' <button type="button" data-narm="'+k+'">×</button></span>'; }).join('')+' <a href="#" id="naIntLimpa">limpar</a>'; }
+function pnlNaIntsLigar(){
+  document.querySelectorAll('[data-narm]').forEach(function(b){ b.onclick=function(){ _naInts.splice(+b.dataset.narm,1); pnlNaIntsSalvar(); }; });
+  var lp=el('naIntLimpa'); if(lp) lp.onclick=function(e){ e.preventDefault(); _naInts=[]; pnlNaIntsSalvar(); };
+}
+function pnlNaIntAdd(lst){ pnlNaInts(); var n=0; lst.forEach(function(x){ if(!_naInts.some(function(y){ return y.id===x.id; })){ _naInts.push({id:x.id,nome:x.nome,tipo:x.tipo,caminho:x.caminho}); n++; } }); pnlNaIntsSalvar(); return n; }
+function pnlNaPacote(){ var r=el('naIntRes'); if(r) r.innerHTML='<small>Buscando no Meta…</small>';
+  return fetch('/.netlify/functions/admin-posicoes?pacote=relacionamento',{cache:'no-store'}).then(function(x){ return x.json(); }).then(function(d){
+    if(!d||!d.itens){ if(r) r.innerHTML='<small>⚠️ '+esc((d&&d.erro)||'Não consegui buscar.')+'</small>'; return 0; }
+    var n=pnlNaIntAdd(d.itens); if(r) r.innerHTML='<small>✓ '+n+' interesses de relacionamento adicionados.</small>'; return n; }); }
+function pnlNaLigarExtras(){
+  pnlNaIntsLigar();
+  document.querySelectorAll('[data-napos]').forEach(function(c){ c.onchange=function(){ var v=[].slice.call(document.querySelectorAll('[data-napos]:checked')).map(function(x){ return x.dataset.napos; });
+    if(!v.length){ c.checked=true; toast('Deixe pelo menos 1 posição.'); return; } try{ Store.set('cl_napos',JSON.stringify(v)); }catch(e){} }; });
+  function marcar(lst){ document.querySelectorAll('[data-napos]').forEach(function(c){ c.checked=lst.indexOf(c.dataset.napos)>=0; }); try{ Store.set('cl_napos',JSON.stringify(lst)); }catch(e){} }
+  var pt=el('naPosTodas'); if(pt) pt.onclick=function(e){ e.preventDefault(); marcar(['ig_reels','ig_story','ig_feed','fb_reels','fb_story','fb_feed']); };
+  var pm=el('naPosMelhores'); if(pm) pm.onclick=function(e){ e.preventDefault(); marcar(_pnlPos.melhores); toast('Marcadas as posições que vendem ✓'); };
+  var bq=el('naIntBusca'), iq=el('naIntQ');
+  function buscar(){ var q=(iq.value||'').trim(); if(q.length<2) return; var r=el('naIntRes'); r.innerHTML='<small>Buscando…</small>';
+    fetch('/.netlify/functions/admin-posicoes?q='+encodeURIComponent(q),{cache:'no-store'}).then(function(x){ return x.json(); }).then(function(d){
+      var L=(d&&d.itens)||[]; if(!L.length){ r.innerHTML='<small>Nada encontrado.</small>'; return; }
+      r.innerHTML=L.map(function(x,k){ return '<button type="button" class="na-res" data-naadd="'+k+'"><b>'+esc(x.nome)+'</b><small>'+esc(({interests:'Interesse',behaviors:'Comportamento',life_events:'Acontecimento',family_statuses:'Família',relationship_statuses:'Relacionamento'}[x.tipo]||x.tipo)+(x.tamanho?' · '+(x.tamanho>=1e6?(x.tamanho/1e6).toFixed(1).replace('.',',')+' mi':Math.round(x.tamanho/1e3)+' mil')+' pessoas':''))+'</small></button>'; }).join('');
+      r.querySelectorAll('[data-naadd]').forEach(function(b){ b.onclick=function(){ pnlNaIntAdd([L[+b.dataset.naadd]]); b.remove(); }; });
+    }).catch(function(){ r.innerHTML='<small>Sem conexão.</small>'; }); }
+  if(bq) bq.onclick=buscar; if(iq) iq.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); buscar(); } };
+  var pc=el('naIntPac'); if(pc) pc.onclick=function(){ pnlNaPacote(); };
+  var tp=el('naTop'); if(tp) tp.onclick=function(){
+    var sg=_pnlPub&&_pnlPub.sugestao, txt=[];
+    if(sg){ el('naIMin').value=String(sg.min||18); el('naIMax').value=String(sg.max||0); txt.push('idade '+sg.txt); }
+    if(_pnlPos&&_pnlPos.melhores&&_pnlPos.melhores.length){ marcar(_pnlPos.melhores); txt.push(_pnlPos.melhores.length+' posições que vendem'); }
+    pnlNaPacote().then(function(n){ if(n||pnlNaInts().length) txt.push('interesses de relacionamento'); toast('⭐ Campanha top: '+(txt.join(' · ')||'sem dados ainda')); });
+    if(!_pnlPub) pnlPubCarregar(); if(!_pnlPos) pnlPosCarregar();
+  };
+}
+/* ===== 📍 ONDE VENDE ===== */
+var _pnlPos=null,_pnlPosCarr=false,_pnlPosCamp='';
+function pnlPosCarregar(novo){
+  if(_pnlPosCarr) return; _pnlPosCarr=true;
+  fetch('/.netlify/functions/admin-posicoes?dias=30'+(_pnlPosCamp?'&camp='+_pnlPosCamp:'')+(novo?'&novo=1':''),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){ _pnlPosCarr=false; _pnlPos=d; pnlPosAtualizar(); })
+    .catch(function(){ _pnlPosCarr=false; _pnlPos={erro:'Sem conexão.'}; pnlPosAtualizar(); });
+}
+function pnlPosAtualizar(){ var bx=document.querySelector('.cp-pos'); if(!bx) return; var t=document.createElement('div'); t.innerHTML=pnlPosHtml(); bx.replaceWith(t.firstChild); pnlPosLigar(); }
+function pnlPosLigar(){
+  var sel=el('cpPosCamp'); if(sel) sel.onchange=function(){ _pnlPosCamp=sel.value; _pnlPos=null; pnlPosAtualizar(); pnlPosCarregar(); };
+  var rb=document.querySelector('[data-cpposnovo]'); if(rb) rb.onclick=function(){ _pnlPos=null; pnlPosAtualizar(); pnlPosCarregar(true); };
+}
+function pnlPosHtml(){
+  var P=_pnlPos, R=function(v){ return 'R$ '+fmtPreco(Number(v)||0); }, Rs=function(v){ return (v<0?'-':'')+'R$ '+fmtPreco(Math.abs(Number(v)||0)); };
+  var camps=(_pnlCamp&&_pnlCamp.campanhas)||[];
+  var sel='<select id="cpPosCamp" class="cp-sel"><option value="">Conta toda</option>'+camps.map(function(c){ return '<option value="'+esc(c.id)+'"'+(_pnlPosCamp===c.id?' selected':'')+'>'+esc(c.nome)+'</option>'; }).join('')+'</select>';
+  var topo='<h4>📍 Onde vende <small style="font-weight:600;opacity:.7">· últimos 30 dias</small> <button type="button" class="cmp-bt" data-cpposnovo style="float:right;padding:.1rem .5rem">↻</button></h4>'+sel;
+  if(!P){ pnlPosCarregar(); return '<div class="cp-box cp-pos">'+topo+'<div class="pnl-nota">Buscando no Meta…</div></div>'; }
+  if(P.erro) return '<div class="cp-box cp-pos">'+topo+'<div class="pnl-nota">⚠️ '+esc(P.erro)+'</div></div>';
+  var pl=P.plataformas.filter(function(x){ return x.gasto>0.5||x.compras>0; });
+  var best=pl.slice().sort(function(a,b){ return b.lucro-a.lucro; })[0];
+  var cards='<div class="pos-pl">'+pl.map(function(x){ return '<div class="pos-c '+(x===best&&pl.length>1?'win':'')+'">'+(x===best&&pl.length>1?'<span class="pos-w">🏆 lucra mais</span>':'')+'<b>'+esc(x.rot)+'</b>'+
+    '<div><span>Vendas</span><i>'+x.compras+' <small>('+x.parte+'%)</small></i></div><div><span>Custo/venda</span><i>'+(x.cpa?R(x.cpa):'—')+'</i></div><div><span>Gasto</span><i>'+R(x.gasto)+'</i></div><div><span>Lucro est.</span><i class="'+(x.lucro>=0?'pos':'neg')+'">'+Rs(x.lucro)+'</i></div></div>'; }).join('')+'</div>';
+  var mx=Math.max.apply(null,P.posicoes.map(function(x){ return Math.abs(x.lucro); }).concat([1]));
+  var graf='<div class="pos-g"><div class="pos-gt">Lucro estimado por posição</div>'+P.posicoes.map(function(x){ var w=Math.max(2,Math.round(Math.abs(x.lucro)/mx*100));
+    return '<div class="pos-gl '+x.cor+'"><span class="pos-gr">'+(x.plat==='instagram'?'📸 ':'📘 ')+esc(x.rot)+'</span><span class="pos-gb"><i class="'+(x.lucro>=0?'p':'n')+'" style="width:'+w+'%"></i></span><span class="pos-gv '+(x.lucro>=0?'pos':'neg')+'">'+Rs(x.lucro)+'</span></div>'; }).join('')+'</div>';
+  var cor={verde:'🟢',amarelo:'🟡',vermelho:'🔴'};
+  var tab='<details class="cp-dd"><summary>🔻 Cada posição em detalhe (funil)</summary><div style="overflow-x:auto"><table><tr><th>Posição</th><th>Gasto</th><th>Cliques</th><th>Visitas</th><th>Pix</th><th>Vendas</th><th>R$/venda</th></tr>'+
+    P.posicoes.map(function(x){ return '<tr><td>'+(cor[x.cor]||'')+' '+esc(x.rot)+'</td><td>'+R(x.gasto)+'</td><td>'+x.cliques+'</td><td>'+x.visitas+'</td><td>'+x.checkouts+'</td><td>'+x.compras+'</td><td>'+(x.cpa?R(x.cpa):'—')+'</td></tr>'; }).join('')+'</table></div></details>';
+  var NMk={ig_reels:'Reels IG',ig_story:'Stories IG',ig_feed:'Feed IG',fb_reels:'Reels FB',fb_story:'Stories FB',fb_feed:'Feed FB'};
+  return '<div class="cp-box cp-pos">'+topo+'<div style="margin:.3rem 0">'+P.totalCompras+' vendas'+(P.cpaConta?' a <b>'+R(P.cpaConta)+'</b>':'')+' · lucro estimado = vendas × R$ '+fmtPreco(P.ticket)+' − gasto com imposto</div>'+cards+graf+
+    (P.melhores&&P.melhores.length?'<div class="hres">💡 Posições que vendem: <b>'+P.melhores.map(function(k){ return NMk[k]||k; }).join(', ')+'</b>. No 📣 Novo anúncio, toque em "só as que vendem" ou em ⭐ Montar campanha top.</div>':'')+
+    (P.poucosDados?'<div class="pnl-nota">⚠️ Poucos dados ainda ('+P.totalCompras+' vendas). Use como pista.</div>':'')+tab+'</div>';
+}
 var _pnlPub=null,_pnlPubCarr=false;
 function pnlPubCarregar(novo){
   if(_pnlPubCarr) return; _pnlPubCarr=true;
@@ -8801,7 +8898,7 @@ function pnlCampHtml(){
         (x.media?'<tr class="md"><td>Média/dia</td><td>'+R(x.media.gasto)+'</td><td>'+String(x.media.vendas).replace('.',',')+'</td><td>'+(x.media.cpa?R(x.media.cpa):'—')+'</td><td class="'+(x.media.lucro>=0?'pos':'neg')+'">'+(x.media.lucro<0?'-':'')+R(Math.abs(x.media.lucro))+'</td></tr>':'')+'</table></details>':'')+
       '<div class="cmp-bts">'+bts+'</div></div>';
   }).join('')||'<div class="pnl-nota">Nenhuma campanha nesse filtro.</div>';
-  return '<div class="cp">'+chipsPer+resumo+boxSobe+boxLogo+boxDup+pnlHorHtml()+pnlPubHtml()+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
+  return '<div class="cp">'+chipsPer+resumo+boxSobe+boxLogo+boxDup+pnlHorHtml()+pnlPubHtml()+pnlPosHtml()+alertas+'<div class="dsh-card gst-card"><div class="dsh-t">Campanhas</div>'+filtro+lista+
     '<div class="dsh-nota">Gasto e custo por venda iguais ao app do Meta; lucro já desconta o imposto ('+String(D.imposto).replace('.',',')+'%). Vendas = maior entre Pixel e vendas reais do site. Projeção usa o custo por venda dos últimos 3 dias (ou 7) e o orçamento de hoje: é estimativa.</div></div>'+robo+'</div>';
 }
 function pnlCampLigar(body){
@@ -8820,6 +8917,7 @@ function pnlCampLigar(body){
   }; });
   body.querySelectorAll('[data-cphesc]').forEach(function(b){ b.onclick=function(){ var e=b.dataset.cphesc; if(e==='mao'&&!_pnlHorMao) _pnlHorMao=pnlHorAtalho(_pnlHorEsc); _pnlHorEsc=e; pnlHorSalvar(); pnlRedesenhar(); }; });
   body.querySelectorAll('[data-cphr]').forEach(function(b){ b.onclick=function(){ var h=Number(b.dataset.cphr); var cur=pnlHorAtalho(_pnlHorEsc); var i=cur.indexOf(h); if(i>=0) cur.splice(i,1); else cur.push(h); _pnlHorMao=cur.sort(function(x,y){ return x-y; }); _pnlHorEsc='mao'; pnlHorSalvar(); pnlRedesenhar(); }; });
+  pnlNaLigarExtras(); pnlPosLigar();
   body.querySelectorAll('[data-cppubnovo]').forEach(function(b){ b.onclick=function(){ _pnlPub=null; pnlPubCarregar(true); }; });
   body.querySelectorAll('[data-cphornovo]').forEach(function(b){ b.onclick=function(){ _pnlHor=null; pnlHorCarregar(true); }; });
   body.querySelectorAll('[data-cpprog]').forEach(function(b){ b.onclick=function(){

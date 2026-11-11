@@ -259,8 +259,20 @@ export async function publicarAnuncio(cfg, a, etapa) {
   const iMin = Math.max(18, Math.min(65, parseInt(a.idadeMin, 10) || 18));
   let iMax = parseInt(a.idadeMax, 10) || null; if (iMax && (iMax >= 65 || iMax < iMin)) iMax = null;
   const gen = [1, 2].indexOf(parseInt(a.genero, 10)) >= 0 ? parseInt(a.genero, 10) : null;
-  const restrito = iMin > 18 || !!iMax || !!gen;
-  const pubTxt = restrito ? (iMin + (iMax ? '-' + iMax : '+') + (gen === 1 ? ' H' : gen === 2 ? ' M' : '')) : '';
+  // posições escolhidas (padrão: as 6). fb_feed, fb_story, fb_reels, ig_feed, ig_story, ig_reels
+  const MAPA = { fb_feed: ['facebook', 'feed'], fb_story: ['facebook', 'story'], fb_reels: ['facebook', 'facebook_reels'], ig_feed: ['instagram', 'stream'], ig_story: ['instagram', 'story'], ig_reels: ['instagram', 'reels'] };
+  let pk = (Array.isArray(a.posicoes) ? a.posicoes : []).filter((k, i, l) => MAPA[k] && l.indexOf(k) === i);
+  if (!pk.length) pk = Object.keys(MAPA);
+  const POS = { publisher_platforms: [], facebook_positions: [], instagram_positions: [] };
+  pk.forEach((k) => { const [pf, ps] = MAPA[k]; if (POS.publisher_platforms.indexOf(pf) < 0) POS.publisher_platforms.push(pf); POS[pf + '_positions'].push(ps); });
+  ['facebook', 'instagram'].forEach((pf) => { if (!POS[pf + '_positions'].length) delete POS[pf + '_positions']; });
+  const temFeed = pk.some((k) => /_feed$/.test(k)), temVert = pk.some((k) => !/_feed$/.test(k));
+  const so = (regra) => { const o = { publisher_platforms: [] }; ['facebook', 'instagram'].forEach((pf) => { const l = (regra[pf + '_positions'] || []).filter((x) => (POS[pf + '_positions'] || []).indexOf(x) >= 0); if (l.length) { o.publisher_platforms.push(pf); o[pf + '_positions'] = l; } }); return o; };
+  // interesses (detalhamento): interests / behaviors / life_events …
+  const ints = (Array.isArray(a.interesses) ? a.interesses : []).filter((x) => x && /^\d{5,25}$/.test(String(x.id))).slice(0, 40);
+  const flex = {}; ints.forEach((x) => { const t = ['interests', 'behaviors', 'life_events', 'family_statuses', 'relationship_statuses', 'industries', 'income'].indexOf(x.tipo) >= 0 ? x.tipo : 'interests'; (flex[t] = flex[t] || []).push({ id: String(x.id), name: String(x.nome || '').slice(0, 80) }); });
+  const restrito = iMin > 18 || !!iMax || !!gen || ints.length > 0;
+  const pubTxt = (iMin > 18 || iMax || gen ? (iMin + (iMax ? '-' + iMax : '+') + (gen === 1 ? ' H' : gen === 2 ? ' M' : '')) : '') + (ints.length ? (iMin > 18 || iMax || gen ? ' ' : '') + 'int' + ints.length : '') + (pk.length < 6 ? ' ' + pk.length + 'pos' : '');
   const nome = 'Capivarinha #' + String(seq).padStart(3, '0') + ' · ' + String(a.nome || 'Criativo').slice(0, 40) + (pubTxt ? ' · ' + pubTxt : '') + ' · ' + dataTxt;
   const link = cfg.link || 'https://capivarinhalove.com.br/';
   const video = a.tipo === 'video';
@@ -269,16 +281,18 @@ export async function publicarAnuncio(cfg, a, etapa) {
   await etapa('Montando o anúncio (feed + reels/stories, sem aprimoramentos)…');
   const mid = (x, rot) => video ? { video_id: x.videoId, thumbnail_url: x.thumb, adlabels: [{ name: rot }] } : { hash: x.hash, adlabels: [{ name: rot }] };
   const lab = video ? 'video_label' : 'image_label';
+  const RF = so(REGRA_FEED), RV = so(REGRA_VERT);
+  const midias = temFeed && temVert ? [mid(a.feed, 'cap_feed'), mid(a.vertical, 'cap_vertical')] : temFeed ? [mid(a.feed, 'cap_feed')] : [mid(a.vertical, 'cap_vertical')];
+  const regras = temFeed && temVert ? [
+    { customization_spec: RF, [video ? 'video_label' : 'image_label']: { name: 'cap_feed' }, priority: 1 },
+    { customization_spec: RV, [video ? 'video_label' : 'image_label']: { name: 'cap_vertical' }, priority: 2 }] : null;
   const feedSpec = {
-    [video ? 'videos' : 'images']: [mid(a.feed, 'cap_feed'), mid(a.vertical, 'cap_vertical')],
+    [video ? 'videos' : 'images']: midias,
     bodies: [{ text: a.texto || cfg.textoPadrao }], titles: [{ text: a.titulo || cfg.tituloPadrao }],
     link_urls: [{ website_url: link }], call_to_action_types: [cfg.cta || 'SHOP_NOW'],
-    ad_formats: [video ? 'SINGLE_VIDEO' : 'SINGLE_IMAGE'], optimization_type: 'PLACEMENT',
-    asset_customization_rules: [
-      { customization_spec: REGRA_FEED, [lab]: { name: 'cap_feed' }, priority: 1 },
-      { customization_spec: REGRA_VERT, [lab]: { name: 'cap_vertical' }, priority: 2 }
-    ]
+    ad_formats: [video ? 'SINGLE_VIDEO' : 'SINGLE_IMAGE']
   };
+  if (regras) Object.assign(feedSpec, { optimization_type: 'PLACEMENT', asset_customization_rules: regras });
   const tirar = [];
   const corpo = () => {
     const feats = {}; SEM_APRIMORAMENTOS.filter((k) => tirar.indexOf(k) < 0).forEach((k) => { feats[k] = { enroll_status: 'OPT_OUT' }; });
@@ -311,13 +325,14 @@ export async function publicarAnuncio(cfg, a, etapa) {
       name: nome, objective: 'OUTCOME_SALES', status: 'PAUSED', special_ad_categories: [],
       buying_type: 'AUCTION', daily_budget: String(Math.round(orc * 100)), bid_strategy: 'LOWEST_COST_WITHOUT_CAP'
     });
-    await etapa('Criando o conjunto (6 posicionamentos, Brasil, compra no site)…');
+    await etapa('Criando o conjunto (' + pk.length + ' posicionamentos, Brasil, compra no site' + (ints.length ? ', ' + ints.length + ' interesses' : '') + ')…');
     const adset = await graphConta('POST', 'adsets', {
       name: nome, campaign_id: camp.id, billing_event: 'IMPRESSIONS', optimization_goal: 'OFFSITE_CONVERSIONS',
       destination_type: 'WEBSITE', is_dynamic_creative: 'false',
       promoted_object: { pixel_id: pixel, custom_event_type: 'PURCHASE' },
       targeting: Object.assign({ geo_locations: { countries: ['BR'] }, age_min: iMin }, iMax ? { age_max: iMax } : {}, gen ? { genders: [gen] } : {},
-        { targeting_automation: { advantage_audience: restrito ? 0 : 1 } }, POSICOES),
+        Object.keys(flex).length ? { flexible_spec: [flex] } : {},
+        { targeting_automation: { advantage_audience: restrito ? 0 : 1 } }, POS),
       status: 'PAUSED'
     });
     await etapa('Criando o anúncio…');
@@ -331,8 +346,9 @@ export async function publicarAnuncio(cfg, a, etapa) {
       graph('GET', camp.id, { fields: 'daily_budget,objective' })
     ]);
     const tg = cs.targeting || {}, probs = [];
-    if (!igual(tg.publisher_platforms, POSICOES.publisher_platforms) || !igual(tg.facebook_positions, POSICOES.facebook_positions) || !igual(tg.instagram_positions, POSICOES.instagram_positions))
-      probs.push('posicionamentos diferentes dos 6 pedidos: ' + JSON.stringify({ fb: tg.facebook_positions, ig: tg.instagram_positions }));
+    if (!igual(tg.publisher_platforms, POS.publisher_platforms) || !igual(tg.facebook_positions || [], POS.facebook_positions || []) || !igual(tg.instagram_positions || [], POS.instagram_positions || []))
+      probs.push('posicionamentos diferentes dos ' + pk.length + ' pedidos: ' + JSON.stringify({ fb: tg.facebook_positions, ig: tg.instagram_positions }));
+    if (ints.length && !(Array.isArray(tg.flexible_spec) && tg.flexible_spec.length)) probs.push('os interesses não foram gravados');
     if (String(cs.promoted_object && cs.promoted_object.pixel_id) !== String(pixel)) probs.push('pixel errado no conjunto');
     if (Number(cc.daily_budget) !== Math.round(orc * 100)) probs.push('orçamento diferente do pedido');
     if (Number(tg.age_min || 18) !== iMin || (iMax && Number(tg.age_max) !== iMax)) probs.push('idade diferente da pedida (' + (tg.age_min || '?') + '-' + (tg.age_max || '65+') + ')');
@@ -350,6 +366,6 @@ export async function publicarAnuncio(cfg, a, etapa) {
     await L.setJSON('anuncio_seq', { n: seq });
     try { await registrarAcao(camp.id, 'criada', { quem: 'painel' }); } catch (e) {}
     return { campanha: camp.id, conjunto: adset.id, criativo: criativo.id, anuncio: ad.id, nome, orcamento: orc, publico: pubTxt || 'todos (18+)',
-      conferido: { posicionamentos: 6, aprimoramentosDesligados: desligados, aprimoramentosQueOMetaNaoDeixouDesligar: tirar.concat(ligados) } };
+      conferido: { posicionamentos: pk.length, interesses: ints.length, aprimoramentosDesligados: desligados, aprimoramentosQueOMetaNaoDeixouDesligar: tirar.concat(ligados) } };
   } catch (e) { await desfazer(); throw e; }
 }
