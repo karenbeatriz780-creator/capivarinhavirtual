@@ -335,6 +335,7 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .pos-gr small{display:block;font-size:.64rem;opacity:.7;font-weight:600}.pos-gl{align-items:center}
 .pos-rk{margin:.6rem 0;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:.45rem .55rem;background:#fff}.pos-ri{display:grid;grid-template-columns:1.6rem 1fr auto;column-gap:.4rem;align-items:center;padding:.3rem 0;border-top:1px solid rgba(0,0,0,.05);font-size:.78rem}
 .pos-ri span{font-weight:800;opacity:.6}.pos-ri i{font-style:normal;font-weight:800}.pos-ri small{grid-column:2/4;font-size:.66rem;opacity:.65}.pos-ri.b i{color:#15803d}.pos-ri.c i{color:#b91c1c}
+.rp-sug{border:2px solid #7c3aed;background:rgba(124,58,237,.06);border-radius:14px;padding:.55rem .65rem;margin:.55rem 0;font-size:.78rem}.rp-sug>small{opacity:.7}.rp-sl div{margin:.3rem 0;line-height:1.35}.rp-sl small{opacity:.7}.rp-sug a{font-size:.74rem;font-weight:700}
 .rp-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center}
 .rp-bx{background:#faf8ff;width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:.9rem .9rem 1.4rem;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
 .rp-h{display:flex;justify-content:space-between;align-items:center;font-size:1.05rem}.rp-x{border:0;background:rgba(0,0,0,.07);border-radius:50%;width:2rem;height:2rem;font-size:1.2rem;cursor:pointer}
@@ -8793,7 +8794,7 @@ function pnlRepAbrir(id,nome,orc){
   var d=document.createElement('div'); d.id='rpSheet'; d.className='rp-ov';
   d.innerHTML='<div class="rp-bx"><div class="rp-h"><b>🔁 Replicar</b><button type="button" class="rp-x" data-rpx>×</button></div>'+
     '<div class="rp-nm">'+esc(nome)+'</div><small class="na-info">Mesmo post (curtidas e comentários). A original não muda. A cópia já entra ligada.</small>'+
-    '<button type="button" class="cmp-bt sobe forte rp-top" id="rpTop">⭐ Tudo top (melhor idade + posições que vendem + interesses de relacionamento)</button>'+
+    '<div class="rp-sug" id="rpSug"><b>🤖 Sugestão do sistema</b><small>Analisando os seus dados…</small></div>'+
     '<div class="na-blk"><b>📍 Onde aparecer</b> <a href="#" id="rpTodas">todas</a>'+(_pnlPos&&_pnlPos.melhores&&_pnlPos.melhores.length?' · <a href="#" id="rpMelhores">só as que vendem</a>':'')+' · <a href="#" id="rpWa">só WhatsApp</a>'+
       '<div class="na-pos">'+NM.map(function(o){ return '<label class="na-ck"><input type="checkbox" data-rppos="'+o[0]+'"'+(o[0]!=='wa_status'?' checked':'')+'> '+o[1]+'</label>'; }).join('')+'</div>'+
       '<small class="na-info">💬 O Meta só aceita Status do WhatsApp junto com Stories do Instagram.</small></div>'+
@@ -8833,16 +8834,40 @@ function pnlRepAbrir(id,nome,orc){
       $('rpRes').innerHTML=L.map(function(y,k){ return '<button type="button" class="na-res" data-rpadd="'+k+'"><b>'+esc(y.nome)+'</b><small>'+esc(y.tipo||'')+'</small></button>'; }).join('');
       $('rpRes').querySelectorAll('[data-rpadd]').forEach(function(bb){ bb.onclick=function(){ add([L[+bb.dataset.rpadd]]); bb.remove(); }; }); }).catch(function(){ $('rpRes').innerHTML='<small>Sem conexão.</small>'; }); };
   $('rpBusca').onclick=buscar; $('rpQ').onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); buscar(); } };
-  $('rpTop').onclick=function(){ var t=[]; if(usarIdade()) t.push('idade '+_pnlPub.sugestao.txt);
-    if(_pnlPos&&_pnlPos.melhores&&_pnlPos.melhores.length){ marcar(_pnlPos.melhores); t.push(_pnlPos.melhores.length+' posições que vendem'); }
-    pacote().then(function(n){ if(n||_rpInts.length) t.push('interesses de relacionamento'); toast('⭐ Tudo top: '+(t.join(' · ')||'sem dados ainda')); });
-    if(!_pnlPub) pnlPubCarregar(); if(!_pnlPos) pnlPosCarregar(); };
+  var nmP={ig_reels:'Reels IG',ig_story:'Stories IG',ig_feed:'Feed IG',fb_reels:'Reels FB',fb_story:'Stories FB',fb_feed:'Feed FB',wa_status:'Status WhatsApp'};
+  var _sug=null;
+  var aplicarSug=function(){ if(!_sug) return; if(_sug.pos.length) marcar(_sug.pos); if(_sug.idade){ $('rpMin').value=String(_sug.idade.min||18); $('rpMax').value=String(_sug.idade.max||0); } $('rpGen').value=''; };
+  var pegaCamp=fetch('/.netlify/functions/admin-posicoes?dias=30&camp='+encodeURIComponent(id),{cache:'no-store'}).then(function(r){ return r.json(); }).catch(function(){ return null; });
+  var pegaConta=_pnlPos&&!_pnlPos.erro?Promise.resolve(_pnlPos):fetch('/.netlify/functions/admin-posicoes?dias=30',{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(x){ _pnlPos=x; return x; }).catch(function(){ return null; });
+  var pegaPub=_pnlPub&&!_pnlPub.erro?Promise.resolve(_pnlPub):fetch('/.netlify/functions/admin-publico?dias=30',{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(x){ _pnlPub=x; return x; }).catch(function(){ return null; });
+  Promise.all([pegaCamp,pegaConta,pegaPub]).then(function(v){
+    var C=v[0], A=v[1], P=v[2], box=$('rpSug'); if(!box) return;
+    var usaCamp=C&&!C.erro&&C.totalCompras>=15&&C.melhores&&C.melhores.length, F=usaCamp?C:(A&&!A.erro?A:null);
+    var L=[], fora=[];
+    if(F&&F.melhores&&F.melhores.length){
+      var pos=F.melhores.filter(function(k){ return nmP[k]; });
+      if(pos.indexOf('wa_status')>=0&&pos.indexOf('ig_story')<0) pos.push('ig_story');
+      ['ig_reels','ig_story','ig_feed','fb_reels','fb_story','fb_feed'].forEach(function(k){ if(pos.indexOf(k)<0){ var x=(F.posicoes||[]).filter(function(y){ return y.chave===k; })[0];
+        fora.push('<b>'+nmP[k]+'</b> ('+(!x?'sem dados':!x.compras?'gastou '+'R$ '+fmtPreco(x.gasto)+' sem vender':(x.lucro<0?'prejuízo, ':'')+'R$ '+fmtPreco(x.cpa)+'/venda')+')'); } });
+      var bons=pos.map(function(k){ var x=(F.posicoes||[]).filter(function(y){ return y.chave===k; })[0]; return nmP[k]+(x&&x.cpa?' R$ '+fmtPreco(x.cpa):''); });
+      L.push('📍 <b>Posições:</b> '+bons.join(', ')+'. <small>'+(usaCamp?'Pelos números desta campanha ('+C.totalCompras+' vendas).':'Pelos números da conta toda'+(C&&C.totalCompras?' (esta campanha só tem '+C.totalCompras+' vendas, pouco pra decidir sozinha)':'')+'.')+'</small>');
+      if(fora.length) L.push('✂️ <b>Tirei:</b> '+fora.join(', ')+'.');
+      _sug={pos:pos};
+    } else { L.push('📍 Posições: ainda sem dados suficientes, deixei as 6.'); _sug={pos:[]}; }
+    var sg=P&&P.sugestao; if(sg){ _sug.idade={min:sg.min,max:sg.max}; L.push('👥 <b>Idade '+esc(sg.txt)+'</b>: '+sg.parte+'% das vendas'+(sg.cpa?' a R$ '+fmtPreco(sg.cpa)+'/venda':'')+'. Sexo: todos (os dois compram).'); }
+    else L.push('👥 Idade: sem dados suficientes, deixei aberta.');
+    L.push('🎯 <b>Interesses:</b> não marquei. O Meta não mostra qual interesse gera venda, então não dá pra provar que barateia. Se quiser testar, toque em 💞 Pacote Relacionamento.');
+    box.innerHTML='<b>🤖 Sugestão do sistema</b> <small>(já marquei abaixo, mude o que quiser)</small><div class="rp-sl">'+L.map(function(x){ return '<div>'+x+'</div>'; }).join('')+'</div>'+
+      '<a href="#" id="rpVolta">↺ voltar pra sugestão</a> · <a href="#" id="rpIgual">deixar igual à original (6 posições, público aberto)</a>';
+    aplicarSug();
+    $('rpVolta').onclick=function(e){ e.preventDefault(); aplicarSug(); toast('Sugestão aplicada ✓'); };
+    $('rpIgual').onclick=function(e){ e.preventDefault(); marcar(['ig_reels','ig_story','ig_feed','fb_reels','fb_story','fb_feed']); $('rpMin').value='18'; $('rpMax').value='0'; $('rpGen').value=''; _rpInts=[]; desenhaInts(); };
+  });
   $('rpGo').onclick=function(){
     var pos=cks().filter(function(c){ return c.checked; }).map(function(c){ return c.dataset.rppos; });
     var orcV=Number(String($('rpOrc').value).replace(',','.')); if(!(orcV>=6&&orcV<=500)){ toast('Orçamento entre R$ 6 e R$ 500.'); return; }
     var mi=Number($('rpMin').value)||18, ma=Number($('rpMax').value)||0, ge=Number($('rpGen').value)||null;
     if(ma&&ma<mi){ toast('A idade máxima tem que ser maior que a mínima.'); return; }
-    var nmP={ig_reels:'Reels IG',ig_story:'Stories IG',ig_feed:'Feed IG',fb_reels:'Reels FB',fb_story:'Stories FB',fb_feed:'Feed FB',wa_status:'Status WhatsApp'};
     if(!confirm('Replicar "'+nome+'"?\n\n• Posições: '+pos.map(function(k){ return nmP[k]; }).join(', ')+'\n• Idade: '+mi+(ma?' a '+ma:'+')+' · '+(ge===1?'Homens':ge===2?'Mulheres':'Todos')+'\n• Interesses: '+(_rpInts.length?_rpInts.length+' (público fechado)':'nenhum (aberto)')+'\n• R$ '+fmtPreco(orcV)+'/dia\n\nMesmo post. Já entra ligada.')) return;
     if(!pedirSenhaAdmin()) return;
     var bt=$('rpGo'); bt.disabled=true; bt.textContent='Criando no Meta…';
