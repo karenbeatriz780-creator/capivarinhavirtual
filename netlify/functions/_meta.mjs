@@ -233,7 +233,7 @@ export async function checarTudo() {
 //  → só então liga. Qualquer erro: apaga o que criou. Nunca fica nada pela metade gastando.
 const POSICOES = { publisher_platforms: ['facebook', 'instagram'], facebook_positions: ['feed', 'story', 'facebook_reels'], instagram_positions: ['stream', 'story', 'reels'] };
 const REGRA_FEED = { publisher_platforms: ['facebook', 'instagram'], facebook_positions: ['feed'], instagram_positions: ['stream'] };
-const REGRA_VERT = { publisher_platforms: ['facebook', 'instagram'], facebook_positions: ['story', 'facebook_reels'], instagram_positions: ['story', 'reels'] };
+const REGRA_VERT = { publisher_platforms: ['facebook', 'instagram', 'whatsapp'], facebook_positions: ['story', 'facebook_reels'], instagram_positions: ['story', 'reels'], whatsapp_positions: ['status'] };
 export const SEM_APRIMORAMENTOS = ['adapt_to_placement', 'add_text_overlay', 'ads_with_benefits', 'biz_ai', 'creative_stickers', 'description_automation',
   'enhance_cta', 'generate_cta', 'image_animation', 'image_background_gen', 'image_brightness_and_contrast', 'image_templates', 'image_touchups', 'image_uncrop',
   'inline_comment', 'local_store_extension', 'media_type_automation', 'multi_photo_to_video', 'music_generation', 'pac_relaxation', 'product_extensions',
@@ -260,19 +260,20 @@ export async function publicarAnuncio(cfg, a, etapa) {
   let iMax = parseInt(a.idadeMax, 10) || null; if (iMax && (iMax >= 65 || iMax < iMin)) iMax = null;
   const gen = [1, 2].indexOf(parseInt(a.genero, 10)) >= 0 ? parseInt(a.genero, 10) : null;
   // posições escolhidas (padrão: as 6). fb_feed, fb_story, fb_reels, ig_feed, ig_story, ig_reels
-  const MAPA = { fb_feed: ['facebook', 'feed'], fb_story: ['facebook', 'story'], fb_reels: ['facebook', 'facebook_reels'], ig_feed: ['instagram', 'stream'], ig_story: ['instagram', 'story'], ig_reels: ['instagram', 'reels'] };
+  const MAPA = { fb_feed: ['facebook', 'feed'], fb_story: ['facebook', 'story'], fb_reels: ['facebook', 'facebook_reels'], ig_feed: ['instagram', 'stream'], ig_story: ['instagram', 'story'], ig_reels: ['instagram', 'reels'], wa_status: ['whatsapp', 'status'] };
   let pk = (Array.isArray(a.posicoes) ? a.posicoes : []).filter((k, i, l) => MAPA[k] && l.indexOf(k) === i);
-  if (!pk.length) pk = Object.keys(MAPA);
-  const POS = { publisher_platforms: [], facebook_positions: [], instagram_positions: [] };
+  if (!pk.length) pk = Object.keys(MAPA).filter((k) => k !== 'wa_status');
+  if (pk.indexOf('wa_status') >= 0 && pk.indexOf('ig_story') < 0) pk.push('ig_story'); // Meta: Status do WhatsApp só junto com Stories do Instagram
+  const POS = { publisher_platforms: [], facebook_positions: [], instagram_positions: [], whatsapp_positions: [] };
   pk.forEach((k) => { const [pf, ps] = MAPA[k]; if (POS.publisher_platforms.indexOf(pf) < 0) POS.publisher_platforms.push(pf); POS[pf + '_positions'].push(ps); });
-  ['facebook', 'instagram'].forEach((pf) => { if (!POS[pf + '_positions'].length) delete POS[pf + '_positions']; });
+  ['facebook', 'instagram', 'whatsapp'].forEach((pf) => { if (!POS[pf + '_positions'].length) delete POS[pf + '_positions']; });
   const temFeed = pk.some((k) => /_feed$/.test(k)), temVert = pk.some((k) => !/_feed$/.test(k));
-  const so = (regra) => { const o = { publisher_platforms: [] }; ['facebook', 'instagram'].forEach((pf) => { const l = (regra[pf + '_positions'] || []).filter((x) => (POS[pf + '_positions'] || []).indexOf(x) >= 0); if (l.length) { o.publisher_platforms.push(pf); o[pf + '_positions'] = l; } }); return o; };
+  const so = (regra) => { const o = { publisher_platforms: [] }; ['facebook', 'instagram', 'whatsapp'].forEach((pf) => { const l = (regra[pf + '_positions'] || []).filter((x) => (POS[pf + '_positions'] || []).indexOf(x) >= 0); if (l.length) { o.publisher_platforms.push(pf); o[pf + '_positions'] = l; } }); return o; };
   // interesses (detalhamento): interests / behaviors / life_events …
   const ints = (Array.isArray(a.interesses) ? a.interesses : []).filter((x) => x && /^\d{5,25}$/.test(String(x.id))).slice(0, 40);
   const flex = {}; ints.forEach((x) => { const t = ['interests', 'behaviors', 'life_events', 'family_statuses', 'relationship_statuses', 'industries', 'income'].indexOf(x.tipo) >= 0 ? x.tipo : 'interests'; (flex[t] = flex[t] || []).push({ id: String(x.id), name: String(x.nome || '').slice(0, 80) }); });
   const restrito = iMin > 18 || !!iMax || !!gen || ints.length > 0;
-  const pubTxt = (iMin > 18 || iMax || gen ? (iMin + (iMax ? '-' + iMax : '+') + (gen === 1 ? ' H' : gen === 2 ? ' M' : '')) : '') + (ints.length ? (iMin > 18 || iMax || gen ? ' ' : '') + 'int' + ints.length : '') + (pk.length < 6 ? ' ' + pk.length + 'pos' : '');
+  const pubTxt = (iMin > 18 || iMax || gen ? (iMin + (iMax ? '-' + iMax : '+') + (gen === 1 ? ' H' : gen === 2 ? ' M' : '')) : '') + (ints.length ? (iMin > 18 || iMax || gen ? ' ' : '') + 'int' + ints.length : '') + (pk.indexOf('wa_status') >= 0 ? ' WA' : '') + (pk.filter((k) => k !== 'wa_status').length < 6 ? ' ' + pk.length + 'pos' : '');
   const nome = 'Capivarinha #' + String(seq).padStart(3, '0') + ' · ' + String(a.nome || 'Criativo').slice(0, 40) + (pubTxt ? ' · ' + pubTxt : '') + ' · ' + dataTxt;
   const link = cfg.link || 'https://capivarinhalove.com.br/';
   const video = a.tipo === 'video';
@@ -346,8 +347,8 @@ export async function publicarAnuncio(cfg, a, etapa) {
       graph('GET', camp.id, { fields: 'daily_budget,objective' })
     ]);
     const tg = cs.targeting || {}, probs = [];
-    if (!igual(tg.publisher_platforms, POS.publisher_platforms) || !igual(tg.facebook_positions || [], POS.facebook_positions || []) || !igual(tg.instagram_positions || [], POS.instagram_positions || []))
-      probs.push('posicionamentos diferentes dos ' + pk.length + ' pedidos: ' + JSON.stringify({ fb: tg.facebook_positions, ig: tg.instagram_positions }));
+    if (!igual(tg.publisher_platforms, POS.publisher_platforms) || !igual(tg.facebook_positions || [], POS.facebook_positions || []) || !igual(tg.instagram_positions || [], POS.instagram_positions || []) || !igual(tg.whatsapp_positions || [], POS.whatsapp_positions || []))
+      probs.push('posicionamentos diferentes dos ' + pk.length + ' pedidos: ' + JSON.stringify({ fb: tg.facebook_positions, ig: tg.instagram_positions, wa: tg.whatsapp_positions }));
     if (ints.length && !(Array.isArray(tg.flexible_spec) && tg.flexible_spec.length)) probs.push('os interesses não foram gravados');
     if (String(cs.promoted_object && cs.promoted_object.pixel_id) !== String(pixel)) probs.push('pixel errado no conjunto');
     if (Number(cc.daily_budget) !== Math.round(orc * 100)) probs.push('orçamento diferente do pedido');

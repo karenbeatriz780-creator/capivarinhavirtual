@@ -8548,9 +8548,9 @@ function pnlNovoAnuncioHtml(){
         return '<div class="robo-g na-pub"><label>Idade mínima<select id="naIMin">'+opM+'</select></label><label>Idade máxima<select id="naIMax">'+opX+'</select></label><label>Sexo<select id="naGen">'+opG+'</select></label></div>'+
           '<small class="na-info" id="naPubDica">'+(sg?'💡 Pelos seus dados, quem mais compra barato: <b>'+esc(sg.txt)+'</b> ('+(sg.cpa?'R$ '+fmtPreco(sg.cpa)+'/venda · ':'')+sg.parte+'% das vendas). <a href="#" id="naUsarSug">Usar</a>':'Deixe 18 a 65+ e Todos pra público aberto (o Meta procura sozinho).')+'</small>';
       })()+
-      (function(){ var ps=pnlNaPos(); var NM=[['ig_reels','Reels do Instagram'],['ig_story','Stories do Instagram'],['ig_feed','Feed do Instagram'],['fb_reels','Reels do Facebook'],['fb_story','Stories do Facebook'],['fb_feed','Feed do Facebook']];
+      (function(){ var ps=pnlNaPos(); var NM=[['ig_reels','Reels do Instagram'],['ig_story','Stories do Instagram'],['ig_feed','Feed do Instagram'],['fb_reels','Reels do Facebook'],['fb_story','Stories do Facebook'],['fb_feed','Feed do Facebook'],['wa_status','Status do WhatsApp']];
         return '<div class="na-blk"><b>📍 Onde aparecer</b> <a href="#" id="naPosTodas">todas</a>'+(_pnlPos&&_pnlPos.melhores&&_pnlPos.melhores.length?' · <a href="#" id="naPosMelhores">só as que vendem</a>':'')+
-          '<div class="na-pos">'+NM.map(function(o){ return '<label class="na-ck"><input type="checkbox" data-napos="'+o[0]+'"'+(ps.indexOf(o[0])>=0?' checked':'')+'> '+o[1]+'</label>'; }).join('')+'</div></div>'+
+          '<div class="na-pos">'+NM.map(function(o){ return '<label class="na-ck"><input type="checkbox" data-napos="'+o[0]+'"'+(ps.indexOf(o[0])>=0?' checked':'')+'> '+o[1]+'</label>'; }).join('')+'</div><small class="na-info">💬 Status do WhatsApp: o Meta só deixa junto com Stories do Instagram. Pra testar só WhatsApp, marque só esses dois.</small></div>'+
           '<div class="na-blk"><b>🎯 Interesses (detalhamento)</b> <small>opcional · fecha o público nesses interesses</small>'+
           '<div class="na-ints" id="naInts">'+pnlNaIntsHtml()+'</div>'+
           '<div class="na-busca"><input type="text" id="naIntQ" placeholder="Buscar: namoro, casamento, noivado…"><button type="button" class="cmp-bt" id="naIntBusca">🔎</button><button type="button" class="cmp-bt" id="naIntPac">💞 Pacote Relacionamento</button></div><div id="naIntRes" class="na-intres"></div></div>'+
@@ -8625,7 +8625,7 @@ function pnlLigarRobo(body){
       if(_ix && _ix<_im){ toast('A idade máxima precisa ser maior que a mínima.'); return; }
       var _np=document.querySelectorAll('[data-napos]:checked').length, _ni=pnlNaInts().length;
       if(_ni) pubTxt=pubTxt.replace(', o Meta procura sozinho','')+' · '+_ni+' interesses (público fechado)';
-      if(!confirm('Publicar este anúncio com R$ '+fmtPreco(orc)+' por dia?\n\nPúblico: '+pubTxt+'\nPosições: '+_np+' de 6\nFeed: '+fF.name+'\nReels/Stories: '+fV.name)) return;
+      if(!confirm('Publicar este anúncio com R$ '+fmtPreco(orc)+' por dia?\n\nPúblico: '+pubTxt+'\nPosições: '+_np+' de 7'+(document.querySelector('[data-napos="wa_status"]:checked')?' (com Status do WhatsApp)':'')+'\nFeed: '+fF.name+'\nReels/Stories: '+fV.name)) return;
       if(!pedirSenhaAdmin()) return;
       pub.disabled=true;
       var info={nome:el('naNome').value||fF.name.replace(/\.[^.]+$/,''), texto:el('naTexto').value, titulo:el('naTitulo').value, orcamento:orc, idadeMin:Number(el('naIMin').value)||18, idadeMax:Number(el('naIMax').value)||null, genero:Number(el('naGen').value)||null, posicoes:[].slice.call(document.querySelectorAll('[data-napos]:checked')).map(function(x){ return x.dataset.napos; }), interesses:pnlNaInts().slice()};
@@ -8792,7 +8792,10 @@ function pnlNaPacote(){ var r=el('naIntRes'); if(r) r.innerHTML='<small>Buscando
     var n=pnlNaIntAdd(d.itens); if(r) r.innerHTML='<small>✓ '+n+' interesses de relacionamento adicionados.</small>'; return n; }); }
 function pnlNaLigarExtras(){
   pnlNaIntsLigar();
-  document.querySelectorAll('[data-napos]').forEach(function(c){ c.onchange=function(){ var v=[].slice.call(document.querySelectorAll('[data-napos]:checked')).map(function(x){ return x.dataset.napos; });
+  document.querySelectorAll('[data-napos]').forEach(function(c){ c.onchange=function(){
+    var wa=document.querySelector('[data-napos="wa_status"]'), igs=document.querySelector('[data-napos="ig_story"]');
+    if(wa&&igs&&wa.checked&&!igs.checked){ igs.checked=true; toast(c===igs?'Com Status do WhatsApp, Stories do Instagram tem que ficar (regra do Meta).':'Marquei Stories do Instagram junto (o Meta exige).'); }
+    var v=[].slice.call(document.querySelectorAll('[data-napos]:checked')).map(function(x){ return x.dataset.napos; });
     if(!v.length){ c.checked=true; toast('Deixe pelo menos 1 posição.'); return; } try{ Store.set('cl_napos',JSON.stringify(v)); }catch(e){} }; });
   function marcar(lst){ document.querySelectorAll('[data-napos]').forEach(function(c){ c.checked=lst.indexOf(c.dataset.napos)>=0; }); try{ Store.set('cl_napos',JSON.stringify(lst)); }catch(e){} }
   var pt=el('naPosTodas'); if(pt) pt.onclick=function(e){ e.preventDefault(); marcar(['ig_reels','ig_story','ig_feed','fb_reels','fb_story','fb_feed']); };
@@ -8839,11 +8842,11 @@ function pnlPosHtml(){
     '<div><span>Vendas</span><i>'+x.compras+' <small>('+x.parte+'%)</small></i></div><div><span>Custo/venda</span><i>'+(x.cpa?R(x.cpa):'—')+'</i></div><div><span>Gasto</span><i>'+R(x.gasto)+'</i></div><div><span>Lucro est.</span><i class="'+(x.lucro>=0?'pos':'neg')+'">'+Rs(x.lucro)+'</i></div></div>'; }).join('')+'</div>';
   var mx=Math.max.apply(null,P.posicoes.map(function(x){ return Math.abs(x.lucro); }).concat([1]));
   var graf='<div class="pos-g"><div class="pos-gt">Lucro estimado por posição</div>'+P.posicoes.map(function(x){ var w=Math.max(2,Math.round(Math.abs(x.lucro)/mx*100));
-    return '<div class="pos-gl '+x.cor+'"><span class="pos-gr">'+(x.plat==='instagram'?'📸 ':'📘 ')+esc(x.rot)+'</span><span class="pos-gb"><i class="'+(x.lucro>=0?'p':'n')+'" style="width:'+w+'%"></i></span><span class="pos-gv '+(x.lucro>=0?'pos':'neg')+'">'+Rs(x.lucro)+'</span></div>'; }).join('')+'</div>';
+    return '<div class="pos-gl '+x.cor+'"><span class="pos-gr">'+(x.plat==='instagram'?'📸 ':x.plat==='whatsapp'?'💬 ':'📘 ')+esc(x.rot)+'</span><span class="pos-gb"><i class="'+(x.lucro>=0?'p':'n')+'" style="width:'+w+'%"></i></span><span class="pos-gv '+(x.lucro>=0?'pos':'neg')+'">'+Rs(x.lucro)+'</span></div>'; }).join('')+'</div>';
   var cor={verde:'🟢',amarelo:'🟡',vermelho:'🔴'};
   var tab='<details class="cp-dd"><summary>🔻 Cada posição em detalhe (funil)</summary><div style="overflow-x:auto"><table><tr><th>Posição</th><th>Gasto</th><th>Cliques</th><th>Visitas</th><th>Pix</th><th>Vendas</th><th>R$/venda</th></tr>'+
     P.posicoes.map(function(x){ return '<tr><td>'+(cor[x.cor]||'')+' '+esc(x.rot)+'</td><td>'+R(x.gasto)+'</td><td>'+x.cliques+'</td><td>'+x.visitas+'</td><td>'+x.checkouts+'</td><td>'+x.compras+'</td><td>'+(x.cpa?R(x.cpa):'—')+'</td></tr>'; }).join('')+'</table></div></details>';
-  var NMk={ig_reels:'Reels IG',ig_story:'Stories IG',ig_feed:'Feed IG',fb_reels:'Reels FB',fb_story:'Stories FB',fb_feed:'Feed FB'};
+  var NMk={wa_status:'Status WhatsApp',ig_reels:'Reels IG',ig_story:'Stories IG',ig_feed:'Feed IG',fb_reels:'Reels FB',fb_story:'Stories FB',fb_feed:'Feed FB'};
   return '<div class="cp-box cp-pos">'+topo+'<div style="margin:.3rem 0">'+P.totalCompras+' vendas'+(P.cpaConta?' a <b>'+R(P.cpaConta)+'</b>':'')+' · lucro estimado = vendas × R$ '+fmtPreco(P.ticket)+' − gasto com imposto</div>'+cards+graf+
     (P.melhores&&P.melhores.length?'<div class="hres">💡 Posições que vendem: <b>'+P.melhores.map(function(k){ return NMk[k]||k; }).join(', ')+'</b>. No 📣 Novo anúncio, toque em "só as que vendem" ou em ⭐ Montar campanha top.</div>':'')+
     (P.poucosDados?'<div class="pnl-nota">⚠️ Poucos dados ainda ('+P.totalCompras+' vendas). Use como pista.</div>':'')+tab+'</div>';

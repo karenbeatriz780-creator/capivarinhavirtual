@@ -82,6 +82,7 @@ export async function calcPublico(nDias, semCache) {
 
 // ---------- ONDE VENDE: Instagram × Facebook e cada posição (Feed, Reels, Stories…) ----------
 const NOME_POS = {
+  'whatsapp|status': 'Status do WhatsApp',
   'facebook|feed': 'Feed do Facebook', 'facebook|facebook_reels': 'Reels do Facebook', 'facebook|facebook_stories': 'Stories do Facebook', 'facebook|story': 'Stories do Facebook',
   'facebook|video_feeds': 'Vídeos do Facebook', 'facebook|marketplace': 'Marketplace', 'facebook|search': 'Busca do Facebook', 'facebook|instream_video': 'Vídeo in-stream (FB)',
   'facebook|facebook_reels_overlay': 'Reels do FB (sobreposição)', 'facebook|right_hand_column': 'Coluna direita (FB)', 'facebook|notification': 'Notificações (FB)',
@@ -92,7 +93,7 @@ const NOME_POS = {
 };
 // chave usada no formulário do Novo anúncio
 const CHAVE_POS = { 'facebook|feed': 'fb_feed', 'facebook|facebook_reels': 'fb_reels', 'facebook|facebook_stories': 'fb_story', 'facebook|story': 'fb_story',
-  'instagram|feed': 'ig_feed', 'instagram|stream': 'ig_feed', 'instagram|instagram_reels': 'ig_reels', 'instagram|reels': 'ig_reels', 'instagram|instagram_stories': 'ig_story', 'instagram|story': 'ig_story' };
+  'instagram|feed': 'ig_feed', 'instagram|stream': 'ig_feed', 'instagram|instagram_reels': 'ig_reels', 'instagram|reels': 'ig_reels', 'instagram|instagram_stories': 'ig_story', 'instagram|story': 'ig_story', 'whatsapp|status': 'wa_status' };
 
 export async function calcPosicoes(nDias, camp, semCache, ticket) {
   nDias = nDias || 30; camp = /^\d{5,30}$/.test(String(camp || '')) ? String(camp) : '';
@@ -112,7 +113,7 @@ export async function calcPosicoes(nDias, camp, semCache, ticket) {
     const pf = x.publisher_platform || '?', pp = x.platform_position || '?', k = pf + '|' + pp;
     pos[k] = pos[k] || Object.assign(linha(NOME_POS[k] || (pf + ' · ' + pp)), { k, plat: pf, chave: CHAVE_POS[k] || null });
     soma(pos[k], x, imp);
-    plat[pf] = plat[pf] || Object.assign(linha({ instagram: 'Instagram', facebook: 'Facebook', messenger: 'Messenger', audience_network: 'Audience Network' }[pf] || pf), { k: pf });
+    plat[pf] = plat[pf] || Object.assign(linha({ instagram: 'Instagram', facebook: 'Facebook', messenger: 'Messenger', audience_network: 'Audience Network', whatsapp: 'WhatsApp' }[pf] || pf), { k: pf });
     soma(plat[pf], x, imp);
   });
   const totC = Object.values(pos).reduce((t, L) => t + L.compras, 0), totG = Object.values(pos).reduce((t, L) => t + L.gasto, 0);
