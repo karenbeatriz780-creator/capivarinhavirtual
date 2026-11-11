@@ -335,6 +335,11 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .pos-gr small{display:block;font-size:.64rem;opacity:.7;font-weight:600}.pos-gl{align-items:center}
 .pos-rk{margin:.6rem 0;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:.45rem .55rem;background:#fff}.pos-ri{display:grid;grid-template-columns:1.6rem 1fr auto;column-gap:.4rem;align-items:center;padding:.3rem 0;border-top:1px solid rgba(0,0,0,.05);font-size:.78rem}
 .pos-ri span{font-weight:800;opacity:.6}.pos-ri i{font-style:normal;font-weight:800}.pos-ri small{grid-column:2/4;font-size:.66rem;opacity:.65}.pos-ri.b i{color:#15803d}.pos-ri.c i{color:#b91c1c}
+.rp-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center}
+.rp-bx{background:#faf8ff;width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:.9rem .9rem 1.4rem;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+.rp-h{display:flex;justify-content:space-between;align-items:center;font-size:1.05rem}.rp-x{border:0;background:rgba(0,0,0,.07);border-radius:50%;width:2rem;height:2rem;font-size:1.2rem;cursor:pointer}
+.rp-nm{font-weight:700;font-size:.85rem;margin:.2rem 0}.rp-top,.rp-go{width:100%;margin:.5rem 0}.rp-go{padding:.75rem;font-size:1rem}
+.rp-g3{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:.4rem;margin-top:.35rem}.rp-g3 label{font-size:.72rem;font-weight:700;display:flex;flex-direction:column;gap:.15rem}.rp-g3 select{padding:.4rem;border-radius:10px;border:1px solid rgba(0,0,0,.15);font:inherit;background:#fff}
 .na-blk{margin:.6rem 0;padding:.55rem .6rem;border:1px solid rgba(0,0,0,.08);border-radius:12px;background:rgba(255,255,255,.6)}.na-blk>b{font-size:.84rem}.na-blk a{font-size:.75rem}
 .na-pos{display:grid;grid-template-columns:1fr 1fr;gap:.25rem .6rem;margin-top:.35rem}.na-blk .na-ck{font-size:.78rem;display:flex!important;flex-direction:row!important;align-items:center;gap:.35rem;margin:0!important;text-align:left;font-weight:600}.na-blk .na-ck input{width:auto!important;margin:0;flex:none}
 .na-ints{display:flex;flex-wrap:wrap;gap:.3rem;margin:.4rem 0}.na-chip{background:#7c3aed;color:#fff;border-radius:99px;padding:.15rem .25rem .15rem .6rem;font-size:.74rem;display:inline-flex;align-items:center;gap:.2rem}.na-chip button{border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:50%;width:1.2rem;height:1.2rem;cursor:pointer;line-height:1}
@@ -8778,6 +8783,77 @@ function pnlHorHtml(){
     (H.poucosDados?'<div class="pnl-nota">⚠️ Ainda poucos dados ('+H.diaTodo.vendas+' vendas de anúncio). Os horários ficam mais certos com o tempo.</div>':'')+res+
     '<div class="pnl-nota">Depois toque em <b>⏰ Duplicar como programada</b> na campanha: ela usa exatamente as horas marcadas aqui.</div></div>';
 }
+/* ===== 🔁 REPLICAR (mesmo post, posições/público escolhidos) ===== */
+var _rpInts=[];
+function pnlRepAbrir(id,nome,orc){
+  var old=document.getElementById('rpSheet'); if(old) old.remove();
+  _rpInts=[];
+  var NM=[['ig_reels','Reels do Instagram'],['ig_story','Stories do Instagram'],['ig_feed','Feed do Instagram'],['fb_reels','Reels do Facebook'],['fb_story','Stories do Facebook'],['fb_feed','Feed do Facebook'],['wa_status','Status do WhatsApp']];
+  var idOpt=function(sel,max){ var h=''; for(var i=18;i<=64;i++) h+='<option value="'+i+'"'+(i===sel?' selected':'')+'>'+i+'</option>'; return h+(max?'<option value="0"'+(!sel?' selected':'')+'>65+</option>':'<option value="65">65</option>'); };
+  var d=document.createElement('div'); d.id='rpSheet'; d.className='rp-ov';
+  d.innerHTML='<div class="rp-bx"><div class="rp-h"><b>🔁 Replicar</b><button type="button" class="rp-x" data-rpx>×</button></div>'+
+    '<div class="rp-nm">'+esc(nome)+'</div><small class="na-info">Mesmo post (curtidas e comentários). A original não muda. A cópia já entra ligada.</small>'+
+    '<button type="button" class="cmp-bt sobe forte rp-top" id="rpTop">⭐ Tudo top (melhor idade + posições que vendem + interesses de relacionamento)</button>'+
+    '<div class="na-blk"><b>📍 Onde aparecer</b> <a href="#" id="rpTodas">todas</a>'+(_pnlPos&&_pnlPos.melhores&&_pnlPos.melhores.length?' · <a href="#" id="rpMelhores">só as que vendem</a>':'')+' · <a href="#" id="rpWa">só WhatsApp</a>'+
+      '<div class="na-pos">'+NM.map(function(o){ return '<label class="na-ck"><input type="checkbox" data-rppos="'+o[0]+'"'+(o[0]!=='wa_status'?' checked':'')+'> '+o[1]+'</label>'; }).join('')+'</div>'+
+      '<small class="na-info">💬 O Meta só aceita Status do WhatsApp junto com Stories do Instagram.</small></div>'+
+    '<div class="na-blk"><b>👥 Público</b><div class="rp-g3"><label>Idade de<select id="rpMin">'+idOpt(18,false)+'</select></label><label>até<select id="rpMax">'+idOpt(0,true)+'</select></label><label>Sexo<select id="rpGen"><option value="">Todos</option><option value="1">Homens</option><option value="2">Mulheres</option></select></label></div>'+
+      (_pnlPub&&_pnlPub.sugestao?'<small class="na-info">💡 Quem mais compra barato: <b>'+esc(_pnlPub.sugestao.txt)+'</b>. <a href="#" id="rpUsarIdade">Usar</a></small>':'')+'</div>'+
+    '<div class="na-blk"><b>🎯 Interesses</b> <small>opcional · fecha o público</small><div class="na-ints" id="rpInts"></div>'+
+      '<div class="na-busca"><input type="text" id="rpQ" placeholder="Buscar: namoro, casamento…"><button type="button" class="cmp-bt" id="rpBusca">🔎</button><button type="button" class="cmp-bt" id="rpPac">💞 Pacote Relacionamento</button></div><div id="rpRes" class="na-intres"></div></div>'+
+    '<div class="na-blk"><b>💰 Orçamento por dia</b><div class="na-busca"><input type="number" id="rpOrc" min="6" max="500" step="1" value="'+esc(String(orc||45))+'"></div></div>'+
+    '<button type="button" class="cmp-bt sobe forte rp-go" id="rpGo">🔁 Criar réplica</button></div>';
+  document.body.appendChild(d);
+  var $=function(x){ return document.getElementById(x); };
+  var fechar=function(){ d.remove(); };
+  d.onclick=function(e){ if(e.target===d) fechar(); }; d.querySelector('[data-rpx]').onclick=fechar;
+  var cks=function(){ return [].slice.call(d.querySelectorAll('[data-rppos]')); };
+  var marcar=function(L){ cks().forEach(function(c){ c.checked=L.indexOf(c.dataset.rppos)>=0; }); };
+  cks().forEach(function(c){ c.onchange=function(){ var wa=d.querySelector('[data-rppos="wa_status"]'), igs=d.querySelector('[data-rppos="ig_story"]');
+    if(wa.checked&&!igs.checked){ igs.checked=true; toast('Stories do Instagram vai junto com o WhatsApp (regra do Meta).'); }
+    if(!cks().some(function(x){ return x.checked; })){ c.checked=true; toast('Deixe pelo menos 1 posição.'); } }; });
+  $('rpTodas').onclick=function(e){ e.preventDefault(); marcar(['ig_reels','ig_story','ig_feed','fb_reels','fb_story','fb_feed']); };
+  if($('rpMelhores')) $('rpMelhores').onclick=function(e){ e.preventDefault(); marcar(_pnlPos.melhores); };
+  $('rpWa').onclick=function(e){ e.preventDefault(); marcar(['wa_status','ig_story']); toast('Só WhatsApp + Stories do Instagram (o Meta exige os dois juntos).'); };
+  var usarIdade=function(){ var sg=_pnlPub&&_pnlPub.sugestao; if(!sg) return false; $('rpMin').value=String(sg.min||18); $('rpMax').value=String(sg.max||0); return true; };
+  if($('rpUsarIdade')) $('rpUsarIdade').onclick=function(e){ e.preventDefault(); usarIdade(); };
+  var desenhaInts=function(){ var b=$('rpInts'); b.innerHTML=_rpInts.length?_rpInts.map(function(x,k){ return '<span class="na-chip">'+esc(x.nome)+' <button type="button" data-rprm="'+k+'">×</button></span>'; }).join('')+' <a href="#" id="rpLimpa">limpar</a>':'<small class="na-info">Nenhum: público aberto.</small>';
+    b.querySelectorAll('[data-rprm]').forEach(function(x){ x.onclick=function(){ _rpInts.splice(+x.dataset.rprm,1); desenhaInts(); }; });
+    var l=$('rpLimpa'); if(l) l.onclick=function(e){ e.preventDefault(); _rpInts=[]; desenhaInts(); }; };
+  var add=function(L){ var n=0; L.forEach(function(x){ if(!_rpInts.some(function(y){ return y.id===x.id; })){ _rpInts.push({id:x.id,nome:x.nome,tipo:x.tipo}); n++; } }); desenhaInts(); return n; };
+  desenhaInts();
+  var pacote=function(){ $('rpRes').innerHTML='<small>Buscando no Meta…</small>';
+    return fetch('/.netlify/functions/admin-posicoes?pacote=relacionamento',{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(x){
+      if(!x||!x.itens){ $('rpRes').innerHTML='<small>⚠️ '+esc((x&&x.erro)||'Não consegui buscar.')+'</small>'; return 0; } var n=add(x.itens); $('rpRes').innerHTML='<small>✓ '+n+' interesses adicionados.</small>'; return n; })
+      .catch(function(){ $('rpRes').innerHTML='<small>Sem conexão.</small>'; return 0; }); };
+  $('rpPac').onclick=pacote;
+  var buscar=function(){ var q=($('rpQ').value||'').trim(); if(q.length<2) return; $('rpRes').innerHTML='<small>Buscando…</small>';
+    fetch('/.netlify/functions/admin-posicoes?q='+encodeURIComponent(q),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(x){ var L=(x&&x.itens)||[];
+      if(!L.length){ $('rpRes').innerHTML='<small>Nada encontrado.</small>'; return; }
+      $('rpRes').innerHTML=L.map(function(y,k){ return '<button type="button" class="na-res" data-rpadd="'+k+'"><b>'+esc(y.nome)+'</b><small>'+esc(y.tipo||'')+'</small></button>'; }).join('');
+      $('rpRes').querySelectorAll('[data-rpadd]').forEach(function(bb){ bb.onclick=function(){ add([L[+bb.dataset.rpadd]]); bb.remove(); }; }); }).catch(function(){ $('rpRes').innerHTML='<small>Sem conexão.</small>'; }); };
+  $('rpBusca').onclick=buscar; $('rpQ').onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); buscar(); } };
+  $('rpTop').onclick=function(){ var t=[]; if(usarIdade()) t.push('idade '+_pnlPub.sugestao.txt);
+    if(_pnlPos&&_pnlPos.melhores&&_pnlPos.melhores.length){ marcar(_pnlPos.melhores); t.push(_pnlPos.melhores.length+' posições que vendem'); }
+    pacote().then(function(n){ if(n||_rpInts.length) t.push('interesses de relacionamento'); toast('⭐ Tudo top: '+(t.join(' · ')||'sem dados ainda')); });
+    if(!_pnlPub) pnlPubCarregar(); if(!_pnlPos) pnlPosCarregar(); };
+  $('rpGo').onclick=function(){
+    var pos=cks().filter(function(c){ return c.checked; }).map(function(c){ return c.dataset.rppos; });
+    var orcV=Number(String($('rpOrc').value).replace(',','.')); if(!(orcV>=6&&orcV<=500)){ toast('Orçamento entre R$ 6 e R$ 500.'); return; }
+    var mi=Number($('rpMin').value)||18, ma=Number($('rpMax').value)||0, ge=Number($('rpGen').value)||null;
+    if(ma&&ma<mi){ toast('A idade máxima tem que ser maior que a mínima.'); return; }
+    var nmP={ig_reels:'Reels IG',ig_story:'Stories IG',ig_feed:'Feed IG',fb_reels:'Reels FB',fb_story:'Stories FB',fb_feed:'Feed FB',wa_status:'Status WhatsApp'};
+    if(!confirm('Replicar "'+nome+'"?\n\n• Posições: '+pos.map(function(k){ return nmP[k]; }).join(', ')+'\n• Idade: '+mi+(ma?' a '+ma:'+')+' · '+(ge===1?'Homens':ge===2?'Mulheres':'Todos')+'\n• Interesses: '+(_rpInts.length?_rpInts.length+' (público fechado)':'nenhum (aberto)')+'\n• R$ '+fmtPreco(orcV)+'/dia\n\nMesmo post. Já entra ligada.')) return;
+    if(!pedirSenhaAdmin()) return;
+    var bt=$('rpGo'); bt.disabled=true; bt.textContent='Criando no Meta…';
+    fetch('/.netlify/functions/admin-campanhas',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'replicar',id:id,posicoes:pos,idadeMin:mi,idadeMax:ma,genero:ge,interesses:_rpInts,orcDia:orcV})})
+      .then(function(r){ return r.json().then(function(x){ return {ok:r.ok,s:r.status,d:x}; }); })
+      .then(function(x){ if(x.s===401){ _pnlChave=''; Store.del('cl_admin_key'); } if(!x.ok){ toast((x.d&&x.d.erro)||'Não deu certo.'); bt.disabled=false; bt.textContent='🔁 Criar réplica'; return; }
+        fechar(); toast('Réplica criada e ligada ✓'); _pnlCamp=null; pnlCampCarregar(); })
+      .catch(function(){ toast('Sem conexão.'); bt.disabled=false; bt.textContent='🔁 Criar réplica'; });
+  };
+  if(!_pnlPub) pnlPubCarregar(); if(!_pnlPos) pnlPosCarregar();
+}
 var _naInts=null;
 function pnlNaPos(){ try{ var v=JSON.parse(Store.get('cl_napos')||'null'); if(Array.isArray(v)&&v.length) return v; }catch(e){} return ['ig_reels','ig_story','ig_feed','fb_reels','fb_story','fb_feed']; }
 function pnlNaInts(){ if(_naInts) return _naInts; try{ _naInts=JSON.parse(Store.get('cl_naints')||'[]')||[]; }catch(e){ _naInts=[]; } return _naInts; }
@@ -8917,6 +8993,7 @@ function pnlCampHtml(){
     var bts='';
     if(x.subir&&x.subir.agora) bts+='<button type="button" class="cmp-bt sobe forte" data-cmpacao="subir" data-cmpid="'+esc(x.id)+'" data-cmpval="'+x.subir.novo+'">⬆️ Subir para '+R(x.subir.novo)+'/dia</button>';
     bts+='<button type="button" class="cmp-bt'+(x.cat==='boa'?' sobe forte':'')+'" data-cpdup="'+esc(x.id)+'">⧉ Duplicar (cópia idêntica)</button>';
+    bts+='<button type="button" class="cmp-bt" data-cprep="'+esc(x.id)+'" data-cporc="'+(x.orcamentoDia||'')+'">🔁 Replicar (escolher posição e público)</button>';
     if(!x.programada) bts+='<button type="button" class="cmp-bt" data-cpprog="'+esc(x.id)+'" data-cporc="'+(x.orcamentoDia||'')+'">⏰ Duplicar como programada</button>';
     if(x.ativa) bts+='<button type="button" class="cmp-bt" data-cmpacao="pausar" data-cmpid="'+esc(x.id)+'">⏸ Pausar</button>';
     else bts+='<button type="button" class="cmp-bt" data-cmpacao="ativar" data-cmpid="'+esc(x.id)+'">▶️ Ativar</button>';
@@ -8957,6 +9034,7 @@ function pnlCampLigar(body){
     if(c){ c.scrollIntoView({behavior:'smooth',block:'center'}); c.classList.add('plc-flash'); setTimeout(function(){ c.classList.remove('plc-flash'); },1600); } else toast('Essa campanha não está na lista de agora (só aparece no período de 30 dias).'); }; });
   body.querySelectorAll('[data-cppubnovo]').forEach(function(b){ b.onclick=function(){ _pnlPub=null; pnlPubCarregar(true); }; });
   body.querySelectorAll('[data-cphornovo]').forEach(function(b){ b.onclick=function(){ _pnlHor=null; pnlHorCarregar(true); }; });
+  body.querySelectorAll('[data-cprep]').forEach(function(b){ b.onclick=function(){ pnlRepAbrir(b.dataset.cprep,(b.closest('.cmp').querySelector('.cmp-top b')||{}).textContent||'',b.dataset.cporc); }; });
   body.querySelectorAll('[data-cpprog]').forEach(function(b){ b.onclick=function(){
     var nome=(b.closest('.cmp').querySelector('.cmp-top b')||{}).textContent||'';
     var js=pnlHorJanelas(); if(!_pnlHor||_pnlHor.erro){ toast('Os horários ainda não carregaram.'); return; } if(!js.length){ toast('Marque as horas no quadro ⏰ Melhores horários primeiro.'); return; }

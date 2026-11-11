@@ -1,12 +1,12 @@
 // Painel → aba CAMPANHAS: desempenho de cada campanha (hoje / ontem / 7 dias),
 // classificação (nova · boa · observar · ruim · pausada), projeção de 7 dias e DUPLICAR.
 //   GET  ?per=hoje|ontem|7d|30d
-//   POST {acao:'duplicar', id}   (senha de administrador)
+//   POST {acao:'duplicar', id} | {acao:'replicar', id, posicoes, idadeMin, idadeMax, genero, interesses, orcDia}   (senha de administrador)
 // Valores de gasto: o do app do Meta (sem imposto) e o real (com imposto). Lucro = faturamento − anúncio com imposto.
 import { metaAds, ultimasAcoes, TICKET, avaliarSubir } from './_gastos.mjs';
 import { lerCfg, graph, logRobo, vendasSitePorCampanha } from './_meta.mjs';
 import { diaBR, imposto, cpa3dias } from './_resumo.mjs';
-import { duplicarCampanha } from './_horarios.mjs';
+import { duplicarCampanha, montarRep } from './_horarios.mjs';
 
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const r2 = (x) => Math.round((Number(x) || 0) * 100) / 100;
@@ -18,11 +18,11 @@ export default async (req) => {
     if (!senha || (req.headers.get('x-admin-key') || '') !== senha) return json({ erro: 'Senha de administrador incorreta.' }, 401);
     let b = {}; try { b = await req.json(); } catch (e) {}
     const id = String(b.id || '');
-    if (b.acao !== 'duplicar' || !/^\d{5,30}$/.test(id)) return json({ erro: 'Pedido inválido.' }, 400);
+    if ((b.acao !== 'duplicar' && b.acao !== 'replicar') || !/^\d{5,30}$/.test(id)) return json({ erro: 'Pedido inválido.' }, 400);
     try {
-      const r = await duplicarCampanha(id, null);
-      return json({ ok: true, nova: r.nova });
-    } catch (e) { return json({ erro: 'O Meta não deixou duplicar: ' + e.message }, 502); }
+      const r = await duplicarCampanha(id, null, b.acao === 'replicar' ? montarRep(b) : null);
+      return json({ ok: true, nova: r.nova, nome: r.nome });
+    } catch (e) { return json({ erro: 'O Meta não deixou ' + (b.acao === 'replicar' ? 'replicar' : 'duplicar') + ': ' + e.message }, 502); }
   }
 
   const per = ['hoje', 'ontem', '7d', '30d'].indexOf(new URL(req.url).searchParams.get('per')) >= 0 ? new URL(req.url).searchParams.get('per') : 'hoje';

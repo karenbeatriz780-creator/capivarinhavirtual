@@ -97,10 +97,36 @@ export async function calcHorarios(nDias, semCache) {
 
 // ---------- DUPLICAR (normal ou PROGRAMADA) ----------
 // Cópia peça por peça (o Meta não deixa "copiar tudo de uma vez" campanha+conjunto+anúncio).
+
+// 🔁 REPLICAR: mesmo post, mas com posições / idade / sexo / interesses escolhidos
+const MAPA_POS = { fb_feed: ['facebook', 'feed'], fb_story: ['facebook', 'story'], fb_reels: ['facebook', 'facebook_reels'], ig_feed: ['instagram', 'stream'], ig_story: ['instagram', 'story'], ig_reels: ['instagram', 'reels'], wa_status: ['whatsapp', 'status'] };
+export function montarRep(b) {
+  let pk = (Array.isArray(b.posicoes) ? b.posicoes : []).map(String).filter((k, i, l) => MAPA_POS[k] && l.indexOf(k) === i);
+  if (!pk.length) pk = Object.keys(MAPA_POS).filter((k) => k !== 'wa_status');
+  if (pk.indexOf('wa_status') >= 0 && pk.indexOf('ig_story') < 0) pk.push('ig_story');
+  const POS = { publisher_platforms: [] };
+  pk.forEach((k) => { const [pf, ps] = MAPA_POS[k]; if (POS.publisher_platforms.indexOf(pf) < 0) POS.publisher_platforms.push(pf); (POS[pf + '_positions'] = POS[pf + '_positions'] || []).push(ps); });
+  const iMin = Math.max(18, Math.min(65, parseInt(b.idadeMin, 10) || 18));
+  let iMax = parseInt(b.idadeMax, 10) || null; if (iMax && (iMax >= 65 || iMax < iMin)) iMax = null;
+  const gen = [1, 2].indexOf(parseInt(b.genero, 10)) >= 0 ? parseInt(b.genero, 10) : null;
+  const ints = (Array.isArray(b.interesses) ? b.interesses : []).filter((x) => x && /^\d{5,25}$/.test(String(x.id))).slice(0, 40);
+  const flex = {}; ints.forEach((x) => { const t = ['interests', 'behaviors', 'life_events', 'family_statuses', 'relationship_statuses', 'industries', 'income'].indexOf(x.tipo) >= 0 ? x.tipo : 'interests'; (flex[t] = flex[t] || []).push({ id: String(x.id), name: String(x.nome || '').slice(0, 80) }); });
+  const orcDia = Math.max(6, Math.min(500, Number(b.orcDia) || 45));
+  const idd = iMin > 18 || iMax || gen;
+  const resumo = [pk.indexOf('wa_status') >= 0 ? 'WA' : '', pk.length < 6 || pk.indexOf('wa_status') >= 0 ? pk.length + 'pos' : '', idd ? iMin + (iMax ? '-' + iMax : '+') + (gen === 1 ? ' H' : gen === 2 ? ' M' : '') : '', ints.length ? 'int' + ints.length : ''].filter(Boolean).join(' ');
+  return { pk, POS, iMin, iMax, gen, flex, ints: ints.length, orcDia, restrito: !!idd || ints.length > 0, resumo };
+}
+function aplicarRep(tg, rep) {
+  const t = JSON.parse(JSON.stringify(tg || {}));
+  ['publisher_platforms', 'facebook_positions', 'instagram_positions', 'whatsapp_positions', 'messenger_positions', 'audience_network_positions', 'threads_positions', 'device_platforms', 'flexible_spec', 'genders', 'age_max', 'age_range'].forEach((k) => { delete t[k]; });
+  Object.assign(t, rep.POS, { age_min: rep.iMin }, rep.iMax ? { age_max: rep.iMax } : {}, rep.gen ? { genders: [rep.gen] } : {}, Object.keys(rep.flex).length ? { flexible_spec: [rep.flex] } : {});
+  t.targeting_automation = Object.assign({}, t.targeting_automation || {}, { advantage_audience: rep.restrito ? 0 : 1 });
+  return t;
+}
 // Anúncio usa o MESMO criativo → mesmo post (curtidas/comentários). A original não é mexida.
 // prog = { janelas, orcDia, dias } → programada: orçamento TOTAL no conjunto + horários (como o Gerenciador faz)
 // prog = null → cópia idêntica: mesmo orçamento diário (na campanha ou nos conjuntos, igual à original)
-export async function duplicarCampanha(id, prog) {
+export async function duplicarCampanha(id, prog, rep) {
   const acc = await graphConta('GET', '', { fields: 'timezone_offset_hours_utc' });
   const desloc = Math.round(Number(acc.timezone_offset_hours_utc || BR) - BR);
   let adset_schedule = null, sched = [];
@@ -120,9 +146,9 @@ export async function duplicarCampanha(id, prog) {
   let setsOk = sets.filter((s) => temAd(s) && s.effective_status !== 'DELETED' && s.effective_status !== 'ARCHIVED');
   if (!setsOk.length) setsOk = sets.filter(temAd);
   if (!setsOk.length) throw new Error('não achei conjunto com anúncio nessa campanha');
-  const base = String(orig.name || 'Campanha').replace(/^⏰ PROG · /, '').replace(/ · cópia$/, '').slice(0, 70);
-  const nome = prog ? '⏰ PROG · ' + base : base + ' · cópia';
-  const cbo = !prog && Number(orig.daily_budget || 0) > 0;
+  const base = String(orig.name || 'Campanha').replace(/^⏰ PROG · /, '').replace(/^🔁 /, '').replace(/ · cópia$/, '').replace(/ · \[[^\]]*\]$/, '').slice(0, 64);
+  const nome = prog ? '⏰ PROG · ' + base : rep ? '🔁 ' + base + (rep.resumo ? ' · [' + rep.resumo + ']' : '') : base + ' · cópia';
+  const cbo = !prog && !rep && Number(orig.daily_budget || 0) > 0;
   const inicio = new Date(Math.ceil((Date.now() + 2 * 60000) / 60000) * 60000);
   const fim = prog ? new Date(inicio.getTime() + prog.dias * 86400000) : null;
   const totalProg = prog ? Math.round(prog.orcDia * prog.dias * 100) : 0;
@@ -135,13 +161,14 @@ export async function duplicarCampanha(id, prog) {
     const criados = [];
     for (const s of setsOk) {
       const corpo = { name: nome, campaign_id: camp.id, billing_event: s.billing_event || 'IMPRESSIONS', optimization_goal: s.optimization_goal || 'OFFSITE_CONVERSIONS',
-        targeting: s.targeting, promoted_object: s.promoted_object, start_time: String(Math.floor(inicio.getTime() / 1000)), status: 'PAUSED' };
+        targeting: rep ? aplicarRep(s.targeting, rep) : s.targeting, promoted_object: s.promoted_object, start_time: String(Math.floor(inicio.getTime() / 1000)), status: 'PAUSED' };
       if (s.destination_type) corpo.destination_type = s.destination_type;
       if (s.attribution_spec) corpo.attribution_spec = s.attribution_spec;
       if (!cbo) {
         corpo.bid_strategy = s.bid_strategy || orig.bid_strategy || 'LOWEST_COST_WITHOUT_CAP';
         if (s.bid_amount && /CAP|BID/.test(corpo.bid_strategy) && corpo.bid_strategy !== 'LOWEST_COST_WITHOUT_CAP') corpo.bid_amount = s.bid_amount;
         if (prog) Object.assign(corpo, { lifetime_budget: String(Math.round(totalProg / setsOk.length)), end_time: String(Math.floor(fim.getTime() / 1000)), pacing_type: ['day_parting'], adset_schedule });
+        else if (rep) corpo.daily_budget = String(Math.max(600, Math.round(rep.orcDia * 100 / setsOk.length)));
         else {
           const d = Number(s.daily_budget || 0) || Math.round(Number(orig.daily_budget || 0) / setsOk.length) || Math.round(45 * 100 / setsOk.length);
           corpo.daily_budget = String(d);
@@ -155,6 +182,13 @@ export async function duplicarCampanha(id, prog) {
       }
     }
     if (!criados.length) throw new Error('nenhum anúncio copiado');
+    if (rep) {
+      const tg = (await graph('GET', criados[0].set, { fields: 'targeting' })).targeting || {};
+      const ig = (a, b) => JSON.stringify((a || []).slice().sort()) === JSON.stringify((b || []).slice().sort());
+      if (!ig(tg.publisher_platforms, rep.POS.publisher_platforms) || !ig(tg.instagram_positions, rep.POS.instagram_positions) || !ig(tg.facebook_positions, rep.POS.facebook_positions) || !ig(tg.whatsapp_positions, rep.POS.whatsapp_positions))
+        throw new Error('o Meta gravou posições diferentes das escolhidas: ' + JSON.stringify({ fb: tg.facebook_positions, ig: tg.instagram_positions, wa: tg.whatsapp_positions }));
+      if (rep.ints && !(Array.isArray(tg.flexible_spec) && tg.flexible_spec.length)) throw new Error('o Meta não gravou os interesses');
+    }
     if (prog) {
       const conf = await graph('GET', criados[0].set, { fields: 'adset_schedule,end_time' });
       if (!Array.isArray(conf.adset_schedule) || !conf.adset_schedule.length) throw new Error('o Meta não gravou o horário programado');
@@ -168,7 +202,7 @@ export async function duplicarCampanha(id, prog) {
       await logRobo({ tipo: 'publicou', camp: nome, id: camp.id, motivo: 'você duplicou como PROGRAMADA (' + txtJanelas(prog.janelas) + ', R$ ' + prog.orcDia + '/dia por ' + prog.dias + ' dias = R$ ' + (totalProg / 100) + ' no total)' });
       return { ok: true, nova: camp.id, nome, total: totalProg / 100, fim: fim.getTime(), janelas: txtJanelas(prog.janelas) };
     }
-    await logRobo({ tipo: 'publicou', camp: nome, id: camp.id, motivo: 'você duplicou pelo painel (cópia idêntica, mesmo post, já ligada)' });
+    await logRobo({ tipo: 'publicou', camp: nome, id: camp.id, motivo: rep ? 'você replicou pelo painel (mesmo post, ' + rep.pk.length + ' posições' + (rep.resumo ? ', ' + rep.resumo : '') + ', R$ ' + rep.orcDia + '/dia, já ligada)' : 'você duplicou pelo painel (cópia idêntica, mesmo post, já ligada)' });
     return { ok: true, nova: camp.id, nome };
   } catch (e) {
     console.error('duplicar erro:', e && e.message, JSON.stringify((e && e.meta) || {}));
