@@ -4,8 +4,8 @@
 //  ✅ DESLIGAR campanha ATIVA que está ruim
 //  ❌ NUNCA liga campanha (as que você desligou ficam desligadas) — só religa o que ELE pausou na emergência da IA
 //  ❌ NUNCA sobe orçamento — só te AVISA "pode subir" e você sobe
-// REGRA ATUAL (11/11 19h) — SÓ O DIA DE HOJE: R$ 10 gastos sem venda → desliga; com venda e LUCRO DE HOJE negativo
-// (vendas × ticket − gasto com imposto) → desliga. 1 centavo de lucro → continua. À MEIA-NOITE religa as que ele desligou.
+// REGRA ATUAL (12/11 6h30) — SÓ O DIA DE HOJE: R$ 10 gastos sem venda → desliga; CUSTO POR COMPRA (do Meta) acima de R$ 9,50 → desliga.
+// Até R$ 9,50 → continua. À MEIA-NOITE religa as que ele desligou.
 // (regras antigas abaixo, de 10/11, ficaram só como histórico)
 // QUANDO DESLIGA (campanha ativa) — olhando SÓ O DIA DE HOJE (regra de 10/11):
 //  1) HOJE gastou R$ 15 e não vendeu nada
@@ -23,6 +23,7 @@ import { registrarAcao } from './_gastos.mjs';
 import { diaBR, brl, imposto, cpa3dias } from './_resumo.mjs';
 import { calcHorarios } from './_horarios.mjs';
 
+const CPA_MAX = 9.5; // regra de 12/11 6h30: custo por compra (do Meta) acima de R$ 9,50 hoje → desliga até meia-noite
 const HB_LIGADO = false; // modo horário barato desligado na regra de 11/11 19h (prejuízo → desliga até meia-noite)
 const HB_ENTRA = 9, HB_SAI = 8.5, QUEM_HB = 'robô (horário)';
 const horaBR = (t) => new Date((t || Date.now()) - 3 * 3600000).getUTCHours();
@@ -97,9 +98,10 @@ export async function rodarRobo(simular) {
     const voceAtivou = a && a.tipo === 'ativar' && !/^robô/.test(a.quem || '') && diaBR(a.em) === hoje;
     let pausar = null;
     const lucroH = vH * tk - gH * (1 + imp);
+    const vMeta = dh.compras || 0, vCpa = vMeta || vH; // custo por compra = o do app do Meta (se o Meta ainda não contou, usa as do site)
     if (cfg.autoPausar && !voceAtivou) { // REGRA DE 11/11 (19h): só o dia de hoje
       if (vH === 0 && gH >= prim) pausar = 'hoje gastou ' + brl(gH) + ' e não fez nenhuma venda (limite ' + brl(prim) + ')';
-      else if (vH > 0 && lucroH < 0) pausar = 'hoje está no prejuízo: ' + vH + ' venda(s) a ' + brl(cpaH) + ' (gasto ' + brl(gH) + ', com imposto ' + brl(gH * (1 + imp)) + ') → ' + brl(lucroH);
+      else if (vCpa > 0 && gH / vCpa > CPA_MAX) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s) no Meta, gasto ' + brl(gH) + ') — passou do máximo de ' + brl(CPA_MAX);
     }
     // estava no modo horário (regra antiga) e NÃO está no prejuízo → volta a rodar o dia todo
     if (m && !pausar) {

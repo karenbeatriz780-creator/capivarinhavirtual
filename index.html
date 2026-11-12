@@ -8516,7 +8516,7 @@ function pnlRoboHtml(){
   var inp=function(id,rot,val,tipo,extra){ return '<label>'+rot+'<input id="'+id+'" type="'+(tipo||'number')+'" value="'+esc(String(val==null?'':val))+'" '+(extra||'')+'></label>'; };
   return '<div class="dsh-card gst-card robo"><div class="dsh-t">🤖 Robô do tráfego <span class="robo-st '+(liga?'on':'')+'">'+(liga?'ligado':'desligado')+'</span></div>'+
     '<div class="robo-res">'+
-      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>Desliga sozinho</b>, olhando só o dia de hoje: <b>R$ 10</b> gastos sem nenhuma venda, ou campanha <b>no prejuízo hoje</b> (vendas × R$ '+fmtPreco(9.99)+' menos o gasto com imposto abaixo de zero). Com 1 centavo de lucro, continua. 👀 Com R$ 6 sem venda, fica em atenção no painel.</div>'+
+      '<div>'+(c.autoPausar?'✅':'⛔')+' <b>Desliga sozinho</b>, olhando só o dia de hoje: <b>R$ 10</b> gastos sem nenhuma venda, ou <b>custo por compra de hoje acima de R$ 9,50</b> (o mesmo do app do Meta). Até R$ 9,50, continua ligada. 👀 Com R$ 6 sem venda, fica em atenção no painel.</div>'+
       '<div>'+(c.autoPausar?'✅':'⛔')+' <b>🌙 Meia-noite</b>: religa as campanhas que <b>ele</b> desligou no dia. As que <b>você</b> desligou ficam desligadas. Se você religar uma, ele não mexe nela até a meia-noite.</div>'+
       '<div>🚫 <b>Nunca sobe</b> orçamento — só avisa e quem sobe é você</div>'+
       '<div>'+(c.autoSubir?'✅':'⛔')+' <b>Avisa que pode subir</b> quando a campanha vende a até <b>R$ '+fmtPreco(c.cpaMax||7)+'</b> (hoje e 3 dias)</div>'+
