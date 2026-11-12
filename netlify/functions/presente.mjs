@@ -4,8 +4,6 @@
 // Se o pedido ainda consta como não pago, pergunta direto pra Efí se o Pix
 // já caiu (plano B caso o aviso automático/webhook da Efí não chegue).
 import { getStore } from '@netlify/blobs';
-import { liberarSemComprovante } from './_comprovante.mjs';
-import { ESPERA_LIBERAR } from './_pixmanual.mjs';
 import { indexarDia } from './_indice.mjs';
 import { conferirPagamentoEfi, aplicarPagamento } from './_efi.mjs';
 import { liberarManual } from './_comprovante.mjs';
@@ -31,13 +29,6 @@ export default async (req) => {
 
   if (!presente) return json({ encontrado: false }, 404);
 
-  // "Já paguei" (Pix manual): passou o tempo de espera desde o clique → libera o pedido
-  if (!presente.pago && !presente.cancelado && presente.pagamento && presente.pagamento.provedor === 'manual' &&
-      presente.pagamento.jaPagueiEm && Date.now() - presente.pagamento.jaPagueiEm >= ESPERA_JA_PAGUEI) {
-    try { const lib = await liberarManual(id, 'ja-paguei'); if (lib) presente = lib; }
-    catch (e) { console.error('presente: falha ao liberar já-paguei', id, e && e.message); }
-  }
-
   if (!presente.pago) {
     const recente = !presente.criadoEm || (Date.now() - presente.criadoEm) < SETE_DIAS;
     const ult = ultimaConsulta.get(id) || 0;
@@ -56,10 +47,6 @@ export default async (req) => {
     }
   }
 
-  // Pix manual sem comprovante: 1 minuto depois de gerar → libera sozinho
-  if (!presente.pago && presente.pagamento && presente.pagamento.provedor === 'manual' && Date.now() - (presente.pagamento.manualEm || presente.criadoEm || 0) >= ESPERA_LIBERAR) {
-    try { const g2 = await liberarSemComprovante(id, 'auto-1min'); if (g2 && g2.pago) return json({ encontrado: true, pago: true, presente: g2 }); } catch (e) { console.error('presente liberar manual:', e && e.message); }
-  }
   if (!presente.pago) return json({ encontrado: true, pago: false });
 
   return json({ encontrado: true, pago: true, presente: presente });

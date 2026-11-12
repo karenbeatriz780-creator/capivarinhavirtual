@@ -7474,7 +7474,7 @@ function htmlComprovante(){ return ''; }
 function jaPagueiManual(id, aoPedir){
   return fetch('/.netlify/functions/ja-paguei',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})})
     .then(function(r){ return r.json(); })
-    .then(function(d){ if(d&&d.ok){ if(aoPedir) aoPedir(d); return true; } return false; })
+    .then(function(d){ if(d&&d.ok){ if(aoPedir) aoPedir(d); return true; } return d&&d.cedo?'cedo':false; })
     .catch(function(){ return false; });
 }
 /* "Já paguei" do Pix manual: 1º toque → "processando" 5 s → "tente novamente"; 2º toque → libera */
@@ -7490,7 +7490,11 @@ function jaPagueiDoisToques(id, botao, msg, aoLiberar){
         msg.innerHTML='🔄 Ainda estamos confirmando o seu pagamento. <b>Toque em "Já paguei" de novo</b> para liberar.'; },5000);
       return;
     }
-    jaPagueiManual(id, aoLiberar).then(function(ok){ if(!ok){ botao.disabled=false; if(botao.classList) botao.classList.remove('dis'); msg.innerHTML='Não consegui agora. Toque em <b>Já paguei</b> de novo.'; } });
+    jaPagueiManual(id, aoLiberar).then(function(ok){
+      if(ok===true) return;
+      setTimeout(function(){ botao.disabled=false; if(botao.classList) botao.classList.remove('dis');
+        msg.innerHTML=ok==='cedo'?'🔄 Ainda estamos confirmando o seu pagamento. Aguarde alguns segundos e <b>toque em "Já paguei" de novo</b>.':'Não consegui agora. Toque em <b>Já paguei</b> de novo.'; }, ok==='cedo'?3000:0);
+    });
   };
 }
 function ligarComprovante(id, aoLiberar){
