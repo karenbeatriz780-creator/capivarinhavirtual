@@ -2,6 +2,27 @@ import { getStore } from '@netlify/blobs';
 import { enviarTexto, marcarConversa, entregarMusica, entregarAudiosPagos, chaveNum, registrar, SITE } from './_zap.mjs';
 import { tratarBot, boasVindas } from './_bot.mjs';
 import { entregarPreviaLivro, reservar } from './_livros.mjs';
+import { analisarComprovante } from './_comprovante.mjs';
+import { idsDoTel, lerIndice } from './_indice.mjs';
+
+// 🧾 cliente mandou FOTO/print no WhatsApp e tem pedido no Pix manual esperando → confere o comprovante
+async function pedidoManualPendente(numero) {
+  const ent = await idsDoTel(numero, await lerIndice()).catch(() => null);
+  const ids = ((ent && ent.p) || []).slice(-15).reverse(), pres = getStore('presentes');
+  for (const id of ids) {
+    const g = await pres.get(id, { type: 'json' }).catch(() => null);
+    if (g && !g.pago && !g.cancelado && g.pagamento && g.pagamento.provedor === 'manual' && Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 72 * 3600e3) return g;
+  }
+  return null;
+}
+async function baixarMidia(mediaId) {
+  const token = (process.env.WHATSAPP_TOKEN || '').trim();
+  const info = await (await fetch('https://graph.facebook.com/v25.0/' + mediaId, { headers: { Authorization: 'Bearer ' + token } })).json();
+  if (!info || !info.url) throw new Error('mídia sem url');
+  const r = await fetch(info.url, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r.ok) throw new Error('download ' + r.status);
+  return { buf: Buffer.from(await r.arrayBuffer()), mime: info.mime_type || 'image/jpeg' };
+}
 
 // WEBHOOK DO WHATSAPP (Meta Cloud API)
 // URL de callback:  https://capivarinhalove.com.br/.netlify/functions/whatsapp-webhook
@@ -81,6 +102,31 @@ async function processar(corpo) {
               continue;
             }
           } catch (e) { console.error('enviar música:', e && e.message); }
+          // 🧾 Pix manual: mandou foto/print do comprovante
+          try {
+            if (msg.type === 'image' || (msg.type === 'document' && msg.document)) {
+              const g = await pedidoManualPendente(msg.from);
+              if (g) {
+                if (msg.type === 'document' && !/^image\//.test(String(msg.document.mime_type || ''))) {
+                  await enviarTexto(msg.from, '📸 Recebi um arquivo, mas preciso de um *print (foto da tela)* do comprovante do Pix. Pode mandar o print aqui?');
+                  continue;
+                }
+                await enviarTexto(msg.from, '🧾 Recebi seu comprovante! Conferindo agora, um instante…');
+                const md = await baixarMidia((msg.image || msg.document).id);
+                const r = await analisarComprovante(g.id, md.buf, md.mime, 'whatsapp');
+                if (r.status === 'liberado') {
+                  await enviarTexto(msg.from, '✅ *Pagamento confirmado!* Suas músicas estão liberadas 🎶💗\n\nOuça e baixe aqui:\n' + SITE + '/#/p/' + g.id + '/c');
+                  try { const g2 = await getStore('presentes').get(g.id, { type: 'json' }); if (g2) await entregarAudiosPagos(String(msg.from), g2, false); } catch (e) {}
+                } else if (r.status === 'conferir') {
+                  await enviarTexto(msg.from, '⏳ Recebi! Seu comprovante foi pra conferência e a liberação sai em poucos minutos. Não precisa pagar de novo 💗');
+                } else {
+                  await enviarTexto(msg.from, '⚠️ Não consegui confirmar esse comprovante: ' + (r.motivos || []).join('; ') + '.\n\nConfira se é o Pix de *R$ ' + Number(g.pagamento.valor || 0).toFixed(2).replace('.', ',') + '* para *Gusthavo dos Santos de Jesus* e mande o print de novo. Se precisar, escreva aqui que a gente te ajuda.');
+                }
+                await loja.setJSON('bv_' + String(msg.from).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});
+                continue;
+              }
+            }
+          } catch (e) { console.error('comprovante whatsapp:', e && e.message); }
           // Pagou, recebeu o modelo e agora respondeu → manda os áudios completos (grátis)
           try {
             const pa = await loja.get('pagoaud_' + chaveNum(msg.from), { type: 'json' }).catch(() => null);

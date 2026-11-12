@@ -182,7 +182,7 @@ export default async (req) => {
         if (motivo) await marcarEfiFalhou(motivo);
         const ref = refPedido(presente.id);
         const payload = brcode(precoFinal, ref);
-        const m = Object.assign({}, salvo, { pagamento: Object.assign({}, salvo.pagamento, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', payload }) });
+        const m = Object.assign({}, salvo, { pagamento: Object.assign({}, salvo.pagamento, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', manualEm: Date.now(), payload }) });
         await getStore('presentes').setJSON(presente.id, m);
         return json({ payload, id: presente.id, txid: ref, teste: false, provedor: 'manual', manual: true, valor: precoFinal });
       };

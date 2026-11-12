@@ -151,7 +151,7 @@ export default async (req) => {
       if (motivo) await marcarEfiFalhou(motivo);
       const ref = refPedido(g.id), payload = brcode(valor, ref), agora = Date.now();
       const at = Object.assign({}, g, { criadoEm: agora, recuperadoEm: agora, ...(oferta4 ? { quatro: true } : {}), extrasPix,
-        pagamento: Object.assign({}, g.pagamento || {}, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', valor, extras: extrasPix, valorExtras, payload,
+        pagamento: Object.assign({}, g.pagamento || {}, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', manualEm: Date.now(), valor, extras: extrasPix, valorExtras, payload,
           duracao: (g.pagamento && g.pagamento.duracao) || 'vitalicio' }) });
       await getStore('presentes').setJSON(g.id, at);
       await indexar(at.musicaWhatsapp, 'p', g.id); await indexarDia('p', g.id);
