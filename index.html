@@ -7477,13 +7477,25 @@ function jaPagueiManual(id, aoPedir){
     .then(function(d){ if(d&&d.ok){ if(aoPedir) aoPedir(d); return true; } return false; })
     .catch(function(){ return false; });
 }
+/* "Já paguei" do Pix manual: 1º toque → "processando" 5 s → "tente novamente"; 2º toque → libera */
+function jaPagueiDoisToques(id, botao, msg, aoLiberar){
+  var n=0;
+  return function(){
+    n++;
+    botao.disabled=true; if(botao.classList) botao.classList.add('dis');
+    msg.hidden=false; msg.className=msg.className.replace(/ ?er\b/,'');
+    msg.innerHTML='⏳ <b>Processando o seu pagamento…</b>';
+    if(n===1){
+      setTimeout(function(){ botao.disabled=false; if(botao.classList) botao.classList.remove('dis');
+        msg.innerHTML='🔄 Ainda estamos confirmando o seu pagamento. <b>Toque em "Já paguei" de novo</b> para liberar.'; },5000);
+      return;
+    }
+    jaPagueiManual(id, aoLiberar).then(function(ok){ if(!ok){ botao.disabled=false; if(botao.classList) botao.classList.remove('dis'); msg.innerHTML='Não consegui agora. Toque em <b>Já paguei</b> de novo.'; } });
+  };
+}
 function ligarComprovante(id, aoLiberar){
   var b=el('cpvJa'); if(!b) return;
-  b.onclick=function(){
-    var m=el('cpvMsg'); b.classList.add('dis');
-    m.hidden=false; m.className='cpv-msg'; m.innerHTML='⏳ <b>Liberando…</b> Isso leva cerca de 1 minuto. Pode deixar esta tela aberta — ela libera sozinha.';
-    jaPagueiManual(id, aoLiberar).then(function(ok){ if(!ok){ b.classList.remove('dis'); m.className='cpv-msg er'; m.innerHTML='Não consegui agora. Toque em <b>Já paguei</b> de novo.'; } });
-  };
+  b.onclick=jaPagueiDoisToques(id, b, el('cpvMsg'), aoLiberar);
 }
 function htmlPixLimpo(payload, valor, teste, info){
   info=info||{titulo:'Música Personalizada', itens:['Liberada assim que o Pix cair']};
@@ -7521,14 +7533,10 @@ function ligarPixLimpo(payload, id, aoPagar){
     var t=el('pxTxt'); if(t){ t.focus(); t.select(); }
   };
   var manual=pixEhManual(payload);
+  var jaFn=null;
   if(manual) rapido=24; /* Pix manual: confere a cada 5 s nos 2 primeiros min (em 1 min libera sozinho) */
   el('pxJa').onclick=function(){
-    if(manual){
-      var bj=el('pxJa'), mj=el('pxMsg'); bj.disabled=true;
-      mj.hidden=false; mj.innerHTML='⏳ <b>Liberando a sua música…</b> Só um instante — pode deixar esta tela aberta, ela libera sozinha.';
-      jaPagueiManual(id, function(){ rapido=60; checar(); }).then(function(ok){ if(!ok){ bj.disabled=false; mj.innerHTML='Não consegui agora. Toque em <b>Já paguei</b> de novo.'; } });
-      return;
-    }
+    if(manual){ if(!jaFn) jaFn=jaPagueiDoisToques(id, el('pxJa'), el('pxMsg'), function(){ rapido=60; checar(); }); jaFn(); return; }
     var b=el('pxJa'); b.disabled=true;
     checar().then(function(ok){
       b.disabled=false;
