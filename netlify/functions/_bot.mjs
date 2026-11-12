@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { enviarTexto, enviarBotoes, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE } from './_zap.mjs';
+import { enviarTexto, enviarBotoes, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE, entregarPedidoPagoZap } from './_zap.mjs';
 import { lerIndice, idsDoTel } from './_indice.mjs';
 import { entregarLivroZap } from './_livros.mjs';
 import { liberarSemComprovante } from './_comprovante.mjs';
@@ -127,6 +127,63 @@ async function perguntarSePagou(de) {
   await enviarBotoes(de, '💳 Você já fez o *pagamento do Pix* da sua música?', [['pg:conf', '✅ Sim, já paguei'], ['pg:nao', '⏳ Ainda não']]);
 }
 
+// 🤖 IA (Kie): entende o que a pessoa quer quando o texto não é óbvio → pagou | criar | livro | outro
+async function intencaoIA(texto) {
+  const ch = (process.env.KIE_API_KEY || '').trim();
+  if (!ch || texto.length < 4) return 'outro';
+  const prompt = 'Classifique a mensagem de um cliente de uma loja de músicas personalizadas no WhatsApp. Responda SÓ uma palavra:\n' +
+    'pagou = diz que já pagou/fez o Pix/comprou e quer receber a música, ou reclama que pagou e não recebeu\n' +
+    'criar = quer criar/comprar uma música nova ou saber preço\nlivro = quer o livro infantil\noutro = qualquer outra coisa\n\nMensagem: "' + texto.slice(0, 400) + '"';
+  for (const m of ['gemini-3-8-flash-openai', 'gemini-3-6-flash-openai']) {
+    try {
+      const ac = new AbortController(), to = setTimeout(() => ac.abort(), 8000);
+      const r = await fetch('https://api.kie.ai/' + m + '/v1/chat/completions', { method: 'POST', signal: ac.signal,
+        headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], stream: false, reasoning_effort: 'low' }) });
+      clearTimeout(to);
+      const j = await r.json().catch(() => null);
+      const t = String((j && (((j.choices || [])[0] || {}).message || {}).content) || '').toLowerCase();
+      const k = (/\b(pagou|criar|livro|outro)\b/.exec(t) || [])[1];
+      if (k) return k;
+    } catch (e) {}
+  }
+  return 'outro';
+}
+const PRINT = (n) => 'printpend_' + chaveNum(n);
+// liberados sem conferência (texto/botão/2 toques) desse número nos últimos 7 dias
+async function liberadosSemConferencia(gs) {
+  return gs.filter((g) => g.pago && g.pagamento && g.pagamento.provedor === 'manual' && !g.pagamento.e2eid && Date.now() - (g.pagoEm || 0) < 7 * 864e5).length;
+}
+// 💬 a pessoa ESCREVEU que pagou: já pago → envia · Pix gerado e confiável → libera e envia · desconfiou → pede o print
+export async function pagouTexto(de) {
+  const gs = (await pedidosRecentes(de)).filter((g) => !g.cancelado && g.produto !== 'livro' && temMusica(g));
+  const pago = gs.find((g) => g.pago);
+  const pend = gs.find((g) => !g.pago && g.pagamento && g.pagamento.provedor === 'manual');
+  if (pago && (!pend || (pago.pagoEm || 0) > (pend.criadoEm || 0))) {
+    await enviarTexto(de, '💗 Achei! Seu pagamento já está confirmado. Mandando suas músicas completas agora 🎶');
+    await getStore('whatsapp').delete('pago_' + pago.id).catch(() => {});
+    await entregarPedidoPagoZap(pago);
+    return;
+  }
+  if (!pend) {
+    const efi = gs.find((g) => !g.pago);
+    await enviarTexto(de, efi ? '😕 Ainda não identificamos o seu pagamento.\n\nSe já pagou, me manda aqui o *print ou PDF do comprovante* do Pix que eu confiro na hora. 💗'
+      : '😕 Não achei um Pix gerado neste número.\n\nToque no link da sua prévia, gere o Pix e pague. Se já pagou, me manda aqui o *print ou PDF do comprovante*. 💗');
+    if (efi) await getStore('whatsapp').setJSON(PRINT(de), { id: efi.id, em: Date.now() }).catch(() => {});
+    return;
+  }
+  const idade = Date.now() - (pend.pagamento.manualEm || pend.criadoEm || 0);
+  const suspeito = idade < 60e3 || (await liberadosSemConferencia(gs)) >= 1;
+  if (suspeito) {
+    await getStore('whatsapp').setJSON(PRINT(de), { id: pend.id, em: Date.now() }).catch(() => {});
+    await enviarTexto(de, '💗 Pra eu confirmar rapidinho, me manda aqui o *print ou PDF do comprovante* do Pix de *R$ ' + Number(pend.pagamento.valor || 0).toFixed(2).replace('.', ',') + '*. Assim que eu conferir, sua música chega aqui. 🎶');
+    return;
+  }
+  const g2 = await liberarSemComprovante(pend.id, 'ja-paguei-whatsapp-texto');
+  if (g2 && g2.pago) { await enviarTexto(de, '✅ *Pagamento confirmado!* Mandando suas músicas completas agora 🎶💗'); await entregarPedidoPagoZap(g2); }
+  else await enviarTexto(de, '💗 Me manda aqui o *print ou PDF do comprovante* do Pix que eu confiro na hora.');
+}
+
 // ✅ "Já paguei" no WhatsApp: NÃO libera nada. Só ENTREGA se a pessoa já confirmou no site (2 toques em "Já paguei").
 async function confirmarPagamentoZap(de) {
   let gerou = false;
@@ -145,7 +202,7 @@ async function confirmarPagamentoZap(de) {
   } catch (e) { console.error('confirmar pagamento zap:', e && e.message); }
   await enviarTexto(de, gerou
     ? '😕 *Ops, ainda não identificamos o seu pagamento.*\n\nSe você já pagou, volte na página do Pix e toque em *"Já paguei"* pra confirmar. Assim que confirmar, a música chega aqui. 💗'
-    : '😕 *Ops, não identificamos o seu pagamento.*\n\nToque no link da sua prévia, gere o Pix, pague e depois toque em *"Já paguei"* na página. Assim que confirmar, as músicas completas chegam aqui. 💗');
+    : '😕 *Ops, não identificamos o seu pagamento.*\n\nToque no link da sua prévia, gere o Pix, pague e depois toque em *"Já paguei"* na página. Se já pagou, me escreva aqui *"já paguei"*. 💗');
 }
 async function procurar(de) {
   await enviarTexto(de, '🔎 Procurando seus pedidos...');
@@ -185,7 +242,7 @@ export async function tratarBot(msg) {
   if (id === 'promo:sim') { await mandarPromocoes(de); return true; }
   if (id === 'promo:nao') { await enviarTexto(de, 'Tudo bem! 💗 Aproveite sua música. Qualquer coisa é só chamar.'); await registrar('promo_nao', { numero: de }); return true; }
   if (id === 'pg:conf') { await limpar(de); await confirmarPagamentoZap(de); return true; }
-  if (id === 'pg:perg') { await limpar(de); await confirmarPagamentoZap(de); return true; }
+  if (id === 'pg:perg') { await limpar(de); await confirmarPagamentoZap(de); return true; } // botão: só entrega se já confirmou no site
   if (id === 'pg:nao') { await limpar(de); await enviarTexto(de, 'Tudo bem! 💗 Pra pagar, toque no link da sua prévia e gere o Pix. Depois é só voltar aqui e me dizer que já pagou.'); return true; }
   if (id === 'ini:minha') { await limpar(de); await procurar(de); return true; }
   if (id === 'ini:criar' || id === 'ini:zap' || id === 'ini:musica') { await limpar(de); await mandarLinkCriar(de); return true; }
@@ -209,7 +266,7 @@ export async function tratarBot(msg) {
   }
 
   // texto livre: entende os pedidos mais comuns
-  if (/j[aá] paguei|^paguei|fiz o pix|fiz o pagamento|confirmar pagamento/.test(baixo)) { await confirmarPagamentoZap(de); return true; }
+  if (/j[aá] paguei|\bpaguei\b|fiz o pix|fiz o pagamento|j[aá] comprei|n[aã]o (recebi|chegou)|cad[eê].{0,20}m[uú]sica|pix (feito|pago)/.test(baixo)) { await pagouTexto(de); return true; }
   if (/(minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}m[uú]sica|j[aá] (comprei|paguei)|^paguei|fiz o pix|fiz o pagamento/.test(baixo)) { await procurar(de); return true; }
   if (/(meu|minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}(livro|hist[oó]ria|pdf)/.test(baixo)) { await procurar(de); return true; }
   if (/\b(livro|livrinho|hist[oó]ria|historinha)\b/.test(baixo)) { await mandarLinkLivro(de); return true; }
@@ -217,6 +274,13 @@ export async function tratarBot(msg) {
   if (/promo[cç][aã]o|promo[cç][oõ]es|desconto|indica/.test(baixo)) {
     const pr = await loja().get('promo_' + chaveNum(de), { type: 'json' }).catch(() => null);
     if (pr) { await mandarPromocoes(de); return true; }
+  }
+  // não entendeu pelas palavras: a IA (Kie) classifica e manda a coisa certa
+  if (texto.length >= 6 && !/^(oi+|ol[aá]|bom dia|boa tarde|boa noite|eai|e a[ií])[!. ]*$/.test(baixo)) {
+    const k = await intencaoIA(texto);
+    if (k === 'pagou') { await pagouTexto(de); return true; }
+    if (k === 'criar') { await mandarLinkCriar(de); return true; }
+    if (k === 'livro') { await mandarLinkLivro(de); return true; }
   }
   return false; // o webhook responde com o menu
 }

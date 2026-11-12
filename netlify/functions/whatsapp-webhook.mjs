@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { enviarTexto, marcarConversa, entregarMusica, entregarAudiosPagos, chaveNum, registrar, SITE } from './_zap.mjs';
+import { enviarTexto, marcarConversa, entregarMusica, entregarAudiosPagos, chaveNum, registrar, SITE, entregarPedidoPagoZap } from './_zap.mjs';
 import { tratarBot, boasVindas } from './_bot.mjs';
 import { entregarPreviaLivro, reservar } from './_livros.mjs';
 import { analisarComprovante } from './_comprovante.mjs';
@@ -8,9 +8,9 @@ import { idsDoTel, lerIndice } from './_indice.mjs';
 // 🧾 cliente mandou FOTO/print no WhatsApp e tem pedido no Pix manual esperando → confere o comprovante
 async function pedidoManualPendente(numero) {
   const ent = await idsDoTel(numero, await lerIndice()).catch(() => null);
-  const ids = ((ent && ent.p) || []).slice(-15).reverse(), pres = getStore('presentes');
-  for (const id of ids) {
-    const g = await pres.get(id, { type: 'json' }).catch(() => null);
+  const ids = [...new Set(((ent && ent.p) || []))].slice(-80), pres = getStore('presentes');
+  const gs = (await Promise.all(ids.map((id) => pres.get(id, { type: 'json' }).catch(() => null)))).filter(Boolean).sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
+  for (const g of gs) {
     if (g && !g.pago && !g.cancelado && g.pagamento && g.pagamento.provedor === 'manual' && Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 72 * 3600e3) return g;
   }
   return null;
@@ -102,17 +102,26 @@ async function processar(corpo) {
               continue;
             }
           } catch (e) { console.error('enviar música:', e && e.message); }
-          // 🧾 Pix manual: mandou foto/print do comprovante
+          // 🧾 mandou FOTO ou PDF (comprovante) e tem Pix manual esperando → a IA (Kie) confere
           try {
             if (msg.type === 'image' || (msg.type === 'document' && msg.document)) {
               const g = await pedidoManualPendente(msg.from);
               if (g) {
-                if (msg.type === 'document' && !/^image\//.test(String(msg.document.mime_type || ''))) {
-                  await enviarTexto(msg.from, '📸 Recebi um arquivo, mas preciso de um *print (foto da tela)* do comprovante do Pix. Pode mandar o print aqui?');
-                  continue;
+                const mt = String((msg.document && msg.document.mime_type) || 'image/jpeg');
+                if (msg.type === 'document' && !/^image\/|^application\/pdf/.test(mt)) { await enviarTexto(msg.from, '📸 Me manda o comprovante como *print (foto)* ou *PDF*, por favor.'); continue; }
+                await enviarTexto(msg.from, '🧾 Recebi! Conferindo seu comprovante, um instante…');
+                const md = await baixarMidia((msg.image || msg.document).id);
+                const r = await analisarComprovante(g.id, md.buf, md.mime || mt, 'whatsapp');
+                await loja.delete('printpend_' + chaveNum(msg.from)).catch(() => {});
+                if (r.status === 'liberado') {
+                  await enviarTexto(msg.from, '✅ *Pagamento confirmado!* Mandando suas músicas completas agora 🎶💗');
+                  const g2 = await getStore('presentes').get(g.id, { type: 'json' }).catch(() => null);
+                  if (g2) await entregarPedidoPagoZap(g2);
+                } else if (r.status === 'conferir') {
+                  await enviarTexto(msg.from, '⏳ Recebi! Seu comprovante foi pra conferência e a liberação sai em poucos minutos. Não precisa pagar de novo 💗');
+                } else {
+                  await enviarTexto(msg.from, '⚠️ Não consegui confirmar esse comprovante: ' + (r.motivos || []).join('; ') + '.\n\nConfira se é o Pix de *R$ ' + Number(g.pagamento.valor || 0).toFixed(2).replace('.', ',') + '* para *Gusthavo dos Santos de Jesus* e mande de novo.');
                 }
-                // SEM COMPROVANTE (regra de 12/11): não analisa imagem — quem libera é o "Já paguei" (2 toques) na página do Pix
-                await enviarTexto(msg.from, '💗 Obrigado! Pra liberar sua música, volte na *página do Pix* e toque em *"Já paguei"*. Assim que confirmar, as músicas completas chegam aqui na hora. 🎶\n\nSe fechou a página, abra de novo o link da sua prévia.');
                 await loja.setJSON('bv_' + String(msg.from).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});
                 continue;
               }

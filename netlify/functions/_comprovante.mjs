@@ -18,18 +18,24 @@ const PROMPT = 'Você confere comprovantes de Pix brasileiros. Leia a imagem e r
   '"editado": true se parecer montagem/edição (textos desalinhados, fontes diferentes, números sobrepostos), "obs": observação curta}';
 
 async function lerIA(dataUrl) {
-  const ch = (process.env.OPENROUTER_API_KEY || '').trim();
-  if (!ch) throw new Error('sem OPENROUTER_API_KEY');
+  // 1º Kie (já paga, Gemini lê imagem e PDF) · reserva: OpenRouter (se tiver chave)
+  const kie = (process.env.KIE_API_KEY || '').trim(), orc = (process.env.OPENROUTER_API_KEY || '').trim();
+  const msgs = [{ role: 'user', content: [{ type: 'text', text: PROMPT }, { type: 'image_url', image_url: { url: dataUrl } }] }];
+  const tentativas = [];
+  if (kie) ['gemini-3-8-flash-openai', 'gemini-3-6-flash-openai'].forEach((m) => tentativas.push(['https://api.kie.ai/' + m + '/v1/chat/completions', kie, { messages: msgs, stream: false }, 'kie:' + m]));
+  if (orc) MODELOS.forEach((m) => tentativas.push([OR, orc, { model: m, temperature: 0, max_tokens: 500, messages: msgs }, 'or:' + m]));
+  if (!tentativas.length) throw new Error('sem chave de IA');
   let ult = null;
-  for (const model of MODELOS) {
+  for (const [url, ch, corpo, nome] of tentativas) {
     try {
-      const r = await fetch(OR, { method: 'POST', headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, temperature: 0, max_tokens: 500, messages: [{ role: 'user', content: [{ type: 'text', text: PROMPT }, { type: 'image_url', image_url: { url: dataUrl } }] }] }) });
-      const j = await r.json();
-      const txt = (((j.choices || [])[0] || {}).message || {}).content || '';
+      const ac = new AbortController(), to = setTimeout(() => ac.abort(), 25000);
+      const r = await fetch(url, { method: 'POST', signal: ac.signal, headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+      clearTimeout(to);
+      const j = await r.json().catch(() => null);
+      const txt = j && (((j.choices || [])[0] || {}).message || {}).content || '';
       const m = /\{[\s\S]*\}/.exec(String(txt));
-      if (m) return Object.assign(JSON.parse(m[0]), { _modelo: model });
-      ult = new Error('IA não devolveu JSON: ' + String(txt || JSON.stringify(j.error || {})).slice(0, 150));
+      if (m) return Object.assign(JSON.parse(m[0]), { _modelo: nome });
+      ult = new Error(nome + ': ' + String(txt || JSON.stringify(j || {})).slice(0, 120));
     } catch (e) { ult = e; }
   }
   throw ult || new Error('IA falhou');
@@ -103,7 +109,7 @@ export async function analisarComprovante(id, imagem, mime, origem) {
   if (idT) await loja().setJSON('t_' + idT, { id, em: Date.now() });
   if (status === 'liberado') await liberarManual(id, 'comprovante-ia', { e2e: idT });
   else { g.pagamento.comprovante = { status, em: Date.now() }; await pres.setJSON(id, g); }
-  try {
+  if (status === 'conferir') try {
     const { avisar } = await import('./_meta.mjs');
     await avisar('🧾 Comprovante ' + (status === 'liberado' ? '✅ LIBERADO automático' : status === 'conferir' ? '⏳ pra CONFERIR' : '❌ recusado pela IA') +
       '\nPedido ' + id + ' · R$ ' + Number(pg.valor || 0).toFixed(2).replace('.', ',') + (L && L.pagadorNome ? ' · ' + L.pagadorNome : '') +
