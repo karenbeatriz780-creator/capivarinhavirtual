@@ -243,6 +243,8 @@ export async function tratarBot(msg) {
   if (id === 'promo:nao') { await enviarTexto(de, 'Tudo bem! 💗 Aproveite sua música. Qualquer coisa é só chamar.'); await registrar('promo_nao', { numero: de }); return true; }
   if (id === 'pg:conf') { await limpar(de); await confirmarPagamentoZap(de); return true; }
   if (id === 'pg:perg') { await limpar(de); await confirmarPagamentoZap(de); return true; } // botão: só entrega se já confirmou no site
+  if (id === 'pg:txt') { await limpar(de); await pagouTexto(de); return true; }
+  if (id === 'ini:humano') { await limpar(de); await loja().setJSON('humano_' + chaveNum(de), { em: Date.now() }).catch(() => {}); await enviarTexto(de, '💬 Certo! Um atendente vai te responder por aqui assim que possível. Pode deixar sua mensagem 💗'); try { const { avisar } = await import('./_meta.mjs'); await avisar('💬 Cliente pediu atendente no WhatsApp: ' + de); } catch (e) {} return true; }
   if (id === 'pg:nao') { await limpar(de); await enviarTexto(de, 'Tudo bem! 💗 Pra pagar, toque no link da sua prévia e gere o Pix. Depois é só voltar aqui e me dizer que já pagou.'); return true; }
   if (id === 'ini:minha') { await limpar(de); await procurar(de); return true; }
   if (id === 'ini:criar' || id === 'ini:zap' || id === 'ini:musica') { await limpar(de); await mandarLinkCriar(de); return true; }
@@ -266,7 +268,8 @@ export async function tratarBot(msg) {
   }
 
   // texto livre: entende os pedidos mais comuns
-  if (/j[aá] paguei|\bpaguei\b|\bpago\b|fiz o pix|fiz o pagamento|j[aá] comprei|n[aã]o (recebi|chegou)|cad[eê].{0,20}m[uú]sica|pix (feito|pago)|(problema|erro|ajuda|d[uú]vida).{0,30}(pagamento|pix|compra)|comprovante/.test(baixo)) { await pagouTexto(de); return true; }
+  const sa = baixo.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (/(ja|eu) (paguei|pague|paguei ja|comprei|fiz o pix|fiz o pagamento|transferi|mandei o pix)|\bpaguei\b|\bpago\b|fiz (o )?pix|fiz (o )?pagamento|nao (recebi|chegou|veio|enviou|enviaram|mandou|mandaram|liberou|apareceu)|recebi nao|cade|cad[eê]|ainda nada|nada ainda|demorando|ta demorando|nao recebi|minha musica|a musica (nao|ainda)|enviar (a|minha) musica|mandar (a|minha) musica|(problema|erro|ajuda|duvida).{0,30}(pagamento|pix|compra|musica)|comprovante|pix (feito|pago|enviado)|ja fiz a musica|vcs nao|voces nao/.test(sa)) { await pagouTexto(de); return true; }
   if (/(minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}m[uú]sica|j[aá] (comprei|paguei)|^paguei|fiz o pix|fiz o pagamento/.test(baixo)) { await procurar(de); return true; }
   if (/(meu|minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}(livro|hist[oó]ria|pdf)/.test(baixo)) { await procurar(de); return true; }
   if (/\b(livro|livrinho|hist[oó]ria|historinha)\b/.test(baixo)) { await mandarLinkLivro(de); return true; }
@@ -281,6 +284,12 @@ export async function tratarBot(msg) {
     if (k === 'pagou') { await pagouTexto(de); return true; }
     if (k === 'criar') { await mandarLinkCriar(de); return true; }
     if (k === 'livro') { await mandarLinkLivro(de); return true; }
+    // não entendeu, mas o número tem pedido recente → pergunta o que precisa (não deixa sem resposta)
+    const recentes = await pedidosRecentes(de).catch(() => []);
+    if (recentes.length) {
+      await enviarBotoes(de, 'Oi! 💗 Me conta como posso te ajudar:', [['pg:txt', '✅ Já paguei'], ['ini:musica', '🎵 Criar música'], ['ini:humano', '💬 Falar c/ atendente']]);
+      return true;
+    }
   }
   return false; // o webhook responde com o menu
 }
