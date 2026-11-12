@@ -103,23 +103,6 @@ async function mandarTudoDoNumero(para, tel) {
   return nl + nm;
 }
 
-// Pix manual sem comprovante: quem escreve "já comprei/já paguei" no WhatsApp tem o pedido de música
-// pendente MAIS RECENTE (desse número, últimas 72 h) liberado — aí a música sai no envio normal abaixo.
-async function liberarPixManualDoNumero(tel) {
-  try {
-    const ent = await idsDoTel(tel, await lerIndice());
-    const pres = getStore('presentes');
-    for (const id of ((ent && ent.p) || []).slice(-15).reverse()) {
-      const g = await pres.get(id, { type: 'json' }).catch(() => null);
-      if (g && !g.pago && !g.cancelado && g.produto !== 'livro' && g.pagamento && g.pagamento.provedor === 'manual' &&
-          Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 72 * 3600e3) {
-        await liberarSemComprovante(id, 'ja-paguei-whatsapp');
-        return id;
-      }
-    }
-  } catch (e) { console.error('liberar pix manual (whatsapp):', e && e.message); }
-  return null;
-}
 
 
 // Pix manual pendente (gerado e não liberado) do número, últimas 72 h
@@ -138,34 +121,34 @@ async function perguntarSePagou(de) {
   await enviarBotoes(de, '💳 Você já fez o *pagamento do Pix* da sua música?', [['pg:conf', '✅ Sim, já paguei'], ['pg:nao', '⏳ Ainda não']]);
 }
 
-// ✅ "Já paguei" no WhatsApp: libera o pedido do Pix manual mais recente do número e manda as músicas COMPLETAS (só áudio)
+// ✅ "Já paguei" no WhatsApp: NÃO libera nada. Só ENTREGA se a pessoa já confirmou no site (2 toques em "Já paguei").
 async function confirmarPagamentoZap(de) {
+  let gerou = false;
   try {
     const ent = await idsDoTel(de, await lerIndice());
     const pres = getStore('presentes');
     for (const id of ((ent && ent.p) || []).slice(-15).reverse()) {
-      let g = await pres.get(id, { type: 'json' }).catch(() => null);
+      const g = await pres.get(id, { type: 'json' }).catch(() => null);
       if (!g || g.cancelado || g.produto === 'livro' || !temMusica(g)) continue;
       if (Date.now() - (g.criadoEm || 0) > 72 * 3600e3) continue;
-      if (!g.pago && g.pagamento && g.pagamento.provedor === 'manual') {
-        if (Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 20e3) { await enviarTexto(de, '⏳ Estamos processando o seu pagamento. Aguarde alguns segundos e toque em *Sim, já paguei* de novo. 💗'); await perguntarSePagou(de); return; }
-        g = (await liberarSemComprovante(id, 'ja-paguei-whatsapp')) || g;
-      }
-      if (!g.pago) { await enviarTexto(de, '⏳ Ainda não consegui confirmar o seu pagamento. Se você já pagou, aguarde alguns segundos e toque em *Já paguei* de novo. 💗'); return; }
+      if (!g.pago) { gerou = gerou || !!(g.pagamento && g.pagamento.provedor); continue; }
+      const ja = await getStore('whatsapp').get('pago_' + id, { type: 'json' }).catch(() => null);
       await getStore('whatsapp').setJSON('pago_' + id, { em: Date.now(), para: de, via: 'ja-paguei-whatsapp' }).catch(() => {});
       await enviarTexto(de, '✅ *Pagamento confirmado!* Aqui estão suas músicas completas 🎶💗');
       await entregarAudiosPagos(de, g, false);
-      await registrar('pago_enviado', { para: de, pedido: id, via: 'ja-paguei-whatsapp' });
+      if (!ja) await registrar('pago_enviado', { para: de, pedido: id, via: 'ja-paguei-whatsapp' });
       return;
     }
   } catch (e) { console.error('confirmar pagamento zap:', e && e.message); }
-  await enviarTexto(de, 'Não achei um Pix gerado neste número 🤔\n\nPra comprar: toque no link da sua prévia, gere o Pix e pague. Depois volte aqui e toque em *Já paguei*. 💗');
+  await enviarTexto(de, gerou
+    ? '😕 *Ops, ainda não identificamos o seu pagamento.*\n\nSe você já pagou, volte na página do Pix e toque em *"Já paguei"* pra confirmar. Assim que confirmar, a música chega aqui. 💗'
+    : '😕 *Ops, não identificamos o seu pagamento.*\n\nToque no link da sua prévia, gere o Pix, pague e depois toque em *"Já paguei"* na página. Assim que confirmar, as músicas completas chegam aqui. 💗');
 }
 async function procurar(de) {
   await enviarTexto(de, '🔎 Procurando seus pedidos...');
   const pend = await pixManualPendente(de);
   const achou = await mandarTudoDoNumero(de, de);
-  if (pend) { await perguntarSePagou(de); return; }
+  if (pend && !achou) { await confirmarPagamentoZap(de); return; }
   if (achou) return;
   await salvar(de, { etapa: 'tel', d: { tentativas: 0 } });
   await enviarTexto(de, 'Não achei pedidos neste número 🤔\n\nQual o *número de WhatsApp que você usou no pedido*? (com DDD, ex: 91 98888-7777)');
@@ -199,7 +182,7 @@ export async function tratarBot(msg) {
   if (id === 'promo:sim') { await mandarPromocoes(de); return true; }
   if (id === 'promo:nao') { await enviarTexto(de, 'Tudo bem! 💗 Aproveite sua música. Qualquer coisa é só chamar.'); await registrar('promo_nao', { numero: de }); return true; }
   if (id === 'pg:conf') { await limpar(de); await confirmarPagamentoZap(de); return true; }
-  if (id === 'pg:perg') { await limpar(de); await perguntarSePagou(de); return true; }
+  if (id === 'pg:perg') { await limpar(de); await confirmarPagamentoZap(de); return true; }
   if (id === 'pg:nao') { await limpar(de); await enviarTexto(de, 'Tudo bem! 💗 Pra pagar, toque no link da sua prévia e gere o Pix. Depois é só voltar aqui e me dizer que já pagou.'); return true; }
   if (id === 'ini:minha') { await limpar(de); await procurar(de); return true; }
   if (id === 'ini:criar' || id === 'ini:zap' || id === 'ini:musica') { await limpar(de); await mandarLinkCriar(de); return true; }
@@ -223,7 +206,7 @@ export async function tratarBot(msg) {
   }
 
   // texto livre: entende os pedidos mais comuns
-  if (/j[aá] paguei|^paguei|fiz o pix|fiz o pagamento|confirmar pagamento/.test(baixo)) { await perguntarSePagou(de); return true; }
+  if (/j[aá] paguei|^paguei|fiz o pix|fiz o pagamento|confirmar pagamento/.test(baixo)) { await confirmarPagamentoZap(de); return true; }
   if (/(minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}m[uú]sica|j[aá] (comprei|paguei)|^paguei|fiz o pix|fiz o pagamento/.test(baixo)) { await procurar(de); return true; }
   if (/(meu|minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}(livro|hist[oó]ria|pdf)/.test(baixo)) { await procurar(de); return true; }
   if (/\b(livro|livrinho|hist[oó]ria|historinha)\b/.test(baixo)) { await mandarLinkLivro(de); return true; }

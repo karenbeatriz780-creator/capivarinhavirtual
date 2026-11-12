@@ -7487,7 +7487,7 @@ function jaPagueiDoisToques(id, botao, msg, aoLiberar){
     msg.innerHTML='⏳ <b>Processando o seu pagamento…</b>';
     if(n===1){
       setTimeout(function(){ botao.disabled=false; if(botao.classList) botao.classList.remove('dis');
-        msg.innerHTML='🔄 Ainda estamos confirmando o seu pagamento. <b>Toque em "Já paguei" de novo</b> para liberar.'; },5000);
+        msg.innerHTML='🔄 Ainda não processamos o seu pagamento. <b>Toque em "Já paguei" de novo</b>.'; },3000);
       return;
     }
     jaPagueiManual(id, aoLiberar).then(function(ok){
