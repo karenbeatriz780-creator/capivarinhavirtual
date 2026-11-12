@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
+import { brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido } from './_pixmanual.mjs';
 import { indexar, indexarDia, chaveTel, lerIndice, idsDoTel } from './_indice.mjs';
 
 // RECUPERAÇÃO DE VENDA
@@ -144,8 +145,22 @@ export default async (req) => {
     const valorExtras = Math.round(extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0) * 100) / 100;
     const valor = Math.round((base + valorExtras) * 100) / 100;
     const oferta4 = quatroOk(g) || await ofertaRec(String(body.t || ''));
+    // 💳 PIX MANUAL (reserva): Efí recusou/bloqueada → Pix com a chave do Gusthavo + comprovante
+    const pixManual = async (motivo) => {
+      if (!(await podeManual())) return null;
+      if (motivo) await marcarEfiFalhou(motivo);
+      const ref = refPedido(g.id), payload = brcode(valor, ref), agora = Date.now();
+      const at = Object.assign({}, g, { criadoEm: agora, recuperadoEm: agora, ...(oferta4 ? { quatro: true } : {}), extrasPix,
+        pagamento: Object.assign({}, g.pagamento || {}, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', valor, extras: extrasPix, valorExtras, payload,
+          duracao: (g.pagamento && g.pagamento.duracao) || 'vitalicio' }) });
+      await getStore('presentes').setJSON(g.id, at);
+      await indexar(at.musicaWhatsapp, 'p', g.id); await indexarDia('p', g.id);
+      return json({ payload, id: g.id, teste: false, valor, manual: true, provedor: 'manual' });
+    };
+    if (await pularEfi()) { const r = await pixManual(null); if (r) return r; }
     const txid = criarTxid(g.id);
-    const token = await obterToken();
+    let token;
+    try { token = await obterToken(); } catch (e) { const r = await pixManual('token: ' + e.message); if (r) return r; throw e; }
     const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
       method: 'PUT', token,
       body: {
@@ -158,11 +173,12 @@ export default async (req) => {
     });
     if (!cob.ok) {
       console.error('recuperar-pix cob:', cob.status, cob.raw && cob.raw.slice(0, 500));
+      { const r = await pixManual(erroEfi(cob.data, cob.status)); if (r) return r; }
       return json({ erro: 'Efí recusou a cobrança: ' + erroEfi(cob.data, cob.status) }, 502);
     }
     const locId = cob.data && cob.data.loc && cob.data.loc.id;
     const qr = locId != null ? await efiRequest('/v2/loc/' + encodeURIComponent(locId) + '/qrcode', { token }) : null;
-    if (!qr || !qr.ok || !qr.data || !qr.data.qrcode) return json({ erro: 'Não consegui gerar o Pix agora.' }, 502);
+    if (!qr || !qr.ok || !qr.data || !qr.data.qrcode) { const r = await pixManual('QR'); if (r) return r; return json({ erro: 'Não consegui gerar o Pix agora.' }, 502); }
 
     const agora = Date.now();
     const atualizado = Object.assign({}, g, {

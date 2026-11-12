@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
+import { brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido } from './_pixmanual.mjs';
 import { statusOferta, registrarTentativa } from './_oferta.mjs';
 import { statusIndicacao, registrarIndicado, registrarUso } from './_indicacao.mjs';
 import { indexar, indexarDia } from './_indice.mjs';
@@ -159,6 +160,7 @@ export default async (req) => {
       pagamento: { provedor: 'efi', txid, status: 'ATIVA', valor: precoFinal, duracao, addonMusica: temAddonMusica, extras: extrasPix, valorExtras }
     });
 
+    let pixManualFn = null;
     try {
       await getStore('presentes').setJSON(presente.id, salvo);
       await indexar(presente.musicaWhatsapp || presente.whatsapp, 'p', presente.id);
@@ -174,6 +176,18 @@ export default async (req) => {
         }
       } catch (e) {}
 
+      // 💳 PIX MANUAL (reserva): Efí recusou/bloqueada → Pix com a chave do Gusthavo + comprovante
+      pixManualFn = async (motivo) => {
+        if (!(await podeManual())) return null;
+        if (motivo) await marcarEfiFalhou(motivo);
+        const ref = refPedido(presente.id);
+        const payload = brcode(precoFinal, ref);
+        const m = Object.assign({}, salvo, { pagamento: Object.assign({}, salvo.pagamento, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', payload }) });
+        await getStore('presentes').setJSON(presente.id, m);
+        return json({ payload, id: presente.id, txid: ref, teste: false, provedor: 'manual', manual: true, valor: precoFinal });
+      };
+      const pixManual = pixManualFn;
+      if (await pularEfi()) { const r = await pixManual(null); if (r) return r; }
       const token = await obterToken();
       const nomeCobranca = (pacote6 ? '6 Músicas Personalizadas' : comboDaMusica ? ('4 Músicas + ' + pacote.nome) : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '') + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('');
       const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), {
@@ -192,6 +206,7 @@ export default async (req) => {
       });
       if (!cob.ok) {
         console.error('Efí criar cobrança:', cob.status, cob.raw && cob.raw.slice(0, 700));
+        const rm = await pixManual(erroEfi(cob.data, cob.status)); if (rm) return rm;
         return json({ erro: 'Efí recusou a cobrança: ' + erroEfi(cob.data, cob.status) }, 502);
       }
 
@@ -201,6 +216,7 @@ export default async (req) => {
       const qr = await efiRequest('/v2/loc/' + encodeURIComponent(locId) + '/qrcode', { token });
       if (!qr.ok) {
         console.error('Efí gerar QR:', qr.status, qr.raw && qr.raw.slice(0, 700));
+        { const rm = await pixManual('QR: ' + erroEfi(qr.data, qr.status)); if (rm) return rm; }
         return json({ erro: 'Efí não conseguiu gerar o QR Code: ' + erroEfi(qr.data, qr.status) }, 502);
       }
       if (!qr.data || !qr.data.qrcode) return json({ erro: 'Efí não retornou o Pix Copia e Cola.' }, 502);
@@ -216,6 +232,7 @@ export default async (req) => {
       });
     } catch (e) {
       console.error('Falha Efí:', e && e.stack || e);
+      if (pixManualFn) { try { const rm = await pixManualFn('conexão: ' + (e && e.message)); if (rm) return rm; } catch (e2) {} }
       return json({ erro: 'Não consegui conectar à Efí: ' + (e && e.message ? e.message : 'erro inesperado') }, 502);
     }
   } catch (e) {
