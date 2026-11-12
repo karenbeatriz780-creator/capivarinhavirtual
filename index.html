@@ -337,6 +337,8 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .pos-ri span{font-weight:800;opacity:.6}.pos-ri i{font-style:normal;font-weight:800}.pos-ri small{grid-column:2/4;font-size:.66rem;opacity:.65}.pos-ri.b i{color:#15803d}.pos-ri.c i{color:#b91c1c}
 .rp-sug{border:2px solid #7c3aed;background:rgba(124,58,237,.06);border-radius:14px;padding:.55rem .65rem;margin:.55rem 0;font-size:.78rem}.rp-sug>small{opacity:.7}.rp-sl div{margin:.3rem 0;line-height:1.35}.rp-sl small{opacity:.7}.rp-sug a{font-size:.74rem;font-weight:700}
 .cp-prog.hb{background:#fef3c7;color:#92400e}
+.plc-d{display:flex;flex-direction:column;align-items:flex-end;gap:.25rem}.plc-bt{border:0;border-radius:99px;padding:.2rem .55rem;font:inherit;font-size:.68rem;font-weight:800;cursor:pointer;white-space:nowrap}.plc-bt.off{background:#fee2e2;color:#991b1b}.plc-bt.on{background:#dcfce7;color:#166534}.plc-bt:disabled{opacity:.5}
+.plc-i em.on{background:#dcfce7;color:#166534}.plc-todas{width:100%;margin-top:.45rem;border:0;border-radius:12px;padding:.55rem;background:#dc2626;color:#fff;font:inherit;font-weight:800;font-size:.8rem;cursor:pointer}.plc-todas:disabled{opacity:.5}
 .rp-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center}
 .rp-bx{background:#faf8ff;width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:.9rem .9rem 1.4rem;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
 .rp-h{display:flex;justify-content:space-between;align-items:center;font-size:1.05rem}.rp-x{border:0;background:rgba(0,0,0,.07);border-radius:50%;width:2rem;height:2rem;font-size:1.2rem;cursor:pointer}
@@ -8726,11 +8728,14 @@ function pnlCampanhasAlerta(camps){
 function pnlPlacarHtml(D,lbl,R){
   var P=D.placar; if(!P) return '';
   var Rs=function(v){ return (v<0?'-':'+')+R(Math.abs(v)); };
-  var item=function(x){ return '<div class="plc-i" data-plcid="'+esc(x.id)+'"><div><b>'+esc(x.nome)+'</b>'+(x.ativa?'':' <em>desligada</em>')+'<small>'+R(x.gastoImp)+' gasto · '+x.vendas+' venda'+(x.vendas===1?'':'s')+(x.cpa?' · '+R(x.cpa)+'/venda':'')+'</small></div><i class="'+(x.lucro>=0?'pos':'neg')+'">'+Rs(x.lucro)+'</i></div>'; };
+  var item=function(x){ return '<div class="plc-i" data-plcid="'+esc(x.id)+'"><div><b>'+esc(x.nome)+'</b>'+(x.ativa?' <em class="on">ligada</em>':' <em>desligada</em>')+'<small>'+R(x.gastoImp)+' gasto · '+x.vendas+' venda'+(x.vendas===1?'':'s')+(x.cpa?' · '+R(x.cpa)+'/venda':'')+'</small></div><div class="plc-d"><i class="'+(x.lucro>=0?'pos':'neg')+'">'+Rs(x.lucro)+'</i>'+
+    (x.ativa?'<button type="button" class="plc-bt off" data-plcac="pausar" data-plcuid="'+esc(x.id)+'">⏸ Desligar</button>':'<button type="button" class="plc-bt on" data-plcac="ativar" data-plcuid="'+esc(x.id)+'">▶️ Ligar</button>')+'</div></div>'; };
+  var negLig=P.ruins.filter(function(x){ return x.ativa; });
   var col=function(cls,tit,L,soma,vazio){ var k='plc_'+cls, aberto=_pnlPlcAberto[k], mostra=aberto?L:L.slice(0,6);
     return '<div class="plc-col '+cls+'"><div class="plc-h">'+tit+' <span>'+L.length+'</span></div>'+(L.length?mostra.map(item).join(''):'<div class="plc-v">'+vazio+'</div>')+
       (L.length>6?'<button type="button" class="plc-mais" data-plcmais="'+k+'">'+(aberto?'mostrar menos':'ver todas ('+L.length+')')+'</button>':'')+
-      '<div class="plc-s"><span>Soma</span><b class="'+(soma>=0?'pos':'neg')+'">'+Rs(soma)+'</b></div></div>'; };
+      '<div class="plc-s"><span>Soma</span><b class="'+(soma>=0?'pos':'neg')+'">'+Rs(soma)+'</b></div>'+
+      (cls==='ruins'&&negLig.length?'<button type="button" class="plc-todas" data-plctodas>⏸ Desligar todas as negativas ('+negLig.length+' ligada'+(negLig.length===1?'':'s')+')</button>':'')+'</div>'; };
   return '<div class="cp-box cp-plc"><h4>🏆 Placar das campanhas <small>· '+esc(lbl)+'</small></h4>'+
     '<div class="plc-saldo '+(P.saldo>=0?'pos':'neg')+'"><span>Saldo '+esc(lbl)+'</span><b>'+Rs(P.saldo)+'</b><small>🟢 '+P.boas.length+' boa'+(P.boas.length===1?'':'s')+' '+Rs(P.somaBoas)+' &nbsp;·&nbsp; 🔴 '+P.ruins.length+' '+(P.ruins.length===1?'ruim':'ruins')+' '+Rs(P.somaRuins)+(P.zeradas?' &nbsp;·&nbsp; ⚪ '+P.zeradas+' sem gasto':'')+'</small></div>'+
     '<div class="plc-g">'+col('boas','🟢 Lucrando',P.boas,P.somaBoas,'Nenhuma no lucro ainda.')+col('ruins','🔴 No prejuízo',P.ruins,P.somaRuins,'Nenhuma no prejuízo 🎉')+'</div>'+
@@ -9065,6 +9070,19 @@ function pnlCampLigar(body){
   body.querySelectorAll('[data-cphr]').forEach(function(b){ b.onclick=function(){ var h=Number(b.dataset.cphr); var cur=pnlHorAtalho(_pnlHorEsc); var i=cur.indexOf(h); if(i>=0) cur.splice(i,1); else cur.push(h); _pnlHorMao=cur.sort(function(x,y){ return x-y; }); _pnlHorEsc='mao'; pnlHorSalvar(); pnlRedesenhar(); }; });
   pnlNaLigarExtras(); pnlPosLigar();
   body.querySelectorAll('[data-plcmais]').forEach(function(b){ b.onclick=function(){ _pnlPlcAberto[b.dataset.plcmais]=!_pnlPlcAberto[b.dataset.plcmais]; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); }; });
+  function plcMandar(corpo,txt){ if(!pedirSenhaAdmin()) return; toast(txt);
+    fetch('/.netlify/functions/admin-meta-acao',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify(corpo)})
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,s:r.status,d:d}; }); })
+      .then(function(x){ if(x.s===401){ _pnlChave=''; Store.del('cl_admin_key'); toast('Senha incorreta.'); return; }
+        if(x.d&&x.d.erros&&x.d.erros.length) toast('Feito em '+(x.d.feitas||[]).length+'. Erro: '+x.d.erros[0]); else if(!x.ok) toast((x.d&&x.d.erro)||'Não deu certo.'); else toast('Pronto ✓');
+        _pnlCamp=null; pnlCampCarregar(); })
+      .catch(function(){ toast('Sem conexão.'); }); }
+  body.querySelectorAll('[data-plcac]').forEach(function(b){ b.onclick=function(e){ e.stopPropagation(); var ac=b.dataset.plcac, nm=(b.closest('.plc-i').querySelector('b')||{}).textContent||'';
+    if(!confirm((ac==='pausar'?'Desligar':'Ligar')+' "'+nm+'"?'+(ac==='ativar'?'\n\nO robô não mexe nela até a meia-noite.':''))) return;
+    b.disabled=true; plcMandar({id:b.dataset.plcuid,acao:ac},(ac==='pausar'?'Desligando…':'Ligando…')); }; });
+  body.querySelectorAll('[data-plctodas]').forEach(function(b){ b.onclick=function(){ var L=((_pnlCamp&&_pnlCamp.placar&&_pnlCamp.placar.ruins)||[]).filter(function(x){ return x.ativa; });
+    if(!L.length) return; if(!confirm('Desligar '+(L.length===1?'esta campanha negativa':'estas '+L.length+' campanhas negativas')+'?\n\n'+L.map(function(x){ return '• '+x.nome; }).join('\n')+'\n\nAtenção: o robô NÃO religa à meia-noite o que VOCÊ desligou. Elas ficam desligadas até você ligar.')) return;
+    b.disabled=true; plcMandar({acao:'pausarVarios',ids:L.map(function(x){ return x.id; })},'Desligando '+L.length+' campanhas…'); }; });
   body.querySelectorAll('[data-plcid]').forEach(function(b){ b.onclick=function(){ var c=document.querySelector('.cp-c[data-cpid="'+b.dataset.plcid+'"]');
     if(!c&&_pnlCampFiltro!=='todas'){ _pnlCampFiltro='todas'; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); c=document.querySelector('.cp-c[data-cpid="'+b.dataset.plcid+'"]'); }
     if(c){ c.scrollIntoView({behavior:'smooth',block:'center'}); c.classList.add('plc-flash'); setTimeout(function(){ c.classList.remove('plc-flash'); },1600); } else toast('Essa campanha não está na lista de agora (só aparece no período de 30 dias).'); }; });

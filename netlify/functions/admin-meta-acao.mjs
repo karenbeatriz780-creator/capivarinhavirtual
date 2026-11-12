@@ -10,6 +10,22 @@ export default async (req) => {
   if (!senha || (req.headers.get('x-admin-key') || '') !== senha) return json({ erro: 'Senha de administrador incorreta.' }, 401);
   let b = {}; try { b = await req.json(); } catch (e) {}
   const id = String(b.id || ''), acao = String(b.acao || '');
+  // vários de uma vez (painel → 🏆 Placar → "Desligar todas as negativas")
+  if (acao === 'pausarVarios' || acao === 'ativarVarios') {
+    const ids = (Array.isArray(b.ids) ? b.ids : []).map(String).filter((x, i, l) => /^\d{5,30}$/.test(x) && l.indexOf(x) === i).slice(0, 60);
+    if (!ids.length) return json({ erro: 'Nenhuma campanha.' }, 400);
+    const meta = await metaAds(7, null, null, true);
+    if (!meta.configurado || meta.erro) return json({ erro: meta.erro || 'Meta Ads não está ligado.' }, 400);
+    const ac = acao === 'pausarVarios' ? 'pausar' : 'ativar', feitas = [], erros = [];
+    for (const cid of ids) {
+      const c0 = (meta.campanhas || []).find((x) => String(x.id) === cid);
+      if (!c0) { erros.push(cid + ': não encontrada'); continue; }
+      try { await aplicarAcao(c0, ac, 'você'); feitas.push(c0.nome);
+        await logRobo({ tipo: ac === 'pausar' ? 'pausou' : 'ativou', camp: c0.nome, id: cid, motivo: 'você ' + (ac === 'pausar' ? 'desligou' : 'ligou') + ' pelo placar do painel' }); }
+      catch (e) { erros.push(c0.nome + ': ' + (e.message || 'erro')); }
+    }
+    return json({ ok: !erros.length, feitas, erros });
+  }
   if (!/^\d{5,30}$/.test(id) || ['pausar', 'ativar', 'subir'].indexOf(acao) < 0) return json({ erro: 'Pedido inválido.' }, 400);
   try {
     const imp = (process.env.META_IMPOSTO !== undefined && process.env.META_IMPOSTO !== '' ? Number(process.env.META_IMPOSTO) : 12.15) / 100;
