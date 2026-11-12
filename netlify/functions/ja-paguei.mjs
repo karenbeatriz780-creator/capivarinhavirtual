@@ -10,7 +10,7 @@ export default async (req) => {
   try {
     const g0 = await getStore('presentes').get(id, { type: 'json' }).catch(() => null);
     if (g0 && !g0.pago && g0.pagamento && g0.pagamento.provedor === 'manual') {
-      const falta = 60e3 - (Date.now() - (g0.pagamento.manualEm || g0.criadoEm || 0));
+      const falta = 20e3 - (Date.now() - (g0.pagamento.manualEm || g0.criadoEm || 0));
       if (falta > 0) return json({ ok: false, cedo: true, faltaSeg: Math.ceil(falta / 1000) });
     }
     const g = await liberarSemComprovante(id, 'ja-paguei'); return json({ ok: true, pago: !!(g && g.pago) });

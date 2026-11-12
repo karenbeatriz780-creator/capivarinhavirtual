@@ -71,6 +71,7 @@ function mensagem(etapa, m, link) {
 }
 
 export default async () => {
+  return; // DESLIGADO (12/11, regra do Gusthavo): nada de recuperação no WhatsApp — só envia pra quem confirmou o pagamento ou mandou mensagem
   const loja = getStore('whatsapp'), musicas = getStore('musicas');
   let lista = [];
   try { lista = ((await loja.list({ prefix: 'rec_' })).blobs || []).slice(0, 80); } catch (e) { return; }

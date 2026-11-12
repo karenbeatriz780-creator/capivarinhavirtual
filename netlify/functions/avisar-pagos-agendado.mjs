@@ -50,7 +50,8 @@ export default async () => {
       }
       if (!temMusica(g)) { await loja.setJSON('pago_' + id, { pulado: 'sem música', em: agora }); continue; }
       // Pix manual (sem conferência): NÃO manda nada sozinho — a música completa só vai quando a pessoa toca em "Já paguei" no WhatsApp
-      if (g.pagamento && g.pagamento.provedor === 'manual') { await loja.setJSON('pago_' + id, { pulado: 'pix manual: espera o Já paguei no WhatsApp', em: agora }); continue; }
+      // Pix manual: só chega aqui quem CONFIRMOU (2 toques no site ou "Sim, já paguei" no WhatsApp) → manda a música (grátis se a conversa estiver aberta; senão 1 mensagem de utilidade)
+      if (g.pagamento && g.pagamento.provedor === 'manual' && agora - (g.pagoEm || 0) < 2 * 60e3) continue;
       let num = String(g.musicaWhatsapp || g.whatsapp || '').replace(/\D/g, '');
       if (num.length < 10) { await loja.setJSON('pago_' + id, { pulado: 'sem whatsapp', em: agora }); continue; }
       if (!num.startsWith('55') || num.length <= 11) num = '55' + num;

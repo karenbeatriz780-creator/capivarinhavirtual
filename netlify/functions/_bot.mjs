@@ -148,10 +148,10 @@ async function confirmarPagamentoZap(de) {
       if (!g || g.cancelado || g.produto === 'livro' || !temMusica(g)) continue;
       if (Date.now() - (g.criadoEm || 0) > 72 * 3600e3) continue;
       if (!g.pago && g.pagamento && g.pagamento.provedor === 'manual') {
-        if (Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 60e3) { await enviarTexto(de, '⏳ Estamos processando o seu pagamento. Aguarde 1 minutinho e toque em *Sim, já paguei* de novo. 💗'); await perguntarSePagou(de); return; }
+        if (Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 20e3) { await enviarTexto(de, '⏳ Estamos processando o seu pagamento. Aguarde alguns segundos e toque em *Sim, já paguei* de novo. 💗'); await perguntarSePagou(de); return; }
         g = (await liberarSemComprovante(id, 'ja-paguei-whatsapp')) || g;
       }
-      if (!g.pago) { await enviarTexto(de, '⏳ Ainda não consegui confirmar o seu pagamento. Se você já pagou, aguarde 1 minutinho e toque em *Já paguei* de novo. 💗'); return; }
+      if (!g.pago) { await enviarTexto(de, '⏳ Ainda não consegui confirmar o seu pagamento. Se você já pagou, aguarde alguns segundos e toque em *Já paguei* de novo. 💗'); return; }
       await getStore('whatsapp').setJSON('pago_' + id, { em: Date.now(), para: de, via: 'ja-paguei-whatsapp' }).catch(() => {});
       await enviarTexto(de, '✅ *Pagamento confirmado!* Aqui estão suas músicas completas 🎶💗');
       await entregarAudiosPagos(de, g, false);
