@@ -6,6 +6,8 @@
 import { getStore } from '@netlify/blobs';
 import { indexarDia } from './_indice.mjs';
 import { conferirPagamentoEfi, aplicarPagamento } from './_efi.mjs';
+import { liberarManual } from './_comprovante.mjs';
+import { ESPERA_JA_PAGUEI } from './_pixmanual.mjs';
 
 const ultimaConsulta = new Map(); // evita consultar a Efí a cada segundo pro mesmo pedido
 const SETE_DIAS = 7 * 24 * 3600 * 1000;
@@ -23,9 +25,16 @@ export default async (req) => {
   if (!id) return json({ erro: 'id ausente' }, 400);
 
   const store = getStore('presentes');
-  const presente = await store.get(id, { type: 'json' });
+  let presente = await store.get(id, { type: 'json' });
 
   if (!presente) return json({ encontrado: false }, 404);
+
+  // "Já paguei" (Pix manual): passou o tempo de espera desde o clique → libera o pedido
+  if (!presente.pago && !presente.cancelado && presente.pagamento && presente.pagamento.provedor === 'manual' &&
+      presente.pagamento.jaPagueiEm && Date.now() - presente.pagamento.jaPagueiEm >= ESPERA_JA_PAGUEI) {
+    try { const lib = await liberarManual(id, 'ja-paguei'); if (lib) presente = lib; }
+    catch (e) { console.error('presente: falha ao liberar já-paguei', id, e && e.message); }
+  }
 
   if (!presente.pago) {
     const recente = !presente.criadoEm || (Date.now() - presente.criadoEm) < SETE_DIAS;

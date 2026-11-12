@@ -1,12 +1,15 @@
 import { getStore } from '@netlify/blobs';
 // PIX MANUAL (reserva quando a Efí não gera cobrança): o site monta um Pix "copia e cola" com a CHAVE do Gusthavo e o valor do pedido.
 // O cliente paga, manda o comprovante, a IA confere e o Gusthavo libera no painel (ou libera sozinho se ele ligar o automático).
+// Chave Pix aleatória do Nubank (fixa no código — o site em index.html usa a mesma; a do Bradesco foi trocada).
 export const PIX_MANUAL = {
-  chave: (process.env.PIX_MANUAL_CHAVE || 'f0564b72-8404-4ff4-8b52-bba40164284d').trim(),
+  chave: '13c18586-94b7-4c25-b9b9-562ea79fe41a',
   nome: (process.env.PIX_MANUAL_NOME || 'GUSTHAVO DOS SANTOS DE JESUS').trim(),
-  banco: 'Bradesco',
+  banco: 'Nubank',
   cidade: (process.env.PIX_MANUAL_CIDADE || 'PARAUAPEBAS').trim()
 };
+// "Já paguei" (sem comprovante): o pedido libera sozinho depois desse tempo, sem conferir o Pix.
+export const ESPERA_JA_PAGUEI = 45 * 1000;
 const semAcento = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 ]/g, '').toUpperCase();
 const campo = (id, v) => id + String(v.length).padStart(2, '0') + v;
 function crc16(s) {

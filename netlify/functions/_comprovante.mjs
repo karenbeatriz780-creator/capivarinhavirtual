@@ -68,6 +68,7 @@ export async function liberarManual(id, origem, extra) {
   aplicarPagamento(g, { e2eid: (extra && extra.e2e) || null, valor: (g.pagamento && g.pagamento.valor) || null }, origem);
   g.pagamento.provedor = 'manual';
   g.pagamento.confirmadoPor = origem;
+  if (/^ja-paguei/.test(String(origem))) g.pagamento.semConferencia = true; // liberado só pelo "já paguei", sem ver o Pix
   await pres.setJSON(id, g);
   try { await indexarDia('pg', g.id, g.pagoEm); } catch (e) {}
   return g;

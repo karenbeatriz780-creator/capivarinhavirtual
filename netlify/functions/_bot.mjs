@@ -2,6 +2,7 @@ import { getStore } from '@netlify/blobs';
 import { enviarTexto, enviarBotoes, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE } from './_zap.mjs';
 import { lerIndice, idsDoTel } from './_indice.mjs';
 import { entregarLivroZap } from './_livros.mjs';
+import { liberarManual } from './_comprovante.mjs';
 
 // ROBÔ DE ATENDIMENTO (não cria música):
 // - "Oi" → "Como podemos te ajudar?" [Receber minha música] [Criar uma música]
@@ -102,8 +103,27 @@ async function mandarTudoDoNumero(para, tel) {
   return nl + nm;
 }
 
+// Pix manual sem comprovante: quem escreve "já comprei/já paguei" no WhatsApp tem o pedido de música
+// pendente MAIS RECENTE (desse número, últimas 72 h) liberado — aí a música sai no envio normal abaixo.
+async function liberarPixManualDoNumero(tel) {
+  try {
+    const ent = await idsDoTel(tel, await lerIndice());
+    const pres = getStore('presentes');
+    for (const id of ((ent && ent.p) || []).slice(-15).reverse()) {
+      const g = await pres.get(id, { type: 'json' }).catch(() => null);
+      if (g && !g.pago && !g.cancelado && g.produto !== 'livro' && g.pagamento && g.pagamento.provedor === 'manual' &&
+          Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 72 * 3600e3) {
+        await liberarManual(id, 'ja-paguei-whatsapp');
+        return id;
+      }
+    }
+  } catch (e) { console.error('liberar pix manual (whatsapp):', e && e.message); }
+  return null;
+}
+
 async function procurar(de) {
   await enviarTexto(de, '🔎 Procurando seus pedidos...');
+  await liberarPixManualDoNumero(de);
   if (await mandarTudoDoNumero(de, de)) return;
   await salvar(de, { etapa: 'tel', d: { tentativas: 0 } });
   await enviarTexto(de, 'Não achei pedidos neste número 🤔\n\nQual o *número de WhatsApp que você usou no pedido*? (com DDD, ex: 91 98888-7777)');
