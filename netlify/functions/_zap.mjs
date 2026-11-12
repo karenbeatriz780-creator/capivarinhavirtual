@@ -95,8 +95,6 @@ export async function entregarMusica(taskId, numeroPedido) {
       'Depois do pagamento você recebe as músicas *completas*, sem corte, pra baixar e mandar pra quem você ama.\n\n' +
       'Guarde esta conversa: o link fica salvo aqui pra você voltar quando quiser. 💗');
     // só o link (sem áudio no WhatsApp, pra pessoa ouvir no site e comprar)
-    // botão de confirmar pagamento (Pix manual): só depois de tocar a música completa vai pro WhatsApp
-    if (ok) { try { await enviarBotoes(para, 'Já fez o Pix pelo link? Toque abaixo pra confirmar e receber suas músicas *completas* aqui. 💗', [['pg:perg', '✅ Já paguei']]); } catch (e) {} }
   } else {
     return 'semjanela'; // só manda pra quem abriu conversa (sem modelo pago)
   }
