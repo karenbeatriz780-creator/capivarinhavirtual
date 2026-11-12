@@ -8,7 +8,7 @@ import { idsDoTel, lerIndice } from './_indice.mjs';
 // 🧾 cliente mandou FOTO/print no WhatsApp e tem pedido no Pix manual esperando → confere o comprovante
 async function pedidoManualPendente(numero) {
   const ent = await idsDoTel(numero, await lerIndice()).catch(() => null);
-  const ids = [...new Set(((ent && ent.p) || []))].slice(-80), pres = getStore('presentes');
+  const ids = [...new Set(((ent && ent.p) || []))].slice(-40), pres = getStore('presentes');
   const gs = (await Promise.all(ids.map((id) => pres.get(id, { type: 'json' }).catch(() => null)))).filter(Boolean).sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
   for (const g of gs) {
     if (g && !g.pago && !g.cancelado && g.pagamento && g.pagamento.provedor === 'manual' && Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 72 * 3600e3) return g;
@@ -44,7 +44,7 @@ const BOAS_VINDAS =
   '💬 *Precisa de atendimento?*\nEnvie sua dúvida por aqui que nossa equipe responderá assim que possível.\n\n' +
   'A Capivarinha Love agradece seu contato! 💗';
 
-async function processar(corpo) {
+export async function processar(corpo) {
   try {
     const loja = getStore('whatsapp');
     const entradas = (corpo && corpo.entry) || [];
@@ -200,7 +200,12 @@ export default async (req, context) => {
     try { corpo = await req.json(); } catch (e) {}
     // Responde 200 na hora pra Meta (senão ela reenvia a mensagem) e
     // continua o trabalho em segundo plano.
-    const trabalho = processar(corpo);
+    // o trabalho pesado (IA, conferir pedidos, mandar áudios) vai pra uma função de segundo plano (até 15 min),
+    // pra nunca estourar o tempo do webhook. Se não der, faz aqui mesmo.
+    const base = process.env.URL || 'https://capivarinhalove.com.br';
+    const trabalho = fetch(base + '/.netlify/functions/whatsapp-processar-background', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-zap-interno': (process.env.WHATSAPP_VERIFY_TOKEN || '').trim() }, body: JSON.stringify(corpo || {}) })
+      .then((r) => { if (!r.ok && r.status !== 202) throw new Error('bg ' + r.status); })
+      .catch((e) => { console.error('webhook → segundo plano falhou, processando aqui:', e && e.message); return processar(corpo); });
     if (context && typeof context.waitUntil === 'function') context.waitUntil(trabalho);
     else await trabalho;
     // a Meta exige resposta 200 rápida, senão ela reenvia

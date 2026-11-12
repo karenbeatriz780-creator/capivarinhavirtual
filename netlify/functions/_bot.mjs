@@ -108,7 +108,7 @@ async function mandarTudoDoNumero(para, tel) {
 // pedidos do número, do MAIS NOVO pro mais velho (só últimas 72 h)
 async function pedidosRecentes(tel) {
   const ent = await idsDoTel(tel, await lerIndice()).catch(() => null);
-  const ids = [...new Set(((ent && ent.p) || []))].slice(-80), pres = getStore('presentes');
+  const ids = [...new Set(((ent && ent.p) || []))].slice(-40), pres = getStore('presentes');
   const gs = (await Promise.all(ids.map((id) => pres.get(id, { type: 'json' }).catch(() => null)))).filter(Boolean);
   return gs.filter((g) => Date.now() - (g.criadoEm || 0) < 72 * 3600e3).sort((a, b) => (b.pagoEm || b.criadoEm || 0) - (a.pagoEm || a.criadoEm || 0));
 }
@@ -134,9 +134,9 @@ async function intencaoIA(texto) {
   const prompt = 'Classifique a mensagem de um cliente de uma loja de músicas personalizadas no WhatsApp. Responda SÓ uma palavra:\n' +
     'pagou = diz que já pagou/fez o Pix/comprou e quer receber a música, ou reclama que pagou e não recebeu\n' +
     'criar = quer criar/comprar uma música nova ou saber preço\nlivro = quer o livro infantil\noutro = qualquer outra coisa\n\nMensagem: "' + texto.slice(0, 400) + '"';
-  for (const m of ['gemini-3-8-flash-openai', 'gemini-3-6-flash-openai']) {
+  for (const m of ['gemini-3-8-flash-openai']) {
     try {
-      const ac = new AbortController(), to = setTimeout(() => ac.abort(), 8000);
+      const ac = new AbortController(), to = setTimeout(() => ac.abort(), 4500);
       const r = await fetch('https://api.kie.ai/' + m + '/v1/chat/completions', { method: 'POST', signal: ac.signal,
         headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], stream: false, reasoning_effort: 'low' }) });
@@ -266,7 +266,7 @@ export async function tratarBot(msg) {
   }
 
   // texto livre: entende os pedidos mais comuns
-  if (/j[aá] paguei|\bpaguei\b|fiz o pix|fiz o pagamento|j[aá] comprei|n[aã]o (recebi|chegou)|cad[eê].{0,20}m[uú]sica|pix (feito|pago)/.test(baixo)) { await pagouTexto(de); return true; }
+  if (/j[aá] paguei|\bpaguei\b|\bpago\b|fiz o pix|fiz o pagamento|j[aá] comprei|n[aã]o (recebi|chegou)|cad[eê].{0,20}m[uú]sica|pix (feito|pago)|(problema|erro|ajuda|d[uú]vida).{0,30}(pagamento|pix|compra)|comprovante/.test(baixo)) { await pagouTexto(de); return true; }
   if (/(minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}m[uú]sica|j[aá] (comprei|paguei)|^paguei|fiz o pix|fiz o pagamento/.test(baixo)) { await procurar(de); return true; }
   if (/(meu|minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}(livro|hist[oó]ria|pdf)/.test(baixo)) { await procurar(de); return true; }
   if (/\b(livro|livrinho|hist[oó]ria|historinha)\b/.test(baixo)) { await mandarLinkLivro(de); return true; }
