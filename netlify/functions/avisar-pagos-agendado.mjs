@@ -49,7 +49,8 @@ export default async () => {
         continue;
       }
       if (!temMusica(g)) { await loja.setJSON('pago_' + id, { pulado: 'sem música', em: agora }); continue; }
-      if (g.pagamento && g.pagamento.provedor === 'manual' && agora - (g.pagoEm || 0) < 2 * 60e3) continue; // Pix manual: liberou nos 2 toques do site → manda no WhatsApp 2 min depois
+      // Pix manual (sem conferência): NÃO manda nada sozinho — a música completa só vai quando a pessoa toca em "Já paguei" no WhatsApp
+      if (g.pagamento && g.pagamento.provedor === 'manual') { await loja.setJSON('pago_' + id, { pulado: 'pix manual: espera o Já paguei no WhatsApp', em: agora }); continue; }
       let num = String(g.musicaWhatsapp || g.whatsapp || '').replace(/\D/g, '');
       if (num.length < 10) { await loja.setJSON('pago_' + id, { pulado: 'sem whatsapp', em: agora }); continue; }
       if (!num.startsWith('55') || num.length <= 11) num = '55' + num;
