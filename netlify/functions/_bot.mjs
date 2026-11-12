@@ -121,6 +121,27 @@ async function liberarPixManualDoNumero(tel) {
   return null;
 }
 
+
+// ✅ "Já paguei" no WhatsApp: libera o pedido do Pix manual mais recente do número e manda as músicas COMPLETAS (só áudio)
+async function confirmarPagamentoZap(de) {
+  try {
+    const ent = await idsDoTel(de, await lerIndice());
+    const pres = getStore('presentes');
+    for (const id of ((ent && ent.p) || []).slice(-15).reverse()) {
+      let g = await pres.get(id, { type: 'json' }).catch(() => null);
+      if (!g || g.cancelado || g.produto === 'livro' || !temMusica(g)) continue;
+      if (Date.now() - (g.criadoEm || 0) > 72 * 3600e3) continue;
+      if (!g.pago && g.pagamento && g.pagamento.provedor === 'manual') g = (await liberarSemComprovante(id, 'ja-paguei-whatsapp')) || g;
+      if (!g.pago) { await enviarTexto(de, '⏳ Ainda não consegui confirmar o seu pagamento. Se você já pagou, aguarde 1 minutinho e toque em *Já paguei* de novo. 💗'); return; }
+      await getStore('whatsapp').setJSON('pago_' + id, { em: Date.now(), para: de, via: 'ja-paguei-whatsapp' }).catch(() => {});
+      await enviarTexto(de, '✅ *Pagamento confirmado!* Aqui estão suas músicas completas 🎶💗');
+      await entregarAudiosPagos(de, g, false);
+      await registrar('pago_enviado', { para: de, pedido: id, via: 'ja-paguei-whatsapp' });
+      return;
+    }
+  } catch (e) { console.error('confirmar pagamento zap:', e && e.message); }
+  await enviarTexto(de, 'Não achei um Pix gerado neste número 🤔\n\nPra comprar: toque no link da sua prévia, gere o Pix e pague. Depois volte aqui e toque em *Já paguei*. 💗');
+}
 async function procurar(de) {
   await enviarTexto(de, '🔎 Procurando seus pedidos...');
   await liberarPixManualDoNumero(de);
@@ -156,6 +177,7 @@ export async function tratarBot(msg) {
   // botões
   if (id === 'promo:sim') { await mandarPromocoes(de); return true; }
   if (id === 'promo:nao') { await enviarTexto(de, 'Tudo bem! 💗 Aproveite sua música. Qualquer coisa é só chamar.'); await registrar('promo_nao', { numero: de }); return true; }
+  if (id === 'pg:conf') { await limpar(de); await confirmarPagamentoZap(de); return true; }
   if (id === 'ini:minha') { await limpar(de); await procurar(de); return true; }
   if (id === 'ini:criar' || id === 'ini:zap' || id === 'ini:musica') { await limpar(de); await mandarLinkCriar(de); return true; }
   if (id === 'ini:livro') { await limpar(de); await mandarLinkLivro(de); return true; }
@@ -178,6 +200,7 @@ export async function tratarBot(msg) {
   }
 
   // texto livre: entende os pedidos mais comuns
+  if (/j[aá] (comprei|paguei)|^paguei|fiz o pix|fiz o pagamento|confirmar pagamento/.test(baixo)) { await confirmarPagamentoZap(de); return true; }
   if (/(minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}m[uú]sica|j[aá] (comprei|paguei)|^paguei|fiz o pix|fiz o pagamento/.test(baixo)) { await procurar(de); return true; }
   if (/(meu|minha|receber|cad[eê]|enviar?|mandar?|n[aã]o (chegou|recebi)).{0,25}(livro|hist[oó]ria|pdf)/.test(baixo)) { await procurar(de); return true; }
   if (/\b(livro|livrinho|hist[oó]ria|historinha)\b/.test(baixo)) { await mandarLinkLivro(de); return true; }
