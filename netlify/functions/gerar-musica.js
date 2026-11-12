@@ -466,7 +466,9 @@ export default async (req) => {
       // fila do WhatsApp: quando a música ficar pronta, o robô avisa o cliente
       // (avisar-musica-agendado.mjs confere a cada minuto)
       const zap = String((body && body.whatsapp) || '').replace(/\D/g, '');
-      if ((body && body.origem) !== 'painel' && zap.length >= 10) {
+      // 12/11 (regra do Gusthavo): prévia no WhatsApp SÓ pra quem escolheu o caminho do WhatsApp
+      // (tocou em "Receber no WhatsApp" → mensagem com o código → whatsapp-webhook põe na fila; ou o robô de criar no WhatsApp)
+      if (false && (body && body.origem) !== 'painel' && zap.length >= 10) {
         await getStore('whatsapp').setJSON('pend_' + taskId, { taskId, numero: zap, em: Date.now() }).catch(() => {});
         // vigia rápido: manda no WhatsApp assim que a música ficar pronta
         await fetch((process.env.URL || 'https://capivarinhalove.com.br') + '/.netlify/functions/avisar-musica-background', {
