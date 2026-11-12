@@ -187,7 +187,7 @@ const corpoModelo = () => ({
     ] }
   ]
 });
-async function wabaId(token) {
+export async function wabaId(token) {
   const env = (process.env.WHATSAPP_WABA_ID || '').trim();
   if (env) return env;
   const loja = getStore('whatsapp');

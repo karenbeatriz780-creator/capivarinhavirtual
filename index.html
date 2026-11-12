@@ -339,6 +339,8 @@ h1.hn-t em{color:var(--rose,#D63A72)}
 .cp-prog.hb{background:#fef3c7;color:#92400e}
 .plc-d{display:flex;flex-direction:column;align-items:flex-end;gap:.25rem}.plc-bt{border:0;border-radius:99px;padding:.2rem .55rem;font:inherit;font-size:.68rem;font-weight:800;cursor:pointer;white-space:nowrap}.plc-bt.off{background:#fee2e2;color:#991b1b}.plc-bt.on{background:#dcfce7;color:#166534}.plc-bt:disabled{opacity:.5}
 .plc-i em.on{background:#dcfce7;color:#166534}.plc-todas{width:100%;margin-top:.45rem;border:0;border-radius:12px;padding:.55rem;background:#dc2626;color:#fff;font:inherit;font-weight:800;font-size:.8rem;cursor:pointer}.plc-todas:disabled{opacity:.5}
+.zap-custos{margin-top:.8rem;padding:.65rem .7rem;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(127,127,127,.25)}.zc-tot{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin:.5rem 0}.zc-tot div{display:flex;flex-direction:column}.zc-tot span{font-size:.7rem;opacity:.75}.zc-tot b{font-size:1.15rem}
+.zc-t{width:100%;font-size:.72rem;border-collapse:collapse}.zc-t td,.zc-t th{padding:.2rem .3rem;text-align:right}.zc-t td:first-child,.zc-t th:first-child{text-align:left}
 .rp-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center}
 .rp-bx{background:#faf8ff;width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:.9rem .9rem 1.4rem;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
 .rp-h{display:flex;justify-content:space-between;align-items:center;font-size:1.05rem}.rp-x{border:0;background:rgba(0,0,0,.07);border-radius:50%;width:2rem;height:2rem;font-size:1.2rem;cursor:pointer}
@@ -7935,6 +7937,31 @@ function pnlPixSemPedidoHtml(){
     itens.map(function(x){ return '<div class="pnl-dia"><span class="dt">'+(x.horario?new Date(x.horario).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—')+'</span><span class="ct">'+esc(x.pagador||x.info||'sem nome')+'</span><span class="vl">R$ '+esc(String(x.valor||''))+'</span></div>'; }).join('')+'</div>';
 }
 /* ===== aba 🤖 WhatsApp: o que o robô fez, falhas e conversas ===== */
+/* ===== 💸 QUANTO O WHATSAPP COBROU (números do próprio Meta) ===== */
+var _pnlZapCustos=null,_pnlZapCustosCarr=false;
+function pnlZapCustosCarregar(novo){ if(_pnlZapCustosCarr) return; _pnlZapCustosCarr=true;
+  fetch('/.netlify/functions/admin-zap-custos?dias=30'+(novo?'&novo=1':''),{cache:'no-store'}).then(function(r){ return r.json(); })
+    .then(function(d){ _pnlZapCustos=d; }).catch(function(){ _pnlZapCustos={erroMeta:'Sem conexão.'}; })
+    .then(function(){ _pnlZapCustosCarr=false; var bx=document.querySelector('.zap-custos'); if(bx){ var t=document.createElement('div'); t.innerHTML=pnlZapCustosHtml(); bx.replaceWith(t.firstChild); pnlZapCustosLigar(); } }); }
+function pnlZapCustosLigar(){ var b=document.querySelector('[data-zcnovo]'); if(b) b.onclick=function(){ _pnlZapCustos=null; var bx=document.querySelector('.zap-custos'); if(bx) bx.innerHTML='<b>💸 Quanto o WhatsApp cobrou</b><div class="sub">Perguntando ao Meta…</div>'; pnlZapCustosCarregar(true); }; }
+function pnlZapCustosHtml(){
+  var C=_pnlZapCustos, tit='<b>💸 Quanto o WhatsApp cobrou</b> <small>· últimos 30 dias</small> <button type="button" class="cmp-bt" data-zcnovo style="float:right;padding:.05rem .5rem">↻</button>';
+  if(!C){ setTimeout(function(){ pnlZapCustosCarregar(); },0); return '<div class="zap-custos">'+tit+'<div class="sub">Perguntando ao Meta…</div></div>'; }
+  var moeda=C.moeda==='USD'?'US$ ':'R$ ', M=function(v){ return moeda+(Number(v)||0).toFixed(2).replace('.',','); };
+  var NC={utility:'Utilidade',marketing:'Marketing',authentication:'Autenticação',service:'Atendimento',marketing_lite:'Marketing lite',referral_conversion:'Indicação'};
+  var h='<div class="zap-custos">'+tit;
+  if(C.erroMeta) h+='<div class="sub">⚠️ O Meta não deixou ler os custos: '+esc(C.erroMeta)+'</div>';
+  else {
+    h+='<div class="zc-tot"><div><span>Mensagens pagas</span><b>'+C.total.pagas+'</b></div><div><span>Custo total</span><b>'+M(C.total.custo)+'</b></div><div><span>Grátis</span><b>'+C.total.gratis+'</b></div></div>';
+    var cats=Object.keys(C.porCategoria||{}); if(cats.length) h+='<div class="sub">'+cats.map(function(k){ var c=C.porCategoria[k]; return '<b>'+esc(NC[k]||k)+'</b>: '+c.msgs+' msgs · '+M(c.custo)+(c.porMsg?' ('+moeda+c.porMsg.toFixed(3).replace('.',',')+' cada)':''); }).join(' · ')+'</div>';
+    if(C.moeda==='USD') h+='<div class="sub">O Meta mostra em dólar. Em reais fica uns 5,5× isso + IOF do cartão.</div>';
+  }
+  var dias=Object.keys(Object.assign({},C.porDia||{},(C.nossos||{}).porDia||{})).sort().reverse().slice(0,30);
+  if(dias.length) h+='<details class="cp-dd"><summary>📅 Dia a dia</summary><div style="overflow-x:auto"><table class="zc-t"><tr><th>Dia</th><th>Pagas (Meta)</th><th>Custo</th><th>Nosso registro</th></tr>'+dias.map(function(k){ var d=(C.porDia||{})[k]||{}, n=((C.nossos||{}).porDia||{})[k];
+    return '<tr><td>'+k.slice(8,10)+'/'+k.slice(5,7)+'</td><td>'+(d.pagas!=null?d.pagas:'—')+'</td><td>'+(d.custo!=null?M(d.custo):'—')+'</td><td>'+(n!=null?n:'—')+'</td></tr>'; }).join('')+'</table></div></details>';
+  h+='<div class="sub">Mensagem paga = modelo enviado pra quem não conversou com o número nas últimas 24h (o aviso "música pronta"). O Meta junta e cobra no cartão quando chega num valor. O nosso registro guarda só 15 dias.</div></div>';
+  return h;
+}
 var _pnlZap=null, _pnlZapCarregando=false;
 function pnlZapCarregar(){
   if(_pnlZapCarregando) return; _pnlZapCarregando=true;
@@ -7961,6 +7988,7 @@ function pnlZapHtml(){
       '<div class="pnl-card"><b style="color:'+(falhas.length?'#FF9B93':'#6BE8AB')+'">'+falhas.length+'</b><span>falhas na semana</span></div>'+
     '</div>'+
     (_pnlZap.modelo?'<div class="sub" style="margin-top:.7rem">📨 Aviso de <b>música pronta</b> pra quem pagou e não conversou (utilidade, ~R$ 0,08): '+({APPROVED:'<b style="color:#1F9D55">✅ aprovado, enviando</b>',PENDING:'<b>⏳ em análise na Meta</b> (leva de minutos até 24 h)',REJECTED:'<b style="color:#C62828">❌ recusado</b>',erro:'<b style="color:#C62828">⚠️ erro</b>'}[_pnlZap.modelo]||esc(_pnlZap.modelo))+(_pnlZap.modeloMotivo?' · '+esc(_pnlZap.modeloMotivo):'')+'</div>':'')+
+    pnlZapCustosHtml()+
     '<div style="margin-top:.8rem"><button type="button" class="cmp-bt" id="zapReenv">🔁 Reenviar o link pra quem pediu nas últimas 8 h</button>'+
     '<div class="sub" style="margin-top:.35rem">Use quando o WhatsApp ficou parado (ex.: pagamento pendente no Meta). Só manda pra quem ainda não pagou e cuja música já está pronta.</div></div>'+
   '</div>';
@@ -8029,6 +8057,7 @@ function pnlZapLigar(body){
         }).catch(function(){ toast('Sem conexão.'); rv.disabled=false; });
     })();
   };
+  pnlZapCustosLigar();
   var rec=body.querySelector('#zapRecarregar'); if(rec) rec.onclick=function(ev){ ev.preventDefault(); _pnlZap=null; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); pnlZapCarregar(); };
   body.querySelectorAll('[data-zapenv]').forEach(function(b){ b.onclick=function(){
     var n=b.dataset.zapenv, ta=body.querySelector('[data-zapt="'+n+'"]'), t=(ta&&ta.value||'').trim();
