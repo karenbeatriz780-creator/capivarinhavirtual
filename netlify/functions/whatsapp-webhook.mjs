@@ -111,17 +111,8 @@ async function processar(corpo) {
                   await enviarTexto(msg.from, '📸 Recebi um arquivo, mas preciso de um *print (foto da tela)* do comprovante do Pix. Pode mandar o print aqui?');
                   continue;
                 }
-                await enviarTexto(msg.from, '🧾 Recebi seu comprovante! Conferindo agora, um instante…');
-                const md = await baixarMidia((msg.image || msg.document).id);
-                const r = await analisarComprovante(g.id, md.buf, md.mime, 'whatsapp');
-                if (r.status === 'liberado') {
-                  await enviarTexto(msg.from, '✅ *Pagamento confirmado!* Suas músicas estão liberadas 🎶💗\n\nOuça e baixe aqui:\n' + SITE + '/#/p/' + g.id + '/c');
-                  try { const g2 = await getStore('presentes').get(g.id, { type: 'json' }); if (g2) await entregarAudiosPagos(String(msg.from), g2, false); } catch (e) {}
-                } else if (r.status === 'conferir') {
-                  await enviarTexto(msg.from, '⏳ Recebi! Seu comprovante foi pra conferência e a liberação sai em poucos minutos. Não precisa pagar de novo 💗');
-                } else {
-                  await enviarTexto(msg.from, '⚠️ Não consegui confirmar esse comprovante: ' + (r.motivos || []).join('; ') + '.\n\nConfira se é o Pix de *R$ ' + Number(g.pagamento.valor || 0).toFixed(2).replace('.', ',') + '* para *Gusthavo dos Santos de Jesus* e mande o print de novo. Se precisar, escreva aqui que a gente te ajuda.');
-                }
+                // SEM COMPROVANTE (regra de 12/11): não analisa imagem — quem libera é o "Já paguei" (2 toques) na página do Pix
+                await enviarTexto(msg.from, '💗 Obrigado! Pra liberar sua música, volte na *página do Pix* e toque em *"Já paguei"*. Assim que confirmar, as músicas completas chegam aqui na hora. 🎶\n\nSe fechou a página, abra de novo o link da sua prévia.');
                 await loja.setJSON('bv_' + String(msg.from).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});
                 continue;
               }
