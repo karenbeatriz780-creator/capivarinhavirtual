@@ -1,6 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { idsDoDia, diaBR } from './_indice.mjs';
-import { enviarTexto, conversaAberta, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE, enviarModeloPago, textoIndica } from './_zap.mjs';
+import { enviarTexto, conversaAberta, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE, enviarModeloPago, textoIndica, entregarPedidoPagoZap } from './_zap.mjs';
 import { avancarLivro, entregarLivroZap } from './_livros.mjs';
 
 // A CADA MINUTO: quem PAGOU recebe no WhatsApp o link das músicas + os áudios completos.
@@ -49,26 +49,7 @@ export default async () => {
         continue;
       }
       if (!temMusica(g)) { await loja.setJSON('pago_' + id, { pulado: 'sem música', em: agora }); continue; }
-      // Pix manual (sem conferência): NÃO manda nada sozinho — a música completa só vai quando a pessoa toca em "Já paguei" no WhatsApp
-      // Pix manual: só chega aqui quem CONFIRMOU (2 toques no site ou "Sim, já paguei" no WhatsApp) → manda a música (grátis se a conversa estiver aberta; senão 1 mensagem de utilidade)
-      if (g.pagamento && g.pagamento.provedor === 'manual' && agora - (g.pagoEm || 0) < 2 * 60e3) continue;
-      let num = String(g.musicaWhatsapp || g.whatsapp || '').replace(/\D/g, '');
-      if (num.length < 10) { await loja.setJSON('pago_' + id, { pulado: 'sem whatsapp', em: agora }); continue; }
-      if (!num.startsWith('55') || num.length <= 11) num = '55' + num;
-      await loja.setJSON('pago_' + id, { em: agora, para: num }); // marca antes pra não mandar 2 vezes
-      const nome = String(g.meuNome || '').trim().split(/\s+/)[0] || '';
-      const aberta = await conversaAberta(num);
-      if (aberta) {
-        await enviarTexto(aberta, '🎉 *Pagamento confirmado!*' + (nome ? ' Obrigado, ' + nome + '!' : '') + ' 💗\n\n' +
-          'Suas músicas já estão liberadas, sem corte.' + (g.quatro && !g.ofertaM1 ? ' E as *outras 2 músicas* do seu pacote você cria no mesmo link:' : ' Ficam salvas aqui:') + '\n' + linkPedido(g) + '\n\n' + textoIndica(g));
-        await entregarAudiosPagos(aberta, g, false);
-        await registrar('pago_enviado', { para: aberta, pedido: id, nome: g.musicaParaNome || nome, via: 'grátis' });
-      } else {
-        // não conversou com o número: 1 aviso de utilidade (pago, ~R$ 0,08) com o link da música.
-        // Se tocar em "Receber os áudios aqui" (ou responder) em até 7 dias, recebe os áudios grátis.
-        await loja.setJSON('pagoaud_' + chaveNum(num), { id, em: agora });
-        if (await enviarModeloPago(num, g)) await registrar('pago_enviado', { para: num, pedido: id, nome: g.musicaParaNome || nome, via: 'utilidade' });
-      }
+      await entregarPedidoPagoZap(g);
     } catch (e) { console.error('avisar-pagos:', id, e && e.message); }
   }
 };

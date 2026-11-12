@@ -105,12 +105,18 @@ async function mandarTudoDoNumero(para, tel) {
 
 
 
+// pedidos do número, do MAIS NOVO pro mais velho (só últimas 72 h)
+async function pedidosRecentes(tel) {
+  const ent = await idsDoTel(tel, await lerIndice()).catch(() => null);
+  const ids = [...new Set(((ent && ent.p) || []))].slice(-80), pres = getStore('presentes');
+  const gs = (await Promise.all(ids.map((id) => pres.get(id, { type: 'json' }).catch(() => null)))).filter(Boolean);
+  return gs.filter((g) => Date.now() - (g.criadoEm || 0) < 72 * 3600e3).sort((a, b) => (b.pagoEm || b.criadoEm || 0) - (a.pagoEm || a.criadoEm || 0));
+}
+
 // Pix manual pendente (gerado e não liberado) do número, últimas 72 h
 async function pixManualPendente(tel) {
   try {
-    const ent = await idsDoTel(tel, await lerIndice()), pres = getStore('presentes');
-    for (const id of ((ent && ent.p) || []).slice(-15).reverse()) {
-      const g = await pres.get(id, { type: 'json' }).catch(() => null);
+    for (const g of await pedidosRecentes(tel)) {
       if (g && !g.pago && !g.cancelado && g.produto !== 'livro' && g.pagamento && g.pagamento.provedor === 'manual' && Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 72 * 3600e3) return g;
     }
   } catch (e) {}
@@ -125,12 +131,9 @@ async function perguntarSePagou(de) {
 async function confirmarPagamentoZap(de) {
   let gerou = false;
   try {
-    const ent = await idsDoTel(de, await lerIndice());
-    const pres = getStore('presentes');
-    for (const id of ((ent && ent.p) || []).slice(-15).reverse()) {
-      const g = await pres.get(id, { type: 'json' }).catch(() => null);
+    for (const g of await pedidosRecentes(de)) {
+      const id = g.id;
       if (!g || g.cancelado || g.produto === 'livro' || !temMusica(g)) continue;
-      if (Date.now() - (g.criadoEm || 0) > 72 * 3600e3) continue;
       if (!g.pago) { gerou = gerou || !!(g.pagamento && g.pagamento.provedor); continue; }
       const ja = await getStore('whatsapp').get('pago_' + id, { type: 'json' }).catch(() => null);
       await getStore('whatsapp').setJSON('pago_' + id, { em: Date.now(), para: de, via: 'ja-paguei-whatsapp' }).catch(() => {});

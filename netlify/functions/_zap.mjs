@@ -245,3 +245,26 @@ export async function enviarModeloPago(para, g) {
 }
 // "Indica e ganha" — só em mensagem GRÁTIS (conversa aberta)
 export const textoIndica = (g) => '🎁 *Indica e ganha:* cada amigo que comprar pelo seu link vale *1 música grátis* pra você (2 versões).\nSeu link: ' + SITE + '/#/criar/musica/r.' + g.id;
+
+// entrega no WhatsApp um pedido PAGO (música): conversa aberta → grátis (texto + áudios); senão 1 modelo de utilidade. Marca pra não repetir.
+export async function entregarPedidoPagoZap(g) {
+  const loja = getStore('whatsapp'), agora = Date.now();
+  if (!g || !g.pago || g.cancelado || !temMusica(g)) return false;
+  if (await loja.get('pago_' + g.id, { type: 'json' }).catch(() => null)) return false;
+  let num = String(g.musicaWhatsapp || g.whatsapp || '').replace(/\D/g, '');
+  if (num.length < 10) { await loja.setJSON('pago_' + g.id, { pulado: 'sem whatsapp', em: agora }); return false; }
+  if (!num.startsWith('55') || num.length <= 11) num = '55' + num;
+  await loja.setJSON('pago_' + g.id, { em: agora, para: num });
+  const nome = String(g.meuNome || '').trim().split(/\s+/)[0] || '';
+  const aberta = await conversaAberta(num);
+  if (aberta) {
+    await enviarTexto(aberta, '🎉 *Pagamento confirmado!*' + (nome ? ' Obrigado, ' + nome + '!' : '') + ' 💗\n\n' +
+      'Suas músicas já estão liberadas, sem corte.' + (g.quatro && !g.ofertaM1 ? ' E as *outras 2 músicas* do seu pacote você cria no mesmo link:' : ' Ficam salvas aqui:') + '\n' + linkPedido(g) + '\n\n' + textoIndica(g));
+    await entregarAudiosPagos(aberta, g, false);
+    await registrar('pago_enviado', { para: aberta, pedido: g.id, nome: g.musicaParaNome || nome, via: 'grátis' });
+  } else {
+    await loja.setJSON('pagoaud_' + chaveNum(num), { id: g.id, em: agora });
+    if (await enviarModeloPago(num, g)) await registrar('pago_enviado', { para: num, pedido: g.id, nome: g.musicaParaNome || nome, via: 'utilidade' });
+  }
+  return true;
+}
