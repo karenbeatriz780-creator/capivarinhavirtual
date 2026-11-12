@@ -2,7 +2,7 @@ import { getStore } from '@netlify/blobs';
 import { enviarTexto, enviarBotoes, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE } from './_zap.mjs';
 import { lerIndice, idsDoTel } from './_indice.mjs';
 import { entregarLivroZap } from './_livros.mjs';
-import { liberarManual } from './_comprovante.mjs';
+import { liberarSemComprovante } from './_comprovante.mjs';
 
 // ROBÔ DE ATENDIMENTO (não cria música):
 // - "Oi" → "Como podemos te ajudar?" [Receber minha música] [Criar uma música]
@@ -113,7 +113,7 @@ async function liberarPixManualDoNumero(tel) {
       const g = await pres.get(id, { type: 'json' }).catch(() => null);
       if (g && !g.pago && !g.cancelado && g.produto !== 'livro' && g.pagamento && g.pagamento.provedor === 'manual' &&
           Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 72 * 3600e3) {
-        await liberarManual(id, 'ja-paguei-whatsapp');
+        await liberarSemComprovante(id, 'ja-paguei-whatsapp');
         return id;
       }
     }

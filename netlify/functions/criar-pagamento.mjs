@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
-import { brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido } from './_pixmanual.mjs';
+import { brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido, marcarPendente } from './_pixmanual.mjs';
 import { statusOferta, registrarTentativa } from './_oferta.mjs';
 import { statusIndicacao, registrarIndicado, registrarUso } from './_indicacao.mjs';
 import { indexar, indexarDia } from './_indice.mjs';
@@ -184,6 +184,7 @@ export default async (req) => {
         const payload = brcode(precoFinal, ref);
         const m = Object.assign({}, salvo, { pagamento: Object.assign({}, salvo.pagamento, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', manualEm: Date.now(), payload }) });
         await getStore('presentes').setJSON(presente.id, m);
+        await marcarPendente(presente.id);
         return json({ payload, id: presente.id, txid: ref, teste: false, provedor: 'manual', manual: true, valor: precoFinal });
       };
       const pixManual = pixManualFn;

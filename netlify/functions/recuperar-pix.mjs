@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
-import { brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido } from './_pixmanual.mjs';
+import { brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido, marcarPendente } from './_pixmanual.mjs';
 import { indexar, indexarDia, chaveTel, lerIndice, idsDoTel } from './_indice.mjs';
 
 // RECUPERAÇÃO DE VENDA
@@ -154,6 +154,7 @@ export default async (req) => {
         pagamento: Object.assign({}, g.pagamento || {}, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', manualEm: Date.now(), valor, extras: extrasPix, valorExtras, payload,
           duracao: (g.pagamento && g.pagamento.duracao) || 'vitalicio' }) });
       await getStore('presentes').setJSON(g.id, at);
+      await marcarPendente(g.id);
       await indexar(at.musicaWhatsapp, 'p', g.id); await indexarDia('p', g.id);
       return json({ payload, id: g.id, teste: false, valor, manual: true, provedor: 'manual' });
     };

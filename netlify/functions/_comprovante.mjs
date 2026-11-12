@@ -111,3 +111,20 @@ export async function analisarComprovante(id, imagem, mime, origem) {
   } catch (e) {}
   return { status, motivos, leitura: L };
 }
+
+// libera pedido do Pix manual SEM comprovante ("Já paguei" ou 1 minuto depois). Deixa registro pra bater com o extrato.
+export async function liberarSemComprovante(id, origem) {
+  const g = await getStore('presentes').get(id, { type: 'json' }).catch(() => null);
+  if (!g || g.pago || g.cancelado || !g.pagamento || g.pagamento.provedor !== 'manual') return g;
+  const cfg = await lerCfgPix();
+  if (!cfg.semComprovante) return g;
+  const g2 = await liberarManual(id, origem);
+  try {
+    const k = 'c_' + id, reg = (await loja().get(k, { type: 'json' }).catch(() => null)) || { id, envios: [] };
+    Object.assign(reg, { status: 'liberado', semComprovante: true, origemLib: origem, valor: g.pagamento.valor, whatsapp: g.musicaWhatsapp || g.whatsapp || '',
+      para: g.musicaParaNome || g.parceiroNome || '', criadoEm: g.criadoEm, atualizadoEm: Date.now(), ult: Object.assign({}, reg.ult || {}, { origem }) });
+    await loja().setJSON(k, reg);
+    await loja().delete('pend_' + id).catch(() => {});
+  } catch (e) {}
+  return g2;
+}

@@ -3,10 +3,10 @@ import { getStore } from '@netlify/blobs';
 // O cliente paga, manda o comprovante, a IA confere e o Gusthavo libera no painel (ou libera sozinho se ele ligar o automático).
 // Chave Pix aleatória do Nubank (fixa no código — o site em index.html usa a mesma; a do Bradesco foi trocada).
 export const PIX_MANUAL = {
-  chave: '13c18586-94b7-4c25-b9b9-562ea79fe41a',
+  chave: (process.env.PIX_MANUAL_CHAVE || '13c18586-94b7-4c25-b9b9-562ea79fe41a').trim(),
   nome: (process.env.PIX_MANUAL_NOME || 'GUSTHAVO DOS SANTOS DE JESUS').trim(),
   banco: 'Nubank',
-  cidade: (process.env.PIX_MANUAL_CIDADE || 'PARAUAPEBAS').trim()
+  cidade: (process.env.PIX_MANUAL_CIDADE || 'SAO PAULO').trim()
 };
 // "Já paguei" (sem comprovante): o pedido libera sozinho depois desse tempo, sem conferir o Pix.
 export const ESPERA_JA_PAGUEI = 45 * 1000;
@@ -32,7 +32,7 @@ let cache = null, cacheEm = 0;
 export async function lerCfgPix() {
   if (cache && Date.now() - cacheEm < 30000) return cache;
   const c = (await cfgLoja().get('cfg_pixmanual', { type: 'json' }).catch(() => null)) || {};
-  cache = { modo: ['auto', 'manual', 'efi'].indexOf(c.modo) >= 0 ? c.modo : 'auto', autoLiberar: c.autoLiberar !== false, efiFalhouEm: c.efiFalhouEm || 0, efiErro: c.efiErro || '' };
+  cache = { modo: ['auto', 'manual', 'efi'].indexOf(c.modo) >= 0 ? c.modo : 'auto', autoLiberar: c.autoLiberar !== false, semComprovante: c.semComprovante !== false, efiFalhouEm: c.efiFalhouEm || 0, efiErro: c.efiErro || '' };
   cacheEm = Date.now(); return cache;
 }
 export async function salvarCfgPix(m) { const c = Object.assign({}, await lerCfgPix(), m); await cfgLoja().setJSON('cfg_pixmanual', c); cache = c; cacheEm = Date.now(); return c; }
@@ -40,3 +40,7 @@ export async function salvarCfgPix(m) { const c = Object.assign({}, await lerCfg
 export async function pularEfi() { const c = await lerCfgPix(); return c.modo === 'manual' || (c.modo === 'auto' && Date.now() - c.efiFalhouEm < 10 * 60e3); }
 export async function marcarEfiFalhou(erro) { try { await salvarCfgPix({ efiFalhouEm: Date.now(), efiErro: String(erro || '').slice(0, 200) }); } catch (e) {} }
 export async function podeManual() { return (await lerCfgPix()).modo !== 'efi'; }
+
+// SEM COMPROVANTE (regra do Gusthavo, 12/11): liberou o Pix manual → libera a música em 1 minuto (ou na hora no "Já paguei")
+export const ESPERA_LIBERAR = 60e3;
+export async function marcarPendente(id) { try { await getStore('comprovantes').setJSON('pend_' + id, { id, em: Date.now() }); } catch (e) {} }
