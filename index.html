@@ -7491,15 +7491,11 @@ function jaPagueiDoisToques(id, botao, msg, aoLiberar){
     botao.disabled=true; if(botao.classList) botao.classList.add('dis');
     msg.hidden=false; msg.className=msg.className.replace(/ ?er\b/,'');
     msg.innerHTML='⏳ <b>Processando o seu pagamento…</b>';
-    if(n===1){
-      setTimeout(function(){ botao.disabled=false; if(botao.classList) botao.classList.remove('dis');
-        msg.innerHTML='🔄 Ainda não processamos o seu pagamento. <b>Toque em "Já paguei" de novo</b>.'; },3000);
-      return;
-    }
+    /* 1 toque libera, desde que já tenham passado 20 s desde que o Pix foi gerado (o servidor confere) */
     jaPagueiManual(id, aoLiberar).then(function(ok){
       if(ok===true) return;
       setTimeout(function(){ botao.disabled=false; if(botao.classList) botao.classList.remove('dis');
-        msg.innerHTML=ok==='cedo'?'🔄 Ainda estamos confirmando o seu pagamento. Aguarde alguns segundos e <b>toque em "Já paguei" de novo</b>.':'Não consegui agora. Toque em <b>Já paguei</b> de novo.'; }, ok==='cedo'?3000:0);
+        msg.innerHTML=ok==='cedo'?'🔄 Ainda não processamos o seu pagamento. Aguarde alguns segundos e <b>toque em "Já paguei" de novo</b>.':'Não consegui agora. Toque em <b>Já paguei</b> de novo.'; }, ok==='cedo'?3000:0);
     });
   };
 }
