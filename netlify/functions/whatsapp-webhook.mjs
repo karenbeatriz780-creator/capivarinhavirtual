@@ -1,6 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { enviarTexto, marcarConversa, entregarMusica, entregarAudiosPagos, chaveNum, registrar, SITE, entregarPedidoPagoZap } from './_zap.mjs';
-import { tratarBot, boasVindas } from './_bot.mjs';
+import { tratarBot, boasVindas, linkDaPessoa, msgSemPix } from './_bot.mjs';
 import { entregarPreviaLivro, reservar } from './_livros.mjs';
 import { analisarComprovante } from './_comprovante.mjs';
 import { idsDoTel, lerIndice } from './_indice.mjs';
@@ -118,19 +118,27 @@ export async function processar(corpo) {
                 if (msg.type === 'document' && !/^image\/|^application\/pdf/.test(mt)) { await enviarTexto(msg.from, '📸 Me manda o comprovante como *print (foto)* ou *PDF*, por favor.'); continue; }
                 await enviarTexto(msg.from, '🧾 Recebi! Conferindo seu comprovante, um instante…');
                 const md = await baixarMidia((msg.image || msg.document).id);
-                const r = await analisarComprovante(g.id, md.buf, md.mime || mt, 'whatsapp');
+                const r = await analisarComprovante(g.id, md.buf, md.mime || mt, 'whatsapp', msg.from);
                 await loja.delete('printpend_' + chaveNum(msg.from)).catch(() => {});
                 if (r.status === 'liberado') {
                   await enviarTexto(msg.from, '✅ *Pagamento confirmado!* Mandando suas músicas completas agora 🎶💗');
                   const g2 = await getStore('presentes').get(g.id, { type: 'json' }).catch(() => null);
                   if (g2) await entregarPedidoPagoZap(g2);
                 } else if (r.status === 'conferir') {
-                  await enviarTexto(msg.from, '⏳ Recebi! Seu comprovante foi pra conferência e a liberação sai em poucos minutos. Não precisa pagar de novo 💗');
+                  await enviarTexto(msg.from, '⏳ Estou conferindo o seu comprovante. Assim que confirmar, mando suas músicas completas aqui — em poucos minutos. Não precisa pagar de novo 💗');
                 } else {
-                  await enviarTexto(msg.from, '⚠️ Não identifiquei um comprovante de pagamento nessa imagem.\n\nMe manda o *print do comprovante do Pix* (ou o PDF) de *R$ ' + Number(g.pagamento.valor || 0).toFixed(2).replace('.', ',') + '* para *Gusthavo dos Santos de Jesus*. 💗');
+                  const mot = (r.motivos || []).filter((m) => /valor|recebedor|comprovante|já foi usado/.test(m))[0] || 'não consegui confirmar';
+                  await enviarTexto(msg.from, '⚠️ Conferi, mas ' + mot + '.\n\nO Pix precisa ser de *R$ ' + Number(g.pagamento.valor || 0).toFixed(2).replace('.', ',') + '* para *Gusthavo dos Santos de Jesus* (Nubank). Me manda o *print ou PDF* do comprovante certo aqui que eu confiro na hora. 💗');
                 }
                 await loja.setJSON('bv_' + String(msg.from).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});
                 continue;
+              }
+              // mandou comprovante, mas não tem Pix gerado esperando neste número
+              const ehDoc = msg.type === 'image' || /pdf/i.test(String((msg.document && msg.document.mime_type) || ''));
+              if (ehDoc && !(await loja.get('pagoaud_' + chaveNum(msg.from), { type: 'json' }).catch(() => null))) {
+                const ent = await idsDoTel(msg.from, await lerIndice()).catch(() => null);
+                const gs = (await Promise.all([...new Set((ent && ent.p) || [])].slice(-20).map((x) => getStore('presentes').get(x, { type: 'json' }).catch(() => null)))).filter((x) => x && Date.now() - (x.criadoEm || 0) < 72 * 3600e3);
+                if (!gs.some((x) => x.pago)) { await enviarTexto(msg.from, msgSemPix(await linkDaPessoa(msg.from))); continue; }
               }
             }
           } catch (e) { console.error('comprovante whatsapp:', e && e.message); }

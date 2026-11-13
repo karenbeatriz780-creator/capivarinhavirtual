@@ -2,6 +2,7 @@ import { getStore } from '@netlify/blobs';
 import { idsDoDia, diaBR } from './_indice.mjs';
 import { enviarTexto, conversaAberta, chaveNum, registrar, temMusica, linkPedido, entregarAudiosPagos, SITE, enviarModeloPago, textoIndica, entregarPedidoPagoZap } from './_zap.mjs';
 import { avancarLivro, entregarLivroZap } from './_livros.mjs';
+import { tentarComprovantesDeNovo } from './_comprovante.mjs';
 
 // A CADA MINUTO: quem PAGOU recebe no WhatsApp o link das músicas + os áudios completos.
 // - Quem conversou com o número nas últimas 24 h → manda GRÁTIS (texto + áudios + indica e ganha).
@@ -15,6 +16,19 @@ const JANELA = 6 * 3600 * 1000; // só pedidos pagos nas últimas 6 h (não disp
 export default async () => {
   const loja = getStore('whatsapp'), presentes = getStore('presentes');
   const agora = Date.now();
+  // 🧾 a IA não desiste: comprovantes que ela não conseguiu ler → tenta de novo
+  try {
+    for (const x of await tentarComprovantesDeNovo()) {
+      try {
+        if ((x.status === 'liberado' || x.status === 'jaPago') && x.g && x.g.pago) {
+          const ja = await loja.get('pago_' + x.g.id, { type: 'json' }).catch(() => null);
+          if (!ja) { if (x.para) await enviarTexto(x.para, '✅ *Pagamento confirmado!* Conferi o seu comprovante. Mandando suas músicas completas agora 🎶💗'); await entregarPedidoPagoZap(x.g); }
+        } else if (x.status === 'recusado' && x.para) {
+          await enviarTexto(x.para, '⚠️ Conferi o seu comprovante, mas ' + ((x.motivos || []).filter((m) => /valor|recebedor|comprovante/.test(m))[0] || 'não consegui confirmar') + '.\n\nO Pix precisa ser de *R$ ' + Number((x.g && x.g.pagamento && x.g.pagamento.valor) || 0).toFixed(2).replace('.', ',') + '* para *Gusthavo dos Santos de Jesus* (Nubank). Me manda o comprovante certo aqui que eu confiro na hora. 💗');
+        }
+      } catch (e) { console.error('retry comprovante envio', e && e.message); }
+    }
+  } catch (e) { console.error('retry comprovantes', e && e.message); }
   let ids = [];
   try { ids = (await idsDoDia(diaBR(agora), 'pg')).concat(await idsDoDia(diaBR(agora - 86400000), 'pg')); } catch (e) { return; }
   ids = [...new Set(ids)].slice(-200);

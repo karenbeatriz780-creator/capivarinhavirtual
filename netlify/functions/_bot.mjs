@@ -167,12 +167,12 @@ export async function pagouTexto(de) {
     return;
   }
   // escreveu "já paguei" e não está pago: NUNCA libera pelo texto → manda o link pra gerar o Pix / tocar em "Já paguei" no site
-  await enviarTexto(de, msgSemPix(await linkDaPessoa(de)));
+  await enviarTexto(de, msgPagouTexto(await linkDaPessoa(de)));
 }
 
 // ✅ "Já paguei" no WhatsApp: NÃO libera nada. Só ENTREGA se a pessoa já confirmou no site (2 toques em "Já paguei").
 // link da pessoa pra gerar o Pix: a prévia dela (ou o pedido em aberto)
-async function linkDaPessoa(de, t) {
+export async function linkDaPessoa(de, t) {
   if (t) return SITE + '/#/ouvir/t.' + t;
   try {
     const gs = (await pedidosRecentes(de)).filter((g) => !g.pago && !g.cancelado && g.produto !== 'livro' && temMusica(g));
@@ -185,7 +185,9 @@ async function linkDaPessoa(de, t) {
   } catch (e) {}
   return SITE;
 }
-const msgSemPix = (link) => '😕 Não achei um Pix gerado neste número.\n\nToque no link, *gere o Pix* e pague:\n' + link + '\n\nSe já pagou, toque em *"Já paguei"* (ao lado de *"Copiar código Pix"*). 💗';
+export const msgSemPix = (link) => '😕 Não achei um Pix gerado neste número.\n\nToque no link, *gere o Pix* e pague:\n' + link + '\n\nSe já pagou, toque em *"Já paguei"* (ao lado de *"Copiar código Pix"*). 💗';
+// escreveu "já paguei": duas formas — o botão no site OU mandar o comprovante aqui
+const msgPagouTexto = (link) => '💗 Pra liberar sua música, escolha uma das formas:\n\n1️⃣ Abra o link, e se ainda não pagou, *gere o Pix* e pague. Depois toque em *"Já paguei"* (ao lado de *"Copiar código Pix"*):\n' + link + '\n\n2️⃣ Ou me manda aqui o *print ou PDF do comprovante* do Pix que eu confiro na hora. 🧾';
 // pedidos ligados a UMA música (o botão "Já paguei" da prévia vem com o código dela)
 async function pedidosDaMusica(de, t) {
   const m = await getStore('musicas').get(t, { type: 'json' }).catch(() => null);

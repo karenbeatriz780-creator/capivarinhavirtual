@@ -18,27 +18,44 @@ const PROMPT = 'Você confere comprovantes de Pix brasileiros. Leia a imagem e r
   '"editado": true se parecer montagem/edição (textos desalinhados, fontes diferentes, números sobrepostos), "obs": observação curta}';
 
 async function lerIA(dataUrl) {
-  // 1º Kie (já paga, Gemini lê imagem e PDF) · reserva: OpenRouter (se tiver chave)
+  // 1º Kie (Gemini lê imagem e PDF) · reserva: OpenRouter (se tiver chave). A IA NÃO DESISTE: 3 rodadas.
   const kie = (process.env.KIE_API_KEY || '').trim(), orc = (process.env.OPENROUTER_API_KEY || '').trim();
-  const msgs = [{ role: 'user', content: [{ type: 'text', text: PROMPT }, { type: 'image_url', image_url: { url: dataUrl } }] }];
+  const ehPdf = /^data:application\/pdf/.test(dataUrl);
+  const cImg = [{ type: 'text', text: PROMPT }, { type: 'image_url', image_url: { url: dataUrl } }];
+  const cPdf = [{ type: 'text', text: PROMPT }, { type: 'file', file: { filename: 'comprovante.pdf', file_data: dataUrl } }];
+  const formas = ehPdf ? [cImg, cPdf] : [cImg];
   const tentativas = [];
-  if (kie) ['gemini-3-8-flash-openai', 'gemini-3-6-flash-openai'].forEach((m) => tentativas.push(['https://api.kie.ai/' + m + '/v1/chat/completions', kie, { messages: msgs, stream: false }, 'kie:' + m]));
-  if (orc) MODELOS.forEach((m) => tentativas.push([OR, orc, { model: m, temperature: 0, max_tokens: 500, messages: msgs }, 'or:' + m]));
+  formas.forEach((content) => {
+    const msgs = [{ role: 'user', content }];
+    if (kie) ['gemini-3-8-flash-openai', 'gemini-3-6-flash-openai'].forEach((m) => tentativas.push(['https://api.kie.ai/' + m + '/v1/chat/completions', kie, { messages: msgs, stream: false }, 'kie:' + m]));
+    if (orc) MODELOS.forEach((m) => tentativas.push([OR, orc, { model: m, temperature: 0, max_tokens: 500, messages: msgs }, 'or:' + m]));
+  });
   if (!tentativas.length) throw new Error('sem chave de IA');
   let ult = null;
-  for (const [url, ch, corpo, nome] of tentativas) {
-    try {
-      const ac = new AbortController(), to = setTimeout(() => ac.abort(), 25000);
-      const r = await fetch(url, { method: 'POST', signal: ac.signal, headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
-      clearTimeout(to);
-      const j = await r.json().catch(() => null);
-      const txt = j && (((j.choices || [])[0] || {}).message || {}).content || '';
-      const m = /\{[\s\S]*\}/.exec(String(txt));
-      if (m) return Object.assign(JSON.parse(m[0]), { _modelo: nome });
-      ult = new Error(nome + ': ' + String(txt || JSON.stringify(j || {})).slice(0, 120));
-    } catch (e) { ult = e; }
+  for (let rodada = 0; rodada < 3; rodada++) {
+    if (rodada) await new Promise((ok) => setTimeout(ok, rodada * 6000));
+    for (const [url, ch, corpo, nome] of tentativas) {
+      try {
+        const ac = new AbortController(), to = setTimeout(() => ac.abort(), 30000);
+        const r = await fetch(url, { method: 'POST', signal: ac.signal, headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+        clearTimeout(to);
+        const j = await r.json().catch(() => null);
+        const txt = j && (((j.choices || [])[0] || {}).message || {}).content || '';
+        const m = /\{[\s\S]*\}/.exec(String(txt));
+        if (m) { try { return Object.assign(JSON.parse(m[0]), { _modelo: nome }); } catch (e) {} }
+        ult = new Error(nome + ': ' + String(txt || JSON.stringify(j || {})).slice(0, 120));
+        console.error('comprovante IA', ult.message);
+      } catch (e) { ult = e; console.error('comprovante IA', nome, e && e.message); }
+    }
   }
   throw ult || new Error('IA falhou');
+}
+function numValor(v) { // 9.99 · "9,99" · "R$ 9,99" · "1.009,90"
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return v;
+  let t = String(v).replace(/[^\d.,]/g, '');
+  if (/,\d{1,2}$/.test(t)) t = t.replace(/\./g, '').replace(',', '.'); else t = t.replace(/,/g, '');
+  const n = Number(t); return isFinite(n) && n > 0 ? n : null;
 }
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
 const soAlnum = (s) => String(s || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
@@ -52,9 +69,10 @@ export function conferir(g, L, hashJaUsado, idJaUsado) {
   if (!L || !L.comprovante) motivos.push('a imagem não parece um comprovante de Pix');
   else {
     if (!L.concluido) motivos.push('o Pix não aparece como concluído (pode estar agendado ou pendente)');
-    if (L.valor == null || Math.abs(Number(L.valor) - valorPed) > 0.011) motivos.push('o valor do comprovante (' + (L.valor == null ? 'não encontrado' : 'R$ ' + Number(L.valor).toFixed(2).replace('.', ',')) + ') é diferente do pedido (R$ ' + valorPed.toFixed(2).replace('.', ',') + ')');
+    const vL = numValor(L.valor);
+    if (vL == null || vL + 0.011 < valorPed) motivos.push('o valor do comprovante (' + (vL == null ? 'não encontrado' : 'R$ ' + vL.toFixed(2).replace('.', ',')) + ') é diferente do pedido (R$ ' + valorPed.toFixed(2).replace('.', ',') + ')');
     const nome = norm(L.recebedorNome), chave = String(L.recebedorChave || '').toLowerCase();
-    const nomeOk = /GUSTHAVO/.test(nome) || (/SANTOS/.test(nome) && /JESUS/.test(nome));
+    const nomeOk = /GUST+H?AVO/.test(nome) || (/SANTOS/.test(nome) && /JESUS/.test(nome));
     const chaveOk = chave && PIX_MANUAL.chave.toLowerCase().indexOf(chave.replace(/[^a-f0-9-]/g, '').slice(0, 8)) >= 0 && chave.replace(/[^a-f0-9-]/g, '').length >= 8;
     if (!nomeOk && !chaveOk) motivos.push('o recebedor do comprovante não é a nossa conta' + (L.recebedorNome ? ' (aparece: ' + String(L.recebedorNome).slice(0, 40) + ')' : ''));
     const q = quandoBR(L.dataHora), gerado = pg.manualEm || g.criadoEm || 0;
@@ -80,7 +98,7 @@ export async function liberarManual(id, origem, extra) {
   return g;
 }
 // analisa e (se der) libera. imagem = Buffer (jpeg/png). Devolve { status: 'liberado'|'conferir'|'recusado', motivos, leitura }
-export async function analisarComprovante(id, imagem, mime, origem) {
+export async function analisarComprovante(id, imagem, mime, origem, para) {
   const pres = getStore('presentes');
   const g = await pres.get(id, { type: 'json' });
   if (!g) return { status: 'erro', motivos: ['pedido não encontrado'] };
@@ -88,7 +106,7 @@ export async function analisarComprovante(id, imagem, mime, origem) {
   const pg = g.pagamento || {};
   if (pg.provedor !== 'manual') return { status: 'erro', motivos: ['esse pedido não está no Pix manual'] };
   const k = 'c_' + id, reg = (await loja().get(k, { type: 'json' }).catch(() => null)) || { id, envios: [] };
-  if (reg.envios.length >= 6) return { status: 'conferir', motivos: ['muitos envios — vamos conferir manualmente'] };
+  if (reg.envios.length >= 40) return { status: 'conferir', motivos: ['muitos envios — vamos conferir manualmente'] };
   const hash = crypto.createHash('sha256').update(imagem).digest('hex').slice(0, 32);
   const imgKey = 'img_' + id + '_' + Date.now();
   await loja().set(imgKey, imagem, { metadata: { mime: mime || 'image/jpeg' } });
@@ -99,9 +117,9 @@ export async function analisarComprovante(id, imagem, mime, origem) {
   const iU = idT ? await loja().get('t_' + idT, { type: 'json' }).catch(() => null) : null;
   const motivos = erroIA ? ['não consegui ler o comprovante agora (' + erroIA.slice(0, 80) + ')'] : conferir(g, L, hU && hU.id, iU && iU.id);
   const cfg = await lerCfgPix();
-  // regra do Gusthavo: se a IA reconheceu que é um comprovante de pagamento → libera (o resto fica só anotado).
-  // Só barra: não é comprovante, ou o mesmo comprovante já usado em outro pedido.
-  const graves = motivos.filter((m) => /não parece um comprovante|já foi usado/.test(m));
+  // regra do Gusthavo: é comprovante + VALOR certo + RECEBEDOR certo (nome Gusthavo ou a nossa chave) → libera.
+  // Barra também o mesmo comprovante já usado em outro pedido. Data, "concluído" e edição ficam só anotados.
+  const graves = motivos.filter((m) => /não parece um comprovante|já foi usado|valor do comprovante|recebedor/.test(m));
   const okIA = !erroIA && !graves.length;
   let status = okIA ? 'liberado' : (erroIA ? 'conferir' : 'recusado');
   const envio = { em: Date.now(), img: imgKey, hash, leitura: L, motivos, status, origem };
@@ -110,9 +128,14 @@ export async function analisarComprovante(id, imagem, mime, origem) {
   await loja().setJSON(k, reg);
   await loja().setJSON('h_' + hash, { id, em: Date.now() });
   if (idT) await loja().setJSON('t_' + idT, { id, em: Date.now() });
-  if (status === 'liberado') await liberarManual(id, 'comprovante-ia', { e2e: idT });
-  else { g.pagamento.comprovante = { status, em: Date.now() }; await pres.setJSON(id, g); }
-  if (status === 'conferir') try {
+  if (status === 'liberado') { await liberarManual(id, 'comprovante-ia', { e2e: idT }); await loja().delete('retry_' + id).catch(() => {}); }
+  else if (status === 'conferir' && erroIA) { // a IA não desiste: tenta de novo sozinha a cada 3 min (até 24 h)
+    const rt = (await loja().get('retry_' + id, { type: 'json' }).catch(() => null)) || { id, desde: Date.now(), n: 0 };
+    await loja().setJSON('retry_' + id, Object.assign(rt, { img: imgKey, mime: mime || 'image/jpeg', origem, ult: Date.now() }, para ? { para: String(para) } : {}));
+  }
+  else await loja().delete('retry_' + id).catch(() => {});
+  if (status !== 'liberado') { g.pagamento.comprovante = { status, em: Date.now() }; await pres.setJSON(id, g); }
+  if (status === 'conferir' && !(await loja().get('retry_' + id, { type: 'json' }).catch(() => null) || {}).n) try {
     const { avisar } = await import('./_meta.mjs');
     await avisar('🧾 Comprovante ' + (status === 'liberado' ? '✅ LIBERADO automático' : status === 'conferir' ? '⏳ pra CONFERIR' : '❌ recusado pela IA') +
       '\nPedido ' + id + ' · R$ ' + Number(pg.valor || 0).toFixed(2).replace('.', ',') + (L && L.pagadorNome ? ' · ' + L.pagadorNome : '') +
@@ -136,4 +159,25 @@ export async function liberarSemComprovante(id, origem) {
     await loja().delete('pend_' + id).catch(() => {});
   } catch (e) {}
   return g2;
+}
+
+// a IA não desiste: reprocessa os comprovantes que ela não conseguiu ler (chamado a cada 3 min)
+export async function tentarComprovantesDeNovo() {
+  const out = [];
+  let lista = [];
+  try { lista = (await loja().list({ prefix: 'retry_' })).blobs || []; } catch (e) { return out; }
+  for (const b of lista.slice(0, 15)) {
+    const rt = await loja().get(b.key, { type: 'json' }).catch(() => null);
+    if (!rt || !rt.img) { await loja().delete(b.key).catch(() => {}); continue; }
+    if (Date.now() - (rt.desde || 0) > 24 * 3600e3) { await loja().delete(b.key).catch(() => {}); continue; }
+    const g = await getStore('presentes').get(rt.id, { type: 'json' }).catch(() => null);
+    if (!g || g.pago || g.cancelado) { await loja().delete(b.key).catch(() => {}); if (g && g.pago) out.push({ id: rt.id, status: 'jaPago', g, para: rt.para }); continue; }
+    const img = await loja().get(rt.img, { type: 'arrayBuffer' }).catch(() => null);
+    if (!img) { await loja().delete(b.key).catch(() => {}); continue; }
+    rt.n = (rt.n || 0) + 1; await loja().setJSON(b.key, rt);
+    const r = await analisarComprovante(rt.id, Buffer.from(img), rt.mime, String(rt.origem || 'whatsapp').replace(/-retry$/, '') + '-retry', rt.para);
+    const g2 = r.status === 'liberado' ? await getStore('presentes').get(rt.id, { type: 'json' }).catch(() => null) : null;
+    out.push({ id: rt.id, status: r.status, motivos: r.motivos, g: g2 || g, para: rt.para });
+  }
+  return out;
 }
