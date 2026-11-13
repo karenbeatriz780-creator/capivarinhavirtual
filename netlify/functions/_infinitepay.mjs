@@ -11,7 +11,7 @@ const chave = () => (process.env.INFINITEPAY_API_KEY || '').trim();
 const cab = () => Object.assign({ 'Content-Type': 'application/json' }, chave() ? { 'X-Api-Key': chave() } : {});
 export async function ipLigada() {
   const c = (await getStore('gastos').get('cfg_pixmanual', { type: 'json' }).catch(() => null)) || {};
-  return c.infinitepay !== false && !!IP_HANDLE; // ligada por padrão; desliga no painel (🧾 Pix manual)
+  return c.ipLigada === true && !!IP_HANDLE; // desligada (pede e-mail + código); só liga no painel (🧾 Pix manual)
 }
 function acharUrl(d) {
   if (!d || typeof d !== 'object') return null;

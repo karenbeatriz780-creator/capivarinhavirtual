@@ -32,7 +32,7 @@ let cache = null, cacheEm = 0;
 export async function lerCfgPix() {
   if (cache && Date.now() - cacheEm < 30000) return cache;
   const c = (await cfgLoja().get('cfg_pixmanual', { type: 'json' }).catch(() => null)) || {};
-  cache = { modo: ['auto', 'manual', 'efi'].indexOf(c.modo) >= 0 ? c.modo : 'auto', autoLiberar: c.autoLiberar !== false, infinitepay: c.infinitepay !== false, semComprovante: c.semComprovante !== false, efiFalhouEm: c.efiFalhouEm || 0, efiErro: c.efiErro || '' };
+  cache = { modo: ['auto', 'manual', 'efi'].indexOf(c.modo) >= 0 ? c.modo : 'auto', autoLiberar: c.autoLiberar !== false, infinitepay: c.ipLigada === true, ipLigada: c.ipLigada === true, semComprovante: c.semComprovante !== false, efiFalhouEm: c.efiFalhouEm || 0, efiErro: c.efiErro || '' };
   cacheEm = Date.now(); return cache;
 }
 export async function salvarCfgPix(m) { const c = Object.assign({}, await lerCfgPix(), m); await cfgLoja().setJSON('cfg_pixmanual', c); cache = c; cacheEm = Date.now(); return c; }
