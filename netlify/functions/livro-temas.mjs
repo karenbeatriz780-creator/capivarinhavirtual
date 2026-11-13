@@ -14,6 +14,7 @@ import { lerDias, idsDosDiasTudo, diaBR } from './_indice.mjs';
 import { HISTORIAS_20 } from './_historias20.mjs';
 import { json, loja, lerTemas, TEMAS_PADRAO, criarImagem, verTarefa, guardarImagem, promptImagem, chaveApi, flex, refazerImagens, avancarLivro, usaDe, diagLivro, motorRodando, adicionarExemplo, linkPdf, lerVendas, lerPropria, salvarPropria } from './_livros.mjs';
 import { iaFetch, RESERVA_OR, TEXTO_KIE } from './_ia.mjs';
+import { conversaAberta, enviarImagem, enviarTexto, SITE as SITE_ZAP, registrar } from './_zap.mjs';
 
 // ---------- exemplos (vitrine da página) ----------
 async function lerExemplos() { try { return (await loja().get('exemplos', { type: 'json' })) || []; } catch (e) { return []; } }
@@ -446,6 +447,51 @@ export default async (req) => {
       // o agendador continua fazendo as imagens mesmo com a tela fechada
       await getStore('whatsapp').setJSON('lvadm_' + id, { id, em: Date.now() }).catch(() => {});
       try { await avancarLivro(id, process.env.URL || new URL(req.url).origin); } catch (e) {}
+      return json({ ok: true });
+    }
+    if (b.acao === 'recentes') {
+      // 📖 LIVROS RECENTES: prévias e livros dos últimos dias (mais novo primeiro), pra liberar e mandar no WhatsApp
+      const dias = Math.max(1, Math.min(30, parseInt(b.dias, 10) || 3));
+      const idx = await lerDias().catch(() => null);
+      const ids = [...new Set((await idsDosDiasTudo(idx, dias, 'p')).filter((x) => /^L[0-9a-f]{14}$/.test(x)))].slice(-200);
+      const pres = getStore('presentes'), zl = getStore('whatsapp');
+      const gs = (await Promise.all(ids.map((id) => pres.get(id, { type: 'json' }).catch(() => null)))).filter((g) => g && g.livro && !g.cancelado && !g.pacoteDe);
+      const temas = await lerTemas();
+      const lista = await Promise.all(gs.sort((a, c) => (c.criadoEm || 0) - (a.criadoEm || 0)).slice(0, 80).map(async (g) => {
+        const L = g.livro, t = temas.find((x) => x.id === L.tema);
+        const env = await zl.get('lvadmzap_' + g.id, { type: 'json' }).catch(() => null);
+        return { id: g.id, nome: L.nome, idade: L.idade === 0 ? (L.idadeMeses || 0) + ' meses' : (L.idade || '?') + ' anos',
+          tema: L.tema === 'propria' ? '✨ História própria' : t ? (t.emoji || '📖') + ' ' + t.nome : L.tema,
+          titulo: flex((L.temaProprio && L.temaProprio.titulo) || (t && t.titulo) || '', L.nome, L.genero).replace(/\{nome\}/g, L.nome),
+          whatsapp: L.zapEntrega || g.whatsapp || '', criadoEm: g.criadoEm || null, pago: !!g.pago, cortesia: !!g.cortesia, status: L.status || '',
+          capa: L.capa && L.capa.ok ? '/.netlify/functions/livro-img?k=' + encodeURIComponent('img/' + g.id + '/capa') + '&t=' + L.token : null,
+          link: '/#/livro/' + g.id + '.' + L.token, enviadoEm: env ? env.em : null };
+      }));
+      return json({ ok: true, livros: lista });
+    }
+    if (b.acao === 'enviar-zap') {
+      // 📲 manda pra pessoa: foto da capa + nome do livro + nome da criança + link (1 mensagem)
+      const id = String(b.id || '').trim();
+      if (!/^L[0-9a-f]{14}$/.test(id)) return json({ erro: 'Código do livro inválido.' }, 400);
+      const g = await getStore('presentes').get(id, { type: 'json' }).catch(() => null);
+      if (!g || !g.livro) return json({ erro: 'Livro não encontrado.' }, 404);
+      const L = g.livro;
+      let num = String(L.zapEntrega || g.whatsapp || '').replace(/\D/g, '');
+      if (num.length < 10) return json({ erro: 'Esse livro não tem WhatsApp cadastrado.' }, 400);
+      if (!num.startsWith('55') || num.length <= 11) num = '55' + num;
+      const para = await conversaAberta(num);
+      if (!para) return json({ ok: false, fechada: true, erro: 'Conversa fechada: a pessoa não mandou mensagem nas últimas 24 h, então a Meta não deixa mandar a foto. Peça pra ela mandar um "oi" no WhatsApp e tente de novo.' });
+      const t = (await lerTemas()).find((x) => x.id === L.tema);
+      const titulo = flex((L.temaProprio && L.temaProprio.titulo) || (t && t.titulo) || 'Livro Mágico', L.nome, L.genero).replace(/\{nome\}/g, L.nome);
+      const link = SITE_ZAP + '/#/livro/' + g.id + '.' + L.token;
+      const pronto = L.status === 'pronto';
+      const txt = '📖✨ *' + titulo + '*\n\n' + (pronto ? 'O livro de *' + L.nome + '* ficou pronto! Toque pra ler e ouvir as músicas:' : 'O livro de *' + L.nome + '* já está sendo feito! Toque pra ver:') + '\n' + link + ' 💛';
+      let ok = false;
+      if (L.capa && L.capa.ok) ok = await enviarImagem(para, SITE_ZAP + '/.netlify/functions/livro-img?k=' + encodeURIComponent('img/' + g.id + '/capa') + '&t=' + L.token, txt);
+      else ok = await enviarTexto(para, txt);
+      if (!ok) return json({ ok: false, erro: 'A Meta recusou o envio. Veja em WhatsApp → Falhas.' });
+      await getStore('whatsapp').setJSON('lvadmzap_' + id, { em: Date.now(), para }).catch(() => {});
+      await registrar('livro_admin_zap', { para, pedido: id, nome: L.nome }).catch(() => {});
       return json({ ok: true });
     }
     if (b.acao === 'relatorio') {

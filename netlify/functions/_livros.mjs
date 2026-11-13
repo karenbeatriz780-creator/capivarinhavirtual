@@ -247,12 +247,27 @@ export const TEMAS_PADRAO = [
   }
 ];
 
+// SÓ A CRIANÇA E OS BICHINHOS: tira vovô/vovó da Fazenda dos Sonhos (texto e cenas), mesmo nas versões já salvas
+const TROCAS_SEM_PESSOAS = [
+  ['O vovô fazendeiro entregou um chapéu de palha: "Hoje, {nome}, você é [o|a] fazendeir[o|a] mais importante daqui!"', 'Na porta de casa, um chapéu de palha esperava por {nome}, com um bilhetinho: "Hoje, você é [o|a] fazendeir[o|a] mais importante daqui!"'],
+  ['"Pra cuidar dos bichinhos, primeiro a gente cuida da barriguinha", disse a vovó, sorrindo.', '"Pra cuidar dos bichinhos, primeiro a gente cuida da barriguinha!", cantou o galo, todo animado.'],
+  ['"Tudo que a gente planta com carinho cresce bonito", ensinou o vovô.', '"Tudo que a gente planta com carinho cresce bonito!", pensou {nome}.'],
+  ['{nome} provou uma colherinha com a vovó e fechou os olhos', '{nome} provou uma colherinha e fechou os olhos'],
+  ['com o vovô segurando a rédea,', 'com o cachorrinho Pipoca correndo ao lado,'],
+  [' next to a smiling grandmother,', ','],
+  [' while a smiling grandfather holds the reins safely,', ' with the little dog running alongside,']
+];
+function semPessoasExtras(t) {
+  if (!t || !Array.isArray(t.paginas)) return t;
+  const tr = (x) => { let y = String(x || ''); for (const [a, b] of TROCAS_SEM_PESSOAS) y = y.split(a).join(b); return y; };
+  return Object.assign({}, t, { capa: t.capa && tr(t.capa), paginas: t.paginas.map((p) => p ? Object.assign({}, p, p.texto != null ? { texto: tr(p.texto) } : {}, p.cena != null ? { cena: tr(p.cena) } : {}) : p) });
+}
 export async function lerTemas() {
   try {
     const t = await loja().get('temas', { type: 'json' });
-    if (Array.isArray(t) && t.length) return t;
+    if (Array.isArray(t) && t.length) return t.map(semPessoasExtras);
   } catch (e) {}
-  return TEMAS_PADRAO;
+  return TEMAS_PADRAO.map(semPessoasExtras);
 }
 export async function acharTema(id) {
   if (id === 'propria') return lerPropria();
@@ -393,13 +408,20 @@ export function idadeIA(livro) {
   const m = Number(livro.idadeMeses);
   const a = Number(livro.idade);
   const menina = livro.genero === 'menina';
+  const sx = menina ? ' girl' : ' boy';
   if (a === 0 || (!a && m >= 0)) {
     const meses = Math.max(0, m || 0);
-    return (meses <= 1 ? 'a newborn baby' : 'a ' + meses + '-month-old baby') + (menina ? ' girl' : ' boy') +
-      ' (show the baby sitting, lying on a soft blanket or held safely in a loving way; adapt every action to a baby)';
+    if (meses <= 5) return (meses <= 1 ? 'a tiny newborn baby' : 'a tiny ' + meses + '-month-old baby') + sx +
+      ' (REAL BABY SIZE AND BODY: very small, chubby baby body, big head, short arms and legs, a little bit of baby hair; the baby CANNOT sit alone, stand or walk: ' +
+      'show the baby lying on a soft blanket or cushion, or held safely in the arms of the story friend; never standing, never walking, never holding hands while walking)';
+    return 'a tiny ' + meses + '-month-old baby' + sx +
+      ' (REAL BABY SIZE AND BODY: very small chubby baby, big head, short chubby arms and legs, about the size of a ' + meses + '-month-old; the baby CANNOT stand or walk yet: ' +
+      'show the baby CRAWLING ON ALL FOURS on the ground or soft grass, or sitting on the ground, or held safely in the arms of the story friend; ' +
+      'if the scene says the child walks or holds hands, show the baby crawling beside them or being carried instead; never standing, never walking, never a toddler or older child body)';
   }
-  if (a <= 2) return 'a ' + a + '-year-old toddler ' + (menina ? 'girl' : 'boy') + ' (adapt actions to a toddler: sitting, crawling, small steps)';
-  return 'a ' + (a >= 10 ? '10-year-old' : a + '-year-old') + ' ' + (menina ? 'girl' : 'boy');
+  if (a === 1) return 'a 1-year-old baby' + sx + ' (REAL SIZE: very small chubby toddler body, big head, short legs, taking wobbly first steps or sitting on the ground; never the body of an older child)';
+  if (a === 2) return 'a 2-year-old toddler' + sx + ' (REAL SIZE: small toddler body and proportions, chubby cheeks, short legs, small steps; never the body of an older child)';
+  return 'a ' + (a >= 10 ? '10-year-old' : a + '-year-old') + sx + ' (body size, height and proportions exactly of a ' + (a >= 10 ? 10 : a) + '-year-old child, not older, not younger)';
 }
 
 const ESTILO_BASE =
@@ -473,6 +495,10 @@ export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
       'Never copy the face from the cover: the face always comes from the FIRST photo. ') +
     'The child is fully dressed in the outfit described and is the clear hero of the scene, happy and expressive, with the face clearly visible (not hidden, not turned away, not too small). ' +
     'Scene: the child ' + cena + '. ' +
+    // SÓ A CRIANÇA (e os bichinhos): ninguém a mais, a não ser quem tem foto ou o personagem que a cena cita pelo nome
+    'NO OTHER PEOPLE: do not add any other human in the picture (no parents, grandparents, farmers, teachers, strangers, crowds or background people) ' +
+    (nEx ? 'except the companions from the reference photos ' : '') +
+    'unless the scene above explicitly names a story character (for example Jesus, David, Noah, Santa Claus) — then show only that named character. Animals and cute creatures are welcome. ' +
     (ehCapa ? 'Book cover composition: keep the top quarter of the image calm and uncluttered (sky or soft background) because the title will be placed there; the child is large in the frame with the face well lit. ' : '') +
     'CORRECT ANATOMY FOR EVERY PERSON AND ANIMAL: each person has exactly two arms, two hands and two legs, five fingers on each hand, and every arm clearly connected to the shoulder; no extra or missing arms, hands, legs, fingers or heads, no merged or floating limbs. ' +
     'Each hand does only ONE thing: if the child is holding someone\'s hand, only the OTHER hand can touch or hold something else (or rests naturally). ' +

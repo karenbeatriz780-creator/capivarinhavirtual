@@ -843,7 +843,7 @@ function telaLivroCriar(){
   /* até 2 prévias grátis por pessoa: se já tem 2 (não pagas), mostra a mais recente em vez de criar outra.
      Vale pra todo mundo (inclusive você): o site funciona igual pra qualquer cliente. */
   var meus=lvGet().slice(0,2), meu=meus[0];
-  var conferir = meus.length>=2 && !LV.codigo
+  var conferir = false /* sem limite de prévias (13/11) */ && meus.length>=2 && !LV.codigo
     ? Promise.all(meus.map(function(o){ return fetch('/.netlify/functions/livro-status?id='+o.id+'&t='+encodeURIComponent(o.t),{cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; }); }))
     : Promise.resolve([]);
   Promise.all([lvTemas(), conferir]).then(function(x){
@@ -1484,6 +1484,7 @@ function desenharLvp(){
   var c=el('lvpCaixa'); if(!c) return;
   if(_lvp.ed!=null) return desenharEditor();
   c.innerHTML='<div class="pnl-nota">📚 <b>Livro Mágico</b>: crie e aprove as histórias. Só as <b>publicadas</b> aparecem no site. Link da página de venda: <b>'+esc(location.origin)+'/#/livro</b> <button class="pnl-link" id="lvpCop">Copiar</button></div>'+
+    '<div class="lvp-it" style="display:block" id="lvpRec"></div>'+
     '<div class="lvp-it" style="display:block" id="lvpRel"></div>'+
     '<div class="lvp-it" style="display:block" id="lvpProp">'+htmlPropriaPnl()+'</div>'+
     (_lvp.temas||[]).map(function(t,i){
@@ -1507,7 +1508,7 @@ function desenharLvp(){
       '<div class="lvp-bts"><button class="ouro" id="lvpImp20">Adicionar as 20 histórias</button></div></div>';
   el('lvpCop').onclick=function(){ copiar(location.origin+'/#/livro','Link copiado!'); };
   ligarPropriaPnl();
-  ligarVitrinePnl(); ligarRelatorioLivros();
+  ligarVitrinePnl(); ligarRecentesLivros(); ligarRelatorioLivros();
   el('lvpCod').onclick=function(){
     var b=el('lvpCod'); b.disabled=true;
     lvpPost({acao:'codigo'}).then(function(r){ b.disabled=false; if(!r.ok){ toast(r.d.erro||'Erro'); return; }
@@ -1707,6 +1708,54 @@ function ligarVitrinePnl(){
 _lvp.relDias=_lvp.relDias||30;
 function lvTempo(ms){ if(ms==null||ms<0) return '—'; var s=Math.round(ms/1000); if(s<90) return s+' s'; var m=Math.round(s/60); if(m<90) return m+' min'; return (m/60).toFixed(1).replace('.',',')+' h'; }
 function lvMedia(l){ l=l.filter(function(x){ return x!=null&&x>=0; }); if(!l.length) return null; l.sort(function(a,b){ return a-b; }); return l[Math.floor(l.length/2)]; }
+/* 📖 LIVROS RECENTES: liberar (cria o livro) e mandar no WhatsApp da pessoa (capa + nome do livro + nome da criança) */
+function ligarRecentesLivros(){
+  var box=el('lvpRec'); if(!box) return;
+  _lvp.recDias=_lvp.recDias||3;
+  box.innerHTML='<b>📖 Livros recentes</b><div style="font-size:.85rem;color:#888;margin-top:.3rem">Carregando…</div>';
+  lvpPost({acao:'recentes',dias:_lvp.recDias}).then(function(r){
+    if(!r.ok){ box.innerHTML='<b>📖 Livros recentes</b><div style="color:#B4380A">'+esc(r.d.erro||'Não carregou.')+'</div>'; return; }
+    var ls=r.d.livros||[];
+    function st(l){
+      if(l.pago&&l.status==='pronto') return '<span class="lvp-st pub">✅ Livro pronto</span>';
+      if(l.pago) return '<span class="lvp-st" style="background:#FFF6DB;color:#8A5A00">⏳ Criando o livro</span>';
+      return '<span class="lvp-st ras">Prévia</span>';
+    }
+    box.innerHTML='<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap"><b style="flex:1">📖 Livros recentes</b>'+
+      '<select id="lvpRecDias" style="padding:.35rem;border-radius:8px;border:1px solid #ddd">'+[1,3,7,15].map(function(n){ return '<option value="'+n+'"'+(n===_lvp.recDias?' selected':'')+'>'+(n===1?'hoje':n+' dias')+'</option>'; }).join('')+'</select>'+
+      '<button class="pnl-link" id="lvpRecAtt">↻</button></div>'+
+      '<div style="font-size:.8rem;color:#777;margin:.3rem 0 .4rem">Liberar cria o livro inteiro (sem pagamento). Enviar manda 1 mensagem com a capa, o nome do livro e da criança (~R$ 0,035).</div>'+
+      (ls.length?ls.map(function(l){
+        var dt=l.criadoEm?new Date(l.criadoEm).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+        return '<div style="display:flex;gap:.6rem;border-top:1px solid #f0f0f0;padding:.55rem 0;align-items:flex-start">'+
+          (l.capa?'<img src="'+esc(l.capa)+'" alt="" loading="lazy" style="width:54px;height:72px;object-fit:cover;border-radius:8px;flex:none">':'<div style="width:54px;height:72px;border-radius:8px;background:#F3EEFA;display:grid;place-items:center;flex:none">📖</div>')+
+          '<div style="flex:1;min-width:0;font-size:.85rem"><b>'+esc(l.nome||'')+'</b> · '+esc(l.idade||'')+'<div style="color:#555">'+esc(l.titulo||l.tema||'')+'</div>'+
+          '<div style="color:#888;font-size:.78rem">'+dt+(l.whatsapp?' · 📱 '+esc(l.whatsapp):' · sem WhatsApp')+(l.enviadoEm?' · ✅ enviado '+new Date(l.enviadoEm).toLocaleString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'')+'</div>'+
+          '<div style="margin:.25rem 0">'+st(l)+'</div>'+
+          '<div style="display:flex;gap:.35rem;flex-wrap:wrap">'+
+            (!l.pago?'<button class="pnl-link" data-recLib="'+esc(l.id)+'">🔓 Liberar e criar o livro</button>':'')+
+            (l.whatsapp?'<button class="pnl-link" data-recZap="'+esc(l.id)+'">📲 Enviar no WhatsApp</button>':'')+
+            '<a class="pnl-link" href="'+esc(l.link)+'" target="_blank" rel="noopener">👀 Ver</a></div></div></div>';
+      }).join(''):'<div style="font-size:.85rem;color:#888;margin-top:.4rem">Nenhum livro nesse período.</div>');
+    el('lvpRecDias').onchange=function(){ _lvp.recDias=+this.value; ligarRecentesLivros(); };
+    el('lvpRecAtt').onclick=function(){ ligarRecentesLivros(); };
+    box.querySelectorAll('[data-recLib],[data-reclib]').forEach(function(b){ b.onclick=function(){
+      var id=b.getAttribute('data-recLib')||b.getAttribute('data-reclib'); b.disabled=true; b.textContent='Liberando…';
+      lvpPost({acao:'livro-liberar',id:id}).then(function(x){
+        if(!x.ok){ b.disabled=false; b.textContent='🔓 Liberar e criar o livro'; toast(x.d.erro||'Não deu.'); return; }
+        toast('🔓 Liberado! O livro está sendo criado.'); ligarRecentesLivros();
+      }).catch(function(){ b.disabled=false; b.textContent='🔓 Liberar e criar o livro'; toast('Sem conexão.'); });
+    }; });
+    box.querySelectorAll('[data-recZap],[data-reczap]').forEach(function(b){ b.onclick=function(){
+      var id=b.getAttribute('data-recZap')||b.getAttribute('data-reczap'); b.disabled=true; b.textContent='Enviando…';
+      lvpPost({acao:'enviar-zap',id:id}).then(function(x){
+        b.disabled=false; b.textContent='📲 Enviar no WhatsApp';
+        if(x.ok&&x.d.ok){ toast('✅ Enviado no WhatsApp!'); ligarRecentesLivros(); return; }
+        toast((x.d&&x.d.erro)||'Não deu pra enviar.');
+      }).catch(function(){ b.disabled=false; b.textContent='📲 Enviar no WhatsApp'; toast('Sem conexão.'); });
+    }; });
+  }).catch(function(){ box.innerHTML='<b>📖 Livros recentes</b><div style="color:#B4380A">Sem conexão.</div>'; });
+}
 function ligarRelatorioLivros(){
   var box=el('lvpRel'); if(!box) return;
   box.innerHTML='<b>📊 Relatório do Livro Mágico</b><div style="font-size:.85rem;color:#888;margin-top:.3rem">Carregando…</div>';

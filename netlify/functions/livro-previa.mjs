@@ -10,8 +10,8 @@ import { indexar, indexarDia } from './_indice.mjs';
 // Pra liberar mais uma sem pagar: o suporte gera um código no painel (aba Livros).
 // Você (com a senha de administrador salva no aparelho) cria quantas quiser, pra testar.
 const DIAS_TRAVA = 30;
-const MAX_PREVIAS = 2;
-const MAX_IP_DIA = 5;
+const MAX_PREVIAS = Infinity; // sem limite (pedido do Gusthavo, 13/11)
+const MAX_IP_DIA = Infinity;
 
 export default async (req) => {
   try {
