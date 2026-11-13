@@ -169,7 +169,7 @@ export async function pagouTexto(de) {
   if (!pend) {
     const efi = gs.find((g) => !g.pago);
     await enviarTexto(de, efi ? '😕 Ainda não identificamos o seu pagamento.\n\nSe já pagou, me manda aqui o *print ou PDF do comprovante* do Pix que eu confiro na hora. 💗'
-      : '😕 Não achei um Pix gerado neste número.\n\nToque no link da sua prévia, gere o Pix e pague. Se já pagou, me manda aqui o *print ou PDF do comprovante*. 💗');
+      : msgSemPix(await linkDaPessoa(de)));
     if (efi) await getStore('whatsapp').setJSON(PRINT(de), { id: efi.id, em: Date.now() }).catch(() => {});
     return;
   }
@@ -185,6 +185,21 @@ export async function pagouTexto(de) {
 }
 
 // ✅ "Já paguei" no WhatsApp: NÃO libera nada. Só ENTREGA se a pessoa já confirmou no site (2 toques em "Já paguei").
+// link da pessoa pra gerar o Pix: a prévia dela (ou o pedido em aberto)
+async function linkDaPessoa(de, t) {
+  if (t) return SITE + '/#/ouvir/t.' + t;
+  try {
+    const gs = (await pedidosRecentes(de)).filter((g) => !g.pago && !g.cancelado && g.produto !== 'livro' && temMusica(g));
+    if (gs.length) return SITE + '/#/p/' + gs[0].id;
+    const ent = await idsDoTel(de, await lerIndice()).catch(() => null);
+    const ts = [...new Set((ent && ent.t) || [])].slice(-15);
+    const ms = (await Promise.all(ts.map(async (x) => { const m = await getStore('musicas').get(x, { type: 'json' }).catch(() => null); return m && m.url && !m.pago ? { x, em: m.criadoEm || m.em || 0 } : null; }))).filter(Boolean);
+    ms.sort((a, b) => b.em - a.em);
+    if (ms.length) return SITE + '/#/ouvir/t.' + ms[0].x;
+  } catch (e) {}
+  return SITE;
+}
+const msgSemPix = (link) => '😕 Não achei um Pix gerado neste número.\n\nToque no link, *gere o Pix* e pague:\n' + link + '\n\nSe já pagou, toque em *"Já paguei"* (ao lado de *"Copiar código Pix"*). 💗';
 // pedidos ligados a UMA música (o botão "Já paguei" da prévia vem com o código dela)
 async function pedidosDaMusica(de, t) {
   const m = await getStore('musicas').get(t, { type: 'json' }).catch(() => null);
@@ -237,7 +252,7 @@ async function confirmarPagamentoZap(de, botao, t) {
   }
   await enviarTexto(de, gerou
     ? '😕 *Ops, ainda não identificamos o seu pagamento.*\n\nSe você já pagou, volte na página do Pix e toque em *"Já paguei"* pra confirmar. Assim que confirmar, a música chega aqui. 💗'
-    : '😕 *Ops, não identificamos o seu pagamento.*\n\nToque no link da sua prévia, *gere o Pix*, pague e depois toque em *"Já paguei"*. 💗');
+    : msgSemPix(await linkDaPessoa(de, t)));
 }
 async function procurar(de) {
   await enviarTexto(de, '🔎 Procurando seus pedidos...');
