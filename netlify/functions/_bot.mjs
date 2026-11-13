@@ -157,11 +157,12 @@ async function liberadosSemConferencia(gs) {
 // 💬 a pessoa ESCREVEU que pagou: já pago → envia · Pix gerado e confiável → libera e envia · desconfiou → pede o print
 export async function pagouTexto(de) {
   const gs = (await pedidosRecentes(de)).filter((g) => !g.cancelado && g.produto !== 'livro' && temMusica(g));
-  const pago = gs.find((g) => g.pago);
+  // pago e AINDA NÃO entregue → entrega (pedido antigo já entregue nunca é reenviado)
+  let pago = null;
+  for (const g of gs) if (g.pago && !(await getStore('whatsapp').get('pago_' + g.id, { type: 'json' }).catch(() => null))) { pago = g; break; }
   const pend = gs.find((g) => !g.pago && g.pagamento && g.pagamento.provedor === 'manual');
   if (pago && (!pend || (pago.pagoEm || 0) > (pend.criadoEm || 0))) {
     await enviarTexto(de, '💗 Achei! Seu pagamento já está confirmado. Mandando suas músicas completas agora 🎶');
-    await getStore('whatsapp').delete('pago_' + pago.id).catch(() => {});
     await entregarPedidoPagoZap(pago);
     return;
   }
@@ -172,9 +173,8 @@ export async function pagouTexto(de) {
     if (efi) await getStore('whatsapp').setJSON(PRINT(de), { id: efi.id, em: Date.now() }).catch(() => {});
     return;
   }
-  const idade = Date.now() - (pend.pagamento.manualEm || pend.criadoEm || 0);
-  const suspeito = idade < 60e3 || (await liberadosSemConferencia(gs)) >= 1;
-  if (suspeito) {
+  // escreveu "já paguei" (sem botão): NUNCA libera só pelo texto → pede o comprovante (a IA confere e libera)
+  if (true) {
     await getStore('whatsapp').setJSON(PRINT(de), { id: pend.id, em: Date.now() }).catch(() => {});
     await enviarTexto(de, '💗 Pra eu confirmar rapidinho, me manda aqui o *print ou PDF do comprovante* do Pix de *R$ ' + Number(pend.pagamento.valor || 0).toFixed(2).replace('.', ',') + '*. Assim que eu conferir, sua música chega aqui. 🎶');
     return;
