@@ -10,7 +10,7 @@ export default async (req, context) => {
   if (!/^[A-Za-z0-9_-]{4,80}$/.test(id)) return json({ erro: 'Pedido inválido.' }, 400);
   try {
     const g0 = await getStore('presentes').get(id, { type: 'json' }).catch(() => null);
-    if (g0 && !g0.pago && g0.pagamento && g0.pagamento.provedor === 'manual') { // 2º toque libera sem tempo mínimo
+    if (!b.segundo && g0 && !g0.pago && g0.pagamento && g0.pagamento.provedor === 'manual') { // 2º toque libera sem tempo mínimo // 2º toque libera sem tempo mínimo
       const falta = 20e3 - (Date.now() - (g0.pagamento.manualEm || g0.criadoEm || 0));
       if (falta > 0) return json({ ok: false, cedo: true, faltaSeg: Math.ceil(falta / 1000) });
     }
