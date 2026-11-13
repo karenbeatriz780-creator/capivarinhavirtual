@@ -89,9 +89,16 @@ export async function processar(corpo) {
               const tid = cod[1];
             await registrar('pediu_site', { numero: String(msg.from), taskId: tid });
               await loja.setJSON('optin_' + tid, { numero: String(msg.from), em: Date.now() });
-              const r = await entregarMusica(tid, msg.from);
+              const baseU = process.env.URL || SITE;
+              let r = await entregarMusica(tid, msg.from);
+              if (r === 'esperando') { // pode já estar pronta e ninguém perguntou ao serviço de música → pergunta agora
+                await fetch(baseU + '/.netlify/functions/gerar-musica-status?taskId=' + encodeURIComponent(tid)).catch(() => {});
+                r = await entregarMusica(tid, msg.from);
+              }
               if (r === 'esperando') {
                 await loja.setJSON('pend_' + tid, { taskId: tid, numero: String(msg.from), em: Date.now() });
+                // vigia rápido: confere a cada 12 s e manda a prévia assim que ficar pronta
+                await fetch(baseU + '/.netlify/functions/avisar-musica-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId: tid, rapido: true }) }).catch(() => {});
                 await enviarTexto(msg.from, '✅ Recebi! Sua música está sendo criada agora 🎶\n\nPode ficar tranquilo(a): assim que ficar pronta eu te mando aqui mesmo, em instantes. 💗');
               } else if (r === 'naoachei') {
                 await enviarTexto(msg.from, 'Não achei essa música 😕\nCrie a sua aqui: ' + SITE + '/#/criar/musica');

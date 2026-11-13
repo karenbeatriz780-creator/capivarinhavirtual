@@ -17,7 +17,7 @@ export default async (req) => {
   const ini = Date.now();
   // marca que tem vigia rápido cuidando (o agendado não mexe nesta música enquanto isso)
   await loja.setJSON('vig_' + taskId, { em: ini }).catch(() => {});
-  await dormir(45000);
+  await dormir(b && b.rapido ? 8000 : 45000); // pedido pelo WhatsApp: a música já está sendo feita há um tempo
   while (Date.now() - ini < 12 * 60 * 1000) {
     try {
       const p = await loja.get('pend_' + taskId, { type: 'json' }).catch(() => null);
