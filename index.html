@@ -3447,7 +3447,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
-<script src="/livro.js?v=35"></script>
+<script src="/livro.js?v=36"></script>
 <script>
 /* =========================================================
    CAPIVARINHA LOVE — aplicação completa (single file)
@@ -4426,7 +4426,7 @@ function navegar(){
   if(r.nome==='oferta' && r.arg){ telaOferta(r.arg); return; }
   if(r.nome==='live'){ try{ Store.set('cl_live', String(Date.now())); }catch(e){} ir('criar/musica'); return; }
   if(r.nome==='tela-aovivo'){ telaAoVivo(); return; }
-  if(r.nome==='livro' && typeof telaLivro==='function'){ telaLivro(r.arg); return; }
+  if(r.nome==='livro' && typeof telaLivro==='function'){ telaLivro(r.arg, r.arg2); return; }
   if(r.nome==='exemplo' && r.arg==='carta'){ abrirPresenteChecado(exemploCarta()); return; }
   if(r.nome==='painel-capivarinha'){ telaPainel(r.arg); return; }
   if(r.nome==='sou-eu'){ telaMarcarDev(); return; }

@@ -508,9 +508,10 @@ function htmlCapa(o){
 }
 
 /* --------------------------------------------------------------- roteador */
-window.telaLivro=function(arg){
+window.telaLivro=function(arg, arg2){
   document.title='Livro Mágico · Capivarinha Love';
   if(!arg) return telaLivroHome();
+  if(arg2==='musicas' && /^L[0-9a-f]{14}$/.test(arg)) return telaLivroMusicas(arg); /* QR Code do livro */
   if(arg==='criar') return telaLivroCriar();
   if(arg==='meus') return telaLivroMeus();
   if(/^L[0-9a-f]{14}$/.test(arg)) return telaLivroPedido(arg);
@@ -524,6 +525,26 @@ window.telaLivro=function(arg){
   }
   location.hash='#/livro';
 };
+
+/* ---------------------------------------- QR Code do livro → músicas da criança (ouvir e baixar) */
+function telaLivroMusicas(id){
+  var app=el('app'), t=lvToken(id)||'';
+  app.innerHTML='<div class="lv"><div class="lv-wrap" style="padding-top:calc(1.6rem + env(safe-area-inset-top,0px));text-align:center"><div class="lv-sub">Carregando as músicas…</div></div></div>';
+  fetch('/.netlify/functions/livro-status?id='+id+'&t='+encodeURIComponent(t),{cache:'no-store'}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); }).then(function(res){
+    var d=res.d||{};
+    if(!res.ok || !d.pago){ app.innerHTML='<div class="lv"><div class="lv-wrap" style="padding-top:2rem;text-align:center"><h1 class="lv-tit">🎵 Músicas do livro</h1><p class="lv-sub">As músicas aparecem aqui depois que o livro é liberado.</p><a class="lv-btn" href="#/livro/'+esc(id)+'">Ver o livro</a></div></div>'; return; }
+    var dl=function(v){ return (typeof linkBaixarMusica==='function'?linkBaixarMusica(id,v):'/.netlify/functions/baixar-musica?id='+encodeURIComponent(id)+'&v='+v); };
+    var vs=[1].concat(d.musica2?[2]:[]);
+    app.innerHTML='<div class="lv"><div class="lv-wrap" style="padding-top:calc(1.4rem + env(safe-area-inset-top,0px));text-align:center">'+
+      (d.capa?'<img src="'+esc(d.capa)+'" alt="" style="width:min(46vw,180px);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);margin:0 auto 1rem;display:block">':'')+
+      '<h1 class="lv-tit">🎵 As músicas de '+esc(d.nome||'')+'</h1><p class="lv-sub">Toque pra ouvir. Pra guardar, toque em baixar.</p>'+
+      vs.map(function(v){ return '<div style="background:rgba(255,255,255,.1);border-radius:16px;padding:.85rem;margin:.8rem 0;text-align:left">'+
+        '<b style="display:block;margin-bottom:.45rem">🎶 Música '+v+'</b><audio controls preload="none" src="'+esc(dl(v))+'" style="width:100%"></audio>'+
+        '<a class="lv-btn claro" style="margin:.55rem 0 0;padding:.65rem;text-decoration:none" href="'+esc(dl(v))+'" download>⬇️ Baixar música '+v+'</a></div>'; }).join('')+
+      (typeof DICA_BAIXAR==='string'?DICA_BAIXAR:'')+
+      '<a class="lv-btn" href="#/livro/'+esc(id)+'" style="margin-top:1rem">📖 Abrir o livro</a></div></div>';
+  }).catch(function(){ app.innerHTML='<div class="lv"><div class="lv-wrap" style="padding-top:2rem;text-align:center"><p class="lv-sub">Sem conexão. Tente de novo.</p></div></div>'; });
+}
 
 /* ------------------------------------------------------- página de venda */
 function telaLivroHome(){
@@ -1222,7 +1243,7 @@ function htmlPagina(p,d,tema,num){
   if(p.t==='pertence') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo">'+capaMini+'<div class="peq" style="margin-top:9%">Este livro pertence a</div><div class="nomeDono">'+nome+'</div><div class="peq" style="margin-top:12%">com amor, ______________________</div></div></div>';
   if(p.t==='rosto') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo">'+orn+'<div class="grande" style="margin:.3em 0">'+esc(flexTxt(tema.titulo,d.nome,d.genero))+'</div>'+orn+'<div class="peq">Uma aventura mágica criada especialmente para '+nome+'</div></div></div>';
   if(p.t==='fim') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div class="script">Fim</div>'+orn+'<div class="txt" style="font-size:.95em;text-align:center">'+nome+', que venham muitas outras aventuras!</div></div><div class="num">'+num+'</div></div>';
-  if(p.t==='musica'){ var svg=''; try{ svg=QRCodeGen.toSVG(location.origin+'/#/livro/'+d.id,{ec:'M',quiet:1}); }catch(e){}
+  if(p.t==='musica'){ var svg=''; try{ svg=QRCodeGen.toSVG(location.origin+'/#/livro/'+d.id+'/musicas',{ec:'M',quiet:1}); }catch(e){}
     return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div class="grande" style="font-size:1.5em;margin:.3em 0">A música de '+nome+'</div>'+orn+'<div class="qr">'+svg+'</div><div class="peq" style="margin-top:6%">Aponte a câmera do celular pra ouvir a música e ler o livro com ela tocando.</div></div><div class="num">'+num+'</div></div>'; }
   if(p.t==='branco') return '<div class="lv-pag" style="'+est+'">'+fundo+'<div class="miolo"><div class="peq">Espaço pra um desenho ou uma mensagem especial</div></div></div>';
   return '<div class="lv-pag" style="'+est+'"><div class="fundo" style="background:linear-gradient(160deg,'+c[1]+','+c[2]+')"></div><div class="miolo" style="color:#fff">'+capaMini.replace('class="moldura"','class="moldura" style="width:40%"')+'<div class="peq" style="opacity:.95;margin-top:10%;font-weight:700;letter-spacing:.03em">capivarinhalove.com.br</div></div></div>';
@@ -1417,7 +1438,7 @@ async function desenharPaginaCanvas(p,d,tema,num,W,H){
     textoCentro(ctx,nome+', que venham muitas outras aventuras!',W/2,H*.68,W*.75,'600 '+(u*5)+'px "Baloo 2"','#2A1B3D',u*6.5);
   } else if(p.t==='musica'){
     textoCentro(ctx,'A música de '+nome,W/2,H*.22,W*.8,'800 '+(u*7.5)+'px "Baloo 2"',c[2],u*8);
-    try{ var svg=QRCodeGen.toSVG(location.origin+'/#/livro/'+d.id,{ec:'M',quiet:1}); var q=await carregarImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));
+    try{ var svg=QRCodeGen.toSVG(location.origin+'/#/livro/'+d.id+'/musicas',{ec:'M',quiet:1}); var q=await carregarImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));
       var qs=W*.46; ctx.fillStyle='#fff'; ctx.fillRect((W-qs)/2-u*2,H*.42-u*2,qs+u*4,qs+u*4); ctx.drawImage(q,(W-qs)/2,H*.42,qs,qs); }catch(e){}
     textoCentro(ctx,'Aponte a câmera do celular pra ouvir a música e ler o livro com ela tocando.',W/2,H*.8,W*.72,'500 '+(u*3.6)+'px Inter','#6E5C82',u*4.6);
   } else if(p.t==='branco'){

@@ -482,12 +482,35 @@ const ROSTO =
   'hair color, hair texture (straight, wavy, curly or coily), length, hairline, part, bangs and hairstyle. Keep the same age, ethnicity and gender appearance. ' +
   'Keep the REAL proportions of this face: do not enlarge the eyes, do not shrink the nose, do not slim or round the face, do not lighten or darken the skin, do not beautify, never use a generic cartoon face. ' +
   'Only the rendering is illustrated (soft 3D picture-book shading and lighting); the facial structure stays a faithful portrait of the photo. ';
+// bebê (menos de 1 ano) não anda nem fica em pé: troca as ações da cena por engatinhar / sentar / colo
+export function ehBebe(livro) { const a = Number(livro && livro.idade); return a === 0 || (!a && Number(livro && livro.idadeMeses) >= 0 && livro && livro.idadeMeses != null); }
+const TROCAS_BEBE = [
+  [/\bwalking hand in hand with\b/gi, 'crawling happily on the ground right next to'],
+  [/\bwalking hand in hand\b/gi, 'crawling happily side by side'],
+  [/\bholding hands with\b/gi, 'crawling happily next to'],
+  [/\bwalking (beside|with|next to|along)\b/gi, 'crawling $1'],
+  [/\b(walking|running|jumping|dancing|skipping|marching|hiking|climbing)\b/gi, 'crawling'],
+  [/\bstanding( proudly| happily| tall)?\b/gi, 'sitting$1'],
+  [/\briding\b/gi, 'sitting safely, held by a gentle hand, on'],
+  [/\bkicking\b/gi, 'touching'],
+  [/\bholding up\b/gi, 'reaching for']
+];
+function cenaDaIdade(livro, cena) {
+  if (!ehBebe(livro)) return cena;
+  let c = String(cena || ''); TROCAS_BEBE.forEach(([re, por]) => { c = c.replace(re, por); });
+  return c;
+}
+function regraIdade(livro) {
+  return 'AGE IS CRITICAL (second most important rule, right after the face): the main child is ' + idadeIA(livro) + '. ' +
+    'Body size, height, head-to-body proportions and posture must match this exact age. Never draw the child older than this age. ';
+}
 export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
   const nEx = semFoto ? 0 : (((livro && livro.extras) || []).filter((x) => x && x.nome).length);
-  return (semFoto ? '' : ROSTO) + ESTILO_BASE +
+  cena = cenaDaIdade(livro || {}, cena);
+  return (semFoto ? '' : ROSTO) + regraIdade(livro || {}) + ESTILO_BASE +
     (semFoto ? 'The main character is an adorable, expressive Brazilian child with a big smile. '
       : 'The main character is the child from the FIRST reference photo. ') +
-    'The child is ' + idadeIA(livro) + ', wearing ' + (tema.roupa || 'colorful comfortable clothes') + '. ' +
+    'The child is ' + idadeIA(livro) + ', wearing ' + (ehBebe(livro || {}) ? 'a baby-sized version of ' : '') + (tema.roupa || 'colorful comfortable clothes') + '. ' +
     (nEx ? promptExtras(livro, ehCapa) : '') +
     (ehCapa || semFoto ? '' : (nEx
       ? 'If there is one more reference image after the companion photos (the LAST one), it is the book cover: use it ONLY for the outfit, colors and art style. '
@@ -504,7 +527,7 @@ export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
     'Each hand does only ONE thing: if the child is holding someone\'s hand, only the OTHER hand can touch or hold something else (or rests naturally). ' +
     'Animals have the right number of legs, ears, eyes and one tail. ' +
     'Absolutely no text, letters, words, numbers on clothing except as described, logos or watermarks. Safe, wholesome, age-appropriate. ' +
-    (semFoto ? '' : 'Final check before finishing: count the arms and hands of every character (exactly two each); the child\'s face must be identical to the FIRST reference photo' + (nEx ? ', and each companion must look like their own photo' : '') + '.');
+    (semFoto ? '' : 'Final check before finishing: count the arms and hands of every character (exactly two each); the child\'s face must be identical to the FIRST reference photo' + (nEx ? ', and each companion must look like their own photo' : '') + '; the child\'s body must look exactly ' + idadeIA(livro || {}).split(' (')[0] + ' (not older).');
 }
 
 // ---------------------------------------------------------------------------
