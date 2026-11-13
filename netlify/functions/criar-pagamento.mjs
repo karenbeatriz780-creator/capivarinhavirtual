@@ -193,7 +193,7 @@ export default async (req) => {
       if (await ipLigada()) {
         try {
           const desc = (pacote6 ? '6 Músicas Personalizadas' : comboDaMusica ? ('4 Músicas + ' + pacote.nome) : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('') + ' - Capivarinha Love';
-          const lk = await criarLinkIP(presente.id, precoFinal, desc);
+          const lk = await criarLinkIP(presente.id, precoFinal, desc, { nome: salvo.meuNome || presente.meuNome, tel: salvo.musicaWhatsapp || salvo.whatsapp || presente.musicaWhatsapp || presente.whatsapp });
           const m = Object.assign({}, salvo, { pagamento: Object.assign({}, salvo.pagamento, { provedor: 'infinitepay', txid: presente.id, status: 'AGUARDANDO', ipUrl: lk.url, ipEm: Date.now() }) });
           await getStore('presentes').setJSON(presente.id, m);
           return json({ checkoutUrl: lk.url, id: presente.id, provedor: 'infinitepay', valor: precoFinal });

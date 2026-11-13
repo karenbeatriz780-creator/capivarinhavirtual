@@ -162,7 +162,7 @@ export default async (req) => {
     // 💳 INFINITEPAY (principal)
     if (await ipLigada()) {
       try {
-        const lk = await criarLinkIP(g.id, valor, (oferta4 ? '4 Músicas Personalizadas' : 'Música Personalizada') + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('') + ' - Capivarinha Love');
+        const lk = await criarLinkIP(g.id, valor, (oferta4 ? '4 Músicas Personalizadas' : 'Música Personalizada') + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('') + ' - Capivarinha Love', { nome: g.meuNome, tel: g.musicaWhatsapp || g.whatsapp });
         const agora = Date.now();
         const at = Object.assign({}, g, { criadoEm: agora, recuperadoEm: agora, ...(oferta4 ? { quatro: true } : {}), extrasPix,
           pagamento: Object.assign({}, g.pagamento || {}, { provedor: 'infinitepay', txid: g.id, status: 'AGUARDANDO', valor, extras: extrasPix, valorExtras, ipUrl: lk.url, ipEm: agora,

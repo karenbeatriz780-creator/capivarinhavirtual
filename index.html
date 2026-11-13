@@ -4680,7 +4680,7 @@ function telaHome(){
       '<div><h4>Ajuda</h4><a href="https://wa.me/'+CONFIG.whatsapp+'" target="_blank" rel="noopener">Falar no WhatsApp</a><a href="mailto:'+CONFIG.email+'">'+CONFIG.email+'</a><a href="#depoimentos">Depoimentos</a></div>'+
     '</div>'+
     '<div class="ft-bot"><span>© '+new Date().getFullYear()+' '+CONFIG.marca+'. Feito com carinho no Brasil.</span>'+
-      '<span>Pagamento único via Pix • Sem assinatura</span></div>'+
+      '<span>Pagamento único via Pix ou cartão • Sem assinatura</span></div>'+
   '</div></footer>'+
 
   '<a class="fab" href="https://wa.me/'+CONFIG.whatsapp+'" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">'+IC.wpp+'</a>';
@@ -5598,7 +5598,7 @@ function desenharPasso(opts){
   el('wzFill').style.width=((wStep+1)/ps.length*100)+'%';
   el('wzBody').innerHTML=htmlPasso(k);
   el('wzNext').disabled=false;
-  el('wzNext').textContent = (k==='checkout') ? 'Pagar e gerar o link' : (k==='musicaLetra' ? (precisaGeneroLetra() && !W.musicaLetraTexto ? 'Escrever a letra' : 'Aprovar letra e compor música') :
+  el('wzNext').textContent = (k==='checkout') ? (IP_ON?'Pagar (Pix ou cartão)':'Pagar e gerar o link') : (k==='musicaLetra' ? (precisaGeneroLetra() && !W.musicaLetraTexto ? 'Escrever a letra' : 'Aprovar letra e compor música') :
     ((k==='musicaFinal' && !W.musicaPreviewUrl) ? (W.musicaCompondo ? 'Compondo sua música...' : 'Gerar prévia da música 🎵') :
     ((k==='musicaFinal' && W.ofertaDe && !W.ofertaM1) ? 'Próximo: criar a 2ª música →' :
      ((k==='musicaFinal' && W.pacote6 && W.ofertaM1 && !W.ofertaM2) ? 'Próximo: criar a 3ª letra →' : 'Continuar'))));
@@ -7218,7 +7218,7 @@ function abrirExtrasPix(seguir, base){
             '<div class="xp-bts"><button type="button" class="xp-ex" data-xpex="'+o.k+'">▶ Ver exemplo</button>'+
             '<button type="button" class="xp-add" data-xpadd="'+o.k+'">'+(on?'✓ Adicionado':'+ Adicionar')+'</button></div></div></div>'; }).join('')+
       '<div class="xp-tot"><span>Total do seu pedido</span><b>R$ '+fmtPreco(total())+'</b></div>'+
-      '<button type="button" class="xp-go" id="xpGo">Gerar Pix · R$ '+fmtPreco(total())+'</button>'+
+      '<button type="button" class="xp-go" id="xpGo">'+(IP_ON?'Pagar (Pix ou cartão)':'Gerar Pix')+' · R$ '+fmtPreco(total())+'</button>'+
       '<button type="button" class="xp-nao" id="xpNao">Agora não, só as músicas</button>'+
     '</div>';
     el('xpVt').onclick=function(){ gaEvento('extras_voltou',{}); fechar(); };
@@ -7245,7 +7245,7 @@ function abrirExtrasPix(seguir, base){
       '<div class="mt-fotos xp-fotos">'+g+'</div>'+
       '<input type="file" id="xpFile" accept="image/*" '+(mx>1?'multiple':'')+' hidden>'+
       '<div class="xp-tot"><span>Total do seu pedido</span><b>R$ '+fmtPreco(total())+'</b></div>'+
-      '<button type="button" class="xp-go" id="xpGo2">'+(_xpFotos.length?'Concluir e gerar Pix':'Gerar Pix')+' · R$ '+fmtPreco(total())+'</button>'+
+      '<button type="button" class="xp-go" id="xpGo2">'+(IP_ON?(_xpFotos.length?'Concluir e pagar':'Pagar (Pix ou cartão)'):(_xpFotos.length?'Concluir e gerar Pix':'Gerar Pix'))+' · R$ '+fmtPreco(total())+'</button>'+
       '<button type="button" class="xp-nao" id="xpDepois">Prefiro mandar as fotos depois de pagar</button>'+
     '</div>';
     el('xpVt2').onclick=function(){ desenhar(); };
@@ -7414,7 +7414,7 @@ function finalizarDeVerdade(){
   fbEvento('InitiateCheckout',{value:precoTotal(W), currency:'BRL', content_name:W.produto, content_type:'product'});
   ttqEvento('InitiateCheckout',{value:precoTotal(W), currency:'BRL', content_name:W.produto, content_type:'product'});
   var btn=el('wzNext');
-  if(btn){ btn.disabled=true; btn.textContent='Gerando o Pix...'; }
+  if(btn){ btn.disabled=true; btn.textContent=IP_ON?'Abrindo o pagamento...':'Gerando o Pix...'; }
   var boxErro=el('pagErro');
   if(boxErro){ boxErro.style.display='none'; }
   if(quatroAtivo(W)) W.quatro=true;
@@ -7511,11 +7511,34 @@ function ligarComprovante(id, aoLiberar){
 function irParaInfinitePay(url, id, fotosPromise){
   try{ Store.set('cl_ip', JSON.stringify({id:id, url:url, em:Date.now()})); Store.set('cl_pix',''); }catch(e){}
   var ov=document.createElement('div'); ov.className='ip-ov';
-  ov.innerHTML='<div class="ip-bx"><div class="ip-sp"></div><b>Abrindo o pagamento seguro…</b><small>Pix ou cartão · InfinitePay<br>Depois de pagar, você volta pra cá e a sua música é liberada na hora.</small><a href="'+esc(url)+'" class="btn btn-primary" style="margin-top:.9rem">Ir para o pagamento</a></div>';
+  ov.innerHTML='<div class="ip-bx"><div class="ip-sp"></div><b>🔒 Pagamento seguro · Pix ou Cartão</b><small>Você vai pagar pela InfinitePay.<br>Após o pagamento, a sua música será <b>enviada automaticamente para o seu número</b> ou <b>liberada aqui no site</b>.</small><a href="'+esc(url)+'" class="btn btn-primary" style="margin-top:.9rem">Ir para o pagamento</a></div>';
   document.body.appendChild(ov);
+  ipVigiarVolta(id);
   var foi=false, ir=function(){ if(foi) return; foi=true; location.href=url; };
   Promise.race([Promise.resolve(fotosPromise).catch(function(){}), new Promise(function(r){ setTimeout(r,20000); })]).then(function(){ setTimeout(ir,400); });
 }
+/* quando a pessoa volta da InfinitePay (troca de aba / botão voltar), confere sozinho e abre a música */
+function ipVigiarVolta(id){
+  if(window._ipVig===id) return; window._ipVig=id; var feito=false;
+  function chk(){ if(feito||document.hidden) return;
+    fetch('/.netlify/functions/presente?id='+encodeURIComponent(id),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+      if(feito||!d||!d.pago||!d.presente) return; feito=true;
+      try{ Store.set('cl_ip',''); }catch(e){} try{ salvarPresente(d.presente); }catch(e){}
+      var ov=document.querySelector('.ip-ov'); if(ov) ov.remove();
+      location.hash='#/p/'+encodeURIComponent(id)+'/c';
+    }).catch(function(){}); }
+  document.addEventListener('visibilitychange',chk); window.addEventListener('focus',chk); window.addEventListener('pageshow',chk);
+  var n=0, iv=setInterval(function(){ if(feito||++n>180){ clearInterval(iv); return; } chk(); },5000);
+}
+/* abriu o site de novo depois de ir pra InfinitePay (últimas 3 h): confere se já pagou */
+(function(){ try{ var ip=JSON.parse(Store.get('cl_ip')||'null'); if(ip&&ip.id&&Date.now()-(ip.em||0)<3*3600e3) setTimeout(function(){ ipVigiarVolta(ip.id); },1500); }catch(e){} })();
+/* o pagamento está pela InfinitePay? (só muda o texto dos botões) */
+var IP_ON=false;
+try{ fetch('/.netlify/functions/pagamento-cfg').then(function(r){ return r.json(); }).then(function(d){ IP_ON=!!(d&&d.ip); if(IP_ON) ipTextos(); }).catch(function(){}); }catch(e){}
+function noPix(){ return IP_ON?' no Pix ou cartão':' no Pix'; }
+function ipTextos(){ document.querySelectorAll('#ouvirPagar').forEach(function(b){ b.textContent=b.textContent.replace(/ no Pix$/,' no Pix ou cartão'); });
+  ['xpGo','xpGo2'].forEach(function(k){ var b=el(k); if(b) b.textContent=b.textContent.replace(/^(Concluir e g|G)erar Pix/,function(m,a){ return a==='G'?'Pagar (Pix ou cartão)':'Concluir e pagar'; }); });
+  var w=el('wzNext'); if(w&&w.textContent==='Pagar e gerar o link') w.textContent='Pagar (Pix ou cartão)'; }
 function htmlPixLimpo(payload, valor, teste, info){
   info=info||{titulo:'Música Personalizada', itens:['Liberada assim que o Pix cair']};
   var svg=''; try{ svg=QRCodeGen.toSVG(payload,{ec:'M',quiet:2}); }catch(e){}
@@ -8026,10 +8049,10 @@ function pnlPixManHtml(){
       '<div class="pm-b">'+(u.img?'<button type="button" class="cmp-bt" data-pmimg="'+esc(u.img)+'">🖼️ Ver comprovante</button>':'')+
         (!x.pago?'<button type="button" class="cmp-bt sobe" data-pmac="liberar" data-pmid="'+esc(x.id)+'">✅ Liberar</button>'+(x.status!=='recusado'?'<button type="button" class="cmp-bt" data-pmac="recusar" data-pmid="'+esc(x.id)+'">❌ Recusar</button>':''):'')+'</div><div class="pm-img" hidden></div></div>'; };
   return '<div class="pm-box'+(conf.length?' alerta':'')+'"><div class="pm-top" data-pmabre><b>🧾 Pix manual</b> '+(conf.length?'<span class="pm-n">'+conf.length+' pra conferir</span>':'')+
-      '<small>'+(efiFora?(D.cfg.infinitepay===true?'💳 Pagamento principal: InfinitePay (Pix e cartão, libera sozinho) · reserva: Pix Nubank':'🟠 Efí fora: o site está usando o seu Pix (Nubank) com "Já paguei" (2 toques)'):'🟢 Efí funcionando')+' · hoje '+lib.filter(function(x){ return new Date(x.pagoEm||0).toDateString()===new Date().toDateString(); }).length+' liberado(s) por comprovante</small><span class="pm-seta">'+(_pnlPMAberto||conf.length?'▴':'▾')+'</span></div>'+
+      '<small>'+(efiFora?(D.cfg.infinitepay!==false?'💳 Pagamento principal: InfinitePay (Pix e cartão, libera sozinho) · reserva: Pix Nubank':'🟠 Efí fora: o site está usando o seu Pix (Nubank) com "Já paguei" (2 toques)'):'🟢 Efí funcionando')+' · hoje '+lib.filter(function(x){ return new Date(x.pagoEm||0).toDateString()===new Date().toDateString(); }).length+' liberado(s) por comprovante</small><span class="pm-seta">'+(_pnlPMAberto||conf.length?'▴':'▾')+'</span></div>'+
     ((_pnlPMAberto||conf.length)?'<div class="pm-corpo">'+
       '<div class="pm-cfg"><label>Pix do site<select data-pmmodo><option value="auto"'+(D.cfg.modo==='auto'?' selected':'')+'>Automático (Efí; se falhar, o meu Pix)</option><option value="manual"'+(D.cfg.modo==='manual'?' selected':'')+'>Só o meu Pix (Bradesco)</option><option value="efi"'+(D.cfg.modo==='efi'?' selected':'')+'>Só Efí</option></select></label>'+
-        '<label class="pm-ck"><input type="checkbox" data-pmip'+(D.cfg.infinitepay===true?' checked':'')+'> 💳 <b>Usar InfinitePay</b> (Pix e cartão, libera sozinho). Se falhar, usa o Pix acima.</label>'+
+        '<label class="pm-ck"><input type="checkbox" data-pmip'+(D.cfg.infinitepay!==false?' checked':'')+'> 💳 <b>Usar InfinitePay</b> (Pix e cartão, libera sozinho). Se falhar, usa o Pix acima.</label>'+
         '<label class="pm-ck"><input type="checkbox" data-pmauto'+(D.cfg.autoLiberar?' checked':'')+'> Liberar sozinho quando a IA aprovar o comprovante</label>'+
         (D.cfg.efiErro?'<small>Último erro da Efí: '+esc(D.cfg.efiErro)+'</small>':'')+'</div>'+
       (conf.length?'<div class="pm-sec">⏳ Para conferir</div>'+conf.map(item).join(''):'')+
@@ -10390,7 +10413,7 @@ function ouvirEscolher(prod){
   var pm=PACOTES.musica.preco;
   b.textContent = prod==='carta' ? ('Montar minha carta 💌 — R$ '+fmtPreco(pm+COMBO_DA_MUSICA.carta))
     : prod==='completo' ? ('Montar minha retrospectiva 💝 — R$ '+fmtPreco(pm+COMBO_DA_MUSICA.completo))
-    : ('Quero as 4 músicas — pagar R$ '+fmtPreco(_ouvir.valor)+' no Pix');
+    : ('Quero as 4 músicas — pagar R$ '+fmtPreco(_ouvir.valor)+noPix());
 }
 /* link do WhatsApp → leva a música pro criador e já abre a carta/retrospectiva */
 function ouvirMontarCombo(){
@@ -10444,7 +10467,7 @@ function telaOuvir(arg){
             (d.oferta4?'':'<div class="mp-of-pr">R$ '+fmtPreco(valor)+'</div></div>')+
           '</div>'+
           (d.oferta4 ? '<div id="ouvirCombos">'+htmlOpcoesCombo('musica')+'</div>' : '')+
-          '<button class="btn btn-primary btn-block" id="ouvirPagar" style="margin-top:1rem">'+(d.oferta4?'Quero as 4 músicas — pagar R$ ':'Quero minha música — pagar R$ ')+fmtPreco(valor)+' no Pix</button>'+
+          '<button class="btn btn-primary btn-block" id="ouvirPagar" style="margin-top:1rem">'+(d.oferta4?'Quero as 4 músicas — pagar R$ ':'Quero minha música — pagar R$ ')+fmtPreco(valor)+noPix()+'</button>'+
           '<div id="ouvirPix" style="display:none;margin-top:1rem"></div>'+
         '</div>';
       ligarPreviasLimitadas();
@@ -10466,7 +10489,7 @@ function telaOuvir(arg){
             if(res.ok && res.d && res.d.checkoutUrl){ W.id=res.d.id; irParaInfinitePay(res.d.checkoutUrl, res.d.id, enviarFotosExtras(res.d.id, W)); return; }
             if(!res.ok || !res.d || !res.d.payload){
               toast((res.d&&res.d.erro)||'Não consegui gerar o Pix agora.');
-              b.disabled=false; b.textContent=(d.oferta4?'Quero as 4 músicas — pagar R$ ':'Quero minha música — pagar R$ ')+fmtPreco(valor)+' no Pix'; return;
+              b.disabled=false; b.textContent=(d.oferta4?'Quero as 4 músicas — pagar R$ ':'Quero minha música — pagar R$ ')+fmtPreco(valor)+noPix()+''; return;
             }
             var id=res.d.id, payload=res.d.payload;
             b.style.display='none';
@@ -10480,7 +10503,7 @@ function telaOuvir(arg){
             W.id=id; enviarFotosExtras(id, W);
             try{ area.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
           })
-          .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent=(d.oferta4?'Quero as 4 músicas — pagar R$ ':'Quero minha música — pagar R$ ')+fmtPreco(valor)+' no Pix'; });
+          .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent=(d.oferta4?'Quero as 4 músicas — pagar R$ ':'Quero minha música — pagar R$ ')+fmtPreco(valor)+noPix()+''; });
       };
     })
     .catch(function(e){ console.error('telaOuvir:', e && (e.stack||e.message)); telaPresenteNaoEncontrado(); });

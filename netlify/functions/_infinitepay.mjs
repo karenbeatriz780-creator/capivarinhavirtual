@@ -11,7 +11,7 @@ const chave = () => (process.env.INFINITEPAY_API_KEY || '').trim();
 const cab = () => Object.assign({ 'Content-Type': 'application/json' }, chave() ? { 'X-Api-Key': chave() } : {});
 export async function ipLigada() {
   const c = (await getStore('gastos').get('cfg_pixmanual', { type: 'json' }).catch(() => null)) || {};
-  return c.infinitepay === true && !!IP_HANDLE; // liga/desliga no painel (🧾 Pix manual)
+  return c.infinitepay !== false && !!IP_HANDLE; // ligada por padrão; desliga no painel (🧾 Pix manual)
 }
 function acharUrl(d) {
   if (!d || typeof d !== 'object') return null;
@@ -19,11 +19,24 @@ function acharUrl(d) {
   for (const v of Object.values(d)) { if (typeof v === 'string' && /^https:\/\/[^ ]*infinitepay/.test(v)) return v; if (v && typeof v === 'object') { const u = acharUrl(v); if (u) return u; } }
   return null;
 }
-// cria o link de pagamento do pedido. valor em reais.
-export async function criarLinkIP(id, valor, descricao) {
+function telBR(t) {
+  let d = String(t || '').replace(/\D/g, '');
+  if (d.length === 10 || d.length === 11) d = '55' + d;
+  return /^55\d{10,11}$/.test(d) ? '+' + d : null;
+}
+// cria o link de pagamento do pedido. valor em reais. cli = { nome, tel } pra já vir preenchido na InfinitePay.
+export async function criarLinkIP(id, valor, descricao, cli) {
+  const cust = {}; const nm = String((cli && cli.nome) || '').replace(/[^\p{L} '.-]/gu, '').trim().slice(0, 60); const tl = telBR(cli && cli.tel);
+  if (nm.length >= 2) cust.name = nm; if (tl) cust.phone_number = tl;
+  try { return await criarLinkIP0(id, valor, descricao, Object.keys(cust).length ? cust : null); }
+  catch (e) { if (!Object.keys(cust).length) throw e; console.error('InfinitePay recusou com dados do cliente, tentando sem:', e.message); return await criarLinkIP0(id, valor, descricao, null); }
+}
+async function criarLinkIP0(id, valor, descricao, customer) {
   const corpo = { handle: IP_HANDLE, order_nsu: String(id), items: [{ quantity: 1, price: Math.round(Number(valor) * 100), description: String(descricao || 'Música Personalizada').slice(0, 120) }],
     redirect_url: SITE + '/.netlify/functions/infinitepay-retorno?id=' + encodeURIComponent(id),
     webhook_url: SITE + '/.netlify/functions/infinitepay-webhook' };
+  if (customer) corpo.customer = customer;
+  if (chave()) corpo.options = { require_delivery_address: false }; // sem endereço (só funciona com a chave da API)
   const ac = new AbortController(), to = setTimeout(() => ac.abort(), 12000);
   try {
     const r = await fetch(IP + '/links', { method: 'POST', headers: cab(), body: JSON.stringify(corpo), signal: ac.signal });
