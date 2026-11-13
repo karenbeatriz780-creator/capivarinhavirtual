@@ -166,22 +166,8 @@ export async function pagouTexto(de) {
     await entregarPedidoPagoZap(pago);
     return;
   }
-  if (!pend) {
-    const efi = gs.find((g) => !g.pago);
-    await enviarTexto(de, efi ? '😕 Ainda não identificamos o seu pagamento.\n\nSe já pagou, me manda aqui o *print ou PDF do comprovante* do Pix que eu confiro na hora. 💗'
-      : msgSemPix(await linkDaPessoa(de)));
-    if (efi) await getStore('whatsapp').setJSON(PRINT(de), { id: efi.id, em: Date.now() }).catch(() => {});
-    return;
-  }
-  // escreveu "já paguei" (sem botão): NUNCA libera só pelo texto → pede o comprovante (a IA confere e libera)
-  if (true) {
-    await getStore('whatsapp').setJSON(PRINT(de), { id: pend.id, em: Date.now() }).catch(() => {});
-    await enviarTexto(de, '💗 Pra eu confirmar rapidinho, me manda aqui o *print ou PDF do comprovante* do Pix de *R$ ' + Number(pend.pagamento.valor || 0).toFixed(2).replace('.', ',') + '*. Assim que eu conferir, sua música chega aqui. 🎶');
-    return;
-  }
-  const g2 = await liberarSemComprovante(pend.id, 'ja-paguei-whatsapp-texto');
-  if (g2 && g2.pago) { await enviarTexto(de, '✅ *Pagamento confirmado!* Mandando suas músicas completas agora 🎶💗'); await entregarPedidoPagoZap(g2); }
-  else await enviarTexto(de, '💗 Me manda aqui o *print ou PDF do comprovante* do Pix que eu confiro na hora.');
+  // escreveu "já paguei" e não está pago: NUNCA libera pelo texto → manda o link pra gerar o Pix / tocar em "Já paguei" no site
+  await enviarTexto(de, msgSemPix(await linkDaPessoa(de)));
 }
 
 // ✅ "Já paguei" no WhatsApp: NÃO libera nada. Só ENTREGA se a pessoa já confirmou no site (2 toques em "Já paguei").
