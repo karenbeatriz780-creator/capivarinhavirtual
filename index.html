@@ -10519,8 +10519,27 @@ function telaPresenteAguardando(id){
   el('app').innerHTML='<div class="g-scope"><div class="expired">'+
     '<img src="'+MASCOTE+'" alt="">'+
     '<h2 style="font-family:Fraunces;font-size:1.5rem">Esse presente ainda está sendo preparado</h2>'+
-    '<p style="color:#B99BA8;font-size:.9rem;line-height:1.6;max-width:22rem">O pagamento de quem criou ainda não foi confirmado. Tente abrir de novo em alguns instantes.</p>'+
-    '<a class="btn btn-primary" href="#/p/'+esc(id)+'" style="margin-top:.6rem">Tentar de novo</a></div></div>';
+    '<p style="color:#B99BA8;font-size:.9rem;line-height:1.6;max-width:22rem">O pagamento ainda não foi confirmado. Se você ainda não pagou, gere o Pix abaixo — assim que pagar, a música é liberada aqui e enviada no seu WhatsApp.</p>'+
+    '<button type="button" class="btn btn-primary" id="agPagar" style="margin-top:.6rem">💚 Pagar agora no Pix</button>'+
+    '<a class="btn btn-ghost" href="#/p/'+esc(id)+'" style="margin-top:.6rem">Já paguei — tentar de novo</a>'+
+    '<div id="agPix" style="display:none;width:100%;max-width:30rem;margin-top:1rem;text-align:left"></div></div></div>';
+  el('agPagar').onclick=function(){
+    var b=el('agPagar'); b.disabled=true; b.textContent='Gerando o Pix...';
+    try{ Store.set('cl_ip',''); }catch(e){}
+    fetch('/.netlify/functions/recuperar-pix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id, manterExtras:true})})
+      .then(function(r){ return r.json().then(function(x){ return {ok:r.ok,d:x}; }); })
+      .then(function(res){
+        if(res.d && res.d.pago){ location.hash='#/p/'+encodeURIComponent(id)+'/c'; return; }
+        if(res.ok && res.d && res.d.checkoutUrl){ irParaInfinitePay(res.d.checkoutUrl, res.d.id||id, null); return; }
+        if(!res.ok || !res.d || !res.d.payload){ toast((res.d&&res.d.erro)||'Não consegui gerar o Pix agora.'); b.disabled=false; b.textContent='💚 Pagar agora no Pix'; return; }
+        b.style.display='none';
+        var pid=res.d.id||id, area=el('agPix'); area.style.display='block';
+        area.innerHTML=htmlPixLimpo(res.d.payload, Number(res.d.valor)||0, false, {titulo:'Música Personalizada', itens:['As músicas completas, sem corte','Enviada no seu WhatsApp assim que pagar']});
+        try{ guardarPixPendente(pid, res.d.payload, Number(res.d.valor)||0, false, null); }catch(e){}
+        ligarPixLimpo(res.d.payload, pid, function(){ location.hash='#/p/'+encodeURIComponent(pid)+'/c'; });
+      })
+      .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent='💚 Pagar agora no Pix'; });
+  };
 }
 function telaPresenteExpirado(){
   el('app').innerHTML='<div class="g-scope"><div class="expired">'+

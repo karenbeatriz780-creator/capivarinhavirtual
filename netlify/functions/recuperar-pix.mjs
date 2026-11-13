@@ -142,7 +142,8 @@ export default async (req) => {
     const pg0 = g.pagamento || {};
     const base = Math.round((Number(pg0.valor || PRECO_MUSICA) - Number(pg0.valorExtras || 0)) * 100) / 100 || PRECO_MUSICA;
     const extrasOk = (g.produto || 'musica') === 'musica' && !g.comboDaMusica && !g.bonusDe && !g.dobroDe;
-    const extrasPix = extrasOk && Array.isArray(body.extras) ? body.extras.filter((k, i, a) => EXTRAS_PIX[k] && a.indexOf(k) === i) : [];
+    const extrasIn = Array.isArray(body.extras) ? body.extras : (body.manterExtras ? (pg0.extras || g.extrasPix || []) : []);
+    const extrasPix = extrasOk && Array.isArray(extrasIn) ? extrasIn.filter((k, i, a) => EXTRAS_PIX[k] && a.indexOf(k) === i) : [];
     const valorExtras = Math.round(extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0) * 100) / 100;
     const valor = Math.round((base + valorExtras) * 100) / 100;
     const oferta4 = quatroOk(g) || await ofertaRec(String(body.t || ''));
