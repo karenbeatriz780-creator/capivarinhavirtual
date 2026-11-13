@@ -498,7 +498,7 @@ const TROCAS_BEBE = [
 function cenaDaIdade(livro, cena) {
   if (!ehBebe(livro)) return cena;
   let c = String(cena || ''); TROCAS_BEBE.forEach(([re, por]) => { c = c.replace(re, por); });
-  return c;
+  return 'is a TINY BABY on the ground, crawling on all fours or sitting on a soft blanket (a real ' + (Number(livro.idadeMeses) || 0) + '-month-old baby, NOT a toddler, NOT a preschooler, NOT standing), ' + c;
 }
 function regraIdade(livro) {
   return 'AGE IS CRITICAL (second most important rule, right after the face): the main child is ' + idadeIA(livro) + '. ' +
@@ -510,7 +510,7 @@ export function promptImagem(tema, livro, cena, ehCapa, semFoto) {
   return (semFoto ? '' : ROSTO) + regraIdade(livro || {}) + ESTILO_BASE +
     (semFoto ? 'The main character is an adorable, expressive Brazilian child with a big smile. '
       : 'The main character is the child from the FIRST reference photo. ') +
-    'The child is ' + idadeIA(livro) + ', wearing ' + (ehBebe(livro || {}) ? 'a baby-sized version of ' : '') + (tema.roupa || 'colorful comfortable clothes') + '. ' +
+    'The child is ' + idadeIA(livro) + ', wearing ' + (ehBebe(livro || {}) ? 'a soft cotton baby romper (onesie) in colors inspired by: ' : '') + (tema.roupa || 'colorful comfortable clothes') + (ehBebe(livro || {}) ? ', no shoes or tiny soft baby socks' : '') + '. ' +
     (nEx ? promptExtras(livro, ehCapa) : '') +
     (ehCapa || semFoto ? '' : (nEx
       ? 'If there is one more reference image after the companion photos (the LAST one), it is the book cover: use it ONLY for the outfit, colors and art style. '
@@ -963,7 +963,7 @@ export async function entregarPreviaLivro(id, token, numero, base) {
   // 2) o PDF da prévia + o que libera + os exemplos: monta em segundo plano (leva uns segundos)
   const primeira = !g.livro.exemplosZap;
   try { const atual = await presentes.get(id, { type: 'json' }).catch(() => null) || g; atual.livro.exemplosZap = atual.livro.exemplosZap || Date.now(); await presentes.setJSON(id, atual); } catch (e) {}
-  const r = await fetch((base || SITE) + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, previa: true, para, info: primeira }) }).catch(() => null);
+  const r = true; if (false) await fetch((base || SITE) + '/.netlify/functions/livro-pdf-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, previa: true, para, info: primeira }) }).catch(() => null);
   if (!r && primeira) await enviarInfoPrevia(para, g);
   return 'enviado';
 }

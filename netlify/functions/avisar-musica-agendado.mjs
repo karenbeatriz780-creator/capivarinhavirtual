@@ -46,7 +46,7 @@ export default async () => {
       if (idade > 20 * 3600 * 1000) continue; // passou da janela de 24 h do WhatsApp
       if (!(await conversaAberta(o.para))) continue;
       const g = await getStore('presentes').get(o.pedido, { type: 'json' }).catch(() => null);
-      if (g) await oferecerLivro(o.para, g, 2);
+      // desligado: o bot não manda oferta/exemplo de livro (só a prévia que a pessoa pediu)
     }
   } catch (e) { console.error('lembrete-livro:', e && e.message); }
   let lista = [];
