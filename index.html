@@ -3630,6 +3630,7 @@ var PRECO_PACOTE6 = 19.99; /* 6 músicas (3 letras × 2 versões) — tem que ba
 function numMusicaAtual(){ return W.ofertaM2 ? 3 : (W.ofertaM1 ? 2 : 1); }
 var ZAP_API='5511924826268';
 function htmlBotaoZap(tid, esperando){
+  return ''; /* prévia pelo WhatsApp desligada (a Meta cobra cada mensagem) — a prévia fica só aqui no site */
   tid = tid || (W && W.musicaPreviewId);
   if(!W || !tid || W.bonusDe || W.dobroDe) return '';
   var txt='Oi! Quero receber minha música 🎵 (código t.'+tid+')';
@@ -3736,11 +3737,11 @@ function htmlMusicaDemorou(taskId){
   return '<div class="musica-demorou">⏳'+
     '<b>Sua música ainda está sendo produzida</b>'+
     '<span>Às vezes o estúdio fica cheio e leva mais tempo. Ela não foi perdida — '+
-    'a gente te manda assim que ficar pronta.</span>'+
-    '<a class="mc-whats-btn" href="'+link+'" target="_blank" rel="noopener">'+IC.wpp+' Receber no meu WhatsApp</a>'+
+    'fique nesta página: assim que ficar pronta, ela aparece aqui.</span>'+
   '</div>';
 }
 function htmlBotaoWhatsMusica(taskId){
+  return ''; /* prévia pelo WhatsApp desligada */
   if(!taskId) return '';
   var msg='Olá! Quero receber a prévia da minha música. ID do pedido: '+taskId;
   var link='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent(msg);
@@ -7491,11 +7492,16 @@ function jaPagueiDoisToques(id, botao, msg, aoLiberar){
     botao.disabled=true; if(botao.classList) botao.classList.add('dis');
     msg.hidden=false; msg.className=msg.className.replace(/ ?er\b/,'');
     msg.innerHTML='⏳ <b>Processando o seu pagamento…</b>';
-    /* 1º toque libera se já passaram 20 s desde que o Pix foi gerado; 2º toque libera na hora (sem tempo) */
-    jaPagueiManual(id, aoLiberar, n>=2).then(function(ok){
+    /* regra: 2 toques E pelo menos 20 s desde que o Pix foi gerado (o servidor confere os 20 s) */
+    if(n===1){
+      setTimeout(function(){ botao.disabled=false; if(botao.classList) botao.classList.remove('dis');
+        msg.innerHTML='🔄 Ainda não processamos o seu pagamento. <b>Toque em "Já paguei" de novo</b>.'; },3000);
+      return;
+    }
+    jaPagueiManual(id, aoLiberar).then(function(ok){
       if(ok===true) return;
       setTimeout(function(){ botao.disabled=false; if(botao.classList) botao.classList.remove('dis');
-        msg.innerHTML=ok==='cedo'?'🔄 Ainda não processamos o seu pagamento. <b>Toque em "Já paguei" de novo</b>.':'Não consegui agora. Toque em <b>Já paguei</b> de novo.'; }, ok==='cedo'?3000:0);
+        msg.innerHTML=ok==='cedo'?'🔄 Ainda não processamos o seu pagamento. Aguarde alguns segundos e <b>toque em "Já paguei" de novo</b>.':'Não consegui agora. Toque em <b>Já paguei</b> de novo.'; }, ok==='cedo'?3000:0);
     });
   };
 }

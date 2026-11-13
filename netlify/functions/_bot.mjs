@@ -217,8 +217,7 @@ async function confirmarPagamentoZap(de, botao, t) {
       const ja = await loja().get('pago_' + g.id, { type: 'json' }).catch(() => null);
       if (ja) continue; // já foi entregue antes → não manda de novo por esse botão
       await getStore('whatsapp').setJSON('pago_' + g.id, { em: Date.now(), para: de, via: 'ja-paguei-whatsapp' }).catch(() => {});
-      await enviarTexto(de, '✅ *Pagamento confirmado!* Aqui estão suas músicas completas 🎶💗');
-      await entregarAudiosPagos(de, g, false);
+      await enviarTexto(de, '✅ *Pagamento confirmado!* Suas músicas completas, sem corte, pra ouvir e baixar:\n' + linkPedido(g) + ' 🎶💗');
       await registrar('pago_enviado', { para: de, pedido: g.id, via: 'ja-paguei-whatsapp' });
       return;
     }

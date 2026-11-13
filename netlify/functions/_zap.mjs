@@ -120,9 +120,8 @@ export const linkPedido = (g) => SITE + '/#/p/' + g.id + (g.produto === 'musica'
 export async function entregarAudiosPagos(para, g, comTexto = true) {
   const vs = versoes(g);
   if (!vs.length) return false;
-  if (comTexto) await enviarTexto(para, '🎧 Aqui estão suas músicas completas pra ouvir e guardar! 💗\n\nTambém ficam salvas no link:\n' + linkPedido(g) + '\n\n' + textoIndica(g));
-  for (const v of vs) await enviarAudio(para, SITE + '/.netlify/functions/baixar-musica?id=' + encodeURIComponent(g.id) + '&v=' + v);
-  if (ehInfantil(g)) await oferecerLivro(para, g); else await oferecerPromo(para, g);
+  // ECONOMIA (Meta cobra cada mensagem nossa desde 01/10/2026): só 1 mensagem com o link — sem áudios separados nem promo
+  if (comTexto) await enviarTexto(para, '🎧 Suas músicas completas, sem corte, pra ouvir e baixar:\n' + linkPedido(g) + '\n\n' + textoIndica(g));
   return true;
 }
 
@@ -260,7 +259,6 @@ export async function entregarPedidoPagoZap(g) {
   if (aberta) {
     await enviarTexto(aberta, '🎉 *Pagamento confirmado!*' + (nome ? ' Obrigado, ' + nome + '!' : '') + ' 💗\n\n' +
       'Suas músicas já estão liberadas, sem corte.' + (g.quatro && !g.ofertaM1 ? ' E as *outras 2 músicas* do seu pacote você cria no mesmo link:' : ' Ficam salvas aqui:') + '\n' + linkPedido(g) + '\n\n' + textoIndica(g));
-    await entregarAudiosPagos(aberta, g, false);
     await registrar('pago_enviado', { para: aberta, pedido: g.id, nome: g.musicaParaNome || nome, via: 'grátis' });
   } else {
     await loja.setJSON('pagoaud_' + chaveNum(num), { id: g.id, em: agora });
