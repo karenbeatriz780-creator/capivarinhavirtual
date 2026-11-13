@@ -185,41 +185,59 @@ export async function pagouTexto(de) {
 }
 
 // ✅ "Já paguei" no WhatsApp: NÃO libera nada. Só ENTREGA se a pessoa já confirmou no site (2 toques em "Já paguei").
-async function confirmarPagamentoZap(de, botao) {
-  let gerou = false;
+// pedidos ligados a UMA música (o botão "Já paguei" da prévia vem com o código dela)
+async function pedidosDaMusica(de, t) {
+  const m = await getStore('musicas').get(t, { type: 'json' }).catch(() => null);
+  const usa = (g) => g && (g.musicaPreviewId === t || (g.ofertaM1 && g.ofertaM1.id === t) || (g.ofertaM2 && g.ofertaM2.id === t) || (m && (g.id === m.presenteId || g.id === m.pedidoRecId)));
+  const lista = (await pedidosRecentes(de)).filter(usa);
+  for (const x of [m && m.presenteId, m && m.pedidoRecId].filter(Boolean)) {
+    if (!lista.some((g) => g.id === x)) { const g = await getStore('presentes').get(x, { type: 'json' }).catch(() => null); if (g && usa(g)) lista.push(g); }
+  }
+  return lista.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
+}
+// botão "Já paguei" (WhatsApp). Regra:
+// · pedido desta música já pago e AINDA NÃO entregue → entrega
+// · Pix gerado e não pago → 1º toque "processando, toque de novo"; 2º toque libera e entrega
+// · não gerou o Pix → "Ops, não identificamos… gere o Pix pelo link"
+// (nunca reenvia música de pedido antigo já entregue)
+async function confirmarPagamentoZap(de, botao, t) {
+  let gerou = false, pend = null;
   try {
-    for (const g of await pedidosRecentes(de)) {
-      const id = g.id;
+    const lista = t ? await pedidosDaMusica(de, t) : await pedidosRecentes(de);
+    for (const g of lista) {
       if (!g || g.cancelado || g.produto === 'livro' || !temMusica(g)) continue;
-      if (!g.pago) { gerou = gerou || !!(g.pagamento && g.pagamento.provedor); continue; }
-      const ja = await getStore('whatsapp').get('pago_' + id, { type: 'json' }).catch(() => null);
-      await getStore('whatsapp').setJSON('pago_' + id, { em: Date.now(), para: de, via: 'ja-paguei-whatsapp' }).catch(() => {});
+      if (!g.pago) {
+        if (g.pagamento && g.pagamento.provedor) gerou = true;
+        if (!pend && g.pagamento && g.pagamento.provedor === 'manual' && Date.now() - (g.pagamento.manualEm || g.criadoEm || 0) < 72 * 3600e3) pend = g;
+        continue;
+      }
+      const ja = await loja().get('pago_' + g.id, { type: 'json' }).catch(() => null);
+      if (ja) continue; // já foi entregue antes → não manda de novo por esse botão
+      await getStore('whatsapp').setJSON('pago_' + g.id, { em: Date.now(), para: de, via: 'ja-paguei-whatsapp' }).catch(() => {});
       await enviarTexto(de, '✅ *Pagamento confirmado!* Aqui estão suas músicas completas 🎶💗');
       await entregarAudiosPagos(de, g, false);
-      if (!ja) await registrar('pago_enviado', { para: de, pedido: id, via: 'ja-paguei-whatsapp' });
+      await registrar('pago_enviado', { para: de, pedido: g.id, via: 'ja-paguei-whatsapp' });
       return;
     }
   } catch (e) { console.error('confirmar pagamento zap:', e && e.message); }
-  // botão "Já paguei" no WhatsApp: 1º toque → "processando, toque de novo"; 2º toque → libera e manda (sem tempo mínimo)
-  if (botao) {
+  // 2 toques no botão "Já paguei" → libera (sem tempo mínimo), só se o Pix foi gerado
+  if (botao && pend) {
     try {
-      const pend = await pixManualPendente(de);
-      if (pend && pend.id) {
-        const k = 'jpz_' + chaveNum(de), st = await loja().get(k, { type: 'json' }).catch(() => null);
-        if (!st || st.id !== pend.id || Date.now() - (st.em || 0) > 6 * 3600e3) {
-          await loja().setJSON(k, { id: pend.id, em: Date.now() });
-          await enviarBotoes(de, '⏳ *Processando o seu pagamento…*\n\nAinda não identificamos. Toque em *"Já paguei"* de novo pra confirmar. 💗', [['pg:perg', '✅ Já paguei']]);
-          return;
-        }
-        await loja().delete(k).catch(() => {});
-        const g2 = await liberarSemComprovante(pend.id, 'ja-paguei-whatsapp-2toques');
-        if (g2 && g2.pago) { await enviarTexto(de, '✅ *Pagamento confirmado!* Mandando suas músicas completas agora 🎶💗'); await entregarPedidoPagoZap(g2); return; }
+      const k = 'jpz_' + chaveNum(de), st = await loja().get(k, { type: 'json' }).catch(() => null);
+      const bt = t ? [['pg:perg:' + t, '✅ Já paguei']] : [['pg:perg', '✅ Já paguei']];
+      if (!st || st.id !== pend.id || Date.now() - (st.em || 0) > 6 * 3600e3) {
+        await loja().setJSON(k, { id: pend.id, em: Date.now() });
+        await enviarBotoes(de, '⏳ *Processando o seu pagamento…*\n\nAinda não identificamos. Toque em *"Já paguei"* de novo pra confirmar. 💗', bt);
+        return;
       }
+      await loja().delete(k).catch(() => {});
+      const g2 = await liberarSemComprovante(pend.id, 'ja-paguei-whatsapp-2toques');
+      if (g2 && g2.pago) { await enviarTexto(de, '✅ *Pagamento confirmado!* Mandando suas músicas completas agora 🎶💗'); await entregarPedidoPagoZap(g2); return; }
     } catch (e) { console.error('ja paguei zap 2 toques:', e && e.message); }
   }
   await enviarTexto(de, gerou
     ? '😕 *Ops, ainda não identificamos o seu pagamento.*\n\nSe você já pagou, volte na página do Pix e toque em *"Já paguei"* pra confirmar. Assim que confirmar, a música chega aqui. 💗'
-    : '😕 *Ops, não identificamos o seu pagamento.*\n\nToque no link da sua prévia, gere o Pix, pague e depois toque em *"Já paguei"* na página. Se já pagou, me escreva aqui *"já paguei"*. 💗');
+    : '😕 *Ops, não identificamos o seu pagamento.*\n\nToque no link da sua prévia, *gere o Pix*, pague e depois toque em *"Já paguei"*. 💗');
 }
 async function procurar(de) {
   await enviarTexto(de, '🔎 Procurando seus pedidos...');
@@ -260,6 +278,7 @@ export async function tratarBot(msg) {
   if (id === 'promo:nao') { await enviarTexto(de, 'Tudo bem! 💗 Aproveite sua música. Qualquer coisa é só chamar.'); await registrar('promo_nao', { numero: de }); return true; }
   if (id === 'pg:conf') { await limpar(de); await confirmarPagamentoZap(de, true); return true; }
   if (id === 'pg:perg') { await limpar(de); await confirmarPagamentoZap(de, true); return true; } // botão Já paguei: 2 toques libera
+  if (id.startsWith('pg:perg:')) { await limpar(de); await confirmarPagamentoZap(de, true, id.slice(8)); return true; } // botão da prévia (ligado à música)
   if (id === 'pg:txt') { await limpar(de); await pagouTexto(de); return true; }
   if (id === 'ini:humano') { await limpar(de); await loja().setJSON('humano_' + chaveNum(de), { em: Date.now() }).catch(() => {}); await enviarTexto(de, '💬 Certo! Um atendente vai te responder por aqui assim que possível. Pode deixar sua mensagem 💗'); try { const { avisar } = await import('./_meta.mjs'); await avisar('💬 Cliente pediu atendente no WhatsApp: ' + de); } catch (e) {} return true; }
   if (id === 'pg:nao') { await limpar(de); await enviarTexto(de, 'Tudo bem! 💗 Pra pagar, toque no link da sua prévia e gere o Pix. Depois é só voltar aqui e me dizer que já pagou.'); return true; }
