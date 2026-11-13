@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
+import { criarLinkIP, ipLigada } from './_infinitepay.mjs';
 import { brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido, marcarPendente } from './_pixmanual.mjs';
 import { statusOferta, registrarTentativa } from './_oferta.mjs';
 import { statusIndicacao, registrarIndicado, registrarUso } from './_indicacao.mjs';
@@ -188,6 +189,16 @@ export default async (req) => {
         return json({ payload, id: presente.id, txid: ref, teste: false, provedor: 'manual', manual: true, valor: precoFinal });
       };
       const pixManual = pixManualFn;
+      // 💳 INFINITEPAY (principal): link de pagamento (Pix ou cartão) — libera sozinho quando a InfinitePay confirma
+      if (await ipLigada()) {
+        try {
+          const desc = (pacote6 ? '6 Músicas Personalizadas' : comboDaMusica ? ('4 Músicas + ' + pacote.nome) : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('') + ' - Capivarinha Love';
+          const lk = await criarLinkIP(presente.id, precoFinal, desc);
+          const m = Object.assign({}, salvo, { pagamento: Object.assign({}, salvo.pagamento, { provedor: 'infinitepay', txid: presente.id, status: 'AGUARDANDO', ipUrl: lk.url, ipEm: Date.now() }) });
+          await getStore('presentes').setJSON(presente.id, m);
+          return json({ checkoutUrl: lk.url, id: presente.id, provedor: 'infinitepay', valor: precoFinal });
+        } catch (e) { console.error('InfinitePay falhou (vai pro Pix de reserva):', e && e.message); }
+      }
       if (await pularEfi()) { const r = await pixManual(null); if (r) return r; }
       const token = await obterToken();
       const nomeCobranca = (pacote6 ? '6 Músicas Personalizadas' : comboDaMusica ? ('4 Músicas + ' + pacote.nome) : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + (temAddonMusica ? ' + Música' : '') + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('');

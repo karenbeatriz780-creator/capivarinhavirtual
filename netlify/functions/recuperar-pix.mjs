@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
+import { criarLinkIP, ipLigada } from './_infinitepay.mjs';
 import { brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido, marcarPendente } from './_pixmanual.mjs';
 import { indexar, indexarDia, chaveTel, lerIndice, idsDoTel } from './_indice.mjs';
 
@@ -158,6 +159,19 @@ export default async (req) => {
       await indexar(at.musicaWhatsapp, 'p', g.id); await indexarDia('p', g.id);
       return json({ payload, id: g.id, teste: false, valor, manual: true, provedor: 'manual' });
     };
+    // 💳 INFINITEPAY (principal)
+    if (await ipLigada()) {
+      try {
+        const lk = await criarLinkIP(g.id, valor, (oferta4 ? '4 Músicas Personalizadas' : 'Música Personalizada') + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('') + ' - Capivarinha Love');
+        const agora = Date.now();
+        const at = Object.assign({}, g, { criadoEm: agora, recuperadoEm: agora, ...(oferta4 ? { quatro: true } : {}), extrasPix,
+          pagamento: Object.assign({}, g.pagamento || {}, { provedor: 'infinitepay', txid: g.id, status: 'AGUARDANDO', valor, extras: extrasPix, valorExtras, ipUrl: lk.url, ipEm: agora,
+            duracao: (g.pagamento && g.pagamento.duracao) || 'vitalicio' }) });
+        await getStore('presentes').setJSON(g.id, at);
+        await indexar(at.musicaWhatsapp, 'p', g.id); await indexarDia('p', g.id);
+        return json({ checkoutUrl: lk.url, id: g.id, valor, provedor: 'infinitepay' });
+      } catch (e) { console.error('InfinitePay falhou (recuperar):', e && e.message); }
+    }
     if (await pularEfi()) { const r = await pixManual(null); if (r) return r; }
     const txid = criarTxid(g.id);
     let token;

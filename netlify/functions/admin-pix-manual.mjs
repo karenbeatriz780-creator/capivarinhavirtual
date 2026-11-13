@@ -26,7 +26,7 @@ export default async (req) => {
   }
   let b = {}; try { b = await req.json(); } catch (e) {}
   if (b.acao === 'cfg') {
-    const m = {}; if (['auto', 'manual', 'efi'].indexOf(b.modo) >= 0) m.modo = b.modo; if (typeof b.autoLiberar === 'boolean') m.autoLiberar = b.autoLiberar;
+    const m = {}; if (['auto', 'manual', 'efi'].indexOf(b.modo) >= 0) m.modo = b.modo; if (typeof b.autoLiberar === 'boolean') m.autoLiberar = b.autoLiberar; if (typeof b.infinitepay === 'boolean') m.infinitepay = b.infinitepay;
     if (b.modo === 'auto') m.efiFalhouEm = 0;
     return json({ ok: true, cfg: await salvarCfgPix(m) });
   }
