@@ -1567,7 +1567,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .gcard-th{width:52px;height:52px;border-radius:12px;object-fit:cover;background:var(--rose-soft);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
 .gcard h4{font-size:.97rem;font-weight:700;}
-.gcard .mt{font-size:.76rem;color:var(--muted);margin-top:.15rem;}
+.gcard .mt{font-size:.76rem;color:var(--muted);margin-top:.15rem;min-height:0;background:none;}
 .gcard .acts{display:flex;gap:.45rem;margin-top:.9rem;flex-wrap:wrap;}
 .gcard .acts button{font-size:.78rem;font-weight:700;padding:.5rem .85rem;border-radius:100px;border:1.5px solid var(--line);background:#fff;}
 .gcard .acts button:hover{border-color:var(--rose);color:var(--rose-deep);}
@@ -10175,6 +10175,7 @@ function meusMostrar(d, sess){
       '<div style="flex:1;min-width:0"><h4>'+esc(tit)+'</h4><div class="mt">'+esc([nomeGenero(it.estilo), it.em?new Date(it.em).toLocaleDateString('pt-BR'):''].filter(Boolean).join(' · '))+'</div></div>'+badge+
       '</div><div class="acts">'+
         '<a class="ms-btn'+(it.pago?' forte':'')+'" href="'+esc(it.link)+'">'+(it.pago?'▶ Ouvir e baixar':'🎧 Ouvir prévia e liberar')+'</a>'+
+        (!it.pago && it.produto==='musica' ? '<button type="button" class="ms-btn" data-ms-pago="'+esc(it.id)+'">✅ Já paguei</button>' : '')+
         (it.liberadas ? '<a class="ms-btn ms-lib" href="#/liberadas/'+esc(it.id)+'">🎁 Criar minhas 2 músicas liberadas</a>' : '')+
         (it.pago && it.produto==='musica' ? '<button type="button" data-ms-copy="'+esc(location.origin+'/'+it.link.replace(/\/c$/,''))+'">Copiar link pra enviar</button>' : '')+
       '</div></div>';
@@ -10201,6 +10202,18 @@ function meusMostrar(d, sess){
     '<div style="display:flex;gap:.6rem;margin-top:1.2rem;flex-wrap:wrap"><a class="btn btn-ghost" style="flex:1 1 12rem" href="#/livro/criar">📖 Criar outro livro</a><a class="btn btn-ghost" style="flex:1 1 12rem" href="#/criar/musica">🎵 Criar outra música</a></div>';
   el('meusSair').onclick=function(){ Store.set('cl_meus',''); meusLogin(); };
   document.querySelectorAll('[data-ms-copy]').forEach(function(x){ x.onclick=function(){ copiar(x.dataset.msCopy,'Link copiado! É só enviar pra quem vai receber.'); }; });
+  /* "Já paguei" em Meus presentes: 1 toque libera (quem está aqui procurando o presente já comprou) */
+  document.querySelectorAll('[data-ms-pago]').forEach(function(x){ x.onclick=function(){
+    var pid=x.dataset.msPago, txt=x.textContent; x.disabled=true; x.textContent='⏳ Confirmando...';
+    fetch('/.netlify/functions/ja-paguei',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pid, segundo:true})})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d && d.ok && d.pago){ toast('✅ Pagamento confirmado! Abrindo sua música...'); location.hash='#/p/'+encodeURIComponent(pid)+'/c'; return; }
+        x.disabled=false; x.textContent=txt;
+        toast(d && d.ok ? 'Não achamos um Pix gerado nesse pedido. Toque em "Ouvir prévia e liberar" pra gerar o Pix.' : 'Não consegui agora. Toque de novo.');
+      })
+      .catch(function(){ x.disabled=false; x.textContent=txt; toast('Sem conexão. Toque de novo.'); });
+  }; });
   ligarMeusLocal();
   var ivm=setInterval(function(){
     var t=el('msTempo'); if(!t){ clearInterval(ivm); return; }
