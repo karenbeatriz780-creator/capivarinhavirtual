@@ -120,7 +120,7 @@ export async function processar(corpo) {
                 } else if (r.status === 'conferir') {
                   await enviarTexto(msg.from, '⏳ Recebi! Seu comprovante foi pra conferência e a liberação sai em poucos minutos. Não precisa pagar de novo 💗');
                 } else {
-                  await enviarTexto(msg.from, '⚠️ Não consegui confirmar esse comprovante: ' + (r.motivos || []).join('; ') + '.\n\nConfira se é o Pix de *R$ ' + Number(g.pagamento.valor || 0).toFixed(2).replace('.', ',') + '* para *Gusthavo dos Santos de Jesus* e mande de novo.');
+                  await enviarTexto(msg.from, '⚠️ Não identifiquei um comprovante de pagamento nessa imagem.\n\nMe manda o *print do comprovante do Pix* (ou o PDF) de *R$ ' + Number(g.pagamento.valor || 0).toFixed(2).replace('.', ',') + '* para *Gusthavo dos Santos de Jesus*. 💗');
                 }
                 await loja.setJSON('bv_' + String(msg.from).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});
                 continue;

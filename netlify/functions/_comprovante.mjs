@@ -99,8 +99,11 @@ export async function analisarComprovante(id, imagem, mime, origem) {
   const iU = idT ? await loja().get('t_' + idT, { type: 'json' }).catch(() => null) : null;
   const motivos = erroIA ? ['não consegui ler o comprovante agora (' + erroIA.slice(0, 80) + ')'] : conferir(g, L, hU && hU.id, iU && iU.id);
   const cfg = await lerCfgPix();
-  const okIA = !motivos.length;
-  let status = okIA ? (cfg.autoLiberar ? 'liberado' : 'conferir') : (erroIA ? 'conferir' : 'recusado');
+  // regra do Gusthavo: se a IA reconheceu que é um comprovante de pagamento → libera (o resto fica só anotado).
+  // Só barra: não é comprovante, ou o mesmo comprovante já usado em outro pedido.
+  const graves = motivos.filter((m) => /não parece um comprovante|já foi usado/.test(m));
+  const okIA = !erroIA && !graves.length;
+  let status = okIA ? 'liberado' : (erroIA ? 'conferir' : 'recusado');
   const envio = { em: Date.now(), img: imgKey, hash, leitura: L, motivos, status, origem };
   reg.envios.push(envio); reg.ult = envio; reg.status = status; reg.valor = pg.valor; reg.whatsapp = g.musicaWhatsapp || g.whatsapp || '';
   reg.para = g.musicaParaNome || g.parceiroNome || ''; reg.criadoEm = g.criadoEm; reg.atualizadoEm = Date.now();
