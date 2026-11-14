@@ -81,7 +81,15 @@ export default async (req) => {
       else if (av.trava && (av.bom || (cat === 'nova' || cat === 'boa') && v7 >= 3 && cpa7 && cpa7 <= cpaMax))
         subir = { agora: false, novo: av.novo, quando: av.quando, porque: av.trava };
     }
-    return { id: c.id, nome: c.nome, diasLista, media, subir, status: c.status, ativa, criada: c.criada, idadeH: Math.round(idadeH), orcamentoDia: c.orcamentoDia, orcamentoTotal: c.orcamentoTotal || null, programada: /^⏰ PROG/.test(c.nome || ''), modoHorario: !!(modoHor[c.id] && !modoHor[c.id].fim), atencao: (() => { const d = (c.dias || {})[hoje] || {}; return ativa && (d.gasto || 0) >= 6 && !Math.max(d.compras || 0, s.porDia[hoje] || 0) ? +(d.gasto || 0).toFixed(2) : 0; })(),
+    // ⬆️ ABA SUBIR: avalia TODAS (ativas e desligadas) com a mesma regra; desligada é avaliada como se estivesse ligada
+    let sub2 = null;
+    if (c.orcamentoDia) {
+      const av2 = avaliarSubir(Object.assign({}, c, { status: 'ACTIVE' }), s.porDia, acoes[c.id], cpaMax, agora);
+      const brl3 = (x) => 'R$ ' + Number(x).toFixed(2).replace('.', ',');
+      const motivo = av2.trava || (!av2.bom ? (av2.vendas ? 'nos últimos 3 dias: ' + av2.vendas + ' venda(s) a ' + brl3(av2.cpa) + ' — precisa de 5+ vendas a até ' + brl3(cpaMax) : 'sem vendas nos últimos 3 dias') : '');
+      sub2 = { grupo: av2.agora ? (ativa ? 'ativa' : 'desligada') : 'bloqueada', novo: av2.novo, vendas: av2.vendas, cpa: av2.cpa != null ? r2(av2.cpa) : null, motivo, quando: av2.quando || null };
+    }
+    return { id: c.id, nome: c.nome, diasLista, media, subir, sub2, status: c.status, ativa, criada: c.criada, idadeH: Math.round(idadeH), orcamentoDia: c.orcamentoDia, orcamentoTotal: c.orcamentoTotal || null, programada: /^⏰ PROG/.test(c.nome || ''), modoHorario: !!(modoHor[c.id] && !modoHor[c.id].fim), atencao: (() => { const d = (c.dias || {})[hoje] || {}; return ativa && (d.gasto || 0) >= 6 && !Math.max(d.compras || 0, s.porDia[hoje] || 0) ? +(d.gasto || 0).toFixed(2) : 0; })(),
       aprendendo: !!c.aprendendo, cat, txt, dica,
       per: { gasto: r2(g), gastoImp: r2(g * (1 + imp)), vendas: v, cpa: v ? r2(g / v) : null, fat: r2(v * tk), lucro: r2(v * tk - g * (1 + imp)) },
       d7: { gasto: r2(g7), vendas: v7, cpa: cpa7 ? r2(cpa7) : null }, d3: { cpa: k3.cpa ? r2(k3.cpa) : null, vendas: k3.vendas },
@@ -117,5 +125,5 @@ export default async (req) => {
   const podeSubir = lista.filter((x) => x.subir && x.subir.agora).map((x) => ({ id: x.id, nome: x.nome, orc: x.orcamentoDia, novo: x.subir.novo, porque: x.subir.porque }));
   const logoSobe = lista.filter((x) => x.subir && !x.subir.agora).map((x) => ({ id: x.id, nome: x.nome, quando: x.subir.quando, porque: x.subir.porque }));
   const duplicar = lista.filter((x) => x.cat === 'boa').slice(0, 3).map((x) => ({ id: x.id, nome: x.nome, cpa: x.d3.cpa || x.d7.cpa }));
-  return json({ podeSubir, logoSobe, duplicar, per, resumo, placar, cont, projConta: { vendas: pj.vendas, fat: r2(pj.fat), lucro: r2(pj.lucro) }, alertas, campanhas: lista, imposto: imp * 100, ticket: tk });
+  return json({ podeSubir, logoSobe, duplicar, per, cpaMax, resumo, placar, cont, projConta: { vendas: pj.vendas, fat: r2(pj.fat), lucro: r2(pj.lucro) }, alertas, campanhas: lista, imposto: imp * 100, ticket: tk });
 };

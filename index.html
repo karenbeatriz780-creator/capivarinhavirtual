@@ -8962,7 +8962,7 @@ var _pnlCamp=null, _pnlCampPer='hoje', _pnlCampFiltro='todas', _pnlCampCarr=fals
 function pnlCampCarregar(){
   if(_pnlCampCarr) return; _pnlCampCarr=true;
   fetch('/.netlify/functions/admin-campanhas?per='+_pnlCampPer,{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
-    _pnlCampCarr=false; _pnlCamp=d; if(_pnlAba==='campanhas'){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
+    _pnlCampCarr=false; _pnlCamp=d; if(_pnlAba==='campanhas'||_pnlAba==='subir'){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
   }).catch(function(){ _pnlCampCarr=false; _pnlCamp={erro:'Sem conexão.'}; });
 }
 var _pnlHor=null,_pnlHorCarr=false,_pnlHorEsc='sua',_pnlHorMao=null;
@@ -9322,6 +9322,42 @@ function pnlCampLigar(body){
       .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent='⏰ Duplicar como programada'; });
   }; });
   if(_pnlAba==='campanhas'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlCache.robo) pnlCarregarRobo(); }
+  if(_pnlAba==='subir'){ if(!_pnlCamp) pnlCampCarregar(); pnlSubirLigar(body); }
+}
+/* ⬆️ ABA SUBIR: todas as campanhas — ativas que podem subir, desligadas que podem subir e as bloqueadas (com o motivo) */
+function pnlSubirHtml(){
+  var d=_pnlCamp;
+  if(!d) return '<div class="pnl-sec"><div class="pnl-nota">Carregando as campanhas…</div></div>';
+  if(d.erro) return '<div class="pnl-sec"><div class="pnl-nota">'+esc(d.erro)+'</div></div>';
+  var cs=(d.campanhas||[]).filter(function(c){ return c.sub2; });
+  var g={ativa:[],desligada:[],bloqueada:[]}; cs.forEach(function(c){ g[c.sub2.grupo].push(c); });
+  var brl=function(v){ return 'R$ '+fmtPreco(Number(v)); };
+  var info=function(c){ return '<div style="font-size:.82rem;color:#777;margin-top:.15rem">Orçamento: '+brl(c.orcamentoDia)+'/dia'+(c.sub2.vendas?' · últimos 3 dias: '+c.sub2.vendas+' venda(s)'+(c.sub2.cpa?' a '+brl(c.sub2.cpa):''):'')+'</div>'; };
+  var linha=function(c,btn){ return '<div style="border-top:1px solid #f0eef5;padding:.65rem 0;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:12rem"><b>'+esc(c.nome)+'</b>'+info(c)+'</div>'+btn+'</div>'; };
+  var sec=function(t,sub,itens,vazio){ return '<div class="pnl-sec"><h2>'+t+' <small style="color:#999;font-weight:600">('+itens.length+')</small></h2><div class="sub">'+sub+'</div>'+(itens.join('')||'<div class="pnl-nota">'+vazio+'</div>')+'</div>'; };
+  return sec('✅ Ativas que podem subir','Vendendo bem nos últimos 3 dias e sem trava. Sobe +20%.',
+      g.ativa.map(function(c){ return linha(c,'<button type="button" class="pnl-link" data-sub="subir" data-subid="'+esc(c.id)+'" data-subnome="'+esc(c.nome)+'" data-subnovo="'+c.sub2.novo+'">⬆️ Subir para '+brl(c.sub2.novo)+'/dia</button>'); }),'Nenhuma ativa pronta pra subir agora.')+
+    sec('💤 Desligadas que podem subir','Estavam vendendo bem nos últimos 3 dias. O botão liga e já sobe +20%.',
+      g.desligada.map(function(c){ return linha(c,'<button type="button" class="pnl-link" data-sub="ligarSubir" data-subid="'+esc(c.id)+'" data-subnome="'+esc(c.nome)+'" data-subnovo="'+c.sub2.novo+'">▶️ Ligar e subir para '+brl(c.sub2.novo)+'/dia</button>'); }),'Nenhuma desligada boa pra subir.')+
+    sec('🔒 Bloqueadas','Ainda não pode subir. O motivo está embaixo de cada uma.',
+      g.bloqueada.map(function(c){ return linha(c,'<div style="font-size:.82rem;color:#8A5A00;flex-basis:100%">'+(c.ativa?'🟢 Ligada':'⚪ Desligada')+' · '+esc(c.sub2.motivo||'')+(c.sub2.quando?' · libera '+new Date(c.sub2.quando).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'')+'</div>'); }),'Nenhuma bloqueada.')+
+    '<div class="pnl-sec"><div class="sub">Regra: 5+ vendas a até '+brl((d.cpaMax)||7)+' por venda nos últimos 3 dias, campanha com mais de 3 dias e orçamento sem mexer há 72 h. O robô nunca sobe sozinho.</div></div>';
+}
+function pnlSubirLigar(body){
+  body.querySelectorAll('[data-sub]').forEach(function(bt){ bt.onclick=function(){
+    var ac=bt.dataset.sub, nm=bt.dataset.subnome, novo=bt.dataset.subnovo;
+    if(!confirm((ac==='ligarSubir'?'Ligar e subir':'Subir')+' "'+nm+'" para R$ '+fmtPreco(Number(novo))+' por dia?')) return;
+    if(!pedirSenhaAdmin()) return;
+    var txt=bt.textContent; bt.disabled=true; bt.textContent='Enviando…';
+    fetch('/.netlify/functions/admin-meta-acao',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({id:bt.dataset.subid,acao:ac})})
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,s:r.status,d:d}; }); })
+      .then(function(x){
+        if(x.s===401){ _pnlChave=''; Store.del('cl_admin_key'); }
+        if(!x.ok){ toast((x.d&&x.d.erro)||'Não deu certo.'); bt.disabled=false; bt.textContent=txt; return; }
+        toast(ac==='ligarSubir'?'Ligada e orçamento atualizado ✓':'Orçamento atualizado ✓');
+        _pnlCamp=null; pnlCampCarregar();
+      }).catch(function(){ toast('Sem conexão.'); bt.disabled=false; bt.textContent=txt; });
+  }; });
 }
 function pnlLigarCampanhas(body){
   body.querySelectorAll('[data-cmpacao]').forEach(function(bt){
@@ -9807,7 +9843,7 @@ function desenharPainel(pedidos, visitas, musicas){
 
   body.innerHTML=
     '<div class="pnl-abas pnl-abas-main" id="pnlAbas">'+
-      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
+      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
         return '<button type="button" class="pnl-aba'+(_pnlAba===a[0]?' on':'')+'" data-aba="'+a[0]+'"><i>'+a[1]+'</i><span>'+a[2]+'</span></button>'; }).join('')+
     '</div>'+
     '<div class="pnl-abas pnl-abas-mais"><small>Mais:</small>'+
@@ -9822,6 +9858,7 @@ function desenharPainel(pedidos, visitas, musicas){
     '</div></div>'+
     (_pnlAba==='gastos' ? pnlGastosHtml(pedidos) : '')+
     (_pnlAba==='campanhas' ? pnlCampHtml() : '')+
+    (_pnlAba==='subir' ? pnlSubirHtml() : '')+
     (_pnlAba==='hoje' ? pnlHojeHtml(pedidos, _pnlCache.custos||{}) : '')+
     (_pnlAba==='pagos'
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+

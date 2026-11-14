@@ -26,7 +26,7 @@ export default async (req) => {
     }
     return json({ ok: !erros.length, feitas, erros });
   }
-  if (!/^\d{5,30}$/.test(id) || ['pausar', 'ativar', 'subir'].indexOf(acao) < 0) return json({ erro: 'Pedido inválido.' }, 400);
+  if (!/^\d{5,30}$/.test(id) || ['pausar', 'ativar', 'subir', 'ligarSubir'].indexOf(acao) < 0) return json({ erro: 'Pedido inválido.' }, 400);
   try {
     const imp = (process.env.META_IMPOSTO !== undefined && process.env.META_IMPOSTO !== '' ? Number(process.env.META_IMPOSTO) : 12.15) / 100;
     const meta = await metaAds(7, null, null, true);
@@ -36,6 +36,15 @@ export default async (req) => {
     const c = Object.assign({}, c0, { gasto: c0.gasto * (1 + imp),
       dias: Object.fromEntries(Object.entries(c0.dias || {}).map(([k, v]) => [k, Object.assign({}, v, { gasto: v.gasto * (1 + imp) })])) });
     const acoes = await ultimasAcoes();
+    if (acao === 'ligarSubir') { // ⬆️ aba Subir: campanha desligada que está boa → liga e já sobe +20%
+      const cfg = await lerCfg(), site = await vendasSitePorCampanha(10);
+      const av = avaliarSubir(Object.assign({}, c0, { status: 'ACTIVE' }), (site[id] || {}).porDia, acoes[id], cfg.cpaMax || 7);
+      if (!av.agora) return json({ erro: 'Bloqueado: ' + (av.trava || 'não está com vendas boas nos últimos 3 dias') }, 409);
+      await aplicarAcao(c0, 'ativar', 'você');
+      await aplicarAcao(Object.assign({}, c0, { status: 'ACTIVE', novoOrcamento: av.novo }), 'subir', 'você');
+      await logRobo({ tipo: 'subiu', camp: c0.nome, id, motivo: 'você ligou e subiu de R$ ' + c0.orcamentoDia + ' para R$ ' + av.novo + '/dia pelo painel (aba Subir)' });
+      return json({ ok: true, novo: av.novo });
+    }
     if (acao === 'subir') {
       const cfg = await lerCfg(), site = await vendasSitePorCampanha(10);
       const av = avaliarSubir(c0, (site[id] || {}).porDia, acoes[id], cfg.cpaMax || 7);
