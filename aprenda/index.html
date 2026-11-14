@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Criar e Vender com IA</title>
+<meta name="description" content="Aprenda a criar vídeos com Inteligência Artificial, escrever roteiros que prendem e fazer seus vídeos viralizarem. E-book com passo a passo, acesso na hora.">
+<meta property="og:title" content="Aprenda a Criar e Vender com Inteligência Artificial">
+<meta property="og:description" content="Vídeos com IA, roteiros que prendem e como viralizar — passo a passo. R$ 27, acesso na hora.">
+<meta name="theme-color" content="#0B0820">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0820;--bg2:#140F33;--card:#1A1440;--line:rgba(255,255,255,.1);--tx:#F4F1FF;--mut:#B7AEDB;--a1:#7C3AED;--a2:#06B6D4;--y:#FACC15;--ok:#22C55E;--err:#F87171}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:Inter,system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.w{max-width:1040px;margin:0 auto;padding:0 16px}
+h1,h2,h3{font-family:Sora,Inter,sans-serif;line-height:1.15;letter-spacing:-.02em}
+a{color:inherit}
+.glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(600px 400px at 85% 10%,rgba(124,58,237,.35),transparent 60%),radial-gradient(500px 380px at 5% 60%,rgba(6,182,212,.22),transparent 60%)}
+header.hero{position:relative;padding:calc(28px + env(safe-area-inset-top)) 0 56px;overflow:hidden}
+.hero .w{position:relative;display:grid;gap:36px;align-items:center}
+@media(min-width:860px){.hero .w{grid-template-columns:1.15fr .85fr}}
+.tag{display:inline-flex;gap:.45rem;align-items:center;font-size:.8rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--y);background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.3);padding:.35rem .75rem;border-radius:99px}
+.hero h1{font-size:clamp(2rem,6.4vw,3.4rem);margin:16px 0 14px;font-weight:800}
+.grad{background:linear-gradient(90deg,#C4B5FD,#67E8F9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{font-size:1.08rem;color:var(--mut);max-width:34rem}
+.preco{display:flex;align-items:baseline;gap:.6rem;margin:22px 0 6px;flex-wrap:wrap}
+.preco b{font-family:Sora;font-size:2.4rem}
+.preco small{color:var(--mut)}
+.cta{display:inline-flex;justify-content:center;align-items:center;gap:.5rem;width:100%;max-width:420px;font:700 1.08rem Inter;color:#0B0820;background:linear-gradient(90deg,var(--y),#FDE68A);border:0;border-radius:14px;padding:1.05rem 1.4rem;cursor:pointer;box-shadow:0 10px 30px rgba(250,204,21,.25);text-decoration:none;transition:transform .15s}
+.cta:active{transform:scale(.98)}.cta[disabled]{opacity:.6}
+.selos{display:flex;gap:1rem;flex-wrap:wrap;margin-top:14px;color:var(--mut);font-size:.85rem}
+/* capa do e-book (3D) */
+.livro{perspective:1400px;display:flex;justify-content:center}
+.capa{position:relative;width:min(70vw,300px);aspect-ratio:3/4.2;border-radius:6px 14px 14px 6px;transform:rotateY(-18deg) rotateX(4deg);transform-style:preserve-3d;
+  background:radial-gradient(circle at 70% 20%,rgba(103,232,249,.55),transparent 45%),radial-gradient(circle at 20% 85%,rgba(250,204,21,.35),transparent 45%),linear-gradient(155deg,#2E1065,#4C1D95 45%,#0E7490);
+  box-shadow:28px 30px 60px rgba(0,0,0,.55),inset 6px 0 0 rgba(255,255,255,.12);padding:22px 20px;display:flex;flex-direction:column;overflow:hidden}
+.capa:before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:linear-gradient(90deg,rgba(0,0,0,.35),transparent)}
+.capa .ia{font:800 4.6rem/0.9 Sora;color:rgba(255,255,255,.08);position:absolute;right:-8px;bottom:-6px}
+.capa .k{font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--y)}
+.capa h3{font-size:1.55rem;margin:.55rem 0 .5rem}
+.capa .ln{height:3px;width:46px;background:var(--y);border-radius:3px;margin:.2rem 0 .7rem}
+.capa ul{list-style:none;font-size:.78rem;color:#E9E4FF;display:grid;gap:.35rem}
+.capa ul li:before{content:"▸ ";color:#67E8F9}
+.capa .play{margin-top:auto;display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:#E9E4FF}
+.capa .play i{width:30px;height:30px;border-radius:50%;background:var(--y);display:grid;place-items:center;font-style:normal;color:#0B0820;font-weight:800}
+section{padding:56px 0}
+section h2{font-size:clamp(1.55rem,4.6vw,2.2rem);margin-bottom:10px}
+section p.lead{color:var(--mut);max-width:40rem;margin-bottom:26px}
+.grid{display:grid;gap:14px}
+@media(min-width:720px){.grid.g2{grid-template-columns:1fr 1fr}.grid.g4{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+.card .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1.35rem;background:linear-gradient(135deg,rgba(124,58,237,.35),rgba(6,182,212,.35));margin-bottom:12px}
+.card h3{font-size:1.1rem;margin-bottom:6px}
+.card p{color:var(--mut);font-size:.95rem}
+.lista{list-style:none;display:grid;gap:.6rem}
+.lista li{display:flex;gap:.6rem;align-items:flex-start}
+.lista li:before{content:"✓";flex:none;width:22px;height:22px;border-radius:50%;background:rgba(34,197,94,.15);color:var(--ok);display:grid;place-items:center;font-weight:800;font-size:.8rem;margin-top:2px}
+.alt{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:600;list-style:none}summary::-webkit-details-marker{display:none}
+summary:after{content:"+";float:right;color:var(--mut)}details[open] summary:after{content:"–"}
+details p{color:var(--mut);margin-top:8px;font-size:.95rem}
+footer{padding:30px 0 calc(30px + env(safe-area-inset-bottom));color:var(--mut);font-size:.8rem;text-align:center;border-top:1px solid var(--line)}
+/* checkout */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(5,3,15,.78);backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center}
+.ov.on{display:flex}
+@media(min-width:640px){.ov{align-items:center}}
+.sheet{width:100%;max-width:480px;max-height:94vh;overflow:auto;background:#120D2E;border:1px solid var(--line);border-radius:22px 22px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom))}
+@media(min-width:640px){.sheet{border-radius:22px}}
+.sheet h3{font-size:1.25rem;margin-bottom:4px}
+.x{float:right;background:none;border:0;color:var(--mut);font-size:1.5rem;cursor:pointer;line-height:1}
+label{display:block;font-size:.85rem;color:var(--mut);margin:14px 0 6px}
+input[type=text],input[type=tel]{width:100%;font:500 1rem Inter;color:var(--tx);background:#0B0820;border:1px solid var(--line);border-radius:12px;padding:.85rem .9rem}
+input:focus{outline:2px solid var(--a2);border-color:transparent}
+.bump{margin:16px 0;border:2px dashed var(--y);background:rgba(250,204,21,.07);border-radius:16px;padding:14px;display:flex;gap:.8rem;cursor:pointer}
+.bump input{width:22px;height:22px;flex:none;accent-color:var(--y);margin-top:3px}
+.bump b{display:block}.bump .pr{color:var(--y);font-weight:700}.bump s{color:var(--mut);font-weight:500}
+.bump p{font-size:.85rem;color:var(--mut);margin-top:4px}
+.mini{width:52px;flex:none;aspect-ratio:3/4.2;border-radius:3px 7px 7px 3px;background:radial-gradient(circle at 70% 20%,rgba(250,204,21,.5),transparent 50%),linear-gradient(155deg,#0E7490,#155E75 50%,#4C1D95);box-shadow:4px 6px 14px rgba(0,0,0,.4);display:grid;place-items:center;font-size:1.2rem}
+.tot{display:flex;justify-content:space-between;align-items:center;margin:6px 0 14px;font-weight:600}
+.tot b{font-family:Sora;font-size:1.5rem}
+.err{color:var(--err);font-size:.88rem;margin-top:8px;min-height:1.1em}
+.qr{background:#fff;border-radius:14px;padding:12px;width:min(62vw,220px);margin:12px auto}
+.qr svg{display:block;width:100%;height:auto}
+.code{font:500 .78rem ui-monospace,monospace;word-break:break-all;background:#0B0820;border:1px solid var(--line);border-radius:12px;padding:.7rem;color:var(--mut);max-height:84px;overflow:auto}
+.btn2{display:block;width:100%;font:700 1rem Inter;border-radius:12px;padding:.9rem;margin-top:10px;cursor:pointer;border:1px solid var(--line);background:#231A55;color:var(--tx)}
+.btn2.ok{background:var(--ok);border:0;color:#04210F}
+.msg{font-size:.9rem;color:var(--mut);margin-top:10px;text-align:center;min-height:1.2em}
+.steps{counter-reset:s;list-style:none;display:grid;gap:.45rem;font-size:.88rem;color:var(--mut);margin:10px 0}
+.steps li{counter-increment:s;display:flex;gap:.5rem}.steps li:before{content:counter(s);flex:none;width:20px;height:20px;border-radius:50%;background:#231A55;color:var(--tx);font-size:.72rem;font-weight:700;display:grid;place-items:center}
+.addb{margin-top:14px;border:1px dashed var(--y);border-radius:12px;padding:10px;font-size:.88rem;display:flex;gap:.6rem;align-items:center}
+.addb button{margin-left:auto;flex:none;background:var(--y);color:#0B0820;border:0;border-radius:10px;padding:.5rem .7rem;font-weight:700;cursor:pointer}
+.acesso .item{display:flex;gap:.8rem;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.acesso .item a{margin-left:auto;background:var(--y);color:#0B0820;font-weight:700;border-radius:10px;padding:.55rem .8rem;text-decoration:none;flex:none}
+.acesso .item span.wait{margin-left:auto;font-size:.78rem;color:var(--mut);text-align:right;max-width:9rem}
+.sticky{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(11,8,32,.95) 30%);display:flex;justify-content:center;transform:translateY(120%);transition:transform .25s}
+.sticky.on{transform:none}
+</style>
+</head>
+<body>
+<header class="hero"><div class="glow"></div>
+ <div class="w">
+  <div>
+   <span class="tag">⚡ E-book · passo a passo</span>
+   <h1>Aprenda a <span class="grad">Criar e Vender</span> com Inteligência Artificial</h1>
+   <p class="sub">Como criar vídeos com IA, escrever roteiros que prendem nos primeiros segundos e fazer seus vídeos chegarem em muita gente — começando do zero, só com o celular.</p>
+   <div class="preco"><b>R$ 27</b><small>pagamento único no Pix · acesso na hora</small></div>
+   <button class="cta" data-comprar>Quero aprender agora →</button>
+   <div class="selos"><span>📱 Feito pra celular</span><span>🔓 Acesso imediato</span><span>🧠 Do zero</span></div>
+  </div>
+  <div class="livro"><div class="capa">
+   <span class="k">E-book · Inteligência Artificial</span>
+   <h3>Criar Vídeos com IA que Vendem</h3><div class="ln"></div>
+   <ul><li>Vídeos com IA do zero</li><li>Roteiros que prendem</li><li>Como viralizar</li><li>Do vídeo à venda</li></ul>
+   <div class="play"><i>▶</i> Passo a passo prático</div>
+   <div class="ia">IA</div>
+  </div></div>
+ </div>
+</header>
+
+<section><div class="w">
+ <h2>O que você vai aprender</h2>
+ <p class="lead">Tudo explicado em linguagem simples, com exemplos que você pode copiar e adaptar.</p>
+ <div class="grid g4">
+  <div class="card"><div class="ic">🎬</div><h3>Criar vídeos com IA</h3><p>As ferramentas e o passo a passo pra transformar uma ideia em vídeo pronto: imagem, voz, música e edição.</p></div>
+  <div class="card"><div class="ic">✍️</div><h3>Roteiros que prendem</h3><p>A estrutura de roteiro que segura a pessoa nos 3 primeiros segundos e faz ela assistir até o fim.</p></div>
+  <div class="card"><div class="ic">🚀</div><h3>Fazer o vídeo viralizar</h3><p>Ganchos, formatos, duração e horários que mais funcionam no Reels, TikTok e Shorts.</p></div>
+  <div class="card"><div class="ic">🛒</div><h3>Do vídeo à venda</h3><p>Como usar o vídeo pra levar gente pro seu produto, link ou WhatsApp, sem parecer propaganda chata.</p></div>
+ </div>
+</div></section>
+
+<section class="alt"><div class="w grid g2" style="align-items:center">
+ <div>
+  <h2>Pra quem é</h2>
+  <ul class="lista" style="margin-top:14px">
+   <li>Quem quer começar a criar conteúdo e não sabe por onde começar</li>
+   <li>Quem tem um produto ou serviço e quer vender mais com vídeo</li>
+   <li>Quem já posta, mas os vídeos não saem do lugar</li>
+   <li>Quem quer aprender a usar IA de um jeito prático, sem complicação</li>
+  </ul>
+ </div>
+ <div class="card">
+  <h3 style="margin-bottom:10px">Você recebe</h3>
+  <ul class="lista">
+   <li>E-book <b>Criar Vídeos com IA que Vendem</b></li>
+   <li>Modelos de roteiro prontos pra adaptar</li>
+   <li>Lista das ferramentas de IA e como usar cada uma</li>
+   <li>Acesso na hora, direto no celular</li>
+  </ul>
+  <div class="preco" style="margin-top:16px"><b>R$ 27</b><small>pagamento único</small></div>
+  <button class="cta" data-comprar>Quero o e-book →</button>
+ </div>
+</div></section>
+
+<section><div class="w" style="max-width:720px">
+ <h2>Perguntas frequentes</h2>
+ <div style="margin-top:16px">
+  <details><summary>Como recebo o material?</summary><p>Assim que o pagamento é confirmado, o acesso aparece na tela. Guarde o link de acesso para abrir quando quiser.</p></details>
+  <details><summary>Preciso saber mexer com computador?</summary><p>Não. Tudo foi pensado para quem está começando e dá para fazer pelo celular.</p></details>
+  <details><summary>É mensalidade?</summary><p>Não. É pagamento único de R$ 27, no Pix.</p></details>
+  <details><summary>Vou ganhar dinheiro garantido?</summary><p>Não existe garantia de resultado: o e-book ensina o caminho e as técnicas. O resultado depende da sua prática e constância.</p></details>
+ </div>
+</div></section>
+
+<footer><div class="w">© <span id="ano"></span> · Aprenda a Criar e Vender com IA</div></footer>
+<div class="sticky" id="sticky"><button class="cta" data-comprar>Quero aprender — R$ 27</button></div>
+
+<div class="ov" id="ov"><div class="sheet" id="sheet"></div></div>
+<script>
+var QRCodeGen = (function(){
+  var TOTAL_CW = [26,44,70,100,134,172,196,242,292,346];
+  var ECC_PB = [
+    [7,10,13,17],[10,16,22,28],[15,26,18,22],[20,18,26,16],[26,24,18,22],
+    [18,16,24,28],[20,18,18,26],[24,22,22,26],[30,22,20,24],[18,26,24,28]
+  ];
+  var NBLK = [
+    [1,1,1,1],[1,1,1,1],[1,1,2,2],[1,2,2,4],[1,2,4,4],
+    [2,4,4,4],[2,4,6,5],[2,4,6,6],[2,5,8,8],[4,5,8,8]
+  ];
+  var ALIGN = [[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
+  var ECIDX = {L:0,M:1,Q:2,H:3};
+  var ECBITS = {L:1,M:0,Q:3,H:2};
+
+  var EXP = new Array(512), LOG = new Array(256);
+  (function(){ var x=1,i; for(i=0;i<255;i++){ EXP[i]=x; LOG[x]=i; x<<=1; if(x&0x100) x^=0x11D; }
+    for(i=255;i<512;i++) EXP[i]=EXP[i-255]; })();
+  function gmul(a,b){ if(a===0||b===0) return 0; return EXP[LOG[a]+LOG[b]]; }
+
+  function genPoly(n){
+    var poly=[1], i, j;
+    for(i=0;i<n;i++){
+      var next = new Array(poly.length+1); for(j=0;j<next.length;j++) next[j]=0;
+      for(j=0;j<poly.length;j++){ next[j] ^= poly[j]; next[j+1] ^= gmul(poly[j], EXP[i]); }
+      poly = next;
+    }
+    return poly;
+  }
+  function rsEncode(data, ecLen){
+    var gen = genPoly(ecLen), res = new Array(ecLen), i, j;
+    for(i=0;i<ecLen;i++) res[i]=0;
+    for(i=0;i<data.length;i++){
+      var factor = data[i] ^ res[0];
+      res.shift(); res.push(0);
+      for(j=0;j<ecLen;j++) res[j] ^= gmul(gen[j+1], factor);
+    }
+    return res;
+  }
+
+  function utf8Bytes(str){
+    var out=[], i, c;
+    for(i=0;i<str.length;i++){
+      c = str.charCodeAt(i);
+      if(c<0x80) out.push(c);
+      else if(c<0x800){ out.push(0xC0|(c>>6), 0x80|(c&63)); }
+      else if(c<0xD800 || c>=0xE000){ out.push(0xE0|(c>>12), 0x80|((c>>6)&63), 0x80|(c&63)); }
+      else { i++; var cp = 0x10000 + (((c&0x3FF)<<10) | (str.charCodeAt(i)&0x3FF));
+        out.push(0xF0|(cp>>18), 0x80|((cp>>12)&63), 0x80|((cp>>6)&63), 0x80|(cp&63)); }
+    }
+    return out;
+  }
+
+  function dataCapacity(ver, ec){
+    var e = ECIDX[ec];
+    return TOTAL_CW[ver-1] - ECC_PB[ver-1][e]*NBLK[ver-1][e];
+  }
+
+  function build(text, ecLevel){
+    var ec = ecLevel || 'M';
+    var bytes = utf8Bytes(text);
+    var ver = 0, v;
+    for(v=1; v<=10; v++){
+      var ccBits = (v<10)?8:16;
+      var need = 4 + ccBits + bytes.length*8;
+      if(dataCapacity(v, ec)*8 >= need){ ver = v; break; }
+    }
+    if(!ver){
+      if(ec!=='L') return build(text,'L');
+      throw new Error('Conteudo grande demais para QR');
+    }
+
+    // --- bit stream
+    var bits = [];
+    function put(val, len){ for(var i=len-1;i>=0;i--) bits.push((val>>>i)&1); }
+    put(4,4);
+    put(bytes.length, ver<10?8:16);
+    for(var i=0;i<bytes.length;i++) put(bytes[i],8);
+    var capBits = dataCapacity(ver, ec)*8;
+    var term = Math.min(4, capBits - bits.length);
+    for(i=0;i<term;i++) bits.push(0);
+    while(bits.length % 8) bits.push(0);
+    var dataCw = [];
+    for(i=0;i<bits.length;i+=8){
+      var b=0; for(var k=0;k<8;k++) b=(b<<1)|bits[i+k];
+      dataCw.push(b);
+    }
+    var padBytes=[0xEC,0x11], p=0;
+    while(dataCw.length < dataCapacity(ver, ec)){ dataCw.push(padBytes[p++%2]); }
+
+    // --- blocks
+    var e = ECIDX[ec], nb = NBLK[ver-1][e], ecLen = ECC_PB[ver-1][e];
+    var totalData = dataCapacity(ver, ec);
+    var shortLen = Math.floor(totalData/nb), numLong = totalData % nb;
+    var dblocks=[], eblocks=[], off=0;
+    for(i=0;i<nb;i++){
+      var len = shortLen + (i >= nb-numLong ? 1 : 0);
+      var blk = dataCw.slice(off, off+len); off += len;
+      dblocks.push(blk);
+      eblocks.push(rsEncode(blk, ecLen));
+    }
+    var finalCw=[], maxLen = shortLen+ (numLong?1:0);
+    for(i=0;i<maxLen;i++) for(var b2=0;b2<nb;b2++) if(i<dblocks[b2].length) finalCw.push(dblocks[b2][i]);
+    for(i=0;i<ecLen;i++) for(b2=0;b2<nb;b2++) finalCw.push(eblocks[b2][i]);
+
+    // --- matrix
+    var size = ver*4 + 17;
+    var m = [], res = [];
+    for(i=0;i<size;i++){ m.push(new Array(size).fill(0)); res.push(new Array(size).fill(0)); }
+    function setF(r,c,val){ if(r<0||c<0||r>=size||c>=size) return; m[r][c]=val; res[r][c]=1; }
+
+    function finder(r,c){
+      for(var dr=-1;dr<=7;dr++) for(var dc=-1;dc<=7;dc++){
+        var rr=r+dr, cc=c+dc;
+        if(rr<0||cc<0||rr>=size||cc>=size) continue;
+        var on = (dr>=0&&dr<=6&&(dc===0||dc===6)) || (dc>=0&&dc<=6&&(dr===0||dr===6)) ||
+                 (dr>=2&&dr<=4&&dc>=2&&dc<=4);
+        setF(rr,cc,on?1:0);
+      }
+    }
+    finder(0,0); finder(0,size-7); finder(size-7,0);
+
+    var ap = ALIGN[ver-1];
+    for(i=0;i<ap.length;i++) for(var j=0;j<ap.length;j++){
+      var ar=ap[i], ac=ap[j];
+      if((ar<=8&&ac<=8)||(ar<=8&&ac>=size-9)||(ar>=size-9&&ac<=8)) continue;
+      for(var dr2=-2;dr2<=2;dr2++) for(var dc2=-2;dc2<=2;dc2++){
+        var on2 = Math.max(Math.abs(dr2),Math.abs(dc2))!==1;
+        setF(ar+dr2, ac+dc2, on2?1:0);
+      }
+    }
+    for(i=8;i<size-8;i++){ setF(6,i,(i%2===0)?1:0); setF(i,6,(i%2===0)?1:0); }
+    setF(size-8,8,1); // dark module
+
+    // reserve format areas
+    for(i=0;i<9;i++){ if(!res[8][i]) setF(8,i,0); if(!res[i][8]) setF(i,8,0); }
+    for(i=0;i<8;i++){ if(!res[8][size-1-i]) setF(8,size-1-i,0); if(!res[size-1-i][8]) setF(size-1-i,8,0); }
+
+    if(ver>=7){
+      var rem2 = ver<<12, ii;
+      for(ii=0;ii<6;ii++){ if(rem2 & (1<<(17-ii))) rem2 ^= (0x1F25 << (5-ii)); }
+      var vinfo = ((ver<<12) | (rem2 & 0xFFF));
+      for(i=0;i<18;i++){
+        var vbit = (vinfo>>i)&1;
+        setF(Math.floor(i/3), size-11+(i%3), vbit);
+        setF(size-11+(i%3), Math.floor(i/3), vbit);
+      }
+    }
+
+    // --- place data
+    var dir=-1, row=size-1, col=size-1, idx=0, bitI=0;
+    while(col>0){
+      if(col===6) col--;
+      while(true){
+        for(var q=0;q<2;q++){
+          var cc2 = col-q;
+          if(!res[row][cc2]){
+            var dark = 0;
+            if(idx < finalCw.length){ dark = (finalCw[idx] >>> (7-bitI)) & 1; }
+            m[row][cc2] = dark;
+            bitI++; if(bitI===8){ bitI=0; idx++; }
+          }
+        }
+        row += dir;
+        if(row<0||row>=size){ row -= dir; dir = -dir; break; }
+      }
+      col -= 2;
+    }
+
+    // --- masks
+    function maskFn(k,r,c){
+      switch(k){
+        case 0: return (r+c)%2===0;
+        case 1: return r%2===0;
+        case 2: return c%3===0;
+        case 3: return (r+c)%3===0;
+        case 4: return (Math.floor(r/2)+Math.floor(c/3))%2===0;
+        case 5: return (r*c)%2 + (r*c)%3 === 0;
+        case 6: return ((r*c)%2 + (r*c)%3)%2===0;
+        case 7: return ((r+c)%2 + (r*c)%3)%2===0;
+      }
+    }
+    function fmtBits(ecl, mask){
+      var d2 = (ECBITS[ecl]<<3)|mask, rem3 = d2<<10, i2;
+      for(i2=0;i2<5;i2++){ if(rem3 & (1<<(14-i2))) rem3 ^= (0x537 << (4-i2)); }
+      return ((d2<<10)|(rem3 & 0x3FF)) ^ 0x5412;
+    }
+    function applyFormat(mat, ecl, mask){
+      var f = fmtBits(ecl, mask), i3;
+      for(i3=0;i3<15;i3++){
+        var bit = (f>>i3)&1;
+        if(i3<6)        mat[8][i3] = bit;
+        else if(i3===6) mat[8][7] = bit;
+        else if(i3===7) mat[8][8] = bit;
+        else if(i3===8) mat[7][8] = bit;
+        else            mat[14-i3][8] = bit;
+        if(i3<7) mat[size-1-i3][8] = bit;
+        else     mat[8][size-15+i3] = bit;
+      }
+      mat[size-8][8] = 1;
+    }
+    function penalty(mat){
+      var s=0, i4,j4,k4;
+      for(i4=0;i4<size;i4++){
+        for(var dirn=0;dirn<2;dirn++){
+          var run=1, prev=dirn?mat[0][i4]:mat[i4][0];
+          for(j4=1;j4<size;j4++){
+            var cur = dirn?mat[j4][i4]:mat[i4][j4];
+            if(cur===prev) run++;
+            else { if(run>=5) s += 3 + (run-5); run=1; prev=cur; }
+          }
+          if(run>=5) s += 3 + (run-5);
+        }
+      }
+      for(i4=0;i4<size-1;i4++) for(j4=0;j4<size-1;j4++){
+        var v0=mat[i4][j4];
+        if(v0===mat[i4][j4+1] && v0===mat[i4+1][j4] && v0===mat[i4+1][j4+1]) s+=3;
+      }
+      var pat=[1,0,1,1,1,0,1,0,0,0,0];
+      var pat2=[0,0,0,0,1,0,1,1,1,0,1];
+      for(i4=0;i4<size;i4++) for(j4=0;j4<=size-11;j4++){
+        var ok1=true, ok2=true;
+        for(k4=0;k4<11;k4++){ if(mat[i4][j4+k4]!==pat[k4]) ok1=false; if(mat[i4][j4+k4]!==pat2[k4]) ok2=false; }
+        if(ok1) s+=40; if(ok2) s+=40;
+        ok1=true; ok2=true;
+        for(k4=0;k4<11;k4++){ if(mat[j4+k4][i4]!==pat[k4]) ok1=false; if(mat[j4+k4][i4]!==pat2[k4]) ok2=false; }
+        if(ok1) s+=40; if(ok2) s+=40;
+      }
+      var dark=0;
+      for(i4=0;i4<size;i4++) for(j4=0;j4<size;j4++) if(mat[i4][j4]) dark++;
+      var pct = dark*100/(size*size);
+      s += Math.floor(Math.abs(pct-50)/5)*10;
+      return s;
+    }
+
+    var best=null, bestScore=Infinity, bestMask=0;
+    for(var mk=0; mk<8; mk++){
+      var cand=[];
+      for(i=0;i<size;i++) cand.push(m[i].slice());
+      for(i=0;i<size;i++) for(j=0;j<size;j++){
+        if(!res[i][j] && maskFn(mk,i,j)) cand[i][j] ^= 1;
+      }
+      applyFormat(cand, ec, mk);
+      var sc = penalty(cand);
+      if(sc<bestScore){ bestScore=sc; best=cand; bestMask=mk; }
+    }
+    return {matrix:best, size:size, version:ver, ec:ec, mask:bestMask};
+  }
+
+  function toSVG(text, opts){
+    opts = opts || {};
+    var q = build(text, opts.ec||'M');
+    var quiet = opts.quiet===undefined?2:opts.quiet;
+    var n = q.size + quiet*2;
+    var dark = opts.dark||'#161113', light = opts.light||'#ffffff';
+    var path = '';
+    for(var r=0;r<q.size;r++){
+      var c=0;
+      while(c<q.size){
+        if(q.matrix[r][c]){
+          var st=c; while(c<q.size && q.matrix[r][c]) c++;
+          path += 'M'+(st+quiet)+' '+(r+quiet)+'h'+(c-st)+'v1h'+(-(c-st))+'z';
+        } else c++;
+      }
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+n+' '+n+'" shape-rendering="crispEdges">'+
+      '<rect width="'+n+'" height="'+n+'" fill="'+light+'"/><path d="'+path+'" fill="'+dark+'"/></svg>';
+  }
+  return {build:build, toSVG:toSVG};
+})();</script>
+<script>
+(function(){
+var PRECO=27, BUMP=13.5, API='/.netlify/functions/curso';
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function brl(v){ return 'R$ '+Number(v).toFixed(2).replace('.',','); }
+function ler(){ try{ return JSON.parse(localStorage.getItem('curso_ped')||'null'); }catch(e){ return null; } }
+function guardar(p){ try{ localStorage.setItem('curso_ped',JSON.stringify(p)); }catch(e){} }
+function post(o){ return fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); }); }
+var ov=$('ov'), sh=$('sheet');
+function abrir(html){ sh.innerHTML='<button class="x" aria-label="Fechar" id="fx">×</button>'+html; ov.classList.add('on'); $('fx').onclick=fechar; }
+function fechar(){ ov.classList.remove('on'); }
+ov.addEventListener('click',function(e){ if(e.target===ov) fechar(); });
+$('ano').textContent=new Date().getFullYear();
+
+/* 1) dados + oferta do 2º e-book (metade do preço) */
+function telaDados(){
+  var p=ler();
+  if(p&&p.id&&!p.pago&&Date.now()-(p.criadoEm||0)<6*3600e3) return telaPix(p);
+  abrir('<h3>Falta pouco 💜</h3><p style="color:var(--mut);font-size:.92rem">Preencha pra gerar o seu Pix.</p>'+
+    '<label for="fn">Seu nome</label><input type="text" id="fn" autocomplete="name" placeholder="Como você se chama?">'+
+    '<label for="fz">Seu WhatsApp (com DDD)</label><input type="tel" id="fz" autocomplete="tel" inputmode="tel" placeholder="(11) 91234-5678">'+
+    '<label class="bump" for="fb"><input type="checkbox" id="fb"><span class="mini">🌐</span><span><b>Sim! Quero adicionar: Criar um Site que Vende com Vídeos Virais</b>'+
+    '<span class="pr">+ '+brl(BUMP)+'</span> <s>'+brl(PRECO)+'</s> · metade do preço, só agora'+
+    '<p>Como montar uma página simples que transforma as visitas dos seus vídeos em vendas.</p></span></label>'+
+    '<div class="tot"><span>Total</span><b id="tt">'+brl(PRECO)+'</b></div>'+
+    '<button class="cta" id="fgo" style="max-width:none">Gerar meu Pix →</button><div class="err" id="fe"></div>');
+  var fb=$('fb'); fb.onchange=function(){ $('tt').textContent=brl(PRECO+(fb.checked?BUMP:0)); };
+  $('fgo').onclick=function(){
+    var n=$('fn').value.trim(), z=$('fz').value.replace(/\D/g,'');
+    if(n.length<2){ $('fe').textContent='Digite seu nome.'; return; }
+    if(z.length<10){ $('fe').textContent='Digite seu WhatsApp com DDD.'; return; }
+    var b=$('fgo'); b.disabled=true; b.textContent='Gerando o Pix…'; $('fe').textContent='';
+    post({acao:'pedido',nome:n,whatsapp:z,bump:fb.checked,origem:(new URLSearchParams(location.search).get('utm_source')||'')}).then(function(r){
+      if(!r.ok){ b.disabled=false; b.textContent='Gerar meu Pix →'; $('fe').textContent=r.d.erro||'Não deu, tente de novo.'; return; }
+      var p={id:r.d.id,t:r.d.token,nome:n,payload:r.d.payload,valor:r.d.valor,bump:r.d.bump,criadoEm:Date.now()};
+      guardar(p); telaPix(p);
+    }).catch(function(){ b.disabled=false; b.textContent='Gerar meu Pix →'; $('fe').textContent='Sem conexão. Tente de novo.'; });
+  };
+}
+
+/* 2) Pix copia e cola + "Já paguei" (1 toque depois de 20 s, ou 2 toques) */
+function telaPix(p){
+  var svg=''; try{ svg=QRCodeGen.toSVG(p.payload,{ec:'M',quiet:2}); }catch(e){}
+  abrir('<h3>Pague com Pix</h3><div class="tot" style="margin:6px 0 0"><span>'+(p.bump?'2 e-books':'E-book')+'</span><b>'+brl(p.valor)+'</b></div>'+
+    '<ol class="steps"><li>Toque em <b>Copiar código Pix</b></li><li>Abra o app do seu banco → Pix → <b>Copia e Cola</b></li><li>Pague e volte aqui: toque em <b>Já paguei</b></li></ol>'+
+    '<div class="qr">'+svg+'</div><div class="code" id="pc">'+esc(p.payload)+'</div>'+
+    '<button class="btn2" id="pcp">📋 Copiar código Pix</button>'+
+    '<button class="btn2 ok" id="pjp">✅ Já paguei</button><div class="msg" id="pm"></div>'+
+    (!p.bump?'<div class="addb"><span class="mini" style="width:34px">🌐</span><span>Adicionar <b>Criar um Site que Vende</b> por <b style="color:var(--y)">'+brl(BUMP)+'</b></span><button id="padd">Adicionar</button></div>':''));
+  $('pcp').onclick=function(){
+    var ok=function(){ $('pcp').textContent='✅ Código copiado!'; setTimeout(function(){ var b=$('pcp'); if(b) b.textContent='📋 Copiar código Pix'; },2500); };
+    if(navigator.clipboard) navigator.clipboard.writeText(p.payload).then(ok,function(){ selecionar(); });
+    else selecionar();
+    function selecionar(){ var r=document.createRange(); r.selectNodeContents($('pc')); var s=getSelection(); s.removeAllRanges(); s.addRange(r); try{ document.execCommand('copy'); ok(); }catch(e){} }
+  };
+  if($('padd')) $('padd').onclick=function(){
+    var b=$('padd'); b.disabled=true; b.textContent='…';
+    post({acao:'bump',id:p.id,t:p.t}).then(function(r){
+      if(!r.ok){ b.disabled=false; b.textContent='Adicionar'; return; }
+      p.bump=true; p.payload=r.d.payload; p.valor=r.d.valor; guardar(p); telaPix(p);
+    });
+  };
+  var n=0;
+  $('pjp').onclick=function(){
+    var b=$('pjp'), m=$('pm'); n++; b.disabled=true; m.textContent='⏳ Processando o seu pagamento…';
+    post({acao:'ja-paguei',id:p.id,t:p.t,segundo:n>=2}).then(function(r){
+      if(r.ok&&r.d.pago){ p.pago=true; guardar(p); telaAcesso(p,r.d.material); return; }
+      setTimeout(function(){ b.disabled=false; m.innerHTML='🔄 Ainda não processamos o seu pagamento. <b>Toque em "Já paguei" de novo</b>.'; },1500);
+    }).catch(function(){ b.disabled=false; m.textContent='Sem conexão. Toque de novo.'; });
+  };
+}
+
+/* 3) acesso ao material */
+function telaAcesso(p,mat){
+  var link=location.origin+'/aprenda?p='+p.id+'.'+p.t;
+  abrir('<div class="acesso"><h3>🎉 Acesso liberado!</h3><p style="color:var(--mut);font-size:.92rem">Obrigado, '+esc(p.nome||'')+'! Seu material:</p>'+
+    (mat||[]).map(function(x){ return '<div class="item"><span class="mini" style="width:38px">'+(x.id==='site'?'🌐':'🎬')+'</span><b style="font-size:.95rem">'+esc(x.titulo)+'</b>'+
+      (x.url?'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">Abrir</a>':'<span class="wait">Em preparação: chega no seu WhatsApp</span>')+'</div>'; }).join('')+
+    '<label>Guarde seu link de acesso</label><div class="code">'+esc(link)+'</div>'+
+    '<button class="btn2" id="acp">📋 Copiar link de acesso</button></div>');
+  $('acp').onclick=function(){ try{ navigator.clipboard.writeText(link); $('acp').textContent='✅ Link copiado!'; }catch(e){} };
+}
+
+/* link de acesso (/aprenda?p=id.token) ou pedido pago guardado */
+function abrirAcesso(id,t){
+  fetch(API+'?id='+encodeURIComponent(id)+'&t='+encodeURIComponent(t),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+    if(d&&d.pago){ var p={id:id,t:t,pago:true,nome:d.nome,bump:d.bump,valor:d.valor,payload:'',criadoEm:d.criadoEm}; guardar(p); telaAcesso(p,d.material); }
+    else if(d&&d.payload){ var q={id:id,t:t,payload:d.payload,valor:d.valor,bump:d.bump,criadoEm:d.criadoEm}; guardar(q); telaPix(q); }
+  }).catch(function(){});
+}
+var qp=new URLSearchParams(location.search).get('p');
+if(qp&&/^C[0-9a-f]{12}\.[0-9a-f]+$/.test(qp)){ var pp=qp.split('.'); abrirAcesso(pp[0],pp[1]); }
+
+document.querySelectorAll('[data-comprar]').forEach(function(b){ b.onclick=function(){
+  var p=ler(); if(p&&p.pago&&p.id) return abrirAcesso(p.id,p.t); telaDados(); }; });
+var st=$('sticky'); window.addEventListener('scroll',function(){ st.classList.toggle('on',scrollY>520 && !ov.classList.contains('on')); },{passive:true});
+})();
+</script>
+</body>
+</html>
