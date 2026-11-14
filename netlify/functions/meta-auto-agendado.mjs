@@ -16,6 +16,8 @@
 //  Se o custo de hoje cair pra R$ 8,50 ou menos → volta ao normal (ligada o dia todo). Se bater o limite → desliga de vez.
 //  À meia-noite volta ao normal. Se VOCÊ religar ou desligar uma campanha no modo, o robô larga ela.
 // Se VOCÊ religar uma campanha (pelo painel OU pelo app do Meta), o robô não mexe nela até a meia-noite.
+// REGRA DE 14/11: campanha com 2+ dias de dados decide pela MÉDIA DE 3 DIAS (custo/compra até R$ 9,50; R$ 10 em 3 dias sem compra → desliga;
+//   trava: R$ 15 hoje sem compra → desliga). Campanha nova (menos de 2 dias) segue a regra só de hoje.
 import { getStore } from '@netlify/blobs';
 import { metaAds, recomendar, ultimasAcoes, TICKET, avaliarSubir } from './_gastos.mjs';
 import { lerCfg, aplicarAcao, logRobo, avisar, vendasSitePorCampanha } from './_meta.mjs';
@@ -77,6 +79,10 @@ export async function rodarRobo(simular) {
   }
   const ativas = (meta.campanhas || []).filter((c) => c.status === 'ACTIVE' || (modo[c.id] && !modo[c.id].fim));
   const fotos = (await L().get('cpa_hist_' + hoje, { type: 'json' }).catch(() => null)) || {}; // custo por venda de hoje a cada conferência
+  // 🧹 LIMPEZA ÚNICA (14/11): olha a média de 3 dias de TODAS as ligadas, mesmo as que você ligou hoje (só nessa primeira rodada)
+  const LIMPEZA = 'limpeza3d_20261114';
+  const limpezaAgora = cfg.autoPausar && agora >= Date.parse('2026-11-14T08:45:00Z') && !(await L().get(LIMPEZA, { type: 'json' }).catch(() => null));
+  const dias3 = [hoje, ontem, diaBR(agora - 2 * 864e5)];
   for (const c of ativas) {
     let a = acoes[c.id]; const s = site[c.id] || { vendas: 0, porDia: {}, ultima: 0 };
     const gT = c.total ? c.total.gasto : c.gasto, vT = Math.max(c.total ? c.total.compras : c.compras, s.vendas || 0);
@@ -95,11 +101,19 @@ export async function rodarRobo(simular) {
       acoes[c.id] = a = { tipo: 'ativar', quem: 'você (app do Meta)', em: agora }; m.fim = true; m.saiu = 'você religou'; m = null;
     } else if (m && m.ultimo === 'on' && c.status !== 'ACTIVE') { m.fim = true; m.saiu = 'você desligou'; continue; }
     if (c.status !== 'ACTIVE' && !m) continue;
-    const voceAtivou = a && a.tipo === 'ativar' && !/^robô/.test(a.quem || '') && diaBR(a.em) === hoje;
+    const voceAtivou = !limpezaAgora && a && a.tipo === 'ativar' && !/^robô/.test(a.quem || '') && diaBR(a.em) === hoje;
+    // 📊 MÉDIA DE 3 DIAS (hoje + 2 anteriores): gasto e compras do Meta (se o Meta não contou, as do site)
+    let g3 = 0, v3m = 0, v3s = 0, diasDados = 0;
+    for (const d of dias3) { const x = (c.dias || {})[d] || {}; g3 += x.gasto || 0; v3m += x.compras || 0; v3s += s.porDia[d] || 0; if ((x.gasto || 0) > 0) diasDados++; }
+    const v3 = v3m || v3s, aprendeu = diasDados >= 2;
     let pausar = null;
     const lucroH = vH * tk - gH * (1 + imp);
     const vMeta = dh.compras || 0, vCpa = vMeta || vH; // custo por compra = o do app do Meta (se o Meta ainda não contou, usa as do site)
-    if (cfg.autoPausar && !voceAtivou) { // REGRA DE 11/11 (19h): só o dia de hoje
+    if (cfg.autoPausar && !voceAtivou && aprendeu) { // REGRA DE 14/11: campanha com 2+ dias de dados → decide pela MÉDIA DE 3 DIAS
+      if (v3 === 0 && g3 >= prim) pausar = 'em 3 dias gastou ' + brl(g3) + ' e não fez nenhuma compra';
+      else if (v3 > 0 && g3 / v3 > CPA_MAX) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou do máximo de ' + brl(CPA_MAX);
+      else if (vH === 0 && gH >= 15) pausar = 'trava de segurança: hoje gastou ' + brl(gH) + ' sem nenhuma compra (limite R$ 15)';
+    } else if (cfg.autoPausar && !voceAtivou) { // campanha nova (menos de 2 dias de dados): regra só do dia de hoje
       if (vH === 0 && gH >= prim) pausar = 'hoje gastou ' + brl(gH) + ' e não fez nenhuma venda (limite ' + brl(prim) + ')';
       else if (vCpa > 0 && gH / vCpa > CPA_MAX) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s) no Meta, gasto ' + brl(gH) + ') — passou do máximo de ' + brl(CPA_MAX);
     }
@@ -155,6 +169,7 @@ export async function rodarRobo(simular) {
     }
   }
   if (!simular) {
+    if (limpezaAgora) await L().setJSON(LIMPEZA, { em: agora }).catch(() => {});
     await L().setJSON('cpa_hist_' + hoje, fotos).catch(() => {});
     await L().setJSON('modohor_' + hoje, modo).catch(() => {});
     const avisos = [];
