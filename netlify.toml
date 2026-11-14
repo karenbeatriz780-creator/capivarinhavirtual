@@ -8,6 +8,19 @@
   # o desenho das páginas do PDF do livro usa um módulo nativo: não pode ser empacotado
   external_node_modules = ["@napi-rs/canvas"]
 
+# página do curso (link do Instagram): /aprenda abre o e-book, com ou sem barra no final
+[[redirects]]
+  from = "/aprenda"
+  to = "/aprenda/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/aprenda/"
+  to = "/aprenda/index.html"
+  status = 200
+  force = true
+
 # link curto da mensagem de "música pronta" no WhatsApp → página das músicas do pedido
 [[redirects]]
   from = "/m/:id"
