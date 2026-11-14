@@ -456,17 +456,16 @@ $('ano').textContent=new Date().getFullYear();
 
 /* 1) dados + oferta do 2º e-book (metade do preço) */
 function telaDados(){
-  var p=ler();
-  if(p&&p.id&&!p.pago&&Date.now()-(p.criadoEm||0)<6*3600e3) return telaPix(p);
+  var p0=ler()||{};
   abrir('<h3>Falta pouco 💜</h3><p style="color:var(--mut);font-size:.92rem">Preencha pra gerar o seu Pix.</p>'+
-    '<label for="fn">Seu nome</label><input type="text" id="fn" autocomplete="name" placeholder="Como você se chama?">'+
-    '<label for="fz">Seu WhatsApp (com DDD)</label><input type="tel" id="fz" autocomplete="tel" inputmode="tel" placeholder="(11) 91234-5678">'+
+    '<label for="fn">Seu nome</label><input type="text" id="fn" autocomplete="name" placeholder="Como você se chama?" value="'+esc(p0.nome||'')+'">'+
+    '<label for="fz">Seu WhatsApp (com DDD)</label><input type="tel" id="fz" autocomplete="tel" inputmode="tel" placeholder="(11) 91234-5678" value="'+esc(p0.zap||'')+'">'+
     '<label class="bump" for="fb"><input type="checkbox" id="fb"><span class="mini">🌐</span><span><b>Sim! Quero adicionar: Criar um Site que Vende com Vídeos Virais</b>'+
     '<span class="pr">+ '+brl(BUMP)+'</span> <s>'+brl(PRECO)+'</s> · metade do preço, só agora'+
     '<p>Como montar uma página simples que transforma as visitas dos seus vídeos em vendas.</p></span></label>'+
     '<div class="tot"><span>Total</span><b id="tt">'+brl(PRECO)+'</b></div>'+
     '<button class="cta" id="fgo" style="max-width:none">Gerar meu Pix →</button><div class="err" id="fe"></div>');
-  var fb=$('fb'); fb.onchange=function(){ $('tt').textContent=brl(PRECO+(fb.checked?BUMP:0)); };
+  var fb=$('fb'); fb.checked=false; fb.onchange=function(){ $('tt').textContent=brl(PRECO+(fb.checked?BUMP:0)); };
   $('fgo').onclick=function(){
     var n=$('fn').value.trim(), z=$('fz').value.replace(/\D/g,'');
     if(n.length<2){ $('fe').textContent='Digite seu nome.'; return; }
@@ -474,7 +473,7 @@ function telaDados(){
     var b=$('fgo'); b.disabled=true; b.textContent='Gerando o Pix…'; $('fe').textContent='';
     post({acao:'pedido',nome:n,whatsapp:z,bump:fb.checked,origem:(new URLSearchParams(location.search).get('utm_source')||'')}).then(function(r){
       if(!r.ok){ b.disabled=false; b.textContent='Gerar meu Pix →'; $('fe').textContent=r.d.erro||'Não deu, tente de novo.'; return; }
-      var p={id:r.d.id,t:r.d.token,nome:n,payload:r.d.payload,valor:r.d.valor,bump:r.d.bump,criadoEm:Date.now()};
+      var p={id:r.d.id,t:r.d.token,nome:n,zap:z,payload:r.d.payload,valor:r.d.valor,bump:r.d.bump,criadoEm:Date.now()};
       guardar(p); telaPix(p);
     }).catch(function(){ b.disabled=false; b.textContent='Gerar meu Pix →'; $('fe').textContent='Sem conexão. Tente de novo.'; });
   };
@@ -488,12 +487,20 @@ function telaPix(p){
     '<div class="qr">'+svg+'</div><div class="code" id="pc">'+esc(p.payload)+'</div>'+
     '<button class="btn2" id="pcp">📋 Copiar código Pix</button>'+
     '<button class="btn2 ok" id="pjp">✅ Já paguei</button><div class="msg" id="pm"></div>'+
+    (p.bump?'<div class="addb"><span>Inclui <b>Criar um Site que Vende</b> (+ '+brl(BUMP)+')</span><button id="prem" style="background:#231A55;color:var(--tx)">Remover</button></div>':'')+
     (!p.bump?'<div class="addb"><span class="mini" style="width:34px">🌐</span><span>Adicionar <b>Criar um Site que Vende</b> por <b style="color:var(--y)">'+brl(BUMP)+'</b></span><button id="padd">Adicionar</button></div>':''));
   $('pcp').onclick=function(){
     var ok=function(){ $('pcp').textContent='✅ Código copiado!'; setTimeout(function(){ var b=$('pcp'); if(b) b.textContent='📋 Copiar código Pix'; },2500); };
     if(navigator.clipboard) navigator.clipboard.writeText(p.payload).then(ok,function(){ selecionar(); });
     else selecionar();
     function selecionar(){ var r=document.createRange(); r.selectNodeContents($('pc')); var s=getSelection(); s.removeAllRanges(); s.addRange(r); try{ document.execCommand('copy'); ok(); }catch(e){} }
+  };
+  if($('prem')) $('prem').onclick=function(){
+    var b=$('prem'); b.disabled=true; b.textContent='…';
+    post({acao:'bump',id:p.id,t:p.t,tirar:true}).then(function(r){
+      if(!r.ok){ b.disabled=false; b.textContent='Remover'; return; }
+      p.bump=false; p.payload=r.d.payload; p.valor=r.d.valor; guardar(p); telaPix(p);
+    });
   };
   if($('padd')) $('padd').onclick=function(){
     var b=$('padd'); b.disabled=true; b.textContent='…';
@@ -517,7 +524,7 @@ function telaAcesso(p,mat){
   var link=location.origin+'/aprenda?p='+p.id+'.'+p.t;
   abrir('<div class="acesso"><h3>🎉 Acesso liberado!</h3><p style="color:var(--mut);font-size:.92rem">Obrigado, '+esc(p.nome||'')+'! Seu material:</p>'+
     (mat||[]).map(function(x){ return '<div class="item"><span class="mini" style="width:38px">'+(x.id==='site'?'🌐':'🎬')+'</span><b style="font-size:.95rem">'+esc(x.titulo)+'</b>'+
-      (x.url?'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">Abrir</a>':'<span class="wait">Em preparação: chega no seu WhatsApp</span>')+'</div>'; }).join('')+
+      (x.url?'<a href="'+esc(x.url)+'" target="_blank" rel="noopener" download>Baixar PDF</a>':'<span class="wait">Em preparação: chega no seu WhatsApp</span>')+'</div>'; }).join('')+
     '<label>Guarde seu link de acesso</label><div class="code">'+esc(link)+'</div>'+
     '<button class="btn2" id="acp">📋 Copiar link de acesso</button></div>');
   $('acp').onclick=function(){ try{ navigator.clipboard.writeText(link); $('acp').textContent='✅ Link copiado!'; }catch(e){} };

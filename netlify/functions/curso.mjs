@@ -15,8 +15,9 @@ const valorDe = (p) => +(PRECO + (p.bump ? BUMP : 0)).toFixed(2);
 // material: o Gusthavo coloca os links/arquivos depois (cfg_material). Enquanto não tiver, aparece "chega no WhatsApp".
 async function material(p) {
   const cfg = (await loja().get('cfg_material', { type: 'json' }).catch(() => null)) || {};
-  const itens = [{ id: 'videos', titulo: 'Criar Vídeos com IA que Vendem', url: cfg.videos || null }];
-  if (p.bump) itens.push({ id: 'site', titulo: 'Criar um Site que Vende com Vídeos Virais', url: cfg.site || null });
+  const base = '/aprenda/m/a526842de10d0199/'; // PDFs (só aparecem pra quem pagou)
+  const itens = [{ id: 'videos', titulo: 'Criar Vídeos com IA que Vendem', url: cfg.videos || base + 'Criar-Videos-com-IA-que-Vendem.pdf' }];
+  if (p.bump) itens.push({ id: 'site', titulo: 'Criar um Site que Vende com Vídeos Virais', url: cfg.site || base + 'Criar-um-Site-que-Vende.pdf' });
   return itens;
 }
 function publico(p, comMaterial) {
@@ -49,7 +50,7 @@ export default async (req) => {
   if (!p || p.token !== String(b.t || '')) return json({ erro: 'Pedido não encontrado.' }, 404);
   if (b.acao === 'bump') {
     if (p.pago) return json({ erro: 'Esse pedido já foi pago.' }, 400);
-    p.bump = true; p.payload = brcode(valorDe(p), id); p.manualEm = Date.now();
+    p.bump = !b.tirar; p.payload = brcode(valorDe(p), id); p.manualEm = Date.now();
     await loja().setJSON(id, p);
     return json(publico(p));
   }
