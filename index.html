@@ -9249,6 +9249,7 @@ function pnlCampHtml(){
     var p=x.per, pr=x.proj;
     var bts='';
     if(x.subir&&x.subir.agora) bts+='<button type="button" class="cmp-bt sobe forte" data-cmpacao="subir" data-cmpid="'+esc(x.id)+'" data-cmpval="'+x.subir.novo+'">⬆️ Subir para '+R(x.subir.novo)+'/dia</button>';
+    bts+='<button type="button" class="cmp-bt" data-cpdet="'+esc(x.id)+'" data-cpnome="'+esc(x.nome)+'">🔎 Detalhes e posicionamentos</button>';
     bts+='<button type="button" class="cmp-bt'+(x.cat==='boa'?' sobe forte':'')+'" data-cpdup="'+esc(x.id)+'">⧉ Duplicar (cópia idêntica)</button>';
     bts+='<button type="button" class="cmp-bt" data-cprep="'+esc(x.id)+'" data-cporc="'+(x.orcamentoDia||'')+'">🔁 Replicar (escolher posição e público)</button>';
     if(!x.programada) bts+='<button type="button" class="cmp-bt" data-cpprog="'+esc(x.id)+'" data-cporc="'+(x.orcamentoDia||'')+'">⏰ Duplicar como programada</button>';
@@ -9400,7 +9401,52 @@ function pnlSubirLigar(body){
       }).catch(function(){ toast('Sem conexão.'); bt.disabled=false; bt.textContent=txt; });
   }; });
 }
+/* 🔎 DETALHES DA CAMPANHA: onde está ligada (posicionamentos) + resultado de cada um + botão pra tirar (ex.: WhatsApp) */
+function pnlCampDetalhes(id, nome, dias){
+  dias=dias||7;
+  var ov=el('cpDetOv'); if(!ov){ ov=document.createElement('div'); ov.id='cpDetOv'; ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(20,15,40,.55);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(ov); ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); }); }
+  var box='<div style="background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));color:#1c1830">';
+  ov.innerHTML=box+'<b>'+esc(nome)+'</b><div style="color:#888;margin-top:.5rem">Carregando os posicionamentos…</div></div>';
+  var R=function(v){ return 'R$ '+fmtPreco(Number(v||0)); };
+  fetch('/.netlify/functions/admin-campanha-pos?camp='+encodeURIComponent(id)+'&dias='+dias,{headers:{'x-admin-key':_pnlChave}}).then(function(r){ return r.json(); }).then(function(d){
+    if(d.erro){ ov.innerHTML=box+'<b>'+esc(nome)+'</b><div style="color:#B4380A;margin-top:.5rem">'+esc(d.erro)+'</div><button class="pnl-link" onclick="this.closest(\'#cpDetOv\').remove()" style="margin-top:.8rem">Fechar</button></div>'; return; }
+    var ligados={}; (d.conjuntos||[]).forEach(function(cj){ cj.posicoes.forEach(function(p){ ligados[p.k]=p; }); });
+    var algumAuto=(d.conjuntos||[]).some(function(cj){ return cj.auto; });
+    var res={}; (d.resultados||[]).forEach(function(L){ res[L.chaveCfg]=L; });
+    var chaves=Object.keys(ligados); (d.resultados||[]).forEach(function(L){ if(chaves.indexOf(L.chaveCfg)<0) chaves.push(L.chaveCfg); });
+    chaves.sort(function(a,b){ return ((res[b]||{}).gasto||0)-((res[a]||{}).gasto||0); });
+    var cor=function(L){ return !L?'#999':L.cor==='verde'?'#1F8A4C':L.cor==='vermelho'?'#C0392B':'#8A5A00'; };
+    var linhas=chaves.map(function(k){
+      var L=res[k], on=algumAuto||!!ligados[k], nm=(ligados[k]&&ligados[k].nome)||(L&&L.nome)||k;
+      return '<div style="border-top:1px solid #f0eef5;padding:.6rem 0;display:flex;gap:.5rem;align-items:center"><div style="flex:1;min-width:0"><b style="font-size:.92rem">'+esc(nm)+'</b>'+
+        '<div style="font-size:.8rem;color:#777">'+(L?'Gasto '+R(L.gasto)+' · '+L.compras+' compra(s)'+(L.cpa?' a '+R(L.cpa):'')+' · <b style="color:'+cor(L)+'">lucro '+(L.lucro<0?'-':'')+R(Math.abs(L.lucro))+'</b>':'sem gasto no período')+'</div>'+
+        '<div style="font-size:.75rem;color:'+(on?'#1F8A4C':'#999')+'">'+(on?'● ligado'+(algumAuto&&!ligados[k]?' (automático)':''):'○ já está fora')+'</div></div>'+
+        (on?'<button type="button" class="pnl-link" data-cptira="'+esc(k)+'" data-cptnome="'+esc(nm)+'" style="flex:none;color:#C0392B">🚫 Tirar</button>':'')+'</div>';
+    }).join('');
+    ov.innerHTML=box+'<div style="display:flex;align-items:center;gap:.5rem"><b style="flex:1">'+esc(nome)+'</b><button class="pnl-link" data-cpfecha style="color:#5B2A86">✕ Fechar</button></div>'+
+      '<div style="font-size:.85rem;color:#666;margin:.4rem 0">'+(d.conjuntos||[]).length+' conjunto(s)'+(algumAuto?' · <b>posicionamento automático</b> (o Meta escolhe onde mostra)':'')+'. Resultado de cada posicionamento:</div>'+
+      '<div style="display:flex;gap:.35rem;margin-bottom:.4rem">'+[1,3,7,30].map(function(n){ return '<button class="pnl-link" data-cpdias="'+n+'" style="color:#5B2A86;'+(n===dias?'font-weight:800;background:#EFE7FB':'')+'">'+(n===1?'hoje':n+' dias')+'</button>'; }).join('')+'</div>'+
+      (linhas||'<div style="color:#888">Sem dados.</div>')+
+      '<div style="font-size:.78rem;color:#888;margin-top:.7rem">🚫 Tirar remove o posicionamento de todos os conjuntos desta campanha. Não mexe no orçamento, no público nem no anúncio. O Meta pode reiniciar o aprendizado.</div></div>';
+    ov.querySelector('[data-cpfecha]').onclick=function(){ ov.remove(); };
+    ov.querySelectorAll('[data-cpdias]').forEach(function(b){ b.onclick=function(){ pnlCampDetalhes(id,nome,+b.dataset.cpdias); }; });
+    ov.querySelectorAll('[data-cptira]').forEach(function(b){ b.onclick=function(){
+      if(!confirm('Tirar "'+b.dataset.cptnome+'" da campanha "'+nome+'"?\n\nO Meta pode reiniciar o aprendizado.')) return;
+      if(!pedirSenhaAdmin()) return;
+      b.disabled=true; b.textContent='Tirando…';
+      fetch('/.netlify/functions/admin-campanha-pos',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({camp:id,chave:b.dataset.cptira,nome:nome})})
+        .then(function(r){ return r.json().then(function(x){ return {ok:r.ok,d:x}; }); })
+        .then(function(x){
+          if(x.d.nada){ toast('Esse posicionamento já estava fora.'); }
+          else if(!x.ok&&!(x.d.feitos||[]).length){ toast((x.d.erro)||(x.d.erros||[]).join(' · ')||'Não deu.'); b.disabled=false; b.textContent='🚫 Tirar'; return; }
+          else toast('✓ Tirado'+((x.d.erros||[]).length?' (com erro em '+x.d.erros.length+' conjunto)':'')+((x.d.avisos||[]).length?' · '+x.d.avisos.join(' '):''));
+          pnlCampDetalhes(id,nome,dias);
+        }).catch(function(){ b.disabled=false; b.textContent='🚫 Tirar'; toast('Sem conexão.'); });
+    }; });
+  }).catch(function(){ ov.innerHTML=box+'<div>Sem conexão.</div></div>'; });
+}
 function pnlLigarCampanhas(body){
+  body.querySelectorAll('[data-cpdet]').forEach(function(bt){ bt.onclick=function(){ if(!pedirSenhaAdmin()) return; pnlCampDetalhes(bt.dataset.cpdet, bt.dataset.cpnome); }; });
   body.querySelectorAll('[data-cmpacao]').forEach(function(bt){
     bt.onclick=function(){
       var ac=bt.dataset.cmpacao, nome=(bt.closest('.cmp').querySelector('.cmp-top b')||{}).textContent||'';
