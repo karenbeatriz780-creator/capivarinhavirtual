@@ -44,7 +44,10 @@ export const INICIO = Date.parse('2026-11-09T03:00:00Z'); // meia-noite de 09/11
 export async function rodarRobo(simular) {
   const cfg = await lerCfg();
   if (!process.env.META_ADS_TOKEN || !process.env.META_AD_ACCOUNT_ID) return { ok: false, motivo: 'Meta não ligado' };
-  if (!cfg.autoPausar && !cfg.autoSubir) return { ok: true, motivo: 'robô desligado', feitas: [] };
+  // 🛡️ VIGIAS: campanhas que você mandou o robô vigiar com o SEU limite (funcionam mesmo com o robô geral desligado)
+  const vigias = (await getStore('gastos').get('vigias', { type: 'json' }).catch(() => null)) || {};
+  const temVigia = Object.values(vigias).some((v) => v && v.ligado);
+  if (!cfg.autoPausar && !cfg.autoSubir && !temVigia) return { ok: true, motivo: 'robô desligado', feitas: [] };
   if (!simular && Date.now() < INICIO) return { ok: true, motivo: 'regras começam à meia-noite de 09/11', feitas: [] };
   const emerg = await L().get('emergencia', { type: 'json' }).catch(() => null);
   if (emerg && !simular) return { ok: true, motivo: 'modo emergência (IA fora do ar) — robô parado até voltar', feitas: [] };
@@ -116,6 +119,13 @@ export async function rodarRobo(simular) {
     } else if (cfg.autoPausar && !voceAtivou) { // campanha nova (menos de 2 dias de dados): regra só do dia de hoje
       if (vH === 0 && gH >= prim) pausar = 'hoje gastou ' + brl(gH) + ' e não fez nenhuma venda (limite ' + brl(prim) + ')';
       else if (vCpa > 0 && gH / vCpa > CPA_MAX) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s) no Meta, gasto ' + brl(gH) + ') — passou do máximo de ' + brl(CPA_MAX);
+    }
+    // 🛡️ VIGIA desta campanha (você ligou no painel): o SEU limite vale sempre, mesmo se foi você quem ligou/subiu hoje
+    const vg = vigias[c.id];
+    if (!pausar && vg && vg.ligado && c.status === 'ACTIVE') {
+      if (vH === 0 && vg.semCompra && gH >= vg.semCompra) pausar = '🛡️ vigia: hoje gastou ' + brl(gH) + ' sem nenhuma compra (seu limite: ' + brl(vg.semCompra) + ')';
+      else if (vCpa > 0 && vg.cpaMax && gH / vCpa > vg.cpaMax) pausar = '🛡️ vigia: hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s), gasto ' + brl(gH) + ') — passou do seu limite de ' + brl(vg.cpaMax);
+      else if (vg.gastoMax && gH >= vg.gastoMax) pausar = '🛡️ vigia: hoje já gastou ' + brl(gH) + ' (seu limite de gasto do dia: ' + brl(vg.gastoMax) + ')';
     }
     // estava no modo horário (regra antiga) e NÃO está no prejuízo → volta a rodar o dia todo
     if (m && !pausar) {

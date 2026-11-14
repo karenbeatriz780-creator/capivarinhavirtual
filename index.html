@@ -8962,7 +8962,7 @@ var _pnlCamp=null, _pnlCampPer='hoje', _pnlCampFiltro='todas', _pnlCampCarr=fals
 function pnlCampCarregar(){
   if(_pnlCampCarr) return; _pnlCampCarr=true;
   fetch('/.netlify/functions/admin-campanhas?per='+_pnlCampPer,{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
-    _pnlCampCarr=false; _pnlCamp=d; if(_pnlAba==='campanhas'||_pnlAba==='subir'){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
+    _pnlCampCarr=false; _pnlCamp=d; if(_pnlAba==='campanhas'||_pnlAba==='subir'||_pnlAba==='vigiar'){ var y=window.scrollY; desenharPainel(_pnlCache.pedidos,_pnlCache.visitas,_pnlCache.musicas); requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
   }).catch(function(){ _pnlCampCarr=false; _pnlCamp={erro:'Sem conexão.'}; });
 }
 var _pnlHor=null,_pnlHorCarr=false,_pnlHorEsc='sua',_pnlHorMao=null;
@@ -9323,6 +9323,7 @@ function pnlCampLigar(body){
   }; });
   if(_pnlAba==='campanhas'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlCache.robo) pnlCarregarRobo(); }
   if(_pnlAba==='subir'){ if(!_pnlCamp) pnlCampCarregar(); pnlSubirLigar(body); }
+  if(_pnlAba==='vigiar'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlVig) pnlVigCarregar(); pnlVigiarLigar(body); }
 }
 /* ⬆️ ABA SUBIR: todas as campanhas — ativas que podem subir, desligadas que podem subir e as bloqueadas (com o motivo) */
 function pnlSubirHtml(){
@@ -9342,6 +9343,46 @@ function pnlSubirHtml(){
     sec('🔒 Bloqueadas','Ainda não pode subir. O motivo está embaixo de cada uma.',
       g.bloqueada.map(function(c){ return linha(c,'<div style="font-size:.82rem;color:#8A5A00;flex-basis:100%">'+(c.ativa?'🟢 Ligada':'⚪ Desligada')+' · '+esc(c.sub2.motivo||'')+(c.sub2.quando?' · libera '+new Date(c.sub2.quando).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'')+'</div>'); }),'Nenhuma bloqueada.')+
     '<div class="pnl-sec"><div class="sub">Regra: 5+ vendas a até '+brl((d.cpaMax)||7)+' por venda nos últimos 3 dias, campanha com mais de 3 dias e orçamento sem mexer há 72 h. O robô nunca sobe sozinho.</div></div>';
+}
+/* 🛡️ ABA VIGIAR: o robô vigia UMA campanha com o SEU limite e desliga sozinho se passar (mesmo que você tenha ligado/subido hoje) */
+var _pnlVig=null, _pnlVigCarr=false;
+function pnlVigCarregar(){
+  if(_pnlVigCarr||!_pnlChave) return; _pnlVigCarr=true;
+  fetch('/.netlify/functions/admin-vigias',{headers:{'x-admin-key':_pnlChave}}).then(function(r){ return r.json(); })
+    .then(function(d){ _pnlVigCarr=false; _pnlVig=(d&&d.vigias)||{}; if(_pnlAba==='vigiar') pnlRedesenhar(); })
+    .catch(function(){ _pnlVigCarr=false; });
+}
+function pnlVigiarHtml(){
+  var d=_pnlCamp;
+  if(!d||!_pnlVig) return '<div class="pnl-sec"><div class="pnl-nota">Carregando…</div></div>';
+  var cs=(d.campanhas||[]).slice().sort(function(a,b){ var va=_pnlVig[a.id]&&_pnlVig[a.id].ligado?1:0, vb=_pnlVig[b.id]&&_pnlVig[b.id].ligado?1:0; return (vb-va)||((b.ativa?1:0)-(a.ativa?1:0)); });
+  var campo=function(id,k,val,txt){ return '<label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;margin-top:.35rem">'+txt+' R$ <input type="text" inputmode="decimal" data-vg="'+k+'" data-vgid="'+esc(id)+'" value="'+(val?String(val).replace('.',','):'')+'" placeholder="—" style="width:4.6rem;padding:.35rem;border:1px solid #ddd;border-radius:8px"></label>'; };
+  return '<div class="pnl-sec"><h2>🛡️ Vigiar campanha</h2><div class="sub">Ligue o vigia numa campanha e coloque o seu limite. Se passar, o robô <b>desliga sozinho</b> — mesmo que você tenha ligado ou subido ela hoje. Ele confere de 30 em 30 min. Deixe em branco o limite que não quiser usar.</div></div>'+
+    '<div class="pnl-sec">'+(cs.map(function(c){
+      var v=_pnlVig[c.id]||{}, on=!!v.ligado;
+      return '<div style="border-top:1px solid #f0eef5;padding:.7rem 0">'+
+        '<div style="display:flex;align-items:center;gap:.5rem"><b style="flex:1">'+esc(c.nome)+'</b><span style="font-size:.78rem;color:#888">'+(c.ativa?'🟢 ligada':'⚪ desligada')+'</span></div>'+
+        '<label style="display:flex;align-items:center;gap:.45rem;margin-top:.4rem;font-weight:600"><input type="checkbox" data-vgon="'+esc(c.id)+'"'+(on?' checked':'')+'> 🛡️ Vigiar esta campanha'+(on?' <span style="color:#1F8A4C;font-size:.8rem">· ativo</span>':'')+'</label>'+
+        campo(c.id,'semCompra',v.semCompra!=null?v.semCompra:(on?'':10),'Desligar se gastar sem compra hoje:')+
+        campo(c.id,'cpaMax',v.cpaMax!=null?v.cpaMax:(on?'':9.5),'ou se o custo por compra de hoje passar de:')+
+        campo(c.id,'gastoMax',v.gastoMax||'','ou se o gasto do dia passar de:')+
+        '<button type="button" class="pnl-link" data-vgsalvar="'+esc(c.id)+'" data-vgnome="'+esc(c.nome)+'" style="margin-top:.5rem">Salvar</button></div>';
+    }).join('')||'<div class="pnl-nota">Nenhuma campanha.</div>')+'</div>';
+}
+function pnlVigiarLigar(body){
+  body.querySelectorAll('[data-vgsalvar]').forEach(function(bt){ bt.onclick=function(){
+    var id=bt.dataset.vgsalvar, val=function(k){ var i=body.querySelector('[data-vg="'+k+'"][data-vgid="'+id+'"]'); return i?i.value:''; };
+    var on=(body.querySelector('[data-vgon="'+id+'"]')||{}).checked;
+    if(!pedirSenhaAdmin()) return;
+    bt.disabled=true; bt.textContent='Salvando…';
+    fetch('/.netlify/functions/admin-vigias',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({id:id,nome:bt.dataset.vgnome,ligado:!!on,semCompra:val('semCompra'),cpaMax:val('cpaMax'),gastoMax:val('gastoMax')})})
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+      .then(function(x){
+        bt.disabled=false; bt.textContent='Salvar';
+        if(!x.ok){ toast((x.d&&x.d.erro)||'Não salvou.'); return; }
+        _pnlVig=x.d.vigias||_pnlVig; toast(on?'🛡️ Vigia ligado ✓':'Vigia desligado ✓'); pnlRedesenhar();
+      }).catch(function(){ bt.disabled=false; bt.textContent='Salvar'; toast('Sem conexão.'); });
+  }; });
 }
 function pnlSubirLigar(body){
   body.querySelectorAll('[data-sub]').forEach(function(bt){ bt.onclick=function(){
@@ -9843,7 +9884,7 @@ function desenharPainel(pedidos, visitas, musicas){
 
   body.innerHTML=
     '<div class="pnl-abas pnl-abas-main" id="pnlAbas">'+
-      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
+      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
         return '<button type="button" class="pnl-aba'+(_pnlAba===a[0]?' on':'')+'" data-aba="'+a[0]+'"><i>'+a[1]+'</i><span>'+a[2]+'</span></button>'; }).join('')+
     '</div>'+
     '<div class="pnl-abas pnl-abas-mais"><small>Mais:</small>'+
@@ -9859,6 +9900,7 @@ function desenharPainel(pedidos, visitas, musicas){
     (_pnlAba==='gastos' ? pnlGastosHtml(pedidos) : '')+
     (_pnlAba==='campanhas' ? pnlCampHtml() : '')+
     (_pnlAba==='subir' ? pnlSubirHtml() : '')+
+    (_pnlAba==='vigiar' ? pnlVigiarHtml() : '')+
     (_pnlAba==='hoje' ? pnlHojeHtml(pedidos, _pnlCache.custos||{}) : '')+
     (_pnlAba==='pagos'
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+
