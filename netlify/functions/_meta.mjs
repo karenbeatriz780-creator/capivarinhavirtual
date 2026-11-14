@@ -262,7 +262,7 @@ export async function publicarAnuncio(cfg, a, etapa) {
   // posições escolhidas (padrão: as 6). fb_feed, fb_story, fb_reels, ig_feed, ig_story, ig_reels
   const MAPA = { fb_feed: ['facebook', 'feed'], fb_story: ['facebook', 'story'], fb_reels: ['facebook', 'facebook_reels'], ig_feed: ['instagram', 'stream'], ig_story: ['instagram', 'story'], ig_reels: ['instagram', 'reels'], wa_status: ['whatsapp', 'status'] };
   let pk = (Array.isArray(a.posicoes) ? a.posicoes : []).filter((k, i, l) => MAPA[k] && l.indexOf(k) === i);
-  if (!pk.length) pk = Object.keys(MAPA).filter((k) => k !== 'wa_status');
+  if (!pk.length) pk = ['ig_reels', 'ig_feed']; // padrão (14/11): só Instagram Reels + Feed, sem Facebook
   if (pk.indexOf('wa_status') >= 0 && pk.indexOf('ig_story') < 0) pk.push('ig_story'); // Meta: Status do WhatsApp só junto com Stories do Instagram
   const POS = { publisher_platforms: [], facebook_positions: [], instagram_positions: [], whatsapp_positions: [] };
   pk.forEach((k) => { const [pf, ps] = MAPA[k]; if (POS.publisher_platforms.indexOf(pf) < 0) POS.publisher_platforms.push(pf); POS[pf + '_positions'].push(ps); });

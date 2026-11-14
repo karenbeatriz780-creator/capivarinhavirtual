@@ -9112,7 +9112,8 @@ function pnlRepAbrir(id,nome,orc){
   if(!_pnlPub) pnlPubCarregar(); if(!_pnlPos) pnlPosCarregar();
 }
 var _naInts=null;
-function pnlNaPos(){ try{ var v=JSON.parse(Store.get('cl_napos')||'null'); if(Array.isArray(v)&&v.length) return v; }catch(e){} return ['ig_reels','ig_story','ig_feed','fb_reels','fb_story','fb_feed']; }
+/* padrão (14/11): só Instagram Reels + Feed — sem Facebook (dava prejuízo). Escolha salva começa do zero com o padrão novo. */
+function pnlNaPos(){ try{ var v=JSON.parse(Store.get('cl_napos2')||'null'); if(Array.isArray(v)&&v.length) return v; }catch(e){} return ['ig_reels','ig_feed']; }
 function pnlNaInts(){ if(_naInts) return _naInts; try{ _naInts=JSON.parse(Store.get('cl_naints')||'[]')||[]; }catch(e){ _naInts=[]; } return _naInts; }
 function pnlNaIntsSalvar(){ try{ Store.set('cl_naints',JSON.stringify(_naInts||[])); }catch(e){} var b=el('naInts'); if(b){ b.innerHTML=pnlNaIntsHtml(); pnlNaIntsLigar(); } }
 function pnlNaIntsHtml(){ var L=pnlNaInts(); if(!L.length) return '<small class="na-info">Nenhum interesse: o Meta procura sozinho (público aberto).</small>';
@@ -9132,8 +9133,8 @@ function pnlNaLigarExtras(){
     var wa=document.querySelector('[data-napos="wa_status"]'), igs=document.querySelector('[data-napos="ig_story"]');
     if(wa&&igs&&wa.checked&&!igs.checked){ igs.checked=true; toast(c===igs?'Com Status do WhatsApp, Stories do Instagram tem que ficar (regra do Meta).':'Marquei Stories do Instagram junto (o Meta exige).'); }
     var v=[].slice.call(document.querySelectorAll('[data-napos]:checked')).map(function(x){ return x.dataset.napos; });
-    if(!v.length){ c.checked=true; toast('Deixe pelo menos 1 posição.'); return; } try{ Store.set('cl_napos',JSON.stringify(v)); }catch(e){} }; });
-  function marcar(lst){ document.querySelectorAll('[data-napos]').forEach(function(c){ c.checked=lst.indexOf(c.dataset.napos)>=0; }); try{ Store.set('cl_napos',JSON.stringify(lst)); }catch(e){} }
+    if(!v.length){ c.checked=true; toast('Deixe pelo menos 1 posição.'); return; } try{ Store.set('cl_napos2',JSON.stringify(v)); }catch(e){} }; });
+  function marcar(lst){ document.querySelectorAll('[data-napos]').forEach(function(c){ c.checked=lst.indexOf(c.dataset.napos)>=0; }); try{ Store.set('cl_napos2',JSON.stringify(lst)); }catch(e){} }
   var pt=el('naPosTodas'); if(pt) pt.onclick=function(e){ e.preventDefault(); marcar(['ig_reels','ig_story','ig_feed','fb_reels','fb_story','fb_feed']); };
   var pm=el('naPosMelhores'); if(pm) pm.onclick=function(e){ e.preventDefault(); marcar(_pnlPos.melhores); toast('Marcadas as posições que vendem ✓'); };
   var bq=el('naIntBusca'), iq=el('naIntQ');
