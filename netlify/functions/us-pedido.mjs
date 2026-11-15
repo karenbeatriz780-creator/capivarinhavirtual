@@ -8,12 +8,13 @@ import { statusIndicacao, registrarIndicado, registrarUso } from './_indicacao.m
 import { indexarEmail } from './us-extra.mjs';
 
 export const PRECO_US = Number(process.env.PRECO_US) || 7.99;
+export const EXTRAS_US = { clipe: 2.99, quadro: 2.99 }; // 🎬 clipe com fotos · 🖼️ quadro (retrato) com QR
 const USD_BRL = () => Number(process.env.USD_BRL) || 5.65; // só estimativa; ao pagar, entra o valor exato em reais do Stripe
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const str = (b, k, n) => String((b && b[k]) || '').trim().slice(0, n || 200);
 
 export default async (req) => {
-  if (req.method === 'GET') return json({ preco: PRECO_US, moeda: 'usd' });
+  if (req.method === 'GET') return json({ preco: PRECO_US, extras: EXTRAS_US, moeda: 'usd' });
   if (req.method !== 'POST') return json({ erro: 'Use POST.' }, 405);
   let b = {}; try { b = await req.json(); } catch (e) {}
   const taskId = str(b, 'taskId', 120), email = str(b, 'email', 160).toLowerCase();
@@ -22,6 +23,8 @@ export default async (req) => {
   const reg = await getStore('musicas').get(taskId, { type: 'json' }).catch(() => null);
   if (!reg || !reg.url) return json({ erro: 'Your song is still being made. Please wait a moment.' }, 409);
   const id = 'us' + Date.now().toString(36) + crypto.randomBytes(4).toString('hex');
+  const extras = (Array.isArray(b.extras) ? b.extras : []).filter((k, i, a) => EXTRAS_US[k] && a.indexOf(k) === i);
+  const totalUS = Math.round((PRECO_US + extras.reduce((t, k) => t + EXTRAS_US[k], 0)) * 100) / 100;
   const agora = Date.now();
   const g = {
     id, produto: 'musica', idioma: 'en', pais: 'us', email,
@@ -29,9 +32,9 @@ export default async (req) => {
     musicaEstilo: str(b, 'estilo', 40), musicaClima: str(b, 'clima', 40), musicaPara: str(b, 'relacao', 40), musicaOcasiao: str(b, 'ocasiao', 80), musicaVoz: str(b, 'voz', 20),
     musicaLetra: str(b, 'letra', 5000) || reg.letraAprovada || null,
     musicaPreviewId: taskId, musicaPreviewUrl: reg.url, musicaPreviewUrl2: reg.url2 || null,
-    musicaOn: true, musicaPersonalizar: true, duracao: 'vitalicio', expiraEm: null,
+    musicaOn: true, musicaPersonalizar: true, duracao: 'vitalicio', expiraEm: null, extrasPix: extras,
     criadoEm: agora, pago: false, quatro: true,
-    pagamento: { provedor: 'stripe', status: 'ATIVA', moeda: 'usd', valorMoeda: PRECO_US, valor: Math.round(PRECO_US * USD_BRL() * 100) / 100 }
+    pagamento: { provedor: 'stripe', status: 'ATIVA', moeda: 'usd', valorMoeda: totalUS, valor: Math.round(totalUS * USD_BRL() * 100) / 100, extras }
   };
   // 🎶 4 MÚSICAS: as 2 da prévia + mais 2 (outra letra/estilo) que a pessoa cria depois de pagar
   const dobroDe = str(b, 'dobroDe', 80);
@@ -40,7 +43,7 @@ export default async (req) => {
     const origem = await lojaP.get(dobroDe, { type: 'json' }).catch(() => null);
     if (!origem || !origem.pago || origem.cancelado || !origem.quatro || origem.idioma !== 'en') return json({ erro: 'These songs are not available for this order.' }, 400);
     if (origem.dobroUsado && origem.dobroUsado !== id) return json({ erro: 'You already created your other 2 songs.', jaUsado: origem.dobroUsado }, 400);
-    Object.assign(g, { pago: true, pagoEm: agora, dobroDe, quatro: false, email: origem.email || email, meuNome: g.meuNome || origem.meuNome || '', pagamento: { provedor: 'incluso', status: 'CONCLUIDA', valor: 0, pagoEm: agora } });
+    Object.assign(g, { pago: true, pagoEm: agora, dobroDe, quatro: false, extrasPix: [], email: origem.email || email, meuNome: g.meuNome || origem.meuNome || '', pagamento: { provedor: 'incluso', status: 'CONCLUIDA', valor: 0, pagoEm: agora } });
     await lojaP.setJSON(id, g);
     origem.dobroUsado = id; origem.dobroEm = agora; await lojaP.setJSON(dobroDe, origem);
     try { await indexarDia('p', id); } catch (e) {}
@@ -53,7 +56,7 @@ export default async (req) => {
     const dono = await getStore('presentes').get(bonusDe, { type: 'json' }).catch(() => null);
     const st = dono && dono.pago ? await statusIndicacao(bonusDe) : { disponiveis: 0 };
     if (!(st.disponiveis >= 1)) return json({ erro: 'You don\'t have a free song available yet.' }, 400);
-    Object.assign(g, { pago: true, pagoEm: agora, bonusDe, quatro: false, pagamento: { provedor: 'bonus', status: 'CONCLUIDA', valor: 0, pagoEm: agora } });
+    Object.assign(g, { pago: true, pagoEm: agora, bonusDe, quatro: false, extrasPix: [], pagamento: { provedor: 'bonus', status: 'CONCLUIDA', valor: 0, pagoEm: agora } });
     await getStore('presentes').setJSON(id, g);
     await registrarUso(bonusDe, id);
     try { await indexarDia('p', id); } catch (e) {}
@@ -67,5 +70,5 @@ export default async (req) => {
   try { await indexarDia('p', id); } catch (e) {}
   try { await indexarEmail(email, id); } catch (e) {}
   try { reg.pedidoId = id; reg.email = email; await getStore('musicas').setJSON(taskId, reg); } catch (e) {}
-  return json({ ok: true, id, preco: PRECO_US });
+  return json({ ok: true, id, preco: totalUS });
 };

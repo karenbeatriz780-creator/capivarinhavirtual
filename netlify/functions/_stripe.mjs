@@ -66,7 +66,7 @@ export async function criarSessaoStripe(g) {
   const cents = Math.round(valor * 100);
   if (!(cents >= 100)) throw new Error('Valor do pedido inválido.');
   const en = g.idioma === 'en';
-  const nome = en ? 'Personalized Song' : g.produto === 'livro' ? 'Livro Mágico personalizado' : 'Música personalizada';
+  const nome = en ? ('4 Personalized Songs' + ((g.extrasPix || []).length ? ' + ' + g.extrasPix.map((k) => k === 'clipe' ? 'Photo Clip' : 'Portrait').join(' + ') : '')) : g.produto === 'livro' ? 'Livro Mágico personalizado' : 'Música personalizada';
   const s = await st('POST', 'checkout/sessions', {
     ui_mode: 'embedded', mode: 'payment', redirect_on_completion: 'never',
     payment_method_types: ['card'], // cartão + Apple Pay + Google Pay (carteiras entram junto com o cartão)

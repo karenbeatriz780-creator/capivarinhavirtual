@@ -53,7 +53,7 @@
       var ty = fy + fh + 250, maxT = fw - 200;
       var pT = caber(c, d.titulo || 'Nossa m\u00fasica', maxT, 176, '600', 'QLora, Georgia, serif');
       c.fillStyle = T.tx; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
-      c.font = '600 ' + pT + 'px QLora, Georgia, serif'; c.fillText(d.titulo || 'Nossa m\u00fasica', fx, ty);
+      c.font = '600 ' + pT + 'px QLora, Georgia, serif'; c.fillText(d.titulo || d.tituloPadrao || 'Nossa m\u00fasica', fx, ty);
       c.fillStyle = T.tx2; c.font = '500 ' + caber(c, d.sub || '', maxT, 66, '500', 'QInter, Arial, sans-serif') + 'px QInter, Arial, sans-serif'; c.fillText(d.sub || '', fx + 4, ty + 105);
       icone(c, 'cor', fx + fw - 62, ty - 52, 118, T.acento);
       // barra de progresso
@@ -79,7 +79,7 @@
       }
       var tx = qx + qs + 90, cyq = qy + qs / 2;
       c.fillStyle = T.tx2; c.font = '700 46px QInter, Arial, sans-serif';
-      var linhaTopo = d.data ? String(d.data).toUpperCase() : 'NOSSA M\u00daSICA';
+      var linhaTopo = d.data ? String(d.data).toUpperCase() : (d.topo || 'NOSSA M\u00daSICA');
       c.save(); if (c.letterSpacing !== undefined) c.letterSpacing = '8px'; c.fillText(linhaTopo, tx, cyq - 90); c.restore();
       c.fillStyle = T.tx; c.font = 'italic 500 92px QLora, Georgia, serif';
       var frase = d.frase || 'aponte a c\u00e2mera e ou\u00e7a\na nossa m\u00fasica \u2665';

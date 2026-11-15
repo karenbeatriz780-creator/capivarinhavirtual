@@ -4330,13 +4330,14 @@ var QRCodeGen = (function(){
       var f = fmtBits(ecl, mask), i3;
       for(i3=0;i3<15;i3++){
         var bit = (f>>i3)&1;
-        if(i3<6)        mat[8][i3] = bit;
-        else if(i3===6) mat[8][7] = bit;
+        /* posições oficiais (linha, coluna) — antes estavam trocadas e o QR não lia */
+        if(i3<6)        mat[i3][8] = bit;
+        else if(i3===6) mat[7][8] = bit;
         else if(i3===7) mat[8][8] = bit;
-        else if(i3===8) mat[7][8] = bit;
-        else            mat[14-i3][8] = bit;
-        if(i3<7) mat[size-1-i3][8] = bit;
-        else     mat[8][size-15+i3] = bit;
+        else if(i3===8) mat[8][7] = bit;
+        else            mat[8][14-i3] = bit;
+        if(i3<8) mat[8][size-1-i3] = bit;
+        else     mat[size-15+i3][8] = bit;
       }
       mat[size-8][8] = 1;
     }
@@ -4459,6 +4460,8 @@ function navegar(){
   var r=rota();
   var app=el('app');
   window.scrollTo(0,0);
+  /* 🇺🇸 pedido do site em inglês (id começa com "us"): abre sempre a página em inglês */
+  if(r.arg && /^us[a-z0-9]{6,}$/.test(r.arg) && ['p','pago','pagar','montar','extras','sucesso','ouvir','liberadas','oferta','bonus'].indexOf(r.nome)>=0){ location.replace('/us/#/'+(r.nome==='montar'||r.nome==='extras'?'extras':'song')+'/'+r.arg); return; }
   if(r.nome==='p' && r.arg){ telaPresente(r.arg); return; }
   if(r.nome==='pago' && r.arg){ telaConfirmando(r.arg); return; }
   if(r.nome==='pagar' && r.arg){ telaPagar(r.arg); return; }
@@ -7319,7 +7322,7 @@ function abrirExtrasPix(seguir, base){
 }
 /* ===== #/montar/<id>: cliente monta o CLIPE (até 8 fotos) e/ou o QUADRO (1 foto) ===== */
 var _mt=null;
-function carregarQuadroJs(){ return window.desenharQuadro ? Promise.resolve() : new Promise(function(ok,er){ var sc=document.createElement('script'); sc.src='/quadro.js?v=1'; sc.onload=ok; sc.onerror=er; document.head.appendChild(sc); }); }
+function carregarQuadroJs(){ return window.desenharQuadro ? Promise.resolve() : new Promise(function(ok,er){ var sc=document.createElement('script'); sc.src='/quadro.js?v=2'; sc.onload=ok; sc.onerror=er; document.head.appendChild(sc); }); }
 function telaMontarExtras(id){
   document.body.style.overflow='auto';
   el('app').innerHTML='<div class="mt"><div class="mt-in"><div class="mt-load">Carregando seus extras…</div></div></div>';
@@ -8108,6 +8111,17 @@ var RELACAO_NOME={
 };
 /* período do painel: '8' (padrão), '30p' / '90p' (só pagos), 'tudo', ou busca por número */
 var _pnlModo='8', _pnlTel='';
+document.addEventListener('click',function(e){
+  var b=e.target&&e.target.closest&&e.target.closest('#pnlQrVer'); if(!b) return;
+  b.disabled=true; b.textContent='Carregando…';
+  fetch('/.netlify/functions/admin-qr-refazer?dias=7',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+    b.disabled=false; b.textContent='Atualizar';
+    var it=((d&&d.itens)||[]).filter(function(x){ return x.tipo==='quadro'; });
+    el('pnlQrLista').innerHTML=it.length?it.map(function(x){ var msg='Oi'+(x.nome?' '+x.nome.split(' ')[0]:'')+'! 💗 Atualizamos o seu quadro: o QR Code agora está funcionando perfeitamente. Baixe a versão nova aqui (é só tocar em "Baixar quadro"): '+x.link;
+      return '<div class="pnl-dia"><span class="dt">'+(x.pagoEm?new Date(x.pagoEm).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—')+'</span><span class="ct">'+esc(x.nome||'(sem nome)')+(x.para?' → '+esc(x.para):'')+'</span>'+
+        (x.zap?'<a class="pnl-btn" target="_blank" rel="noopener" href="https://wa.me/'+(x.zap.length<=11?'55':'')+x.zap+'?text='+encodeURIComponent(msg)+'">📲 Mandar link</a>':'<a class="pnl-btn" target="_blank" rel="noopener" href="'+esc(x.link)+'">Abrir</a>')+'</div>'; }).join(''):'<div class="sub">Nenhum quadro nos últimos 7 dias.</div>';
+  }).catch(function(){ b.disabled=false; b.textContent='Tentar de novo'; });
+});
 function pnlAudiosHtml(){
   var bk=_pnlCache.audiosBackup; if(!bk || !bk.em) return '';
   var lista=bk.semAudio||[], vistos={}, uniq=[];
@@ -10063,6 +10077,7 @@ function desenharPainel(pedidos, visitas, musicas){
           '<form class="pnl-busca" id="pnlBuscaPix" style="margin-top:.5rem"><input type="text" id="pnlBuscaPixQ" placeholder="Ex.: E6070119… ou Jean Carlos"><button type="submit">Buscar</button></form><div id="pnlBuscaPixRes"></div></div>'+
         pnlPixSemPedidoHtml()+
         pnlAudiosHtml()+
+        '<div class="pnl-sec" id="pnlQr"><h2>🔧 QR Code corrigido — quadros dos últimos dias</h2><div class="sub">O QR dos quadros (retrato) feitos até 15/11 podia não ler. Mande o link pra cliente baixar o quadro de novo (o novo já vem com o QR certo). Os livros foram refeitos sozinhos.</div><button type="button" class="pnl-btn" id="pnlQrVer" style="margin-top:.5rem">Ver quadros dos últimos 7 dias</button><div id="pnlQrLista"></div></div>'+
         '<div class="pnl-sec"><h2>Pedidos pagos</h2><div class="sub">Mais recentes primeiro.</div>'+
         '<div class="pnl-lista">'+pagosHtml+'</div></div>'
       : '')+

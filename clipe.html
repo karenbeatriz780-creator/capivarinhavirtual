@@ -93,14 +93,17 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 <script>
 var $=function(i){return document.getElementById(i)},au=$('au'),capa=$('capa'),fi=-1,TROCA=6.5,ID=new URLSearchParams(location.search).get('id')||'';
 var FOTOS=[],DED='',D={},ims=[],dts=[];
+/* 🇺🇸 pedido do site em inglês (id começa com "us") → tudo em inglês */
+var EN=/^us/.test(ID);function L(pt,en){return EN?en:pt}
+if(EN){document.documentElement.lang='en';[['.top .c',null],['.ded h3','💌 Dedication'],['#bx','⬇ Download video for Stories'],['#env','↗ Share'],['.ent .k','🎁 A surprise for you'],['#entP','A song made just for you, with your photos.'],['.ent small','Tap to play ♥'],['#vidX','Cancel'],['.erro b','Clip not found'],['.erro span','Check the link you received.']].forEach(function(x){var e=document.querySelector(x[0]);if(!e)return;if(x[0]==='.top .c'){e.firstChild.textContent='Playing for you';return}e.textContent=x[1]});var mk=document.querySelector('.marca');if(mk)mk.lastChild.textContent='made with love by Capivarinha Love';}
 function txt(id,t){$(id).textContent=t}
 fetch('/.netlify/functions/clipe?id='+encodeURIComponent(ID),{cache:'no-store'}).then(function(r){return r.json()}).then(function(x){
  if(!x||!x.montado){$('erro').hidden=false;$('ent').classList.add('fora');return}
  D=x.dados;FOTOS=x.fotos;DED=D.dedicatoria||'';au.src=x.audio;
- var para=D.para||'você',de=D.de||'';
- txt('topoPara',para+' ♥');txt('tit',D.titulo||('Música pra '+para));txt('art',(de?de+' · ':'')+'com amor');
- $('entH').innerHTML=(de?esc(de)+' fez uma <em>música</em> pra '+esc(para):'Uma <em>música</em> feita pra '+esc(para));
- document.title=(D.titulo||('Música pra '+para))+' ♥';
+ var para=D.para||L('você','you'),de=D.de||'';
+ txt('topoPara',para+' ♥');txt('tit',D.titulo||(L('Música pra ','A song for ')+para));txt('art',(de?de+' · ':'')+L('com amor','with love'));
+ $('entH').innerHTML=EN?(de?esc(de)+' made a <em>song</em> for '+esc(para):'A <em>song</em> made for '+esc(para)):(de?esc(de)+' fez uma <em>música</em> pra '+esc(para):'Uma <em>música</em> feita pra '+esc(para));
+ document.title=(D.titulo||(L('Música pra ','A song for ')+para))+' ♥';
  if(!DED)$('dedBox').style.display='none';
  montarFotos();
 }).catch(function(){$('erro').hidden=false});
@@ -139,8 +142,8 @@ $('play').onclick=function(){au.paused?tocar():au.pause()};
 $('go').onclick=function(){$('ent').classList.add('fora');tocar()};
 $('trk').onclick=function(e){var r=this.getBoundingClientRect();if(au.duration)au.currentTime=(e.clientX-r.left)/r.width*au.duration;desl=0};
 function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('on')},2600)}
-$('env').onclick=function(){var l=location.href,m='Uma música pra você 💝 '+l;if(navigator.share)navigator.share({title:document.title,text:'Uma música pra você 💝',url:l}).catch(function(){});else location.href='https://wa.me/?text='+encodeURIComponent(m)};
-$('voltar').onclick=function(){au.pause();location.href='/'};
+$('env').onclick=function(){var l=location.href,m=L('Uma música pra você 💝 ','A song for you 💝 ')+l;if(navigator.share)navigator.share({title:document.title,text:L('Uma música pra você 💝','A song for you 💝'),url:l}).catch(function(){});else location.href='https://wa.me/?text='+encodeURIComponent(m)};
+$('voltar').onclick=function(){au.pause();location.href=EN?'/us/':'/'};
 /* ===== vídeo vertical de 30 s pro Status / Reels (gerado no próprio celular) ===== */
 var gerando=null;
 $('bx').onclick=function(){if(!FOTOS.length)return;if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){toast('Seu navegador não consegue gerar o vídeo. Abra no Chrome ou no Safari atualizado.');return}gerarVideo()};
@@ -148,8 +151,8 @@ $('vidX').onclick=function(){if(gerando)gerando.cancelar();$('vid').hidden=true}
 function carregaImg(u){return new Promise(function(ok,er){var i=new Image();i.onload=function(){ok(i)};i.onerror=er;i.src=u})}
 function gerarVideo(){
  au.pause();var DUR=30,Wv=720,Hv=1280,cancel=false;
- $('vid').hidden=false;txt('vidT','🎬 Gerando seu vídeo…');txt('vidS','Deixe esta tela aberta. Leva uns 30 segundos.');$('vidB').style.width='0';
- var c=$('vidX');c.textContent='Cancelar';var vc=document.querySelector('.vid-c a');if(vc)vc.remove();
+ $('vid').hidden=false;txt('vidT',L('🎬 Gerando seu vídeo…','🎬 Making your video…'));txt('vidS',L('Deixe esta tela aberta. Leva uns 30 segundos.','Keep this screen open. It takes about 30 seconds.'));$('vidB').style.width='0';
+ var c=$('vidX');c.textContent=L('Cancelar','Cancel');var vc=document.querySelector('.vid-c a');if(vc)vc.remove();
  var C=window.AudioContext||window.webkitAudioContext;var ac=new C();
  Promise.all([Promise.all(FOTOS.map(carregaImg)),fetch(au.src).then(function(r){return r.arrayBuffer()}).then(function(b){return new Promise(function(ok,er){ac.decodeAudioData(b,ok,er)})})]).then(function(r){
   if(cancel)return;var fs=r[0],ab=r[1];
@@ -161,7 +164,7 @@ function gerarVideo(){
   for(var i=0;i<tipos.length;i++)if(MediaRecorder.isTypeSupported(tipos[i])){mime=tipos[i];break}
   var rec=new MediaRecorder(st,mime?{mimeType:mime,videoBitsPerSecond:4e6}:undefined),pedacos=[];
   rec.ondataavailable=function(e){if(e.data&&e.data.size)pedacos.push(e.data)};
-  var t0=0,raf=0,titulo=D.titulo||('Música pra '+(D.para||'você')),sub=(D.de?D.de+' · ':'')+'com amor';
+  var t0=0,raf=0,titulo=D.titulo||(L('Música pra ','A song for ')+(D.para||L('você','you'))),sub=(D.de?D.de+' · ':'')+L('com amor','with love');
   function cover(img,dx,dy,dw,dh,z,ox,oy){var s=Math.max(dw/img.width,dh/img.height)*z,iw=img.width*s,ih=img.height*s;x.drawImage(img,dx+(dw-iw)/2+ox,dy+(dh-ih)/2+oy,iw,ih)}
   function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
   function quadro(){var t=(performance.now()-t0)/1000;if(t>DUR){rec.stop();return}
@@ -184,14 +187,14 @@ function gerarVideo(){
    $('vidB').style.width=Math.min(100,t/DUR*100)+'%';raf=requestAnimationFrame(quadro)}
   rec.onstop=function(){cancelAnimationFrame(raf);try{src.stop()}catch(e){}try{ac.close()}catch(e){}
    if(cancel)return;var tp=(mime||'video/webm').split(';')[0],ext=tp.indexOf('mp4')>=0?'mp4':'webm',blob=new Blob(pedacos,{type:tp});
-   var nome='musica-'+(D.para||'presente').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.'+ext,file=null;try{file=new File([blob],nome,{type:tp})}catch(e){}
-   txt('vidT','✅ Seu vídeo está pronto!');txt('vidS',ext==='mp4'?'Toque abaixo para salvar ou postar no Status.':'Toque abaixo para salvar. Se o WhatsApp não aceitar, abra este link no Chrome atualizado.');
-   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;a.textContent='⬇ Salvar vídeo';
-   if(file&&navigator.canShare&&navigator.canShare({files:[file]})){a.textContent='📲 Salvar / Postar no Status';a.onclick=function(e){e.preventDefault();navigator.share({files:[file],title:titulo}).catch(function(){location.href=a.href})}}
-   $('vidX').textContent='Fechar';$('vidX').before(a);gerando=null};
+   var nome=L('musica-','song-')+(D.para||'presente').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.'+ext,file=null;try{file=new File([blob],nome,{type:tp})}catch(e){}
+   txt('vidT',L('✅ Seu vídeo está pronto!','✅ Your video is ready!'));txt('vidS',ext==='mp4'?L('Toque abaixo para salvar ou postar no Status.','Tap below to save or post it.'):L('Toque abaixo para salvar. Se o WhatsApp não aceitar, abra este link no Chrome atualizado.','Tap below to save it.'));
+   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;a.textContent=L('⬇ Salvar vídeo','⬇ Save video');
+   if(file&&navigator.canShare&&navigator.canShare({files:[file]})){a.textContent=L('📲 Salvar / Postar no Status','📲 Save / Share');a.onclick=function(e){e.preventDefault();navigator.share({files:[file],title:titulo}).catch(function(){location.href=a.href})}}
+   $('vidX').textContent=L('Fechar','Close');$('vidX').before(a);gerando=null};
   rec.start(500);src.start(0);t0=performance.now();quadro();
   gerando={cancelar:function(){cancel=true;try{rec.stop()}catch(e){}}};
- }).catch(function(){txt('vidT','Não consegui gerar o vídeo');txt('vidS','Confira sua internet e tente de novo.');$('vidX').textContent='Fechar'});
+ }).catch(function(){txt('vidT',L('Não consegui gerar o vídeo',"Couldn't make the video"));txt('vidS',L('Confira sua internet e tente de novo.','Check your connection and try again.'));$('vidX').textContent=L('Fechar','Close')});
  gerando={cancelar:function(){cancel=true}};
 }
 requestAnimationFrame(loop);

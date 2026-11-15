@@ -47,7 +47,7 @@ function capaMini(ctx, imCapa, x, y, w) {
   cobrir(ctx, imCapa, x, y, w, h);
 }
 function desenharQR(ctx, texto, x, y, tam) {
-  const q = QRCodeGen.build(texto, { ec: 'M' }), n = q.size, m = 1, cel = tam / (n + m * 2);
+  const q = QRCodeGen.build(texto, 'M'), n = q.size, m = 1, cel = tam / (n + m * 2);
   ctx.fillStyle = '#fff'; ctx.fillRect(x, y, tam, tam); ctx.fillStyle = '#000';
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.matrix[r][c]) ctx.fillRect(x + (c + m) * cel, y + (r + m) * cel, Math.ceil(cel), Math.ceil(cel));
 }
@@ -414,13 +414,14 @@ const QRCodeGen = (function(){
       var f = fmtBits(ecl, mask), i3;
       for(i3=0;i3<15;i3++){
         var bit = (f>>i3)&1;
-        if(i3<6)        mat[8][i3] = bit;
-        else if(i3===6) mat[8][7] = bit;
+        /* posições oficiais (linha, coluna) — antes estavam trocadas e o QR não lia */
+        if(i3<6)        mat[i3][8] = bit;
+        else if(i3===6) mat[7][8] = bit;
         else if(i3===7) mat[8][8] = bit;
-        else if(i3===8) mat[7][8] = bit;
-        else            mat[14-i3][8] = bit;
-        if(i3<7) mat[size-1-i3][8] = bit;
-        else     mat[8][size-15+i3] = bit;
+        else if(i3===8) mat[8][7] = bit;
+        else            mat[8][14-i3] = bit;
+        if(i3<8) mat[8][size-1-i3] = bit;
+        else     mat[size-15+i3][8] = bit;
       }
       mat[size-8][8] = 1;
     }

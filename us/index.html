@@ -142,13 +142,314 @@ textarea.inp{min-height:160px;resize:vertical;line-height:1.45}
 .ok-h{text-align:center;padding:10px 0 6px}
 .ok-h div{font-size:3rem}
 pre.lt{white-space:pre-wrap;font-family:inherit;color:var(--mut);font-size:.92rem}
+.addon{display:flex;margin-bottom:8px;cursor:pointer}.addon small{display:block}
+.gift{padding:20px 0 10px}.g-k{text-align:center;color:var(--gold);font-weight:800;font-size:.85rem;letter-spacing:.04em;margin-bottom:8px}
+.g-h{text-align:center;font-size:2.1rem;margin-bottom:6px}.g-h em{font-style:normal;color:var(--rose2)}
+.xf{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px}
+.xf-i{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--bg2)}.xf-i img{width:100%;height:100%;object-fit:cover}
+.xf-i span{position:absolute;left:4px;bottom:4px;font-size:.6rem;font-weight:800;background:var(--gold);color:#3a1a05;padding:.1rem .35rem;border-radius:6px}
+.xf-i button{position:absolute;top:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:.8rem}.xf-i button[data-cap]{left:3px}.xf-i .rm{right:3px}
+.xf-add{aspect-ratio:1;border-radius:12px;border:1.5px dashed var(--line);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;gap:2px}.xf-add b{font-size:1.4rem}.xf-add small{color:var(--mut)}
 .toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#fff;color:#2A0F1E;font-weight:600;padding:.7rem 1rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50;max-width:92vw;font-size:.92rem}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
-var PRECO=7.99;
+var PRECO=7.99, EXTRAS={clipe:{p:2.99,t:'🎬 Photo video clip',d:'Up to 8 photos + your song, ready to post'},quadro:{p:2.99,t:'🖼️ Printable portrait',d:'Your photo + a QR code that plays the song'}};
+var QRCodeGen = (function(){
+  var TOTAL_CW = [26,44,70,100,134,172,196,242,292,346];
+  var ECC_PB = [
+    [7,10,13,17],[10,16,22,28],[15,26,18,22],[20,18,26,16],[26,24,18,22],
+    [18,16,24,28],[20,18,18,26],[24,22,22,26],[30,22,20,24],[18,26,24,28]
+  ];
+  var NBLK = [
+    [1,1,1,1],[1,1,1,1],[1,1,2,2],[1,2,2,4],[1,2,4,4],
+    [2,4,4,4],[2,4,6,5],[2,4,6,6],[2,5,8,8],[4,5,8,8]
+  ];
+  var ALIGN = [[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
+  var ECIDX = {L:0,M:1,Q:2,H:3};
+  var ECBITS = {L:1,M:0,Q:3,H:2};
+
+  var EXP = new Array(512), LOG = new Array(256);
+  (function(){ var x=1,i; for(i=0;i<255;i++){ EXP[i]=x; LOG[x]=i; x<<=1; if(x&0x100) x^=0x11D; }
+    for(i=255;i<512;i++) EXP[i]=EXP[i-255]; })();
+  function gmul(a,b){ if(a===0||b===0) return 0; return EXP[LOG[a]+LOG[b]]; }
+
+  function genPoly(n){
+    var poly=[1], i, j;
+    for(i=0;i<n;i++){
+      var next = new Array(poly.length+1); for(j=0;j<next.length;j++) next[j]=0;
+      for(j=0;j<poly.length;j++){ next[j] ^= poly[j]; next[j+1] ^= gmul(poly[j], EXP[i]); }
+      poly = next;
+    }
+    return poly;
+  }
+  function rsEncode(data, ecLen){
+    var gen = genPoly(ecLen), res = new Array(ecLen), i, j;
+    for(i=0;i<ecLen;i++) res[i]=0;
+    for(i=0;i<data.length;i++){
+      var factor = data[i] ^ res[0];
+      res.shift(); res.push(0);
+      for(j=0;j<ecLen;j++) res[j] ^= gmul(gen[j+1], factor);
+    }
+    return res;
+  }
+
+  function utf8Bytes(str){
+    var out=[], i, c;
+    for(i=0;i<str.length;i++){
+      c = str.charCodeAt(i);
+      if(c<0x80) out.push(c);
+      else if(c<0x800){ out.push(0xC0|(c>>6), 0x80|(c&63)); }
+      else if(c<0xD800 || c>=0xE000){ out.push(0xE0|(c>>12), 0x80|((c>>6)&63), 0x80|(c&63)); }
+      else { i++; var cp = 0x10000 + (((c&0x3FF)<<10) | (str.charCodeAt(i)&0x3FF));
+        out.push(0xF0|(cp>>18), 0x80|((cp>>12)&63), 0x80|((cp>>6)&63), 0x80|(cp&63)); }
+    }
+    return out;
+  }
+
+  function dataCapacity(ver, ec){
+    var e = ECIDX[ec];
+    return TOTAL_CW[ver-1] - ECC_PB[ver-1][e]*NBLK[ver-1][e];
+  }
+
+  function build(text, ecLevel){
+    var ec = ecLevel || 'M';
+    var bytes = utf8Bytes(text);
+    var ver = 0, v;
+    for(v=1; v<=10; v++){
+      var ccBits = (v<10)?8:16;
+      var need = 4 + ccBits + bytes.length*8;
+      if(dataCapacity(v, ec)*8 >= need){ ver = v; break; }
+    }
+    if(!ver){
+      if(ec!=='L') return build(text,'L');
+      throw new Error('Conteudo grande demais para QR');
+    }
+
+    // --- bit stream
+    var bits = [];
+    function put(val, len){ for(var i=len-1;i>=0;i--) bits.push((val>>>i)&1); }
+    put(4,4);
+    put(bytes.length, ver<10?8:16);
+    for(var i=0;i<bytes.length;i++) put(bytes[i],8);
+    var capBits = dataCapacity(ver, ec)*8;
+    var term = Math.min(4, capBits - bits.length);
+    for(i=0;i<term;i++) bits.push(0);
+    while(bits.length % 8) bits.push(0);
+    var dataCw = [];
+    for(i=0;i<bits.length;i+=8){
+      var b=0; for(var k=0;k<8;k++) b=(b<<1)|bits[i+k];
+      dataCw.push(b);
+    }
+    var padBytes=[0xEC,0x11], p=0;
+    while(dataCw.length < dataCapacity(ver, ec)){ dataCw.push(padBytes[p++%2]); }
+
+    // --- blocks
+    var e = ECIDX[ec], nb = NBLK[ver-1][e], ecLen = ECC_PB[ver-1][e];
+    var totalData = dataCapacity(ver, ec);
+    var shortLen = Math.floor(totalData/nb), numLong = totalData % nb;
+    var dblocks=[], eblocks=[], off=0;
+    for(i=0;i<nb;i++){
+      var len = shortLen + (i >= nb-numLong ? 1 : 0);
+      var blk = dataCw.slice(off, off+len); off += len;
+      dblocks.push(blk);
+      eblocks.push(rsEncode(blk, ecLen));
+    }
+    var finalCw=[], maxLen = shortLen+ (numLong?1:0);
+    for(i=0;i<maxLen;i++) for(var b2=0;b2<nb;b2++) if(i<dblocks[b2].length) finalCw.push(dblocks[b2][i]);
+    for(i=0;i<ecLen;i++) for(b2=0;b2<nb;b2++) finalCw.push(eblocks[b2][i]);
+
+    // --- matrix
+    var size = ver*4 + 17;
+    var m = [], res = [];
+    for(i=0;i<size;i++){ m.push(new Array(size).fill(0)); res.push(new Array(size).fill(0)); }
+    function setF(r,c,val){ if(r<0||c<0||r>=size||c>=size) return; m[r][c]=val; res[r][c]=1; }
+
+    function finder(r,c){
+      for(var dr=-1;dr<=7;dr++) for(var dc=-1;dc<=7;dc++){
+        var rr=r+dr, cc=c+dc;
+        if(rr<0||cc<0||rr>=size||cc>=size) continue;
+        var on = (dr>=0&&dr<=6&&(dc===0||dc===6)) || (dc>=0&&dc<=6&&(dr===0||dr===6)) ||
+                 (dr>=2&&dr<=4&&dc>=2&&dc<=4);
+        setF(rr,cc,on?1:0);
+      }
+    }
+    finder(0,0); finder(0,size-7); finder(size-7,0);
+
+    var ap = ALIGN[ver-1];
+    for(i=0;i<ap.length;i++) for(var j=0;j<ap.length;j++){
+      var ar=ap[i], ac=ap[j];
+      if((ar<=8&&ac<=8)||(ar<=8&&ac>=size-9)||(ar>=size-9&&ac<=8)) continue;
+      for(var dr2=-2;dr2<=2;dr2++) for(var dc2=-2;dc2<=2;dc2++){
+        var on2 = Math.max(Math.abs(dr2),Math.abs(dc2))!==1;
+        setF(ar+dr2, ac+dc2, on2?1:0);
+      }
+    }
+    for(i=8;i<size-8;i++){ setF(6,i,(i%2===0)?1:0); setF(i,6,(i%2===0)?1:0); }
+    setF(size-8,8,1); // dark module
+
+    // reserve format areas
+    for(i=0;i<9;i++){ if(!res[8][i]) setF(8,i,0); if(!res[i][8]) setF(i,8,0); }
+    for(i=0;i<8;i++){ if(!res[8][size-1-i]) setF(8,size-1-i,0); if(!res[size-1-i][8]) setF(size-1-i,8,0); }
+
+    if(ver>=7){
+      var rem2 = ver<<12, ii;
+      for(ii=0;ii<6;ii++){ if(rem2 & (1<<(17-ii))) rem2 ^= (0x1F25 << (5-ii)); }
+      var vinfo = ((ver<<12) | (rem2 & 0xFFF));
+      for(i=0;i<18;i++){
+        var vbit = (vinfo>>i)&1;
+        setF(Math.floor(i/3), size-11+(i%3), vbit);
+        setF(size-11+(i%3), Math.floor(i/3), vbit);
+      }
+    }
+
+    // --- place data
+    var dir=-1, row=size-1, col=size-1, idx=0, bitI=0;
+    while(col>0){
+      if(col===6) col--;
+      while(true){
+        for(var q=0;q<2;q++){
+          var cc2 = col-q;
+          if(!res[row][cc2]){
+            var dark = 0;
+            if(idx < finalCw.length){ dark = (finalCw[idx] >>> (7-bitI)) & 1; }
+            m[row][cc2] = dark;
+            bitI++; if(bitI===8){ bitI=0; idx++; }
+          }
+        }
+        row += dir;
+        if(row<0||row>=size){ row -= dir; dir = -dir; break; }
+      }
+      col -= 2;
+    }
+
+    // --- masks
+    function maskFn(k,r,c){
+      switch(k){
+        case 0: return (r+c)%2===0;
+        case 1: return r%2===0;
+        case 2: return c%3===0;
+        case 3: return (r+c)%3===0;
+        case 4: return (Math.floor(r/2)+Math.floor(c/3))%2===0;
+        case 5: return (r*c)%2 + (r*c)%3 === 0;
+        case 6: return ((r*c)%2 + (r*c)%3)%2===0;
+        case 7: return ((r+c)%2 + (r*c)%3)%2===0;
+      }
+    }
+    function fmtBits(ecl, mask){
+      var d2 = (ECBITS[ecl]<<3)|mask, rem3 = d2<<10, i2;
+      for(i2=0;i2<5;i2++){ if(rem3 & (1<<(14-i2))) rem3 ^= (0x537 << (4-i2)); }
+      return ((d2<<10)|(rem3 & 0x3FF)) ^ 0x5412;
+    }
+    function applyFormat(mat, ecl, mask){
+      var f = fmtBits(ecl, mask), i3;
+      for(i3=0;i3<15;i3++){
+        var bit = (f>>i3)&1;
+        /* posições oficiais (linha, coluna) — antes estavam trocadas e o QR não lia */
+        if(i3<6)        mat[i3][8] = bit;
+        else if(i3===6) mat[7][8] = bit;
+        else if(i3===7) mat[8][8] = bit;
+        else if(i3===8) mat[8][7] = bit;
+        else            mat[8][14-i3] = bit;
+        if(i3<8) mat[8][size-1-i3] = bit;
+        else     mat[size-15+i3][8] = bit;
+      }
+      mat[size-8][8] = 1;
+    }
+    function penalty(mat){
+      var s=0, i4,j4,k4;
+      for(i4=0;i4<size;i4++){
+        for(var dirn=0;dirn<2;dirn++){
+          var run=1, prev=dirn?mat[0][i4]:mat[i4][0];
+          for(j4=1;j4<size;j4++){
+            var cur = dirn?mat[j4][i4]:mat[i4][j4];
+            if(cur===prev) run++;
+            else { if(run>=5) s += 3 + (run-5); run=1; prev=cur; }
+          }
+          if(run>=5) s += 3 + (run-5);
+        }
+      }
+      for(i4=0;i4<size-1;i4++) for(j4=0;j4<size-1;j4++){
+        var v0=mat[i4][j4];
+        if(v0===mat[i4][j4+1] && v0===mat[i4+1][j4] && v0===mat[i4+1][j4+1]) s+=3;
+      }
+      var pat=[1,0,1,1,1,0,1,0,0,0,0];
+      var pat2=[0,0,0,0,1,0,1,1,1,0,1];
+      for(i4=0;i4<size;i4++) for(j4=0;j4<=size-11;j4++){
+        var ok1=true, ok2=true;
+        for(k4=0;k4<11;k4++){ if(mat[i4][j4+k4]!==pat[k4]) ok1=false; if(mat[i4][j4+k4]!==pat2[k4]) ok2=false; }
+        if(ok1) s+=40; if(ok2) s+=40;
+        ok1=true; ok2=true;
+        for(k4=0;k4<11;k4++){ if(mat[j4+k4][i4]!==pat[k4]) ok1=false; if(mat[j4+k4][i4]!==pat2[k4]) ok2=false; }
+        if(ok1) s+=40; if(ok2) s+=40;
+      }
+      var dark=0;
+      for(i4=0;i4<size;i4++) for(j4=0;j4<size;j4++) if(mat[i4][j4]) dark++;
+      var pct = dark*100/(size*size);
+      s += Math.floor(Math.abs(pct-50)/5)*10;
+      return s;
+    }
+
+    var best=null, bestScore=Infinity, bestMask=0;
+    for(var mk=0; mk<8; mk++){
+      var cand=[];
+      for(i=0;i<size;i++) cand.push(m[i].slice());
+      for(i=0;i<size;i++) for(j=0;j<size;j++){
+        if(!res[i][j] && maskFn(mk,i,j)) cand[i][j] ^= 1;
+      }
+      applyFormat(cand, ec, mk);
+      var sc = penalty(cand);
+      if(sc<bestScore){ bestScore=sc; best=cand; bestMask=mk; }
+    }
+    return {matrix:best, size:size, version:ver, ec:ec, mask:bestMask};
+  }
+
+  function toSVG(text, opts){
+    opts = opts || {};
+    var q = build(text, opts.ec||'M');
+    var quiet = opts.quiet===undefined?2:opts.quiet;
+    var n = q.size + quiet*2;
+    var dark = opts.dark||'#161113', light = opts.light||'#ffffff';
+    var path = '';
+    for(var r=0;r<q.size;r++){
+      var c=0;
+      while(c<q.size){
+        if(q.matrix[r][c]){
+          var st=c; while(c<q.size && q.matrix[r][c]) c++;
+          path += 'M'+(st+quiet)+' '+(r+quiet)+'h'+(c-st)+'v1h'+(-(c-st))+'z';
+        } else c++;
+      }
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+n+' '+n+'" shape-rendering="crispEdges">'+
+      '<rect width="'+n+'" height="'+n+'" fill="'+light+'"/><path d="'+path+'" fill="'+dark+'"/></svg>';
+  }
+  return {build:build, toSVG:toSVG};
+})();
+function comprimir(file, maxLado, q){
+  maxLado = maxLado||1280; q = q||0.78;
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onerror=function(){ rej(new Error('leitura')); };
+    fr.onload=function(e){
+      var img=new Image();
+      img.onerror=function(){ rej(new Error('imagem')); };
+      img.onload=function(){
+        var w=img.width,h=img.height,r=Math.min(1,maxLado/Math.max(w,h));
+        var cw=Math.round(w*r), ch=Math.round(h*r);
+        var cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+        var cx=cv.getContext('2d');
+        cx.fillStyle='#fff'; cx.fillRect(0,0,cw,ch);
+        cx.drawImage(img,0,0,cw,ch);
+        res(cv.toDataURL('image/jpeg',q));
+      };
+      img.src=e.target.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
 var MASCOTE='/a/mascote.png';
 var LG_APAY='m2.15 4.318-.454.003c-.15.005-.303.013-.452.04a1.44 1.44 0 0 0-1.06.772c-.07.138-.114.278-.14.43-.028.148-.037.3-.04.45L0 6.222v11.557q0 .104.003.207c.004.15.013.303.04.452q.039.224.142.429a1.44 1.44 0 0 0 .63.63c.138.07.278.115.43.142.148.027.3.036.45.04l.208.003h20.194l.207-.003c.15-.004.303-.013.452-.04s.291-.071.428-.141a1.43 1.43 0 0 0 .631-.631c.07-.138.115-.278.141-.43.027-.148.036-.3.04-.45q.003-.104.003-.208l.001-.246V6.221q0-.104-.004-.207a3 3 0 0 0-.04-.452 1.45 1.45 0 0 0-1.2-1.201 3 3 0 0 0-.452-.04 11 11 0 0 0-.453-.003zm0 .512h19.942q.098 0 .197.003c.115.004.25.01.375.032.109.02.2.05.287.094a.93.93 0 0 1 .407.407 1 1 0 0 1 .094.288c.022.123.028.258.031.374q.003.097.003.197v11.552q0 .097-.003.196c-.003.115-.009.25-.032.375a.93.93 0 0 1-.5.693 1 1 0 0 1-.286.094 3 3 0 0 1-.373.032l-.2.003H1.906q-.1 0-.196-.003a3 3 0 0 1-.375-.032c-.109-.02-.2-.05-.288-.094a.9.9 0 0 1-.406-.407 1 1 0 0 1-.094-.288 2.5 2.5 0 0 1-.032-.373l-.002-.197V6.224q0-.098.002-.197c.004-.114.01-.248.032-.375.02-.108.05-.199.094-.287a.93.93 0 0 1 .407-.406 1 1 0 0 1 .287-.094c.125-.022.26-.029.375-.032q.098-.002.196-.003zm4.71 3.7c-.3.016-.668.199-.88.456-.191.22-.36.58-.316.918.338.03.675-.169.888-.418.205-.258.345-.603.308-.955zm2.207.42v5.493h.852v-1.877h1.18c1.078 0 1.835-.739 1.835-1.812 0-1.07-.742-1.805-1.808-1.805zm.852.719h.982c.739 0 1.161.396 1.161 1.089 0 .692-.422 1.092-1.164 1.092h-.979zm-3.154.3c-.45.01-.83.28-1.05.28-.235 0-.593-.264-.981-.257a1.45 1.45 0 0 0-1.23.747c-.527.908-.139 2.255.374 2.995.249.366.549.769.944.754.373-.014.52-.242.973-.242.454 0 .586.242.98.235.41-.007.667-.366.915-.733.286-.417.403-.82.41-.841-.007-.008-.79-.308-.797-1.209-.008-.754.615-1.113.644-1.135-.352-.52-.9-.578-1.09-.593zm8.204.397c-.99 0-1.606.533-1.652 1.256h.777c.072-.358.369-.586.845-.586.502 0 .803.266.803.711v.309l-1.097.064c-.951.054-1.488.484-1.488 1.184 0 .72.548 1.207 1.332 1.207.526 0 1.032-.281 1.264-.727h.019v.659h.788v-2.76c0-.803-.62-1.317-1.591-1.317m1.94.072 1.446 4.009c0 .003-.073.24-.073.247-.125.41-.33.571-.711.571-.069 0-.206 0-.267-.015v.666c.06.011.267.019.335.019.83 0 1.226-.312 1.568-1.283l1.5-4.214h-.868l-1.012 3.259h-.015l-1.013-3.26zm-1.167 2.189v.316c0 .521-.45.917-1.024.917-.442 0-.731-.228-.731-.579 0-.342.278-.56.769-.593z', LG_GPAY='M3.963 7.235A3.96 3.96 0 0 0 .422 9.419a3.96 3.96 0 0 0 0 3.559 3.96 3.96 0 0 0 3.541 2.184c1.07 0 1.97-.352 2.627-.957.748-.69 1.18-1.71 1.18-2.916a5 5 0 0 0-.07-.806H3.964v1.526h2.14a1.84 1.84 0 0 1-.79 1.205c-.356.241-.814.379-1.35.379-1.034 0-1.911-.697-2.225-1.636a2.38 2.38 0 0 1 0-1.517c.314-.94 1.191-1.636 2.225-1.636a2.15 2.15 0 0 1 1.52.594l1.132-1.13a3.8 3.8 0 0 0-2.652-1.033zm6.501.55v6.9h.886V11.89h1.465q.904 0 1.522-.588a1.91 1.91 0 0 0 .635-1.464 1.92 1.92 0 0 0-.635-1.456 2.13 2.13 0 0 0-1.522-.598zm2.427.85a1.16 1.16 0 0 1 .823.365 1.176 1.176 0 0 1 0 1.686 1.17 1.17 0 0 1-.877.357H11.35V8.635h1.541m4.124 1.175q-1.262 0-1.907.925l.781.491q.432-.626 1.175-.626a1.25 1.25 0 0 1 .856.323 1 1 0 0 1 .366.785v.202q-.51-.29-1.3-.289-.926 0-1.479.434-.555.432-.554 1.165a1.48 1.48 0 0 0 .525 1.156q.525.463 1.305.463.915 0 1.465-.81h.038v.655h.848v-2.909q0-.915-.568-1.44-.57-.525-1.551-.525m2.263.154 1.946 4.422-1.098 2.38h.915L24 9.963h-.965l-1.368 3.391h-.02l-1.406-3.39zm-2.146 2.368q.741 0 1.156.33 0 .558-.44.973a1.41 1.41 0 0 1-.997.414 1.08 1.08 0 0 1-.69-.232.71.71 0 0 1-.293-.578q0-.383.363-.647.36-.26.9-.26Z';
 function lg(d,c,w){ return '<svg viewBox="0 0 24 24" width="'+w+'" height="'+w+'" fill="'+c+'" aria-hidden="true"><path d="'+d+'"/></svg>'; }
@@ -164,7 +465,7 @@ function track(ev,p){ try{ if(window.fbq) fbq('track',ev,p||{}); }catch(e){} }
 
 /* ---------- state ---------- */
 var S={};
-function novo(){ return {para:'',paraGen:'',paraOutro:'',de:'',nome:'',ocasiao:'',estilo:'',clima:'',voz:'',historia:'',frase:'',letra:'',taskId:'',url:'',url2:'',email:'',meuNome:'',pedido:'',bonusDe:'',dobroDe:''}; }
+function novo(){ return {para:'',paraGen:'',paraOutro:'',de:'',nome:'',ocasiao:'',estilo:'',clima:'',voz:'',historia:'',frase:'',letra:'',taskId:'',url:'',url2:'',email:'',meuNome:'',pedido:'',bonusDe:'',dobroDe:'',extras:[]}; }
 function salvar(){ LS.set('us_state',JSON.stringify(S)); }
 try{ S=JSON.parse(LS.get('us_state')||'null')||novo(); }catch(e){ S=novo(); }
 
@@ -380,8 +681,9 @@ function stripeJs(){ if(window.Stripe) return Promise.resolve(); if(_stJs) retur
 function htmlCheckout(){
   return '<h2>Unlock your song</h2><p class="hint">Where should we send your song?</p>'+
     '<div class="box">'+
-      (S.bonusDe?'<div class="tot"><span>Your referral reward</span><b>FREE 🎁</b></div>':'<div class="tot"><span>Total</span><b>'+money(PRECO)+' USD</b></div>')+
+      (S.bonusDe?'<div class="tot"><span>Your referral reward</span><b>FREE 🎁</b></div>':'<div class="tot"><span>Total</span><b id="totV">'+money(totalUS())+' USD</b></div>')+
       '<ul class="incl"><li><b>4 full songs</b>: these 2 + 2 more with new lyrics &amp; style</li><li>Download MP3 + share link</li><li>Lyrics included · yours forever</li></ul>'+
+      (S.bonusDe?'':'<div class="sub-t">Make it extra special <span style="color:var(--mut);font-weight:500">(optional)</span></div>'+Object.keys(EXTRAS).map(function(k){ var x=EXTRAS[k], on=(S.extras||[]).indexOf(k)>=0; return '<label class="opt addon'+(on?' on':'')+'" data-ex="'+k+'"><input type="checkbox"'+(on?' checked':'')+' style="display:none"><span class="e">'+x.t.split(' ')[0]+'</span><span>'+x.t.slice(x.t.indexOf(' ')+1)+' <b style="color:var(--gold)">+'+money(x.p)+'</b><small>'+x.d+'</small></span></label>'; }).join(''))+
       '<div class="sub-t">Your email</div><input class="inp" id="fEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com" value="'+esc(S.email)+'">'+
       '<div class="sub-t">Your first name <span style="color:var(--mut);font-weight:500">(optional)</span></div><input class="inp" id="fMeu" maxlength="60" autocomplete="given-name" placeholder="e.g. Michael" value="'+esc(S.meuNome)+'">'+
       '<button class="btn btn-p" id="bPagar" style="margin-top:16px">'+(S.bonusDe?'Get my free song 🎁':'Continue to payment')+'</button>'+
@@ -389,13 +691,15 @@ function htmlCheckout(){
       '<div id="stBox" hidden><div class="stmsg">Opening secure checkout…</div></div>'+
     '</div>';
 }
+function totalUS(){ return PRECO+(S.extras||[]).reduce(function(t,k){ return t+(EXTRAS[k]?EXTRAS[k].p:0); },0); }
 function ligarCheckout(){
+  document.querySelectorAll('[data-ex]').forEach(function(l){ l.onclick=function(ev){ ev.preventDefault(); if(S.pedido){ toast('Your order was already created. Go back to change extras.'); return; } var k=l.dataset.ex; S.extras=S.extras||[]; var i=S.extras.indexOf(k); if(i>=0) S.extras.splice(i,1); else S.extras.push(k); salvar(); l.classList.toggle('on',i<0); var tv=el('totV'); if(tv) tv.textContent=money(totalUS())+' USD'; }; });
   var e=el('fEmail'), m=el('fMeu');
   e.oninput=function(){ S.email=e.value.trim(); salvar(); }; m.oninput=function(){ S.meuNome=m.value.trim(); salvar(); };
   el('bPagar').onclick=function(){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(S.email)){ erro('Please enter a valid email so we can send your song.'); e.focus(); return; }
     erro(''); var b=el('bPagar'); b.disabled=true; b.textContent='Opening checkout…';
-    var pedidoP = S.pedido ? Promise.resolve({id:S.pedido}) : api('us-pedido',{ref:LS.get('us_ref')||'',bonusDe:S.bonusDe||'',taskId:S.taskId,email:S.email,nome:S.meuNome,paraNome:S.nome,estilo:S.estilo,clima:S.clima,relacao:S.para,ocasiao:S.ocasiao,voz:S.voz,letra:S.letra});
+    var pedidoP = S.pedido ? Promise.resolve({id:S.pedido}) : api('us-pedido',{extras:S.bonusDe?[]:(S.extras||[]),ref:LS.get('us_ref')||'',bonusDe:S.bonusDe||'',taskId:S.taskId,email:S.email,nome:S.meuNome,paraNome:S.nome,estilo:S.estilo,clima:S.clima,relacao:S.para,ocasiao:S.ocasiao,voz:S.voz,letra:S.letra});
     pedidoP.then(function(p){
       if(!p||!p.id) throw new Error((p&&p.erro)||'Couldn\'t create your order.');
       S.pedido=p.id; salvar();
@@ -415,7 +719,7 @@ function ligarCheckout(){
 }
 function confirmar(sessao,n){
   api('stripe-pagar',{acao:'confirmar',id:S.pedido,sessao:sessao}).then(function(d){
-    if(d&&d.pago){ try{ fbq('track','Purchase',{value:PRECO,currency:'USD',content_name:'musica_us'},{eventID:'compra_'+S.pedido}); }catch(e){} location.hash='#/song/'+S.pedido; return; }
+    if(d&&d.pago){ try{ fbq('track','Purchase',{value:totalUS(),currency:'USD',content_name:'musica_us'},{eventID:'compra_'+S.pedido}); }catch(e){} location.hash='#/song/'+S.pedido; return; }
     if(n<10) setTimeout(function(){ confirmar(sessao,n+1); },2500); else location.hash='#/song/'+S.pedido;
   }).catch(function(){ if(n<10) setTimeout(function(){ confirmar(sessao,n+1); },2500); });
 }
@@ -434,7 +738,8 @@ function telaSong(id){
   })();
 }
 function mostrar(g){
-  var para=g.musicaParaNome||'', link=location.origin+'/us/#/song/'+g.id;
+  var para=g.musicaParaNome||'', link=location.origin+'/us/#/song/'+g.id, gift=location.origin+'/us/#/gift/'+g.id;
+  var ex=g.extrasPix||[];
   el('app').innerHTML=topo()+'<div class="w wz">'+
     '<div class="ok-h"><div>🎉</div><h2>Your song'+(para?' for '+esc(para):'')+' is ready!</h2><p class="hint">Full length. Find it anytime in <b>🎁 My songs</b> with your email.</p></div>'+
     player('Version 1',g.musicaPreviewUrl,false)+'<div class="dl" style="margin:-4px 0 12px"><a href="/.netlify/functions/baixar-musica?id='+encodeURIComponent(g.id)+'&v=1">⬇ Download MP3</a></div>'+
@@ -442,6 +747,7 @@ function mostrar(g){
     (g.quatro&&!g.dobroUsado?'<div class="box" style="border-color:rgba(245,196,81,.5);margin-bottom:14px"><div class="sub-t" style="margin-top:0">🎶 You have 2 more songs included!</div><p class="note" style="margin:0 0 10px">Create songs 3 and 4 with new lyrics and a different style — already paid.</p><button class="btn btn-p" id="bDobro">Create my other 2 songs</button></div>':'')+
     (g.dobroUsado?'<a class="btn btn-g" style="margin-bottom:12px" href="#/song/'+esc(g.dobroUsado)+'">🎶 Listen to songs 3 &amp; 4 →</a>':'')+
     (g.dobroDe?'<a class="btn btn-g" style="margin-bottom:12px" href="#/song/'+esc(g.dobroDe)+'">🎵 Listen to songs 1 &amp; 2 →</a>':'')+
+    (ex.length?'<div class="box" style="border-color:rgba(255,92,147,.5);margin-bottom:14px"><div class="sub-t" style="margin-top:0">'+(ex.indexOf('clipe')>=0&&ex.indexOf('quadro')>=0?'🎬 Your photo clip & 🖼️ portrait':ex.indexOf('clipe')>=0?'🎬 Your photo video clip':'🖼️ Your printable portrait')+'</div><p class="note" style="margin:0 0 10px">Add your photos and we\'ll make it in seconds.</p><a class="btn btn-p" href="#/extras/'+esc(g.id)+'">'+(ex.indexOf('clipe')>=0?'📸 Add photos & create':'📸 Add photo & create')+'</a></div>':'')+
     '<button class="btn btn-p" id="bShare">💌 Send it to '+(para?esc(para.split(',')[0]):'them')+'</button>'+
     (g.musicaLetra?'<div class="box"><div class="sub-t" style="margin-top:0">Lyrics</div><pre class="lt">'+esc(g.musicaLetra)+'</pre></div>':'')+
     '<div class="box ref" id="refBox"><div class="sub-t" style="margin-top:0">🎁 Share &amp; earn a free song</div><p class="note" style="margin:0 0 10px">Every friend who buys a song with your link gives you <b>1 free song</b> (2 versions).</p>'+
@@ -450,7 +756,7 @@ function mostrar(g){
     (LS.get('cl_admin_key')?'<div class="mini"><button id="bEx1">⭐ Use version 1 as example</button><button id="bEx2">⭐ Use version 2</button></div>':'')+
   '</div><footer>Keep this link to listen anytime:<br>'+esc(link)+'</footer>';
   limitar();
-  el('bShare').onclick=function(){ var txt='I made a song just for you 💗'; if(navigator.share){ navigator.share({title:'A song for you',text:txt,url:link}).catch(function(){}); } else { try{ navigator.clipboard.writeText(txt+' '+link); toast('Link copied! Paste it in a message.'); }catch(e){ prompt('Copy this link:',link); } } };
+  el('bShare').onclick=function(){ var txt='I made a song just for you 💗'; if(navigator.share){ navigator.share({title:'A song for you',text:txt,url:gift}).catch(function(){}); } else { try{ navigator.clipboard.writeText(txt+' '+gift); toast('Link copied! Paste it in a message.'); }catch(e){ prompt('Copy this link:',gift); } } };
   if(el('bDobro')) el('bDobro').onclick=function(){ var keep={para:g.musicaPara||S.para,paraGen:S.paraGen,de:S.de,nome:g.musicaParaNome||S.nome,ocasiao:g.musicaOcasiao||S.ocasiao,voz:g.musicaVoz||S.voz,historia:S.historia,email:g.email||S.email,meuNome:g.meuNome||S.meuNome};
     S=novo(); Object.keys(keep).forEach(function(k){ S[k]=keep[k]||''; }); S.dobroDe=g.id; S.estilo=''; salvar();
     toast('Pick a different style for songs 3 and 4 🎶'); passo=S.historia&&S.para&&S.nome?PASSOS.indexOf('estilo'):0; location.hash='#/create'; };
@@ -463,6 +769,109 @@ function mostrar(g){
     else if(d.confirmadas>0) st.textContent=d.confirmadas+' friend(s) bought with your link.';
   }).catch(function(){});
   [1,2].forEach(function(v){ var b=el('bEx'+v); if(b) b.onclick=function(){ var t=prompt('Example title (shown on the site):','Song for '+(para||'someone special')); if(t===null) return; var sub=prompt('Small line under it (style · occasion):',(g.musicaEstilo||'')+(g.musicaOcasiao?' · '+g.musicaOcasiao:'')); fetch('/.netlify/functions/us-extra',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':LS.get('cl_admin_key')},body:JSON.stringify({acao:'exemplo-add',id:g.id,v:v,titulo:t,sub:sub||''})}).then(function(r){ return r.json(); }).then(function(d){ toast(d&&d.ok?'Added to examples ✓':((d&&d.erro)||'Error')); }); }; });
+}
+/* ---------- gift page (what the person who RECEIVES the song sees) ---------- */
+function telaGift(id){
+  el('app').innerHTML='<div class="w wz"><div class="load"><div class="spin"></div><div>Opening your surprise…</div></div></div>';
+  fetch('/.netlify/functions/presente?id='+encodeURIComponent(id),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+    if(!d||!d.pago||!d.presente){ el('app').innerHTML='<div class="w wz"><h2>Song not found</h2><p class="hint">Check the link you received.</p></div>'; return; }
+    var g=d.presente, para=(g.musicaParaNome||'').split(',')[0], de=(g.meuNome||'').split(' ')[0], ex=g.extrasPix||[];
+    var vs=[g.musicaPreviewUrl,g.musicaPreviewUrl2].filter(Boolean);
+    el('app').innerHTML='<div class="gift"><div class="w">'+
+      '<div class="g-k">🎁 A surprise for you</div>'+
+      '<h1 class="g-h">'+(de?esc(de)+' made a <em>song</em><br>for '+esc(para||'you'):'A <em>song</em> made<br>for '+esc(para||'you'))+'</h1>'+
+      '<p class="hint" style="text-align:center">Turn up the volume and press play ♥</p>'+
+      vs.map(function(u,i){ return player(vs.length>1?'Version '+(i+1):'Your song',u,false); }).join('')+
+      (ex.indexOf('clipe')>=0?'<a class="btn btn-p" style="margin:6px 0 12px" href="/clipe.html?id='+encodeURIComponent(g.id)+'">🎬 Watch the video with your photos</a>':'')+
+      (g.musicaLetra?'<div class="box"><div class="sub-t" style="margin-top:0">📝 Lyrics</div><pre class="lt">'+esc(g.musicaLetra)+'</pre></div>':'')+
+      '<div class="box" style="text-align:center;margin-top:16px"><div class="sub-t" style="margin-top:0">💗 Want to surprise someone too?</div><p class="note" style="margin:0 0 10px">Create a personalized song with their name and your story.</p><a class="btn btn-p" href="#/r/'+esc(g.id)+'">Create a song</a></div>'+
+    '</div></div><footer>Made with love by Capivarinha Love</footer>';
+    limitar();
+  }).catch(function(){ el('app').innerHTML='<div class="w wz"><h2>Connection problem</h2><a class="btn btn-p" href="#/gift/'+esc(id)+'">Try again</a></div>'; });
+}
+/* ---------- extras: photo clip + printable portrait (same as the Brazilian site, in English) ---------- */
+var _mt=null;
+function carregarQuadroJs(){ return window.desenharQuadro ? Promise.resolve() : new Promise(function(ok,er){ var sc=document.createElement('script'); sc.src='/quadro.js?v=2'; sc.onload=ok; sc.onerror=er; document.head.appendChild(sc); }); }
+function telaExtras(id){
+  el('app').innerHTML=topo()+'<div class="w wz"><div class="load"><div class="spin"></div><div>Loading…</div></div></div>';
+  Promise.all([fetch('/.netlify/functions/clipe?id='+encodeURIComponent(id),{cache:'no-store'}).then(function(r){ return r.json(); }),fetch('/.netlify/functions/presente?id='+encodeURIComponent(id),{cache:'no-store'}).then(function(r){ return r.json(); }).catch(function(){ return null; })]).then(function(r){
+    var x=r[0];
+    if(!x||!x.ok){ el('app').innerHTML=topo()+'<div class="w wz"><h2>No extras on this order</h2><a class="btn btn-p" href="#/song/'+esc(id)+'">Back to my song</a></div>'; return; }
+    var d=x.dados||{};
+    _mt={id:id,tem:x.tem,versoes:x.versoes,montado:!!x.montado,max:x.tem.clipe?8:1,
+      fotos:(x.fotos||[]).map(function(u,k){ return {url:u,nova:false,origK:k,t:(d.tf&&d.tf[k])||d.ts}; }),
+      para:d.para||x.sugestao.para||'',de:d.de||x.sugestao.de||'',titulo:d.titulo||'',data:d.data||'',dedicatoria:d.dedicatoria||'',v:d.v||x.versoes[0],tema:d.tema||'creme'};
+    desenharExtras();
+  }).catch(function(){ el('app').innerHTML=topo()+'<div class="w wz"><h2>Connection problem</h2><a class="btn btn-p" href="#/extras/'+esc(id)+'">Try again</a></div>'; });
+}
+function desenharExtras(){
+  var m=_mt, ambos=m.tem.clipe&&m.tem.quadro;
+  el('app').innerHTML=topo()+'<div class="w wz">'+
+    '<a class="note" href="#/song/'+esc(m.id)+'" style="text-decoration:none">‹ Back to my songs</a>'+
+    '<h2 style="margin-top:8px">'+(ambos?'🎬 Your clip & 🖼️ portrait':m.tem.clipe?'🎬 Your photo video clip':'🖼️ Your printable portrait')+'</h2>'+
+    '<p class="hint">'+(m.tem.clipe?'Pick up to 8 photos. The first one is the cover'+(m.tem.quadro?' and goes on the portrait':'')+'.':'Pick the photo for your portrait.')+'</p>'+
+    '<div class="xf" id="xFotos"></div><input type="file" id="xFile" accept="image/*" '+(m.max>1?'multiple':'')+' hidden>'+
+    '<div class="sub-t">For</div><input class="inp" id="xPara" maxlength="40" value="'+esc(m.para)+'" placeholder="e.g. Emily">'+
+    '<div class="sub-t">From</div><input class="inp" id="xDe" maxlength="40" value="'+esc(m.de)+'" placeholder="e.g. Michael">'+
+    '<div class="sub-t">Song title</div><input class="inp" id="xTit" maxlength="48" value="'+esc(m.titulo)+'" placeholder="'+esc('A song for '+(m.para||'Emily'))+'">'+
+    (m.tem.quadro?'<div class="sub-t">Special date <span style="color:var(--mut);font-weight:500">(optional, on the portrait)</span></div><input class="inp" id="xData" maxlength="40" value="'+esc(m.data)+'" placeholder="e.g. Since 02.14.2023">':'')+
+    (m.tem.clipe?'<div class="sub-t">Dedication <span style="color:var(--mut);font-weight:500">(shows in the clip)</span></div><textarea class="inp" id="xDed" maxlength="400" style="min-height:110px" placeholder="Write a short message…">'+esc(m.dedicatoria)+'</textarea>':'')+
+    (m.versoes.length>1?'<div class="sub-t">Which song plays</div><select class="inp" id="xV">'+m.versoes.map(function(v){ return '<option value="'+v+'"'+(v==m.v?' selected':'')+'>Song '+v+'</option>'; }).join('')+'</select>':'')+
+    '<button class="btn btn-p" id="xGo" style="margin-top:16px">'+(m.montado?'💾 Save changes':'✨ Create my '+(m.tem.clipe?'clip':'portrait'))+'</button>'+
+    '<div class="note" id="xMsg" hidden style="text-align:center;margin-top:8px"></div><div id="xPronto"></div></div>';
+  fotosExtras();
+  el('xFile').onchange=function(){ var lista=[].slice.call(this.files||[]).slice(0,m.max-m.fotos.length); this.value=''; if(!lista.length) return; toast('Preparing your photos…');
+    lista.reduce(function(pr,f){ return pr.then(function(){ return Promise.all([comprimir(f,2200,.86),comprimir(f,1280,.8)]).then(function(r){ m.fotos.push({url:r[1],alta:r[0],media:r[1],nova:true}); fotosExtras(); }).catch(function(){ toast('Couldn\'t open one of the photos.'); }); }); },Promise.resolve()); };
+  el('xGo').onclick=salvarExtras;
+  if(m.montado) prontoExtras();
+}
+function fotosExtras(){
+  var m=_mt,h='';
+  m.fotos.forEach(function(f,k){ h+='<div class="xf-i'+(k===0?' capa':'')+'"><img src="'+esc(f.url)+'" alt="">'+(k===0?'<span>COVER</span>':'<button type="button" data-cap="'+k+'" title="Make cover">★</button>')+'<button type="button" class="rm" data-rm="'+k+'">×</button></div>'; });
+  if(m.fotos.length<m.max) h+='<button type="button" class="xf-add" id="xAdd"><b>+</b>'+(m.fotos.length?'More photos':'Choose '+(m.max>1?'photos':'photo'))+'<small>'+m.fotos.length+' of '+m.max+'</small></button>';
+  el('xFotos').innerHTML=h;
+  if(el('xAdd')) el('xAdd').onclick=function(){ el('xFile').click(); };
+  el('xFotos').querySelectorAll('[data-rm]').forEach(function(b){ b.onclick=function(){ m.fotos.splice(+b.dataset.rm,1); fotosExtras(); }; });
+  el('xFotos').querySelectorAll('[data-cap]').forEach(function(b){ b.onclick=function(){ var k=+b.dataset.cap,f=m.fotos.splice(k,1)[0]; f.capaRefazer=true; m.fotos.unshift(f); fotosExtras(); }; });
+}
+function salvarExtras(){
+  var m=_mt,msg=el('xMsg'),bt=el('xGo');
+  if(!m.fotos.length){ toast('Choose at least 1 photo.'); return; }
+  m.para=el('xPara').value.trim(); m.de=el('xDe').value.trim(); m.titulo=el('xTit').value.trim();
+  if(el('xData')) m.data=el('xData').value.trim(); if(el('xDed')) m.dedicatoria=el('xDed').value.trim(); if(el('xV')) m.v=+el('xV').value;
+  if(!m.para){ toast('Type who it\'s for.'); el('xPara').focus(); return; }
+  bt.disabled=true; msg.hidden=false;
+  var feitas=0, tf=m.fotos.map(function(f){ return f.t||Date.now(); });
+  function du(f,k){ var u=k===0?(f.alta||f.media||f.url):(f.media||f.url); if(/^data:/.test(u)) return Promise.resolve(u); return fetch(u).then(function(r){ return r.blob(); }).then(function(b){ return new Promise(function(ok){ var fr=new FileReader(); fr.onload=function(){ ok(fr.result); }; fr.readAsDataURL(b); }); }); }
+  var envios=m.fotos.map(function(f,k){ return k; }).filter(function(k){ var f=m.fotos[k]; return f.nova||f.capaRefazer||f.origK!==k; });
+  msg.textContent='Uploading photos… 0 of '+envios.length;
+  envios.reduce(function(pr,k){ return pr.then(function(){ return du(m.fotos[k],k).then(function(img){ return fetch('/.netlify/functions/clipe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'foto',id:m.id,k:k,img:img})}).then(function(r){ return r.json(); }); }).then(function(d){ if(!d||!d.ok) throw new Error((d&&d.erro)||'error'); tf[k]=d.t; feitas++; msg.textContent='Uploading photos… '+feitas+' of '+envios.length; }); }); },Promise.resolve()).then(function(){
+    msg.textContent='Saving…';
+    return fetch('/.netlify/functions/clipe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'salvar',id:m.id,n:m.fotos.length,tf:tf,para:m.para,de:m.de,titulo:m.titulo||('A song for '+m.para),data:m.data,dedicatoria:m.dedicatoria,v:m.v,tema:m.tema})}).then(function(r){ return r.json(); });
+  }).then(function(d){
+    if(!d||!d.ok) throw new Error((d&&d.erro)||'error');
+    m.fotos.forEach(function(f,k){ f.nova=false; f.capaRefazer=false; f.origK=k; f.t=tf[k]; });
+    m.montado=true; msg.hidden=true; bt.disabled=false; bt.textContent='💾 Save changes'; prontoExtras(); setTimeout(function(){ var p=el('xPronto'); if(p) p.scrollIntoView({behavior:'smooth'}); },100);
+  }).catch(function(e){ bt.disabled=false; msg.hidden=false; msg.textContent='Couldn\'t save: '+e.message+'. Please try again.'; });
+}
+function prontoExtras(){
+  var m=_mt, link=location.origin+'/clipe.html?id='+encodeURIComponent(m.id), h='';
+  if(m.tem.clipe) h+='<div class="box"><div class="sub-t" style="margin-top:0">🎬 Your clip is ready!</div><p class="note" style="margin:0 0 10px">Send the link to them. They can also download the video there.</p><a class="btn btn-p" href="'+esc(link)+'" target="_blank" rel="noopener">▶ Open the clip</a><div class="mini"><button id="xCp">📋 Copy link</button></div></div>';
+  if(m.tem.quadro) h+='<div class="box"><div class="sub-t" style="margin-top:0">🖼️ Your portrait</div><p class="note" style="margin:0 0 10px">Pick a color and download in high quality. Print it on letter or A4 photo paper.</p>'+
+    '<div class="mini">'+['creme','noite','rose'].map(function(t){ return '<button type="button" data-tema="'+t+'"'+(m.tema===t?' style="border-color:var(--rose2)"':'')+'>'+({creme:'Cream',noite:'Night',rose:'Rosé'})[t]+'</button>'; }).join('')+'</div>'+
+    '<div style="position:relative;margin-top:10px"><canvas id="xCv" style="width:100%;border-radius:12px;background:#fff"></canvas><div class="note" id="xQdL" style="text-align:center">Making your portrait…</div></div>'+
+    '<button class="btn btn-p" id="xBx" style="margin-top:10px">⬇ Download portrait (high quality)</button></div>';
+  el('xPronto').innerHTML=h;
+  if(el('xCp')) el('xCp').onclick=function(){ try{ navigator.clipboard.writeText(link); toast('Link copied!'); }catch(e){ prompt('Copy:',link); } };
+  if(m.tem.quadro){
+    var desenhar=function(){ el('xQdL').hidden=false; carregarQuadroJs().then(function(){ var f=m.fotos[0], u=f.alta||f.media||f.url;
+      return desenharQuadro(el('xCv'),{foto:u,titulo:m.titulo||('A song for '+m.para),sub:(m.de?m.de+' & ':'')+m.para,data:m.data,qr:QRCodeGen.build(link,'M'),topo:'OUR SONG',tituloPadrao:'Our song',frase:'scan with your camera\nto hear our song \u2665'},m.tema);
+    }).then(function(){ el('xQdL').hidden=true; }).catch(function(){ el('xQdL').textContent='Couldn\'t make the portrait. Refresh the page.'; }); };
+    el('xPronto').querySelectorAll('[data-tema]').forEach(function(b){ b.onclick=function(){ m.tema=b.dataset.tema; el('xPronto').querySelectorAll('[data-tema]').forEach(function(x){ x.style.borderColor=x===b?'var(--rose2)':''; }); desenhar();
+      fetch('/.netlify/functions/clipe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'salvar',id:m.id,n:m.fotos.length,tf:m.fotos.map(function(f){ return f.t; }),para:m.para,de:m.de,titulo:m.titulo||('A song for '+m.para),data:m.data,dedicatoria:m.dedicatoria,v:m.v,tema:m.tema})}).catch(function(){}); }; });
+    el('xBx').onclick=function(){ var cv=el('xCv'); if(!cv.width){ toast('Wait for the portrait to finish.'); return; } cv.toBlob(function(b){ var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='portrait-'+(m.para||'song').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.png'; document.body.appendChild(a); a.click(); a.remove(); },'image/png'); };
+    desenhar();
+  }
 }
 /* ---------- my songs (by email) ---------- */
 function telaMeus(){
@@ -484,6 +893,8 @@ function rota(){
   if(h[0]==='create'){ if(passo>=PASSOS.indexOf('letra') && !S.letra) passo=PASSOS.indexOf('historia'); wizard(); if(PASSOS[passo]==='letra'&&!S.letra&&!_letraBusy) gerarLetra(); return; }
   if(h[0]==='song'&&h[1]){ telaSong(h[1]); return; }
   if(h[0]==='my'){ telaMeus(); return; }
+  if(h[0]==='gift'&&h[1]){ telaGift(h[1]); return; }
+  if(h[0]==='extras'&&h[1]){ telaExtras(h[1]); return; }
   if(h[0]==='r'&&h[1]){ LS.set('us_ref',h[1]); location.replace('#/'); return; }
   home();
 }
