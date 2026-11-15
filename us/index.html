@@ -152,7 +152,7 @@ function track(ev,p){ try{ if(window.fbq) fbq('track',ev,p||{}); }catch(e){} }
 
 /* ---------- state ---------- */
 var S={};
-function novo(){ return {para:'',paraGen:'',paraOutro:'',de:'',nome:'',ocasiao:'',estilo:'',clima:'',voz:'',historia:'',frase:'',letra:'',taskId:'',url:'',url2:'',email:'',meuNome:'',pedido:'',bonusDe:''}; }
+function novo(){ return {para:'',paraGen:'',paraOutro:'',de:'',nome:'',ocasiao:'',estilo:'',clima:'',voz:'',historia:'',frase:'',letra:'',taskId:'',url:'',url2:'',email:'',meuNome:'',pedido:'',bonusDe:'',dobroDe:''}; }
 function salvar(){ LS.set('us_state',JSON.stringify(S)); }
 try{ S=JSON.parse(LS.get('us_state')||'null')||novo(); }catch(e){ S=novo(); }
 
@@ -175,7 +175,7 @@ function home(){
     '<p class="sub">Their name, your story, a real song. Ready in minutes.</p>'+
     '<div class="hf-esp"></div>'+
     '<div class="offer">'+
-      '<div class="offer-row"><div><b>Personalized song</b><small>2 full versions · yours forever</small></div><div class="free">FREE<br>preview</div></div>'+
+      '<div class="offer-row"><div><b>4 personalized songs</b><small>full length · yours forever</small></div><div class="free">FREE<br>preview</div></div>'+
       '<a class="btn btn-w" href="#/create">▶ Create my song</a>'+
       '<div class="trust" style="color:#FFE0EC;margin-top:12px"><span>✓ No account needed</span><span>✓ Secure checkout</span></div>'+
     '</div>'+
@@ -187,7 +187,7 @@ function home(){
   '</div></section>'+
   '<section class="s faq"><div class="w"><h2>Questions</h2><p class="lead">&nbsp;</p>'+
     '<details><summary>Do I hear it before paying?</summary><p>Yes. You read the lyrics, approve them, and listen to a preview of your song before you pay anything.</p></details>'+
-    '<details><summary>What do I get?</summary><p>Two full-length versions of your song with the lyrics you approved — play, download as MP3 and share with a link. One-time payment, no subscription. You only see the price after you hear your preview.</p></details>'+
+    '<details><summary>What do I get?</summary><p><b>4 full songs:</b> the 2 versions you preview, plus 2 more with new lyrics and a different style that you create right after paying. Play, download as MP3 and share with a link. One-time payment, no subscription. You only see the price after you hear your preview.</p></details>'+
     '<details><summary>How do I pay?</summary><p>Credit or debit card, Apple Pay or Google Pay, through Stripe secure checkout.</p></details>'+
     '<details><summary>How do I get my song?</summary><p>It unlocks on the screen right after payment. Come back anytime: tap <b>My songs</b> and type your email.</p></details>'+
   '</div></section>'+
@@ -235,7 +235,7 @@ function wizard(n){
   /* botão principal SEMPRE visível na barra de baixo (pessoa leiga não precisa rolar) */
   var acao='<button class="btn btn-p" id="bNext">Continue</button>';
   if(k==='letra') acao=(_letraBusy||!S.letra)?'':'<button class="btn btn-p" id="bAprovar">Create my song 🎵</button>';
-  if(k==='musica') acao=S.url?'<button class="btn btn-p" id="bUnlock">'+(S.bonusDe?'Get my free song 🎁':'Unlock full songs')+'</button>':'';
+  if(k==='musica') acao=S.url?'<button class="btn btn-p" id="bUnlock">'+(S.dobroDe?'Save my 2 new songs ✓':S.bonusDe?'Get my free song 🎁':'Unlock full songs')+'</button>':'';
   if(k==='checkout') acao='';
   el('app').innerHTML=topo()+'<div class="w wz"><div class="bar"><i style="width:'+pct+'%"></i></div>'+h+'<div class="err" id="err"></div></div>'+
     '<div class="navb"><div class="in"><button class="back" id="bBack" aria-label="Back">‹</button>'+acao+'</div></div>';
@@ -316,7 +316,7 @@ function gerarLetra(ajuste){
 var _musBusy=false, _progT=null;
 function htmlMusica(){
   if(!S.url) return '<h2>Creating your song… 🎶</h2><div class="load"><div class="spin"></div><div class="prog"><i id="pg"></i></div><div id="pgTx">Composing the melody and recording the vocals. This usually takes 1–3 minutes — keep this page open.</div></div>';
-  return '<h2>Listen to your song 🎧</h2><p class="hint">Here\'s your free preview. Love it? Tap <b>Unlock full songs</b> below.</p>'+
+  return '<h2>Listen to your song 🎧</h2><p class="hint">'+(S.dobroDe?'Your songs 3 and 4 are ready! Tap <b>Save my 2 new songs</b> below.':'Here\'s your free preview. Love it? Tap <b>Unlock full songs</b> below — you get <b>4 songs</b>.')+'</p>'+
     player('Version 1',S.url,true)+(S.url2?player('Version 2',S.url2,true):'')+
     '<div class="mini"><button id="bRefazer">↻ Make a different version</button></div>';
 }
@@ -324,7 +324,14 @@ function player(t,u,lim){ return '<div class="player"><b>'+t+'</b><audio control
 function limitar(){ var a=[].slice.call(document.querySelectorAll('audio')); a.forEach(function(x){ x.addEventListener('play',function(){ a.forEach(function(o){ if(o!==x) o.pause(); }); }); if(x.dataset.lim) x.addEventListener('timeupdate',function(){ if(x.currentTime>=60){ x.pause(); x.currentTime=0; toast('Unlock to hear the full song 🎶'); } }); }); }
 function ligarMusica(){
   limitar();
-  if(el('bUnlock')) el('bUnlock').onclick=function(){ track('InitiateCheckout',{value:PRECO,currency:'USD'}); wizard(PASSOS.indexOf('checkout')); window.scrollTo(0,0); };
+  if(el('bUnlock')) el('bUnlock').onclick=function(){
+    if(S.dobroDe){ var b=el('bUnlock'); b.disabled=true; b.textContent='Saving…';
+      api('us-pedido',{dobroDe:S.dobroDe,taskId:S.taskId,email:S.email,nome:S.meuNome,paraNome:S.nome,estilo:S.estilo,clima:S.clima,relacao:S.para,ocasiao:S.ocasiao,voz:S.voz,letra:S.letra}).then(function(d){
+        if(d&&d.id){ S.pedido=d.id; S.dobroDe=''; salvar(); location.hash='#/song/'+d.id; return; }
+        if(d&&d.jaUsado){ S.dobroDe=''; salvar(); location.hash='#/song/'+d.jaUsado; return; }
+        b.disabled=false; b.textContent='Save my 2 new songs ✓'; toast((d&&d.erro)||'Something went wrong. Try again.'); });
+      return; }
+    track('InitiateCheckout',{value:PRECO,currency:'USD'}); wizard(PASSOS.indexOf('checkout')); window.scrollTo(0,0); };
   if(el('bRefazer')) el('bRefazer').onclick=function(){ S.taskId=''; S.url=''; S.url2=''; S.pedido=''; salvar(); wizard(); gerarMusica(); };
   if(!S.url && S.taskId && !_musBusy) acompanhar(S.taskId);
   if(!S.url) progresso();
@@ -358,7 +365,7 @@ function htmlCheckout(){
   return '<h2>Unlock your song</h2><p class="hint">Where should we send your song?</p>'+
     '<div class="box">'+
       (S.bonusDe?'<div class="tot"><span>Your referral reward</span><b>FREE 🎁</b></div>':'<div class="tot"><span>Total</span><b>'+money(PRECO)+' USD</b></div>')+
-      '<ul class="incl"><li>2 full-length versions of your song</li><li>Download MP3 + share link</li><li>Lyrics included · yours forever</li></ul>'+
+      '<ul class="incl"><li><b>4 full songs</b>: these 2 + 2 more with new lyrics &amp; style</li><li>Download MP3 + share link</li><li>Lyrics included · yours forever</li></ul>'+
       '<div class="sub-t">Your email</div><input class="inp" id="fEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com" value="'+esc(S.email)+'">'+
       '<div class="sub-t">Your first name <span style="color:var(--mut);font-weight:500">(optional)</span></div><input class="inp" id="fMeu" maxlength="60" autocomplete="given-name" placeholder="e.g. Michael" value="'+esc(S.meuNome)+'">'+
       '<button class="btn btn-p" id="bPagar" style="margin-top:16px">'+(S.bonusDe?'Get my free song 🎁':'Continue to payment')+'</button>'+
@@ -413,9 +420,12 @@ function telaSong(id){
 function mostrar(g){
   var para=g.musicaParaNome||'', link=location.origin+'/us/#/song/'+g.id;
   el('app').innerHTML=topo()+'<div class="w wz">'+
-    '<div class="ok-h"><div>🎉</div><h2>Your song'+(para?' for '+esc(para):'')+' is ready!</h2><p class="hint">Full length, both versions. Find it anytime in <b>🎁 My songs</b> with your email.</p></div>'+
+    '<div class="ok-h"><div>🎉</div><h2>Your song'+(para?' for '+esc(para):'')+' is ready!</h2><p class="hint">Full length. Find it anytime in <b>🎁 My songs</b> with your email.</p></div>'+
     player('Version 1',g.musicaPreviewUrl,false)+'<div class="dl" style="margin:-4px 0 12px"><a href="/.netlify/functions/baixar-musica?id='+encodeURIComponent(g.id)+'&v=1">⬇ Download MP3</a></div>'+
     (g.musicaPreviewUrl2?player('Version 2',g.musicaPreviewUrl2,false)+'<div class="dl" style="margin:-4px 0 12px"><a href="/.netlify/functions/baixar-musica?id='+encodeURIComponent(g.id)+'&v=2">⬇ Download MP3</a></div>':'')+
+    (g.quatro&&!g.dobroUsado?'<div class="box" style="border-color:rgba(245,196,81,.5);margin-bottom:14px"><div class="sub-t" style="margin-top:0">🎶 You have 2 more songs included!</div><p class="note" style="margin:0 0 10px">Create songs 3 and 4 with new lyrics and a different style — already paid.</p><button class="btn btn-p" id="bDobro">Create my other 2 songs</button></div>':'')+
+    (g.dobroUsado?'<a class="btn btn-g" style="margin-bottom:12px" href="#/song/'+esc(g.dobroUsado)+'">🎶 Listen to songs 3 &amp; 4 →</a>':'')+
+    (g.dobroDe?'<a class="btn btn-g" style="margin-bottom:12px" href="#/song/'+esc(g.dobroDe)+'">🎵 Listen to songs 1 &amp; 2 →</a>':'')+
     '<button class="btn btn-p" id="bShare">💌 Send it to '+(para?esc(para.split(',')[0]):'them')+'</button>'+
     (g.musicaLetra?'<div class="box"><div class="sub-t" style="margin-top:0">Lyrics</div><pre class="lt">'+esc(g.musicaLetra)+'</pre></div>':'')+
     '<div class="box ref" id="refBox"><div class="sub-t" style="margin-top:0">🎁 Share &amp; earn a free song</div><p class="note" style="margin:0 0 10px">Every friend who buys a song with your link gives you <b>1 free song</b> (2 versions).</p>'+
@@ -425,6 +435,9 @@ function mostrar(g){
   '</div><footer>Keep this link to listen anytime:<br>'+esc(link)+'</footer>';
   limitar();
   el('bShare').onclick=function(){ var txt='I made a song just for you 💗'; if(navigator.share){ navigator.share({title:'A song for you',text:txt,url:link}).catch(function(){}); } else { try{ navigator.clipboard.writeText(txt+' '+link); toast('Link copied! Paste it in a message.'); }catch(e){ prompt('Copy this link:',link); } } };
+  if(el('bDobro')) el('bDobro').onclick=function(){ var keep={para:g.musicaPara||S.para,paraGen:S.paraGen,de:S.de,nome:g.musicaParaNome||S.nome,ocasiao:g.musicaOcasiao||S.ocasiao,voz:g.musicaVoz||S.voz,historia:S.historia,email:g.email||S.email,meuNome:g.meuNome||S.meuNome};
+    S=novo(); Object.keys(keep).forEach(function(k){ S[k]=keep[k]||''; }); S.dobroDe=g.id; S.estilo=''; salvar();
+    toast('Pick a different style for songs 3 and 4 🎶'); passo=S.historia&&S.para&&S.nome?PASSOS.indexOf('estilo'):0; location.hash='#/create'; };
   el('bOutra').onclick=function(){ var em=S.email, mn=S.meuNome; S=novo(); S.email=em; S.meuNome=mn; salvar(); location.hash='#/create'; };
   var rl=location.origin+'/us/#/r/'+g.id;
   el('bRef').onclick=function(){ var t='I made a personalized song for someone I love 💗 Make one too — you hear it free before paying:'; if(navigator.share){ navigator.share({title:'Personalized songs',text:t,url:rl}).catch(function(){}); } else { try{ navigator.clipboard.writeText(t+' '+rl); toast('Link copied!'); }catch(e){ prompt('Copy your link:',rl); } } };

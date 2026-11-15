@@ -30,16 +30,30 @@ export default async (req) => {
     musicaLetra: str(b, 'letra', 5000) || reg.letraAprovada || null,
     musicaPreviewId: taskId, musicaPreviewUrl: reg.url, musicaPreviewUrl2: reg.url2 || null,
     musicaOn: true, musicaPersonalizar: true, duracao: 'vitalicio', expiraEm: null,
-    criadoEm: agora, pago: false,
+    criadoEm: agora, pago: false, quatro: true,
     pagamento: { provedor: 'stripe', status: 'ATIVA', moeda: 'usd', valorMoeda: PRECO_US, valor: Math.round(PRECO_US * USD_BRL() * 100) / 100 }
   };
+  // 🎶 4 MÚSICAS: as 2 da prévia + mais 2 (outra letra/estilo) que a pessoa cria depois de pagar
+  const dobroDe = str(b, 'dobroDe', 80);
+  if (dobroDe) {
+    const lojaP = getStore('presentes');
+    const origem = await lojaP.get(dobroDe, { type: 'json' }).catch(() => null);
+    if (!origem || !origem.pago || origem.cancelado || !origem.quatro || origem.idioma !== 'en') return json({ erro: 'These songs are not available for this order.' }, 400);
+    if (origem.dobroUsado && origem.dobroUsado !== id) return json({ erro: 'You already created your other 2 songs.', jaUsado: origem.dobroUsado }, 400);
+    Object.assign(g, { pago: true, pagoEm: agora, dobroDe, quatro: false, email: origem.email || email, meuNome: g.meuNome || origem.meuNome || '', pagamento: { provedor: 'incluso', status: 'CONCLUIDA', valor: 0, pagoEm: agora } });
+    await lojaP.setJSON(id, g);
+    origem.dobroUsado = id; origem.dobroEm = agora; await lojaP.setJSON(dobroDe, origem);
+    try { await indexarDia('p', id); } catch (e) {}
+    try { await indexarEmail(g.email, id); } catch (e) {}
+    return json({ ok: true, id, gratis: true });
+  }
   // 🎁 indique e ganhe: música GRÁTIS de quem já tem indicação confirmada
   const bonusDe = str(b, 'bonusDe', 80);
   if (bonusDe) {
     const dono = await getStore('presentes').get(bonusDe, { type: 'json' }).catch(() => null);
     const st = dono && dono.pago ? await statusIndicacao(bonusDe) : { disponiveis: 0 };
     if (!(st.disponiveis >= 1)) return json({ erro: 'You don\'t have a free song available yet.' }, 400);
-    Object.assign(g, { pago: true, pagoEm: agora, bonusDe, pagamento: { provedor: 'bonus', status: 'CONCLUIDA', valor: 0, pagoEm: agora } });
+    Object.assign(g, { pago: true, pagoEm: agora, bonusDe, quatro: false, pagamento: { provedor: 'bonus', status: 'CONCLUIDA', valor: 0, pagoEm: agora } });
     await getStore('presentes').setJSON(id, g);
     await registrarUso(bonusDe, id);
     try { await indexarDia('p', id); } catch (e) {}
