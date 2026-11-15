@@ -201,6 +201,38 @@ h1.hero-t .script{color:var(--rose);font-size:1.02em;line-height:1.25;padding-ri
 /* ===== PÁGINA INICIAL NOVA (livro em cima, música embaixo, meus presentes) ===== */
 .hn{position:relative;overflow:hidden;background:radial-gradient(120% 70% at 88% 0%,#FFE1EC 0%,var(--cream,#FFF8F4) 62%)}
 /* ===== HERO "música" (home) ===== */
+.hx.hx-foto{background:#1a0718;--hw:560px}
+@media(min-width:561px){.hx.hx-foto{--hw:440px}}
+.hxf-img{position:absolute;top:calc(min(100vw,var(--hw))*-.10);left:50%;transform:translateX(-50%);width:100%;max-width:var(--hw);z-index:0}
+.hxf-img img{display:block;width:100%;height:auto}
+@media(min-width:561px){.hxf-img img{-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}}
+.hxf-img:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(26,7,24,.72) 0%,rgba(26,7,24,.25) 24%,rgba(26,7,24,0) 38%,rgba(26,7,24,0) 62%,rgba(26,7,24,.75) 80%,#1a0718 94%)}
+.hx-foto .hx-in{z-index:1;padding-top:1rem;padding-bottom:1.1rem}
+.hx-foto h1.hx-t{max-width:15rem;text-shadow:0 2px 18px rgba(0,0,0,.55)}
+.hx-foto .hx-sub{color:#F1E2EC;text-shadow:0 1px 10px rgba(0,0,0,.6);max-width:17rem}
+.hxf-esp{height:calc(min(100vw,var(--hw))*1.791*.60 - 13.4rem);min-height:9rem}
+.hxf-mus{display:flex;align-items:center;gap:.8rem;position:relative;z-index:4;text-decoration:none;color:#fff;border-radius:20px;padding:.85rem .9rem;margin-bottom:.6rem;overflow:hidden;
+  background:linear-gradient(140deg,#E2307F 0%,#A8146A 55%,#5E1A73 100%);box-shadow:0 18px 44px rgba(226,48,127,.5),inset 0 0 0 1.5px rgba(245,207,110,.6);animation:hxfPulso 2.6s ease-in-out infinite}
+.hxf-mus:before{content:"";position:absolute;top:-60%;left:-30%;width:40%;height:220%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.25),transparent);transform:rotate(18deg);animation:hxBrilho 4.5s ease-in-out infinite}
+.hxf-mus .hx-badge{top:-.01rem;right:1rem;border-radius:0 0 10px 10px}
+.hxf-tx b{display:block;white-space:nowrap;font-weight:900;font-size:clamp(.92rem,4.15vw,1.15rem);line-height:1.12;letter-spacing:-.015em}
+.hxf-tx small{display:block;white-space:nowrap;font-size:.8rem;opacity:.92;margin-top:.2rem}
+.hxf-tx strong{color:#FBE3A0}
+.hxf-sel{display:inline-block;vertical-align:1px;margin-left:.35rem;font-size:.6rem;font-weight:900;letter-spacing:.06em;background:linear-gradient(180deg,#FBE3A0,#E5B04A);color:#3a1a05;padding:.18rem .45rem;border-radius:999px}
+.hxf-mus .ar{margin-left:auto;font-size:1.6rem;font-weight:700}
+.hxf-tx{min-width:0}
+@media(max-width:380px){.hxf-mus .ar{display:none}}
+.hxf-mus .hx-ic{width:2.9rem;height:2.9rem;font-size:1.45rem}
+.hxf-dois{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.7rem;position:relative;z-index:4}
+.hxf-b{display:flex;align-items:center;gap:.55rem;text-decoration:none;border-radius:18px;padding:.7rem .7rem;min-height:4rem}
+.hxf-b .e{flex:none;width:2.3rem;height:2.3rem;border-radius:.8rem;display:grid;place-items:center;font-size:1.25rem}
+.hxf-b b{display:block;font-weight:900;font-size:.95rem;line-height:1.1;letter-spacing:-.01em}
+.hxf-b small{display:block;font-size:.72rem;opacity:.85;margin-top:.12rem;line-height:1.2}
+.hxf-livro{background:linear-gradient(120deg,#F2C14E,#FFE29A 50%,#E5A93A);background-size:200% 100%;color:#3A2208;box-shadow:0 10px 24px rgba(214,150,40,.32);animation:btnMusGrad 7s ease-in-out infinite}
+.hxf-livro .e{background:rgba(255,255,255,.55)}
+.hxf-ped{color:#fff;background:rgba(30,8,26,.6);border:1px solid rgba(255,255,255,.18);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.hxf-ped .e{background:rgba(245,207,110,.16)}
+@keyframes hxfPulso{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
 .hx{position:relative;overflow:hidden;background:radial-gradient(120% 80% at 85% 0%,#3d0f33 0%,#1a0718 55%,#0f040e 100%);color:#fff}
 .hx:after{content:"";position:absolute;inset:auto 0 0 0;height:60px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.0))}
 .hx-in{position:relative;padding-top:1.3rem;padding-bottom:1.6rem;max-width:34rem}
@@ -4603,20 +4635,19 @@ function telaHome(){
     '</nav>'+
   '</div></header>'+
 
-  '<section class="hx"><div class="shell hx-in">'+
-    '<div class="hx-glow"></div>'+
-    '<div class="hx-masc" aria-hidden="true"><span class="hx-aura"></span><img src="'+MASCOTE+'" alt="" fetchpriority="high"><i class="hx-sp s1">✦</i><i class="hx-sp s2">✦</i><i class="hx-sp s3">♪</i></div>'+
+  '<section class="hx hx-foto">'+
+    '<div class="hxf-img"><img src="/a/hero-musica-560.webp" srcset="/a/hero-musica-560.webp 560w, /a/hero-musica.webp 860w" sizes="(max-width:560px) 100vw, 560px" width="560" height="1003" alt="Mulher emocionada ouvindo uma música feita pra ela" fetchpriority="high"></div>'+
+    '<div class="shell hx-in">'+
     '<span class="hx-tag">🎧 Prévia grátis · ouça antes de pagar</span>'+
     '<h1 class="hx-t">A trilha sonora do seu <em>amor</em></h1>'+
-    '<div class="hx-eq" aria-hidden="true"><i style="--d:0.00s;--h:10px"></i><i style="--d:0.11s;--h:33px"></i><i style="--d:0.22s;--h:16px"></i><i style="--d:0.33s;--h:32px"></i><i style="--d:0.44s;--h:21px"></i><i style="--d:0.55s;--h:29px"></i><i style="--d:0.66s;--h:26px"></i><i style="--d:0.77s;--h:24px"></i><i style="--d:0.88s;--h:30px"></i><i style="--d:0.99s;--h:19px"></i><i style="--d:1.10s;--h:33px"></i><i style="--d:1.21s;--h:13px"></i><i style="--d:1.32s;--h:33px"></i><i style="--d:1.43s;--h:12px"></i><i style="--d:1.54s;--h:33px"></i><i style="--d:1.65s;--h:18px"></i></div>'+
-    '<p class="hx-sub">Uma música com o nome e a história de quem você ama. Pronta em menos de 1 minuto.</p>'+
-    '<a class="hx-mus" href="#/criar/musica"><span class="hx-badge">MAIS PEDIDO</span>'+
-      '<span class="hx-row"><span class="hx-ic">🎵</span><span><b>Criar música personalizada</b><small>Com o nome e a história de vocês</small></span></span>'+
-      '<span class="hx-pl"><span class="hx-pb"></span><span class="hx-wv" aria-hidden="true"><i class="on" style="--d:0.00s;height:5px"></i><i class="on" style="--d:0.07s;height:22px"></i><i class="on" style="--d:0.14s;height:12px"></i><i class="on" style="--d:0.21s;height:9px"></i><i class="on" style="--d:0.28s;height:5px"></i><i class="on" style="--d:0.35s;height:6px"></i><i class="on" style="--d:0.42s;height:19px"></i><i class="on" style="--d:0.49s;height:11px"></i><i class="on" style="--d:0.56s;height:21px"></i><i class="on" style="--d:0.63s;height:18px"></i><i class="on" style="--d:0.70s;height:10px"></i><i class="on" style="--d:0.77s;height:11px"></i><i class="" style="--d:0.84s;height:5px"></i><i class="" style="--d:0.91s;height:13px"></i><i class="" style="--d:0.98s;height:14px"></i><i class="" style="--d:1.05s;height:16px"></i><i class="" style="--d:1.12s;height:23px"></i><i class="" style="--d:1.19s;height:6px"></i><i class="" style="--d:1.26s;height:17px"></i><i class="" style="--d:1.33s;height:7px"></i><i class="" style="--d:1.40s;height:7px"></i><i class="" style="--d:1.47s;height:13px"></i><i class="" style="--d:1.54s;height:10px"></i><i class="" style="--d:1.61s;height:24px"></i><i class="" style="--d:1.68s;height:9px"></i><i class="" style="--d:1.75s;height:19px"></i><i class="" style="--d:1.82s;height:12px"></i><i class="" style="--d:1.89s;height:7px"></i><i class="" style="--d:1.96s;height:8px"></i><i class="" style="--d:2.03s;height:5px"></i><i class="" style="--d:2.10s;height:21px"></i><i class="" style="--d:2.17s;height:15px"></i></span><span class="hx-tm">0:47</span></span>'+
-      '<span class="hx-pr"><span>4 músicas · menos de R$ 2,50 cada</span><b>R$ 9,99</b></span>'+
-      '<span class="hx-go">▶ Criar minha música</span></a>'+
-    '<a class="hx-btn hx-livro" href="#/livro"><span class="hx-ic">📖</span><span><b>Criar livro infantil</b><small>Seu filho como protagonista + 2 músicas</small></span><span class="ar">›</span></a>'+
-    '<a class="hx-btn hx-ped" href="#/meus"><span class="hx-ic">🎁</span><span><b>Meus pedidos</b><small>Ouça, baixe e compartilhe o que você já comprou</small></span><span class="ar">›</span></a>'+
+    '<p class="hx-sub">Com o nome e a história de quem você ama. Pronta em 1 minuto.</p>'+
+    '<div class="hxf-esp" aria-hidden="true"></div>'+
+    '<a class="hxf-mus" href="#/criar/musica">'+
+      '<span class="hx-ic">🎵</span><span class="hxf-tx"><b>Criar música personalizada</b><small>4 músicas por <strong>R$ 9,99</strong> <span class="hxf-sel">MAIS PEDIDO</span></small></span><span class="ar">›</span></a>'+
+    '<div class="hxf-dois">'+
+      '<a class="hxf-b hxf-livro" href="#/livro"><span class="e">📖</span><span><b>Criar livro infantil</b><small>Seu filho na história</small></span></a>'+
+      '<a class="hxf-b hxf-ped" href="#/meus"><span class="e">🎁</span><span><b>Meus pedidos</b><small>Ouvir e baixar</small></span></a>'+
+    '</div>'+
     '<div class="hx-conf"><span>👀 Prévia grátis</span><span>🔒 Pix seguro</span><span>💬 Suporte no Zap</span></div>'+
   '</div></section>'+
 
