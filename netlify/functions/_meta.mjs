@@ -252,7 +252,9 @@ export async function publicarAnuncio(cfg, a, etapa) {
     cfg.igId = ig.id; await salvarCfg({ igId: ig.id }).catch(() => {});
   }
   const pixel = cfg.pixelId || '2102013347063288';
-  const orc = Math.max(6, Number(a.orcamento || cfg.orcInicial || 45));
+  // 🇺🇸 anúncio pros EUA: orçamento digitado em US$ → convertido pra reais (a conta de anúncios é em R$)
+  const eua = a.pais === 'US', USD_BRL = Number(process.env.USD_BRL) || 5.65;
+  const orc = eua ? Math.max(6, Math.round(Math.max(1, Number(a.orcamentoUSD) || 10) * USD_BRL * 100) / 100) : Math.max(6, Number(a.orcamento || cfg.orcInicial || 45));
   const dataTxt = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10).split('-').reverse().join('/');
   const L = loja(), seq = ((await L.get('anuncio_seq', { type: 'json' }).catch(() => null)) || { n: 0 }).n + 1;
   // público: idade/sexo escolhidos no painel. Restringiu → público fixo (sem "Advantage+", senão o Meta trata idade máx. só como sugestão)
@@ -274,8 +276,8 @@ export async function publicarAnuncio(cfg, a, etapa) {
   const flex = {}; ints.forEach((x) => { const t = ['interests', 'behaviors', 'life_events', 'family_statuses', 'relationship_statuses', 'industries', 'income'].indexOf(x.tipo) >= 0 ? x.tipo : 'interests'; (flex[t] = flex[t] || []).push({ id: String(x.id), name: String(x.nome || '').slice(0, 80) }); });
   const restrito = iMin > 18 || !!iMax || !!gen || ints.length > 0;
   const pubTxt = (iMin > 18 || iMax || gen ? (iMin + (iMax ? '-' + iMax : '+') + (gen === 1 ? ' H' : gen === 2 ? ' M' : '')) : '') + (ints.length ? (iMin > 18 || iMax || gen ? ' ' : '') + 'int' + ints.length : '') + (pk.indexOf('wa_status') >= 0 ? ' WA' : '') + (pk.filter((k) => k !== 'wa_status').length < 6 ? ' ' + pk.length + 'pos' : '');
-  const nome = 'Capivarinha #' + String(seq).padStart(3, '0') + ' · ' + String(a.nome || 'Criativo').slice(0, 40) + (pubTxt ? ' · ' + pubTxt : '') + ' · ' + dataTxt;
-  const link = cfg.link || 'https://capivarinhalove.com.br/';
+  const nome = (eua ? 'EUA · ' : '') + 'Capivarinha #' + String(seq).padStart(3, '0') + ' · ' + String(a.nome || 'Criativo').slice(0, 40) + (pubTxt ? ' · ' + pubTxt : '') + (eua ? ' · US$ ' + (Number(a.orcamentoUSD) || 10) + '/dia' : '') + ' · ' + dataTxt;
+  const link = eua ? 'https://capivarinhalove.com.br/us/' : (cfg.link || 'https://capivarinhalove.com.br/');
   const video = a.tipo === 'video';
 
   // 1) criativo (não gasta nada) — se o Instagram/aprimoramentos derem erro, para aqui
@@ -289,7 +291,7 @@ export async function publicarAnuncio(cfg, a, etapa) {
     { customization_spec: RV, [video ? 'video_label' : 'image_label']: { name: 'cap_vertical' }, priority: 2 }] : null;
   const feedSpec = {
     [video ? 'videos' : 'images']: midias,
-    bodies: [{ text: a.texto || cfg.textoPadrao }], titles: [{ text: a.titulo || cfg.tituloPadrao }],
+    bodies: [{ text: a.texto || (eua ? 'A personalized song with their name and your story 💗 Hear a free preview before you pay.' : cfg.textoPadrao) }], titles: [{ text: a.titulo || (eua ? '4 personalized songs for $7.99' : cfg.tituloPadrao) }],
     link_urls: [{ website_url: link }], call_to_action_types: [cfg.cta || 'SHOP_NOW'],
     ad_formats: [video ? 'SINGLE_VIDEO' : 'SINGLE_IMAGE']
   };
@@ -326,12 +328,12 @@ export async function publicarAnuncio(cfg, a, etapa) {
       name: nome, objective: 'OUTCOME_SALES', status: 'PAUSED', special_ad_categories: [],
       buying_type: 'AUCTION', daily_budget: String(Math.round(orc * 100)), bid_strategy: 'LOWEST_COST_WITHOUT_CAP'
     });
-    await etapa('Criando o conjunto (' + pk.length + ' posicionamentos, Brasil, compra no site' + (ints.length ? ', ' + ints.length + ' interesses' : '') + ')…');
+    await etapa('Criando o conjunto (' + pk.length + ' posicionamentos, ' + (eua ? 'Estados Unidos' : 'Brasil') + ', compra no site' + (ints.length ? ', ' + ints.length + ' interesses' : '') + ')…');
     const adset = await graphConta('POST', 'adsets', {
       name: nome, campaign_id: camp.id, billing_event: 'IMPRESSIONS', optimization_goal: 'OFFSITE_CONVERSIONS',
       destination_type: 'WEBSITE', is_dynamic_creative: 'false',
       promoted_object: { pixel_id: pixel, custom_event_type: 'PURCHASE' },
-      targeting: Object.assign({ geo_locations: { countries: ['BR'] }, age_min: iMin }, iMax ? { age_max: iMax } : {}, gen ? { genders: [gen] } : {},
+      targeting: Object.assign({ geo_locations: { countries: [eua ? 'US' : 'BR'] }, age_min: iMin }, iMax ? { age_max: iMax } : {}, gen ? { genders: [gen] } : {},
         Object.keys(flex).length ? { flexible_spec: [flex] } : {},
         { targeting_automation: { advantage_audience: restrito ? 0 : 1 } }, POS),
       status: 'PAUSED'
@@ -366,7 +368,7 @@ export async function publicarAnuncio(cfg, a, etapa) {
     await graph('POST', camp.id, { status: 'ACTIVE' });
     await L.setJSON('anuncio_seq', { n: seq });
     try { await registrarAcao(camp.id, 'criada', { quem: 'painel' }); } catch (e) {}
-    return { campanha: camp.id, conjunto: adset.id, criativo: criativo.id, anuncio: ad.id, nome, orcamento: orc, publico: pubTxt || 'todos (18+)',
+    return { campanha: camp.id, conjunto: adset.id, criativo: criativo.id, anuncio: ad.id, nome, orcamento: orc, pais: eua ? 'US' : 'BR', orcamentoUSD: eua ? (Number(a.orcamentoUSD) || 10) : null, publico: pubTxt || 'todos (18+)',
       conferido: { posicionamentos: pk.length, interesses: ints.length, aprimoramentosDesligados: desligados, aprimoramentosQueOMetaNaoDeixouDesligar: tirar.concat(ligados) } };
   } catch (e) { await desfazer(); throw e; }
 }

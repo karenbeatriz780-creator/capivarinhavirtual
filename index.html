@@ -201,6 +201,7 @@ h1.hero-t .script{color:var(--rose);font-size:1.02em;line-height:1.25;padding-ri
 /* ===== PÁGINA INICIAL NOVA (livro em cima, música embaixo, meus presentes) ===== */
 .hn{position:relative;overflow:hidden;background:radial-gradient(120% 70% at 88% 0%,#FFE1EC 0%,var(--cream,#FFF8F4) 62%)}
 /* ===== HERO "música" (home) ===== */
+.na-pais{display:flex;gap:.5rem;margin:.2rem 0 .6rem}.na-pais button{flex:1;padding:.6rem;border-radius:12px;border:2px solid #E7D7DE;background:#fff;font:inherit;font-weight:800;cursor:pointer}.na-pais button.on{border-color:#C2185B;background:#FFF1F6;color:#A8146A}
 .hx.hx-foto{background:#1a0718;--hw:560px}
 @media(min-width:561px){.hx.hx-foto{--hw:440px}}
 .hxf-img{position:absolute;top:calc(min(100vw,var(--hw))*-.19);left:50%;transform:translateX(-50%);width:118%;max-width:calc(var(--hw)*1.18);z-index:0}
@@ -8879,16 +8880,19 @@ function pnlRoboHtml(){
       '<div id="rbSimRes"></div></div>':'')+
     '<div class="robo-log"><div class="robo-lt">Histórico</div>'+log+'</div></div>';
 }
+function pnlPais(){ var p=null; try{ p=Store.get('cl_pais'); }catch(e){} return p==='US'?'US':'BR'; }
 function pnlNovoAnuncioHtml(){
   var c=(_pnlCache.robo&&_pnlCache.robo.cfg)||{};
   return '<div class="dsh-card gst-card robo"><div class="dsh-t">📣 Novo anúncio</div>'+
+    '<div class="na-pais"><button type="button" data-pais="BR" class="'+(pnlPais()==='BR'?'on':'')+'">🇧🇷 Brasil</button><button type="button" data-pais="US" class="'+(pnlPais()==='US'?'on':'')+'">🇺🇸 Estados Unidos</button></div>'+
+    '<div class="na-info" id="naPaisInfo" style="margin:-.2rem 0 .6rem"></div>'+
     '<div class="dsh-nota" style="margin:0 0 .5rem">Mande <b>2 arquivos do mesmo anúncio</b>: um pro Feed e outro pro Reels/Stories (os dois foto ou os dois vídeo). Vai nas posições que você marcar em <b>📍 Onde aparecer</b> (até 6: Feed, Stories e Reels do Facebook e do Instagram), <b>sem nenhum aprimoramento automático</b> do Meta, botão <b>Comprar</b> levando pro site, 1 campanha → 1 conjunto → 1 anúncio, orçamento na campanha.</div>'+
     '<div class="robo-cfg">'+
       '<label>📱 Feed — proporção 4:5 ou 1:1<input type="file" id="naFeed" accept="image/*,video/*"><small id="naFeedInfo" class="na-info"></small></label>'+
       '<label>🎬 Reels e Stories — proporção 9:16<input type="file" id="naVert" accept="image/*,video/*"><small id="naVertInfo" class="na-info"></small></label>'+
       '<label>Nome (só pra você)<input type="text" id="naNome" maxlength="50" placeholder="Ex.: Black Friday neon"></label>'+
       '<label>Texto do anúncio<textarea id="naTexto" rows="3">'+esc(c.textoPadrao||'')+'</textarea></label>'+
-      '<div class="robo-g"><label>Título<input type="text" id="naTitulo" value="'+esc(c.tituloPadrao||'')+'"></label><label>Orçamento (R$/dia)<input type="number" id="naOrc" min="6" step="1" value="'+(c.orcInicial||45)+'"></label></div>'+
+      '<div class="robo-g"><label>Título<input type="text" id="naTitulo" value="'+esc(c.tituloPadrao||'')+'"></label><label><span id="naOrcLb">Orçamento (R$/dia)</span><input type="number" id="naOrc" min="1" step="1" value="'+(c.orcInicial||45)+'"></label></div>'+
       (function(){ var pv={}; try{ pv=JSON.parse(Store.get('cl_pub')||'{}')||{}; }catch(e){}
         var idd=[]; for(var ii=18;ii<=65;ii++) idd.push(ii);
         var opM=idd.map(function(v){ return '<option value="'+v+'"'+(Number(pv.min||18)===v?' selected':'')+'>'+v+(v===65?'+':'')+'</option>'; }).join('');
@@ -8971,12 +8975,31 @@ function pnlLigarRobo(body){
   }
   var ck=el('naChecar'); if(ck) ck.onclick=function(){ if(!pedirSenhaAdmin()) return; ck.disabled=true; checar().catch(function(e){ toast(e.message); }).then(function(){ ck.disabled=false; }); };
   var us=el('naUsarSug'); if(us) us.onclick=function(e){ e.preventDefault(); var sg=_pnlPub&&_pnlPub.sugestao; if(!sg) return; el('naIMin').value=String(sg.min||18); el('naIMax').value=String(sg.max||0); toast('Idade '+sg.txt+' selecionada ✓'); };
+  /* 🇧🇷 / 🇺🇸 país do anúncio */
+  function aplicarPais(p, inicial){
+    var c=(_pnlCache.robo&&_pnlCache.robo.cfg)||{}, us=p==='US'; try{ Store.set('cl_pais',p); }catch(e){}
+    document.querySelectorAll('[data-pais]').forEach(function(b){ b.classList.toggle('on',b.dataset.pais===p); });
+    var lb=el('naOrcLb'); if(lb) lb.textContent=us?'Orçamento (US$/dia)':'Orçamento (R$/dia)';
+    var o=el('naOrc'); if(o && !inicial) o.value=us?10:(c.orcInicial||45); if(o && inicial && us && Number(o.value)>50) o.value=10;
+    var tx=el('naTexto'), ti=el('naTitulo');
+    if(!inicial || us){ if(tx) tx.value=us?'A personalized song with their name and your story 💗 Hear a free preview before you pay. 4 songs for $7.99.':(c.textoPadrao||''); if(ti) ti.value=us?'4 personalized songs for $7.99':(c.tituloPadrao||''); }
+    if(us){ if(el('naIMin')) el('naIMin').value='25'; if(el('naIMax')) el('naIMax').value='55'; if(el('naGen')) el('naGen').value='0';
+      document.querySelectorAll('[data-napos]').forEach(function(x){ x.checked=['ig_reels','ig_feed','fb_reels','fb_feed'].indexOf(x.dataset.napos)>=0; }); }
+    else if(!inicial){ var ps=pnlNaPos(); document.querySelectorAll('[data-napos]').forEach(function(x){ x.checked=ps.indexOf(x.dataset.napos)>=0; }); var pv={}; try{ pv=JSON.parse(Store.get('cl_pub')||'{}')||{}; }catch(e){} if(el('naIMin')) el('naIMin').value=String(pv.min||18); if(el('naIMax')) el('naIMax').value=String(pv.max||0); if(el('naGen')) el('naGen').value=String(pv.gen||0); }
+    var pi=el('naPaisInfo'); if(pi) pi.innerHTML=us?'🇺🇸 <b>Estados Unidos</b> · link <b>capivarinhalove.com.br/us</b> · Reels e Feed do Instagram e do Facebook (sem Stories) · 25 a 55 anos · o orçamento é em <b>dólar</b> (convertido pra reais na hora: ~R$ 5,65 por US$) · o nome da campanha começa com <b>EUA</b> (regra do robô: até R$ 30 por compra)':'🇧🇷 Brasil · link do site brasileiro · orçamento em reais';
+    attPaisOrc();
+  }
+  function attPaisOrc(){ var pi=el('naPaisInfo'), o=el('naOrc'); if(!pi||!o||pnlPais()!=='US') return; var v=Number(o.value)||0, x=pi.querySelector('.na-conv'); var t=' → <span class="na-conv">US$ '+v+'/dia ≈ <b>R$ '+fmtPreco(v*5.65)+'/dia</b></span>'; if(x) x.outerHTML=t.slice(3); else pi.insertAdjacentHTML('beforeend',t); }
+  document.querySelectorAll('[data-pais]').forEach(function(b){ b.onclick=function(){ aplicarPais(b.dataset.pais,false); }; });
+  if(el('naOrc')) el('naOrc').addEventListener('input',attPaisOrc);
+  if(el('naPub')) aplicarPais(pnlPais(),true);
   var pub=el('naPub'); if(pub) pub.onclick=function(){
     var fF=el('naFeed').files[0], fV=el('naVert').files[0], st=el('naSt');
     if(!fF||!fV){ toast('Anexe os 2 arquivos: um pro Feed e um pro Reels/Stories.'); return; }
     var vF=/^video\//.test(fF.type), vV=/^video\//.test(fV.type);
     if(vF!==vV){ toast('Os 2 arquivos precisam ser do mesmo tipo: os dois foto ou os dois vídeo.'); return; }
-    var orc=Number(el('naOrc').value)||0; if(orc<6){ toast('Orçamento mínimo R$ 6/dia.'); return; }
+    var EUA=pnlPais()==='US';
+    var orc=Number(el('naOrc').value)||0; if(EUA){ if(orc<2){ toast('Orçamento mínimo US$ 2/dia.'); return; } } else if(orc<6){ toast('Orçamento mínimo R$ 6/dia.'); return; }
     Promise.all([medir(fF),medir(fV)]).then(function(ms){
       var e=proporcaoOk('feed',ms[0])||proporcaoOk('vert',ms[1]); if(e){ toast('⚠️ '+e); return; }
       var _im=Number(el('naIMin').value)||18, _ix=Number(el('naIMax').value)||0, _ig=Number(el('naGen').value)||0;
@@ -8984,11 +9007,12 @@ function pnlLigarRobo(body){
       if(_ix && _ix<_im){ toast('A idade máxima precisa ser maior que a mínima.'); return; }
       var _np=document.querySelectorAll('[data-napos]:checked').length, _ni=pnlNaInts().length;
       if(_ni) pubTxt=pubTxt.replace(', o Meta procura sozinho','')+' · '+_ni+' interesses (público fechado)';
-      if(!confirm('Publicar este anúncio com R$ '+fmtPreco(orc)+' por dia?\n\nPúblico: '+pubTxt+'\nPosições: '+_np+' de 7'+(document.querySelector('[data-napos="wa_status"]:checked')?' (com Status do WhatsApp)':'')+'\nFeed: '+fF.name+'\nReels/Stories: '+fV.name)) return;
+      if(!confirm((EUA?'🇺🇸 Publicar este anúncio nos ESTADOS UNIDOS com US$ '+orc+' por dia (≈ R$ '+fmtPreco(orc*5.65)+')?':'🇧🇷 Publicar este anúncio com R$ '+fmtPreco(orc)+' por dia?')+'\n\nPúblico: '+pubTxt+'\nPosições: '+_np+' de 7'+(document.querySelector('[data-napos="wa_status"]:checked')?' (com Status do WhatsApp)':'')+'\nFeed: '+fF.name+'\nReels/Stories: '+fV.name)) return;
       if(!pedirSenhaAdmin()) return;
       pub.disabled=true;
       var info={nome:el('naNome').value||fF.name.replace(/\.[^.]+$/,''), texto:el('naTexto').value, titulo:el('naTitulo').value, orcamento:orc, idadeMin:Number(el('naIMin').value)||18, idadeMax:Number(el('naIMax').value)||null, genero:Number(el('naGen').value)||null, posicoes:[].slice.call(document.querySelectorAll('[data-napos]:checked')).map(function(x){ return x.dataset.napos; }), interesses:pnlNaInts().slice()};
-      try{ Store.set('cl_pub',JSON.stringify({min:info.idadeMin,max:info.idadeMax||0,gen:info.genero||0})); }catch(e){}
+      if(EUA){ info.pais='US'; info.orcamentoUSD=orc; info.orcamento=Math.round(orc*5.65*100)/100; }
+      else try{ Store.set('cl_pub',JSON.stringify({min:info.idadeMin,max:info.idadeMax||0,gen:info.genero||0})); }catch(e){}
       function falhou(e){ st.textContent='⚠️ '+e.message; pub.disabled=false; }
       function b64de(blob){ return new Promise(function(ok,no){ var fr=new FileReader(); fr.onload=function(){ ok(String(fr.result).split(',')[1]); }; fr.onerror=no; fr.readAsDataURL(blob); }); }
       /* foto: vai sem recorte (só reduz se for enorme), pra não mudar a arte */
@@ -9254,7 +9278,7 @@ function pnlNaLigarExtras(){
     var wa=document.querySelector('[data-napos="wa_status"]'), igs=document.querySelector('[data-napos="ig_story"]');
     if(wa&&igs&&wa.checked&&!igs.checked){ igs.checked=true; toast(c===igs?'Com Status do WhatsApp, Stories do Instagram tem que ficar (regra do Meta).':'Marquei Stories do Instagram junto (o Meta exige).'); }
     var v=[].slice.call(document.querySelectorAll('[data-napos]:checked')).map(function(x){ return x.dataset.napos; });
-    if(!v.length){ c.checked=true; toast('Deixe pelo menos 1 posição.'); return; } try{ Store.set('cl_napos2',JSON.stringify(v)); }catch(e){} }; });
+    if(!v.length){ c.checked=true; toast('Deixe pelo menos 1 posição.'); return; } try{ if(pnlPais()!=='US') Store.set('cl_napos2',JSON.stringify(v)); }catch(e){} }; });
   function marcar(lst){ document.querySelectorAll('[data-napos]').forEach(function(c){ c.checked=lst.indexOf(c.dataset.napos)>=0; }); try{ Store.set('cl_napos2',JSON.stringify(lst)); }catch(e){} }
   var pt=el('naPosTodas'); if(pt) pt.onclick=function(e){ e.preventDefault(); marcar(['ig_reels','ig_story','ig_feed','fb_reels','fb_story','fb_feed']); };
   var pm=el('naPosMelhores'); if(pm) pm.onclick=function(e){ e.preventDefault(); marcar(_pnlPos.melhores); toast('Marcadas as posições que vendem ✓'); };
