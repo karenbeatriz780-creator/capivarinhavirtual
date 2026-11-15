@@ -236,7 +236,9 @@ const GENEROS = {
   country:    'modern country, nashville, acoustic guitar, pedal steel, fiddle, warm storytelling vocals, big singalong chorus',
   hiphop:     'romantic hip hop, r&b hook, smooth beat, 808, melodic chorus',
   worship:    'contemporary christian worship, ccm, acoustic guitar, piano, building drums, anthemic chorus',
-  latinpop:   'latin pop, romantic reggaeton, dembow groove, spanish guitar, smooth vocals, danceable'
+  latinpop:   'latin pop, romantic reggaeton, dembow groove, spanish guitar, smooth vocals, danceable',
+  usrnb:      'smooth pop soul, retro R&B groove, live band, funky clean electric guitar, warm bass, tight drums, rhodes piano, romantic falsetto vocals, feel-good love song, catchy chorus',
+  usballad:   'heartfelt pop love ballad, wedding song, piano and acoustic guitar, warm strings, soaring emotional vocals, big singalong chorus, modern radio production'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',

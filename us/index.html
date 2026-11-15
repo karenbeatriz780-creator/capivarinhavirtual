@@ -111,6 +111,18 @@ textarea.inp{min-height:160px;resize:vertical;line-height:1.45}
 .load{display:flex;flex-direction:column;align-items:center;gap:12px;padding:30px 10px;text-align:center;color:var(--mut)}
 .spin{width:46px;height:46px;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:var(--rose2);animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.mk{display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 8px 10px;text-align:center}
+.mk-disc{position:relative;width:132px;height:132px;border-radius:50%;background:repeating-radial-gradient(circle,#1b0c16 0 2px,#2c1424 2px 4px);box-shadow:0 0 0 3px rgba(255,92,147,.35),0 0 44px rgba(233,30,99,.45);animation:sp 2.4s linear infinite}
+.mk-disc:after{content:'';position:absolute;inset:38%;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--rose2))}
+.mk-disc:before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 30deg,transparent 0 40deg,rgba(255,255,255,.12) 55deg,transparent 70deg 220deg,rgba(255,255,255,.09) 235deg,transparent 250deg)}
+.mk-eq{display:flex;gap:5px;align-items:flex-end;height:34px}
+.mk-eq i{width:6px;border-radius:3px;background:linear-gradient(180deg,var(--gold),var(--rose2));animation:eq 1s ease-in-out infinite alternate;transform-origin:bottom}
+@keyframes eq{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+.mk-msg{font-weight:700;font-size:1.05rem;min-height:1.4em;transition:opacity .3s}
+.mk-sub{color:var(--mut);font-size:.88rem}
+.mk-pct{font-family:Fraunces,serif;font-size:2rem;font-weight:700;color:var(--gold)}
+.mk-pen{font-size:3rem;animation:pen 1.2s ease-in-out infinite}
+@keyframes pen{0%,100%{transform:translate(0,0) rotate(-8deg)}50%{transform:translate(18px,4px) rotate(4deg)}}
 .prog{width:100%;height:10px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--rose),var(--gold));transition:width .8s}
 .player{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
@@ -159,7 +171,7 @@ try{ S=JSON.parse(LS.get('us_state')||'null')||novo(); }catch(e){ S=novo(); }
 /* ---------- options ---------- */
 var PARA=[['namorado','💘','Girlfriend','Boyfriend'],['esposa','💍','Wife','Husband'],['mae','🌷','Mom','Dad'],['filho','🧸','Daughter','Son'],['irmao','🤝','Sister','Brother'],['amigo','⭐','Female friend','Male friend','Best friend'],['avo','👵','Grandma','Grandpa'],['familia','🏡','My family',''],['outro','✨','Someone else','']];
 var OCAS=[['Birthday','🎂'],['Anniversary','💞'],['Christmas','🎄'],['Just because — to say I love you','💌'],['Valentine\'s Day','❤️'],['Mother\'s Day','🌷'],['Father\'s Day','👔'],['Wedding','💒'],['Graduation','🎓'],['Tribute / Thank you','🙏']];
-var GEN=[['pop','🎤','Pop',1],['country','🤠','Country',1],['hiphop','🎧','Hip-Hop',1],['romanticasoul','🎷','R&B / Soul',1],['romantica','🎹','Love Ballad'],['rock','🤘','Rock'],['romanticavv','🎸','Acoustic'],['latinpop','💃','Latin Pop'],['worship','🙌','Worship'],['natal','🎄','Christmas'],['infantil','🧒','Kids Song'],['infantilninar','🌙','Lullaby'],['jazz','🎺','Jazz'],['reggae','🌴','Reggae'],['lofi','☕','Lo-fi']];
+var GEN=[['pop','🎤','Pop',1],['country','🤠','Country',1],['hiphop','🎧','Hip-Hop',1],['usrnb','🎷','R&B / Soul',1],['usballad','🎹','Love Ballad'],['rock','🤘','Rock'],['romanticavv','🎸','Acoustic'],['latinpop','💃','Latin Pop'],['worship','🙌','Worship'],['natal','🎄','Christmas'],['infantil','🧒','Kids Song'],['infantilninar','🌙','Lullaby'],['jazz','🎺','Jazz'],['reggae','🌴','Reggae'],['lofi','☕','Lo-fi']];
 var CLIMA=[['romantica','🥰','Romantic'],['emocionante','🥹','Emotional'],['alegre','😄','Happy'],['divertida','😂','Funny'],['nostalgica','📸','Nostalgic'],['calma','🌙','Calm'],['inspiradora','🌟','Uplifting']];
 var VOZ=[['feminina','👩','Female'],['masculina','👨','Male'],['dueto','👫','Duet']];
 var DE=[['mulher','I\'m a woman'],['homem','I\'m a man'],['neutro','Prefer not to say']];
@@ -285,7 +297,7 @@ function dados(){
 /* ---------- lyrics ---------- */
 var _letraBusy=false;
 function htmlLetra(){
-  if(_letraBusy||!S.letra) return '<h2>Writing your lyrics…</h2><div class="load"><div class="spin"></div><div>Our songwriter is turning your story into lyrics.<br>This takes about 10–20 seconds.</div></div>';
+  if(_letraBusy||!S.letra) return '<h2>Writing your lyrics ✍️</h2><div class="mk"><div class="mk-pen">✍️</div>'+'<div class="mk-eq">'+[10,24,16,32,20,28,14,30,18,26,12].map(function(h,i){ return '<i style="height:'+h+'px;animation-delay:'+(i*.09)+'s"></i>'; }).join('')+'</div>'+'<div class="mk-msg" id="mkMsg">Reading your story…</div><div class="mk-sub">Just a few seconds</div></div>';
   return '<h2>Your lyrics ✍️</h2><p class="hint">Read them and edit anything you like. When you\'re happy, tap <b>Create my song</b> below.</p>'+
     '<div class="lyr"><textarea class="inp" id="fLetra">'+esc(S.letra)+'</textarea>'+
     '<div class="mini"><button id="bNova">↻ Write another version</button></div>'+
@@ -299,7 +311,7 @@ function ligarLetra(){
   if(el('bAprovar')) el('bAprovar').onclick=function(){ if((S.letra||'').trim().length<80){ toast('The lyrics look too short.'); return; } S.taskId=''; S.url=''; S.url2=''; S.pedido=''; salvar(); wizard(PASSOS.indexOf('musica')); window.scrollTo(0,0); gerarMusica(); };
 }
 function gerarLetra(ajuste){
-  _letraBusy=true; if(PASSOS[passo]==='letra') wizard();
+  _letraBusy=true; if(PASSOS[passo]==='letra'){ wizard(); girarMsgs(MSG_LET,1800); }
   var body=Object.assign(dados(), ajuste||{}, {id:'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,9)});
   var fim=function(l){ _letraBusy=false; if(l){ S.letra=l; salvar(); } else toast('Couldn\'t write the lyrics right now. Please try again.'); if(PASSOS[passo]==='letra') wizard(); };
   api('letra-rapida',body).then(function(d){
@@ -315,7 +327,7 @@ function gerarLetra(ajuste){
 /* ---------- music ---------- */
 var _musBusy=false, _progT=null;
 function htmlMusica(){
-  if(!S.url) return '<h2>Creating your song… 🎶</h2><div class="load"><div class="spin"></div><div class="prog"><i id="pg"></i></div><div id="pgTx">Composing the melody and recording the vocals. This usually takes 1–3 minutes — keep this page open.</div></div>';
+  if(!S.url) return '<h2>Creating your song 🎶</h2><div class="mk"><div class="mk-disc"></div><div class="mk-pct" id="pgPct">0%</div><div class="prog"><i id="pg"></i></div><div class="mk-msg" id="mkMsg">Composing the melody…</div><div class="mk-sub">Usually ready in under a minute — keep this page open</div></div>';
   return '<h2>Listen to your song 🎧</h2><p class="hint">'+(S.dobroDe?'Your songs 3 and 4 are ready! Tap <b>Save my 2 new songs</b> below.':'Here\'s your free preview. Love it? Tap <b>Unlock full songs</b> below — you get <b>4 songs</b>.')+'</p>'+
     player('Version 1',S.url,true)+(S.url2?player('Version 2',S.url2,true):'')+
     '<div class="mini"><button id="bRefazer">↻ Make a different version</button></div>';
@@ -336,7 +348,11 @@ function ligarMusica(){
   if(!S.url && S.taskId && !_musBusy) acompanhar(S.taskId);
   if(!S.url) progresso();
 }
-function progresso(){ clearInterval(_progT); var t0=Date.now(); _progT=setInterval(function(){ var p=el('pg'); if(!p){ clearInterval(_progT); return; } var x=Math.min(95,(Date.now()-t0)/1500); p.style.width=x+'%'; },800); }
+var MSG_MUS=['Composing the melody…','Writing the arrangement…','Recording the vocals…','Singing their name…','Mixing the instruments…','Adding the final touches…'];
+var MSG_LET=['Reading your story…','Finding the perfect words…','Adding their name…','Writing the chorus…','Polishing the lyrics…'];
+var _msgT=null;
+function girarMsgs(lista,ms){ clearInterval(_msgT); var i=0; _msgT=setInterval(function(){ var m=el('mkMsg'); if(!m){ clearInterval(_msgT); return; } i=(i+1)%lista.length; m.style.opacity=0; setTimeout(function(){ m.textContent=lista[i]; m.style.opacity=1; },250); },ms); }
+function progresso(){ clearInterval(_progT); var t0=Date.now(); girarMsgs(MSG_MUS,6000); _progT=setInterval(function(){ var p=el('pg'), c=el('pgPct'); if(!p){ clearInterval(_progT); return; } var t=(Date.now()-t0)/1000, x=t<45?t*2:Math.min(97,90+(t-45)/12); p.style.width=x+'%'; if(c) c.textContent=Math.floor(x)+'%'; },400); }
 function gerarMusica(){
   if(_musBusy) return; _musBusy=true;
   api('gerar-musica',Object.assign(dados(),{letraAprovada:S.letra})).then(function(d){

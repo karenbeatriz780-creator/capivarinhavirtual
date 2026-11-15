@@ -69,7 +69,9 @@ const GENERO_PT = {
   country:'country americano moderno (Nashville, histórias reais, refrão grande)',
   hiphop:'hip-hop / rap americano romântico (rimas, flow, refrão melódico)',
   worship:'louvor cristão contemporâneo americano (worship, fé, gratidão a Deus)',
-  latinpop:'pop latino romântico (reggaeton suave, dançante e apaixonado)'
+  latinpop:'pop latino romântico (reggaeton suave, dançante e apaixonado)',
+  usrnb:'R&B pop romântico com groove gostoso, alegre e apaixonado (declaração de amor moderna, refrão grudento e fácil de cantar)',
+  usballad:'balada pop romântica de casamento (piano e violão, emocionante, refrão grande e marcante)'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
