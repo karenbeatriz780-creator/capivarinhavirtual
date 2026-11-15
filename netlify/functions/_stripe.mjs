@@ -61,16 +61,19 @@ export async function prepararStripe() {
 // cria a sessão de pagamento embutida (cartão / Apple Pay / Google Pay) com o MESMO valor do pedido
 export async function criarSessaoStripe(g) {
   await prepararStripe().catch(() => {});
-  const valor = Number((g.pagamento && g.pagamento.valor) || g.precoFinal || 0);
+  const moeda = (g.pagamento && g.pagamento.moeda) || 'brl';
+  const valor = moeda === 'brl' ? Number((g.pagamento && g.pagamento.valor) || g.precoFinal || 0) : Number(g.pagamento.valorMoeda || 0);
   const cents = Math.round(valor * 100);
   if (!(cents >= 100)) throw new Error('Valor do pedido inválido.');
-  const nome = g.produto === 'livro' ? 'Livro Mágico personalizado' : 'Música personalizada';
+  const en = g.idioma === 'en';
+  const nome = en ? 'Personalized Song' : g.produto === 'livro' ? 'Livro Mágico personalizado' : 'Música personalizada';
   const s = await st('POST', 'checkout/sessions', {
     ui_mode: 'embedded', mode: 'payment', redirect_on_completion: 'never',
     payment_method_types: ['card'], // cartão + Apple Pay + Google Pay (carteiras entram junto com o cartão)
-    line_items: [{ quantity: 1, price_data: { currency: 'brl', unit_amount: cents, product_data: { name: nome + ' · Capivarinha Love' } } }],
+    line_items: [{ quantity: 1, price_data: { currency: moeda, unit_amount: cents, product_data: { name: nome + ' · Capivarinha Love' } } }],
     client_reference_id: g.id, metadata: { pedido: g.id }, payment_intent_data: { metadata: { pedido: g.id }, description: nome + ' ' + g.id },
-    locale: 'pt-BR'
+    locale: en ? 'en' : 'pt-BR',
+    customer_email: g.email && /@/.test(g.email) ? g.email : undefined
   });
   return { clientSecret: s.client_secret, sessao: s.id, valor };
 }
@@ -84,9 +87,21 @@ export async function confirmarSessaoStripe(sessaoId, origem) {
   const pres = getStore('presentes'), g = await pres.get(id, { type: 'json' }).catch(() => null);
   if (!g) return null;
   if (g.pago) return g;
-  const esperado = Math.round(Number((g.pagamento && g.pagamento.valor) || 0) * 100);
+  const moeda = (g.pagamento && g.pagamento.moeda) || 'brl';
+  const esperado = Math.round(Number(moeda === 'brl' ? ((g.pagamento && g.pagamento.valor) || 0) : (g.pagamento.valorMoeda || 0)) * 100);
+  if (String(s.currency || 'brl').toLowerCase() !== moeda) { console.error('stripe: moeda diferente', id, s.currency, moeda); return null; }
   if (esperado && Number(s.amount_total || 0) + 1 < esperado) { console.error('stripe: valor menor que o pedido', id, s.amount_total, esperado); return null; }
-  aplicarPagamento(g, { e2eid: String(s.payment_intent || s.id), valor: Number(s.amount_total || 0) / 100 }, origem || 'stripe');
+  let valorReais = Number(s.amount_total || 0) / 100;
+  if (moeda !== 'brl') { // venda em dólar: guarda quanto entrou em REAIS (é o que o painel soma)
+    valorReais = Number(g.pagamento.valor) || 0;
+    try {
+      const pi = await st('GET', 'payment_intents/' + s.payment_intent, { expand: ['latest_charge.balance_transaction'] });
+      const bt = pi && pi.latest_charge && pi.latest_charge.balance_transaction;
+      if (bt && bt.currency === 'brl' && bt.amount > 0) { valorReais = bt.amount / 100; g.pagamento.taxaStripe = (bt.fee || 0) / 100; g.pagamento.liquido = (bt.net || 0) / 100; }
+    } catch (e) { console.error('stripe: conversão', e.message); }
+    g.pagamento.valor = Math.round(valorReais * 100) / 100;
+  }
+  aplicarPagamento(g, { e2eid: String(s.payment_intent || s.id), valor: valorReais }, origem || 'stripe');
   g.pagamento.provedor = 'stripe';
   Object.assign(g.pagamento, { stSessao: s.id, stIntent: s.payment_intent || null, stCentavos: s.amount_total || null });
   await pres.setJSON(id, g);

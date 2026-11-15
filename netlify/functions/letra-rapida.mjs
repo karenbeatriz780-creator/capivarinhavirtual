@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT } from './gerar-letra.js';
+import { montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT, SYSTEM_PROMPT_EN, AJUSTE_EN } from './gerar-letra.js';
 import { indexarDia } from './_indice.mjs';
 import { iaFetch, RESERVA_OR, TEXTO_KIE, TEXTO_TOP } from './_ia.mjs';
 
@@ -55,16 +55,17 @@ export default async (req) => {
   const apiKey = (process.env.UNIFICALLY_API_KEY || '').trim();
   if (!apiKey) return erro('Servidor sem chave da IA.', 503);
 
+  const idioma = b.idioma === 'en' ? 'en' : 'pt';
   const prompt = modoAjuste
-    ? montarPromptAjuste(letraAtual, instrucao, str(b, 'nomesLetra', 200))
-    : montarPrompt({
+    ? montarPromptAjuste(letraAtual, instrucao, str(b, 'nomesLetra', 200)) + (idioma === 'en' ? AJUSTE_EN : '')
+    : montarPrompt({ idioma,
         estilo: str(b, 'estilo', 40), estiloOutro: str(b, 'estiloOutro', 100), clima: str(b, 'clima', 40),
         relacao: str(b, 'relacao', 40), ocasiao: str(b, 'ocasiao', 80), nomesLetra: str(b, 'nomesLetra', 200),
         frase: str(b, 'frase', 300), voz: str(b, 'voz', 20), de: str(b, 'de', 20), paraGen: str(b, 'paraGen', 20),
         paraOutro: str(b, 'paraOutro', 120), texto
       });
-  const system = (modoAjuste ? AJUSTE_SYSTEM_PROMPT : SYSTEM_PROMPT) +
-    ' Escreva a música COMPLETA (todas as partes da estrutura pedida), nunca só um trecho.';
+  const system = (modoAjuste ? AJUSTE_SYSTEM_PROMPT : (idioma === 'en' ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT)) +
+    (idioma === 'en' ? ' Write the COMPLETE song (every section), never just an excerpt.' : ' Escreva a música COMPLETA (todas as partes da estrutura pedida), nunca só um trecho.');
 
   const t0 = Date.now();
   const ctrls = [], diag = [];

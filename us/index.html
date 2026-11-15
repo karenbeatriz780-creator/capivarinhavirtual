@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Capivarinha Love — A Personalized Song for Someone You Love</title>
+<meta name="description" content="A one-of-a-kind song with their name and your story. Hear a free preview before you pay. Full song for $7.99.">
+<meta property="og:title" content="A personalized song with their name and your story">
+<meta property="og:description" content="Hear a free preview before you pay. Ready in minutes. $7.99.">
+<meta property="og:image" content="https://capivarinhalove.com.br/favicon-512.png">
+<meta name="theme-color" content="#1E0B18">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','2102013347063288');fbq('track','PageView');
+</script>
+<style>
+:root{--bg:#1E0B18;--bg2:#2B1022;--card:#331428;--line:rgba(255,255,255,.12);--tx:#FFF5F9;--mut:#D9B8C8;--mut2:#A98699;--rose:#E91E63;--rose2:#FF5C93;--gold:#F5C451;--ok:#3DDC84;--err:#FF7A8A}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--tx);font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+.w{max-width:560px;margin:0 auto;padding:0 16px}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;letter-spacing:-.01em;line-height:1.12}
+.top{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;max-width:560px;margin:0 auto}
+.logo{display:flex;align-items:center;gap:.5rem;text-decoration:none;font-family:Fraunces,serif;font-weight:700;font-size:1.15rem}
+.logo img{width:34px;height:34px}
+.logo i{color:var(--rose2);font-style:normal}
+.top a.my{font-size:.85rem;color:var(--mut);text-decoration:none;border:1px solid var(--line);padding:.35rem .7rem;border-radius:99px}
+/* hero */
+.hero{position:relative;padding:18px 0 28px;overflow:hidden}
+.hero:before{content:'';position:absolute;inset:-20% -30% auto;height:520px;background:radial-gradient(420px 300px at 80% 20%,rgba(233,30,99,.35),transparent 65%),radial-gradient(360px 260px at 10% 50%,rgba(245,196,81,.16),transparent 65%);pointer-events:none}
+.hero .w{position:relative}
+.pill{display:inline-flex;gap:.4rem;align-items:center;font-size:.8rem;font-weight:700;color:var(--gold);background:rgba(245,196,81,.1);border:1px solid rgba(245,196,81,.35);padding:.35rem .75rem;border-radius:99px}
+.hero h1{font-size:clamp(2.2rem,9vw,3.2rem);margin:14px 0 10px}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p.sub{color:var(--mut);font-size:1.05rem;max-width:30rem}
+.mascot{position:absolute;right:6px;top:4px;width:96px;opacity:.95}
+.offer{margin-top:20px;background:linear-gradient(145deg,#C2185B,#7B1450);border-radius:22px;padding:18px;box-shadow:0 20px 50px rgba(233,30,99,.25);border:1px solid rgba(255,255,255,.15)}
+.offer-row{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
+.offer-row b{display:block;font-size:1.15rem}
+.offer-row small{color:#FFD6E5;font-size:.85rem}
+.price{font-family:Fraunces,serif;font-size:2.4rem;font-weight:700;color:#fff;white-space:nowrap}
+.price s{font-family:Inter;font-size:.9rem;color:#FFC2D6;font-weight:500;margin-right:.3rem}
+.btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;min-height:54px;border:0;border-radius:16px;font-weight:800;font-size:1.05rem;padding:.7rem 1rem;text-decoration:none;transition:transform .15s}
+.btn:active{transform:scale(.98)}
+.btn-w{background:#fff;color:#B0124F}
+.btn-p{background:linear-gradient(135deg,var(--rose),#C2185B);color:#fff;box-shadow:0 10px 26px rgba(233,30,99,.35)}
+.btn-g{background:transparent;border:1.5px solid var(--line);color:var(--tx);font-weight:700}
+.btn[disabled]{opacity:.55;pointer-events:none}
+.trust{display:flex;flex-wrap:wrap;gap:.4rem 1rem;justify-content:center;margin-top:14px;color:var(--mut);font-size:.82rem}
+.paylogos{display:flex;gap:.4rem;justify-content:center;margin-top:12px}
+.paylogos span{display:flex;align-items:center;justify-content:center;width:52px;height:32px;background:#fff;border-radius:7px}
+section.s{padding:30px 0}
+.s h2{font-size:1.7rem;text-align:center;margin-bottom:6px}
+.s p.lead{text-align:center;color:var(--mut);margin-bottom:18px}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.steps3 div{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:14px 8px;text-align:center;font-size:.85rem;color:var(--mut)}
+.steps3 b{display:block;font-size:1.6rem;margin-bottom:4px}
+.steps3 strong{display:block;color:var(--tx);font-size:.92rem;margin-bottom:2px}
+.faq details{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.faq summary{font-weight:700;cursor:pointer}
+.faq p{color:var(--mut);margin-top:6px;font-size:.92rem}
+footer{color:var(--mut2);font-size:.8rem;text-align:center;padding:24px 16px calc(24px + env(safe-area-inset-bottom))}
+/* wizard */
+.wz{padding:6px 16px 120px}
+.bar{height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin:6px 0 18px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--rose),var(--gold));border-radius:99px;transition:width .35s}
+.wz h2{font-size:1.6rem;margin-bottom:6px}
+.wz p.hint{color:var(--mut);margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{display:flex;align-items:center;gap:.55rem;min-height:56px;padding:.7rem .8rem;background:var(--bg2);border:1.5px solid var(--line);border-radius:14px;text-align:left;font-weight:600;font-size:.95rem}
+.opt span.e{font-size:1.3rem}
+.opt.on{border-color:var(--rose2);background:rgba(233,30,99,.16);box-shadow:0 0 0 3px rgba(233,30,99,.15)}
+.opt small{display:block;color:var(--mut);font-weight:500;font-size:.78rem}
+.sub-t{font-weight:700;margin:18px 0 8px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.inp,textarea.inp{width:100%;background:#fff;color:#2A0F1E;border:1.5px solid transparent;border-radius:14px;padding:.85rem .9rem;font:inherit;font-size:1rem}
+.inp:focus{outline:none;border-color:var(--rose2)}
+textarea.inp{min-height:160px;resize:vertical;line-height:1.45}
+.cnt{font-size:.8rem;color:var(--mut);margin-top:6px}
+.cnt.ok{color:var(--ok)}
+.navb{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(30,11,24,0),var(--bg) 30%);padding:18px 16px calc(14px + env(safe-area-inset-bottom));z-index:5}
+.navb .in{max-width:560px;margin:0 auto;display:flex;gap:10px}
+.navb .back{flex:0 0 54px;min-height:54px;border-radius:16px;border:1.5px solid var(--line);background:var(--bg2);font-size:1.3rem}
+.err{color:var(--err);font-size:.9rem;margin-top:10px;min-height:1.2em}
+.lyr{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:14px}
+.lyr textarea{min-height:340px;font-size:.95rem;background:#FFF9FB}
+.mini{display:flex;gap:8px;margin-top:10px}
+.mini button{flex:1;min-height:44px;border-radius:12px;border:1.5px solid var(--line);background:transparent;font-weight:700;font-size:.88rem}
+.load{display:flex;flex-direction:column;align-items:center;gap:12px;padding:30px 10px;text-align:center;color:var(--mut)}
+.spin{width:46px;height:46px;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:var(--rose2);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.prog{width:100%;height:10px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--rose),var(--gold));transition:width .8s}
+.player{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.player b{display:block;margin-bottom:8px}
+.player audio{width:100%}
+.note{font-size:.85rem;color:var(--mut);margin-top:6px}
+.box{background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px}
+.tot{display:flex;justify-content:space-between;align-items:baseline;background:rgba(245,196,81,.1);border:1px solid rgba(245,196,81,.3);border-radius:12px;padding:.7rem .9rem;margin-bottom:12px}
+.tot b{font-size:1.35rem;color:var(--gold)}
+.incl{list-style:none;margin:10px 0 0;color:var(--mut);font-size:.9rem}
+.incl li{margin:4px 0}
+.incl li:before{content:'✓ ';color:var(--ok);font-weight:800}
+#stBox{background:#fff;border-radius:16px;overflow:hidden;min-height:140px;margin-top:12px}
+.stmsg{padding:24px;text-align:center;color:#6b4a5a}
+.dl{display:flex;gap:8px;margin-top:10px}
+.dl a{flex:1;text-align:center;font-size:.88rem;font-weight:700;text-decoration:none;padding:.7rem;border-radius:12px;border:1.5px solid var(--line)}
+.ok-h{text-align:center;padding:10px 0 6px}
+.ok-h div{font-size:3rem}
+pre.lt{white-space:pre-wrap;font-family:inherit;color:var(--mut);font-size:.92rem}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#fff;color:#2A0F1E;font-weight:600;padding:.7rem 1rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50;max-width:92vw;font-size:.92rem}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var PRECO=7.99;
+var MASCOTE='/a/mascote.png';
+var LG_APAY='m2.15 4.318-.454.003c-.15.005-.303.013-.452.04a1.44 1.44 0 0 0-1.06.772c-.07.138-.114.278-.14.43-.028.148-.037.3-.04.45L0 6.222v11.557q0 .104.003.207c.004.15.013.303.04.452q.039.224.142.429a1.44 1.44 0 0 0 .63.63c.138.07.278.115.43.142.148.027.3.036.45.04l.208.003h20.194l.207-.003c.15-.004.303-.013.452-.04s.291-.071.428-.141a1.43 1.43 0 0 0 .631-.631c.07-.138.115-.278.141-.43.027-.148.036-.3.04-.45q.003-.104.003-.208l.001-.246V6.221q0-.104-.004-.207a3 3 0 0 0-.04-.452 1.45 1.45 0 0 0-1.2-1.201 3 3 0 0 0-.452-.04 11 11 0 0 0-.453-.003zm0 .512h19.942q.098 0 .197.003c.115.004.25.01.375.032.109.02.2.05.287.094a.93.93 0 0 1 .407.407 1 1 0 0 1 .094.288c.022.123.028.258.031.374q.003.097.003.197v11.552q0 .097-.003.196c-.003.115-.009.25-.032.375a.93.93 0 0 1-.5.693 1 1 0 0 1-.286.094 3 3 0 0 1-.373.032l-.2.003H1.906q-.1 0-.196-.003a3 3 0 0 1-.375-.032c-.109-.02-.2-.05-.288-.094a.9.9 0 0 1-.406-.407 1 1 0 0 1-.094-.288 2.5 2.5 0 0 1-.032-.373l-.002-.197V6.224q0-.098.002-.197c.004-.114.01-.248.032-.375.02-.108.05-.199.094-.287a.93.93 0 0 1 .407-.406 1 1 0 0 1 .287-.094c.125-.022.26-.029.375-.032q.098-.002.196-.003zm4.71 3.7c-.3.016-.668.199-.88.456-.191.22-.36.58-.316.918.338.03.675-.169.888-.418.205-.258.345-.603.308-.955zm2.207.42v5.493h.852v-1.877h1.18c1.078 0 1.835-.739 1.835-1.812 0-1.07-.742-1.805-1.808-1.805zm.852.719h.982c.739 0 1.161.396 1.161 1.089 0 .692-.422 1.092-1.164 1.092h-.979zm-3.154.3c-.45.01-.83.28-1.05.28-.235 0-.593-.264-.981-.257a1.45 1.45 0 0 0-1.23.747c-.527.908-.139 2.255.374 2.995.249.366.549.769.944.754.373-.014.52-.242.973-.242.454 0 .586.242.98.235.41-.007.667-.366.915-.733.286-.417.403-.82.41-.841-.007-.008-.79-.308-.797-1.209-.008-.754.615-1.113.644-1.135-.352-.52-.9-.578-1.09-.593zm8.204.397c-.99 0-1.606.533-1.652 1.256h.777c.072-.358.369-.586.845-.586.502 0 .803.266.803.711v.309l-1.097.064c-.951.054-1.488.484-1.488 1.184 0 .72.548 1.207 1.332 1.207.526 0 1.032-.281 1.264-.727h.019v.659h.788v-2.76c0-.803-.62-1.317-1.591-1.317m1.94.072 1.446 4.009c0 .003-.073.24-.073.247-.125.41-.33.571-.711.571-.069 0-.206 0-.267-.015v.666c.06.011.267.019.335.019.83 0 1.226-.312 1.568-1.283l1.5-4.214h-.868l-1.012 3.259h-.015l-1.013-3.26zm-1.167 2.189v.316c0 .521-.45.917-1.024.917-.442 0-.731-.228-.731-.579 0-.342.278-.56.769-.593z', LG_GPAY='M3.963 7.235A3.96 3.96 0 0 0 .422 9.419a3.96 3.96 0 0 0 0 3.559 3.96 3.96 0 0 0 3.541 2.184c1.07 0 1.97-.352 2.627-.957.748-.69 1.18-1.71 1.18-2.916a5 5 0 0 0-.07-.806H3.964v1.526h2.14a1.84 1.84 0 0 1-.79 1.205c-.356.241-.814.379-1.35.379-1.034 0-1.911-.697-2.225-1.636a2.38 2.38 0 0 1 0-1.517c.314-.94 1.191-1.636 2.225-1.636a2.15 2.15 0 0 1 1.52.594l1.132-1.13a3.8 3.8 0 0 0-2.652-1.033zm6.501.55v6.9h.886V11.89h1.465q.904 0 1.522-.588a1.91 1.91 0 0 0 .635-1.464 1.92 1.92 0 0 0-.635-1.456 2.13 2.13 0 0 0-1.522-.598zm2.427.85a1.16 1.16 0 0 1 .823.365 1.176 1.176 0 0 1 0 1.686 1.17 1.17 0 0 1-.877.357H11.35V8.635h1.541m4.124 1.175q-1.262 0-1.907.925l.781.491q.432-.626 1.175-.626a1.25 1.25 0 0 1 .856.323 1 1 0 0 1 .366.785v.202q-.51-.29-1.3-.289-.926 0-1.479.434-.555.432-.554 1.165a1.48 1.48 0 0 0 .525 1.156q.525.463 1.305.463.915 0 1.465-.81h.038v.655h.848v-2.909q0-.915-.568-1.44-.57-.525-1.551-.525m2.263.154 1.946 4.422-1.098 2.38h.915L24 9.963h-.965l-1.368 3.391h-.02l-1.406-3.39zm-2.146 2.368q.741 0 1.156.33 0 .558-.44.973a1.41 1.41 0 0 1-.997.414 1.08 1.08 0 0 1-.69-.232.71.71 0 0 1-.293-.578q0-.383.363-.647.36-.26.9-.26Z';
+function lg(d,c,w){ return '<svg viewBox="0 0 24 24" width="'+w+'" height="'+w+'" fill="'+c+'" aria-hidden="true"><path d="'+d+'"/></svg>'; }
+var CARD_SVG='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2A0F1E" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 9.5h19M6 15h4"/></svg>';
+function payLogos(){ return '<div class="paylogos"><span>'+CARD_SVG+'</span><span>'+lg(LG_APAY,'#000',34)+'</span><span>'+lg(LG_GPAY,'#3C4043',34)+'</span></div>'; }
+function el(i){ return document.getElementById(i); }
+function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function money(v){ return '$'+Number(v).toFixed(2); }
+function toast(t){ var d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(function(){ d.remove(); },3200); }
+var LS={get:function(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },set:function(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }};
+function api(n,body){ return fetch('/.netlify/functions/'+n,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ d._ok=r.ok; return d; }); }); }
+function track(ev,p){ try{ if(window.fbq) fbq('track',ev,p||{}); }catch(e){} }
+
+/* ---------- state ---------- */
+var S={};
+function novo(){ return {para:'',paraGen:'',paraOutro:'',de:'',nome:'',ocasiao:'',estilo:'',clima:'',voz:'',historia:'',frase:'',letra:'',taskId:'',url:'',url2:'',email:'',meuNome:'',pedido:''}; }
+function salvar(){ LS.set('us_state',JSON.stringify(S)); }
+try{ S=JSON.parse(LS.get('us_state')||'null')||novo(); }catch(e){ S=novo(); }
+
+/* ---------- options ---------- */
+var PARA=[['namorado','💘','Girlfriend','Boyfriend'],['esposa','💍','Wife','Husband'],['mae','🌷','Mom','Dad'],['filho','🧸','Daughter','Son'],['irmao','🤝','Sister','Brother'],['amigo','⭐','Female friend','Male friend','Best friend'],['avo','👵','Grandma','Grandpa'],['familia','🏡','My family',''],['outro','✨','Someone else','']];
+var OCAS=[['Birthday','🎂'],['Anniversary','💞'],['Christmas','🎄'],['Just because — to say I love you','💌'],['Valentine\'s Day','❤️'],['Mother\'s Day','🌷'],['Father\'s Day','👔'],['Wedding','💒'],['Graduation','🎓'],['Tribute / Thank you','🙏']];
+var GEN=[['pop','🎤','Pop'],['romantica','🎹','Love Ballad'],['romanticavv','🎸','Acoustic'],['country','🤠','Country'],['romanticasoul','🎷','R&B / Soul'],['rock','🤘','Rock'],['hiphop','🎧','Hip-Hop'],['worship','🙌','Worship'],['jazz','🎺','Jazz'],['reggae','🌴','Reggae'],['natal','🎄','Christmas'],['infantil','🧒','Kids Song'],['infantilninar','🌙','Lullaby'],['lofi','☕','Lo-fi']];
+var CLIMA=[['romantica','🥰','Romantic'],['emocionante','🥹','Emotional'],['alegre','😄','Happy'],['divertida','😂','Funny'],['nostalgica','📸','Nostalgic'],['calma','🌙','Calm'],['inspiradora','🌟','Uplifting']];
+var VOZ=[['feminina','👩','Female'],['masculina','👨','Male'],['dueto','👫','Duet']];
+var DE=[['mulher','I\'m a woman'],['homem','I\'m a man'],['neutro','Prefer not to say']];
+var DUPLO={namorado:1,esposa:1,mae:1,filho:1,irmao:1,amigo:1,avo:1};
+function paraLabel(){ var p=PARA.filter(function(x){ return x[0]===S.para; })[0]; if(!p) return ''; if(S.para==='outro') return S.paraOutro; return DUPLO[S.para]?(S.paraGen==='ele'?p[3]:p[2]):p[2]; }
+
+/* ---------- landing ---------- */
+function home(){
+  el('app').innerHTML=topo()+
+  '<header class="hero"><div class="w">'+
+    '<img class="mascot" src="'+MASCOTE+'" alt="">'+
+    '<span class="pill">🎧 Free preview · listen before you pay</span>'+
+    '<h1>A song made<br>just for <em>them</em></h1>'+
+    '<p class="sub">Their name, your story, a real song. Ready in minutes — the most personal gift you can give.</p>'+
+    '<div class="offer">'+
+      '<div class="offer-row"><div><b>Personalized song</b><small>2 full versions · yours forever</small></div><div class="price">'+money(PRECO)+'</div></div>'+
+      '<a class="btn btn-w" href="#/create">▶ Create my song</a>'+
+      '<div class="trust" style="color:#FFE0EC;margin-top:12px"><span>✓ No account needed</span><span>✓ Secure checkout</span></div>'+
+    '</div>'+
+    payLogos()+
+  '</div></header>'+
+  '<section class="s"><div class="w"><h2>How it works</h2><p class="lead">Three quick steps, right on your phone.</p>'+
+    '<div class="steps3"><div><b>📝</b><strong>Tell the story</strong>Who it\'s for, their name, your memories</div><div><b>🎶</b><strong>We write it</strong>Lyrics + music made just for them</div><div><b>🎁</b><strong>Listen &amp; send</strong>Hear the preview, then unlock it</div></div>'+
+  '</div></section>'+
+  '<section class="s faq"><div class="w"><h2>Questions</h2><p class="lead">&nbsp;</p>'+
+    '<details><summary>Do I hear it before paying?</summary><p>Yes. You read the lyrics, approve them, and listen to a preview of your song before you pay anything.</p></details>'+
+    '<details><summary>What do I get for '+money(PRECO)+'?</summary><p>Two full-length versions of your song with the lyrics you approved — play, download as MP3 and share with a link. No subscription.</p></details>'+
+    '<details><summary>How do I pay?</summary><p>Credit or debit card, Apple Pay or Google Pay, through Stripe secure checkout.</p></details>'+
+    '<details><summary>How do I get my song?</summary><p>It unlocks on the screen right after payment, and we email you the link so you can always come back to it.</p></details>'+
+  '</div></section>'+
+  '<div class="w"><a class="btn btn-p" href="#/create">Create my song — '+money(PRECO)+'</a></div>'+
+  '<footer>Capivarinha Love · Personalized songs made with love 💗<br>Questions? songs@capivarinhalove.com.br</footer>';
+  track('ViewContent',{content_name:'us_home'});
+}
+function topo(){ return '<div class="top"><a class="logo" href="#/"><img src="'+MASCOTE+'" alt="">Capivarinha <i>Love</i></a>'+(S.pedido?'<a class="my" href="#/song/'+esc(S.pedido)+'">My song</a>':'')+'</div>'; }
+
+/* ---------- wizard ---------- */
+var PASSOS=['para','nome','ocasiao','estilo','clima','voz','historia','letra','musica','checkout'];
+var passo=0;
+function wizard(n){
+  if(n!=null) passo=n;
+  var k=PASSOS[passo], pct=Math.round((passo+1)/PASSOS.length*100), h='';
+  if(k==='para'){
+    h='<h2>Who is this song for?</h2><p class="hint">Pick one — we\'ll write it just for them.</p><div class="grid">'+
+      PARA.map(function(p){ return '<button class="opt'+(S.para===p[0]?' on':'')+'" data-para="'+p[0]+'"><span class="e">'+p[1]+'</span>'+(p[4]||(DUPLO[p[0]]?p[2]+' / '+p[3]:p[2]))+'</button>'; }).join('')+'</div>';
+    if(S.para==='outro') h+='<div class="sub-t">Who are they to you?</div><input class="inp" id="fOutro" maxlength="100" placeholder="e.g. my teacher, my coworker" value="'+esc(S.paraOutro)+'">';
+    if(DUPLO[S.para]){ var p=PARA.filter(function(x){ return x[0]===S.para; })[0];
+      h+='<div class="sub-t">It\'s for my…</div><div class="grid"><button class="opt'+(S.paraGen==='ela'?' on':'')+'" data-pgen="ela">'+p[2]+'</button><button class="opt'+(S.paraGen==='ele'?' on':'')+'" data-pgen="ele">'+p[3]+'</button></div>'; }
+    if(S.para==='outro') h+='<div class="sub-t">They are…</div><div class="row3"><button class="opt'+(S.paraGen==='ela'?' on':'')+'" data-pgen="ela">Female</button><button class="opt'+(S.paraGen==='ele'?' on':'')+'" data-pgen="ele">Male</button><button class="opt'+(S.paraGen==='neutro'?' on':'')+'" data-pgen="neutro">Either</button></div>';
+    if(S.para) h+='<div class="sub-t">And you are…</div><div class="row3">'+DE.map(function(d){ return '<button class="opt'+(S.de===d[0]?' on':'')+'" data-de="'+d[0]+'" style="font-size:.85rem">'+d[1]+'</button>'; }).join('')+'</div>';
+  }
+  if(k==='nome') h='<h2>What\'s their name?</h2><p class="hint">We\'ll sing it in the song. Add more names separated by commas.</p><input class="inp" id="fNome" maxlength="120" placeholder="e.g. Emily" value="'+esc(S.nome)+'" autocomplete="off">';
+  if(k==='ocasiao') h='<h2>What\'s the occasion?</h2><p class="hint">&nbsp;</p><div class="grid">'+OCAS.map(function(o){ return '<button class="opt'+(S.ocasiao===o[0]?' on':'')+'" data-oc="'+esc(o[0])+'"><span class="e">'+o[1]+'</span>'+esc(o[0])+'</button>'; }).join('')+'</div>';
+  if(k==='estilo') h='<h2>Pick a music style</h2><p class="hint">&nbsp;</p><div class="grid">'+GEN.map(function(g){ return '<button class="opt'+(S.estilo===g[0]?' on':'')+'" data-gen="'+g[0]+'"><span class="e">'+g[1]+'</span>'+g[2]+'</button>'; }).join('')+'</div>';
+  if(k==='clima') h='<h2>What\'s the mood?</h2><p class="hint">&nbsp;</p><div class="grid">'+CLIMA.map(function(c){ return '<button class="opt'+(S.clima===c[0]?' on':'')+'" data-cl="'+c[0]+'"><span class="e">'+c[1]+'</span>'+c[2]+'</button>'; }).join('')+'</div>';
+  if(k==='voz') h='<h2>Who should sing it?</h2><p class="hint">&nbsp;</p><div class="row3">'+VOZ.map(function(v){ return '<button class="opt'+(S.voz===v[0]?' on':'')+'" data-voz="'+v[0]+'" style="flex-direction:column;justify-content:center"><span class="e">'+v[1]+'</span>'+v[2]+'</button>'; }).join('')+'</div>';
+  if(k==='historia') h='<h2>Tell us your story</h2><p class="hint">How you met, inside jokes, places, what you love about them. The more details, the more special the song.</p>'+
+    '<textarea class="inp" id="fHist" maxlength="2000" placeholder="We met at a coffee shop in 2019. She always laughs at my terrible jokes. Our first trip was to the beach…">'+esc(S.historia)+'</textarea><div class="cnt" id="cnt"></div>'+
+    '<div class="sub-t">A special phrase to include <span style="color:var(--mut);font-weight:500">(optional)</span></div><input class="inp" id="fFrase" maxlength="200" placeholder="e.g. You are my sunshine" value="'+esc(S.frase)+'">';
+  if(k==='letra') h=htmlLetra();
+  if(k==='musica') h=htmlMusica();
+  if(k==='checkout') h=htmlCheckout();
+  var semNav=(k==='letra'||k==='musica'||k==='checkout');
+  el('app').innerHTML=topo()+'<div class="w wz"><div class="bar"><i style="width:'+pct+'%"></i></div>'+h+'<div class="err" id="err"></div></div>'+
+    '<div class="navb"><div class="in"><button class="back" id="bBack" aria-label="Back">‹</button>'+(semNav?'':'<button class="btn btn-p" id="bNext">Continue</button>')+'</div></div>';
+  el('bBack').onclick=function(){ if(passo===0){ location.hash='#/'; return; } wizard(passo-1); window.scrollTo(0,0); };
+  if(el('bNext')) el('bNext').onclick=avancar;
+  ligar(k);
+}
+function erro(t){ var e=el('err'); if(e) e.textContent=t||''; }
+function ok(k){
+  if(k==='para'){ if(!S.para) return 'Choose who the song is for.'; if(S.para==='outro'&&S.paraOutro.trim().length<3) return 'Tell us who they are to you.'; if((DUPLO[S.para]||S.para==='outro')&&!S.paraGen) return 'Choose one option.'; if(!S.de) return 'Tell us if you\'re a woman or a man (it helps the lyrics).'; }
+  if(k==='nome'&&S.nome.trim().length<2) return 'Type their name.';
+  if(k==='ocasiao'&&!S.ocasiao) return 'Choose the occasion.';
+  if(k==='estilo'&&!S.estilo) return 'Choose a style.';
+  if(k==='clima'&&!S.clima) return 'Choose a mood.';
+  if(k==='voz'&&!S.voz) return 'Choose a voice.';
+  if(k==='historia'&&S.historia.trim().length<50) return 'Tell us a bit more — at least 50 characters.';
+  return '';
+}
+function avancar(){ var k=PASSOS[passo], m=ok(k); if(m){ erro(m); return; } salvar(); if(k==='historia'){ S.letra=''; S.taskId=''; S.url=''; S.url2=''; S.pedido=''; salvar(); } wizard(passo+1); window.scrollTo(0,0); if(PASSOS[passo]==='letra'&&!S.letra) gerarLetra(); }
+var _autoT=null;
+function auto(){ salvar(); var k=PASSOS[passo]; clearTimeout(_autoT); _autoT=setTimeout(function(){ if(PASSOS[passo]===k) avancar(); },250); }
+function ligar(k){
+  function on(sel,fn){ document.querySelectorAll(sel).forEach(function(b){ b.onclick=function(){ fn(b); }; }); }
+  on('[data-para]',function(b){ if(S.para!==b.dataset.para){ S.paraGen=''; } S.para=b.dataset.para; if(S.para==='familia') S.paraGen='neutro'; salvar(); wizard(); if(S.para&&S.de&&(S.paraGen||!DUPLO[S.para])&&S.para!=='outro') auto(); });
+  on('[data-pgen]',function(b){ S.paraGen=b.dataset.pgen; salvar(); wizard(); if(S.de&&S.para!=='outro') auto(); });
+  on('[data-de]',function(b){ S.de=b.dataset.de; if(!S.voz) S.voz=S.de==='mulher'?'feminina':'masculina'; salvar(); wizard(); if(!ok('para')&&S.para!=='outro') auto(); });
+  on('[data-oc]',function(b){ S.ocasiao=b.dataset.oc; wizard(); auto(); });
+  on('[data-gen]',function(b){ S.estilo=b.dataset.gen; wizard(); auto(); });
+  on('[data-cl]',function(b){ S.clima=b.dataset.cl; wizard(); auto(); });
+  on('[data-voz]',function(b){ S.voz=b.dataset.voz; wizard(); auto(); });
+  var fo=el('fOutro'), fn=el('fNome'), fh=el('fHist'), ff=el('fFrase');
+  if(fo) fo.oninput=function(){ S.paraOutro=fo.value; salvar(); };
+  if(fn){ fn.oninput=function(){ S.nome=fn.value; salvar(); }; fn.onkeydown=function(e){ if(e.key==='Enter') avancar(); }; setTimeout(function(){ try{ fn.focus(); }catch(e){} },150); }
+  if(fh){ var c=function(){ var n=S.historia.trim().length, ce=el('cnt'); if(!ce) return; ce.textContent=n>=50?'✓ '+n+' characters':'At least 50 characters ('+(50-n)+' to go)'; ce.className='cnt'+(n>=50?' ok':''); }; fh.oninput=function(){ S.historia=fh.value; salvar(); c(); }; c(); }
+  if(ff) ff.oninput=function(){ S.frase=ff.value; salvar(); };
+  if(k==='letra') ligarLetra();
+  if(k==='musica') ligarMusica();
+  if(k==='checkout') ligarCheckout();
+}
+function dados(){
+  var rel=S.para==='familia'?'familia':S.para;
+  var ocas=S.ocasiao==='Christmas'?'Christmas':S.ocasiao;
+  return {idioma:'en', estilo:S.estilo, estiloOutro:'', texto:S.historia.trim(), clima:S.clima, relacao:rel, ocasiao:ocas,
+    nomesLetra:S.nome.trim(), frase:S.frase.trim(), voz:S.voz, de:S.de, paraGen:S.paraGen, paraOutro:S.paraOutro};
+}
+
+/* ---------- lyrics ---------- */
+var _letraBusy=false;
+function htmlLetra(){
+  if(_letraBusy||!S.letra) return '<h2>Writing your lyrics…</h2><div class="load"><div class="spin"></div><div>Our songwriter is turning your story into lyrics.<br>This takes about 10–20 seconds.</div></div>';
+  return '<h2>Your lyrics ✍️</h2><p class="hint">Read them, edit anything you like, then create the song.</p>'+
+    '<div class="lyr"><textarea class="inp" id="fLetra">'+esc(S.letra)+'</textarea>'+
+    '<div class="mini"><button id="bNova">↻ Write another version</button></div>'+
+    '<div class="sub-t" style="margin-top:14px">Want a small change?</div><input class="inp" id="fAjuste" maxlength="300" placeholder="e.g. make the chorus happier, mention our dog Max">'+
+    '<div class="mini"><button id="bAjuste">Apply change</button></div></div>'+
+    '<button class="btn btn-p" id="bAprovar" style="margin-top:16px">Approve lyrics &amp; create my song 🎵</button>';
+}
+function ligarLetra(){
+  var t=el('fLetra'); if(t) t.oninput=function(){ S.letra=t.value; salvar(); };
+  if(el('bNova')) el('bNova').onclick=function(){ gerarLetra(); };
+  if(el('bAjuste')) el('bAjuste').onclick=function(){ var a=(el('fAjuste').value||'').trim(); if(a.length<3){ toast('Tell us what to change.'); return; } gerarLetra({letraAtual:S.letra, instrucao:a}); };
+  if(el('bAprovar')) el('bAprovar').onclick=function(){ if((S.letra||'').trim().length<80){ toast('The lyrics look too short.'); return; } S.taskId=''; S.url=''; S.url2=''; S.pedido=''; salvar(); wizard(PASSOS.indexOf('musica')); window.scrollTo(0,0); gerarMusica(); };
+}
+function gerarLetra(ajuste){
+  _letraBusy=true; if(PASSOS[passo]==='letra') wizard();
+  var body=Object.assign(dados(), ajuste||{}, {id:'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,9)});
+  var fim=function(l){ _letraBusy=false; if(l){ S.letra=l; salvar(); } else toast('Couldn\'t write the lyrics right now. Please try again.'); if(PASSOS[passo]==='letra') wizard(); };
+  api('letra-rapida',body).then(function(d){
+    if(d&&d.letra) return fim(d.letra);
+    var id2='l'+Date.now().toString(36)+Math.random().toString(36).slice(2,9), t0=Date.now();
+    fetch('/.netlify/functions/gerar-letra-background',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},body,{id:id2}))}).catch(function(){});
+    (function ver(){ if(Date.now()-t0>120000) return fim(null);
+      fetch('/.netlify/functions/gerar-letra-status?id='+id2,{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(s){ if(s&&s.pronto&&s.letra) return fim(s.letra); if(s&&s.pronto&&s.erro) return fim(null); setTimeout(ver,2000); }).catch(function(){ setTimeout(ver,2500); });
+    })();
+  }).catch(function(){ fim(null); });
+}
+
+/* ---------- music ---------- */
+var _musBusy=false, _progT=null;
+function htmlMusica(){
+  if(!S.url) return '<h2>Creating your song… 🎶</h2><div class="load"><div class="spin"></div><div class="prog"><i id="pg"></i></div><div id="pgTx">Composing the melody and recording the vocals. This usually takes 1–3 minutes — keep this page open.</div></div>';
+  return '<h2>Listen to your song 🎧</h2><p class="hint">Here\'s your free preview. Unlock to get the full songs, download and share.</p>'+
+    player('Version 1',S.url,true)+(S.url2?player('Version 2',S.url2,true):'')+
+    '<button class="btn btn-p" id="bUnlock" style="margin-top:8px">Unlock full songs — '+money(PRECO)+'</button>'+
+    '<div class="mini"><button id="bRefazer">↻ Make a different version</button></div>';
+}
+function player(t,u,lim){ return '<div class="player"><b>'+t+'</b><audio controls preload="none" '+(lim?'data-lim="1" ':'')+'src="'+esc(u)+'"></audio>'+(lim?'<div class="note">Preview · first 60 seconds</div>':'')+'</div>'; }
+function limitar(){ var a=[].slice.call(document.querySelectorAll('audio')); a.forEach(function(x){ x.addEventListener('play',function(){ a.forEach(function(o){ if(o!==x) o.pause(); }); }); if(x.dataset.lim) x.addEventListener('timeupdate',function(){ if(x.currentTime>=60){ x.pause(); x.currentTime=0; toast('Unlock to hear the full song 🎶'); } }); }); }
+function ligarMusica(){
+  limitar();
+  if(el('bUnlock')) el('bUnlock').onclick=function(){ track('InitiateCheckout',{value:PRECO,currency:'USD'}); wizard(PASSOS.indexOf('checkout')); window.scrollTo(0,0); };
+  if(el('bRefazer')) el('bRefazer').onclick=function(){ S.taskId=''; S.url=''; S.url2=''; S.pedido=''; salvar(); wizard(); gerarMusica(); };
+  if(!S.url && S.taskId && !_musBusy) acompanhar(S.taskId);
+  if(!S.url) progresso();
+}
+function progresso(){ clearInterval(_progT); var t0=Date.now(); _progT=setInterval(function(){ var p=el('pg'); if(!p){ clearInterval(_progT); return; } var x=Math.min(95,(Date.now()-t0)/1500); p.style.width=x+'%'; },800); }
+function gerarMusica(){
+  if(_musBusy) return; _musBusy=true;
+  api('gerar-musica',Object.assign(dados(),{letraAprovada:S.letra})).then(function(d){
+    if(!d||!d.taskId){ _musBusy=false; toast((d&&d.erro)||'Couldn\'t start your song. Please try again.'); wizard(PASSOS.indexOf('letra')); return; }
+    S.taskId=d.taskId; salvar(); acompanhar(d.taskId);
+  }).catch(function(){ _musBusy=false; toast('Connection problem. Please try again.'); wizard(PASSOS.indexOf('letra')); });
+}
+function acompanhar(tid){
+  _musBusy=true; var n=0;
+  (function ver(){
+    if(S.taskId!==tid) return;
+    fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(tid),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+      if(d&&d.pronto&&d.url){ _musBusy=false; S.url=d.url; S.url2=d.url2||''; salvar(); track('AddToCart',{value:PRECO,currency:'USD'}); if(PASSOS[passo]==='musica') wizard(); return; }
+      if(d&&d.falhou){ _musBusy=false; S.taskId=''; salvar(); toast('Something went wrong making your song. Please try again.'); if(PASSOS[passo]==='musica') wizard(PASSOS.indexOf('letra')); return; }
+      if(++n>200){ _musBusy=false; toast('Your song is taking longer than usual. Please try again.'); return; }
+      setTimeout(ver,3000);
+    }).catch(function(){ setTimeout(ver,4000); });
+  })();
+}
+
+/* ---------- checkout ---------- */
+var _cfg=null, _stJs=null, _ck=null;
+function cfg(){ if(_cfg) return Promise.resolve(_cfg); return fetch('/.netlify/functions/pagamento-cfg').then(function(r){ return r.json(); }).then(function(d){ _cfg=d||{}; return _cfg; }); }
+function stripeJs(){ if(window.Stripe) return Promise.resolve(); if(_stJs) return _stJs; _stJs=new Promise(function(ok,no){ var s=document.createElement('script'); s.src='https://js.stripe.com/v3/'; s.onload=ok; s.onerror=function(){ _stJs=null; no(new Error('js')); }; document.head.appendChild(s); }); return _stJs; }
+function htmlCheckout(){
+  return '<h2>Unlock your song</h2><p class="hint">Where should we send your song?</p>'+
+    '<div class="box">'+
+      '<div class="tot"><span>Total</span><b>'+money(PRECO)+' USD</b></div>'+
+      '<ul class="incl"><li>2 full-length versions of your song</li><li>Download MP3 + share link</li><li>Lyrics included · yours forever</li></ul>'+
+      '<div class="sub-t">Your email</div><input class="inp" id="fEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com" value="'+esc(S.email)+'">'+
+      '<div class="sub-t">Your first name <span style="color:var(--mut);font-weight:500">(optional)</span></div><input class="inp" id="fMeu" maxlength="60" autocomplete="given-name" placeholder="e.g. Michael" value="'+esc(S.meuNome)+'">'+
+      '<button class="btn btn-p" id="bPagar" style="margin-top:16px">Continue to payment</button>'+
+      payLogos()+
+      '<div id="stBox" hidden><div class="stmsg">Opening secure checkout…</div></div>'+
+    '</div>';
+}
+function ligarCheckout(){
+  var e=el('fEmail'), m=el('fMeu');
+  e.oninput=function(){ S.email=e.value.trim(); salvar(); }; m.oninput=function(){ S.meuNome=m.value.trim(); salvar(); };
+  el('bPagar').onclick=function(){
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(S.email)){ erro('Please enter a valid email so we can send your song.'); e.focus(); return; }
+    erro(''); var b=el('bPagar'); b.disabled=true; b.textContent='Opening checkout…';
+    var pedidoP = S.pedido ? Promise.resolve({id:S.pedido}) : api('us-pedido',{taskId:S.taskId,email:S.email,nome:S.meuNome,paraNome:S.nome,estilo:S.estilo,clima:S.clima,relacao:S.para,ocasiao:S.ocasiao,voz:S.voz,letra:S.letra});
+    pedidoP.then(function(p){
+      if(!p||!p.id) throw new Error((p&&p.erro)||'Couldn\'t create your order.');
+      S.pedido=p.id; salvar();
+      return Promise.all([cfg(), api('stripe-pagar',{acao:'sessao',id:p.id})]);
+    }).then(function(r){
+      var c=r[0], d=r[1];
+      if(d&&d.pago){ location.hash='#/song/'+S.pedido; return; }
+      if(!d||!d.clientSecret) throw new Error('Card payment is unavailable right now. Please try again in a moment.');
+      var sessao=d.sessao;
+      return stripeJs().then(function(){
+        try{ if(_ck){ _ck.destroy(); _ck=null; } }catch(x){}
+        return Stripe(d.pk||c.pk).initEmbeddedCheckout({fetchClientSecret:function(){ return Promise.resolve(d.clientSecret); }, onComplete:function(){ confirmar(sessao,0); }});
+      }).then(function(ck){ _ck=ck; var bx=el('stBox'); bx.hidden=false; bx.innerHTML=''; ck.mount('#stBox'); b.style.display='none'; try{ bx.scrollIntoView({behavior:'smooth',block:'start'}); }catch(x){} });
+    }).catch(function(x){ b.disabled=false; b.textContent='Continue to payment'; erro(x&&x.message&&x.message!=='js'?x.message:'Couldn\'t open the checkout. Please try again.'); });
+  };
+}
+function confirmar(sessao,n){
+  api('stripe-pagar',{acao:'confirmar',id:S.pedido,sessao:sessao}).then(function(d){
+    if(d&&d.pago){ try{ fbq('track','Purchase',{value:PRECO,currency:'USD',content_name:'musica_us'},{eventID:'compra_'+S.pedido}); }catch(e){} location.hash='#/song/'+S.pedido; return; }
+    if(n<10) setTimeout(function(){ confirmar(sessao,n+1); },2500); else location.hash='#/song/'+S.pedido;
+  }).catch(function(){ if(n<10) setTimeout(function(){ confirmar(sessao,n+1); },2500); });
+}
+
+/* ---------- song page (after payment) ---------- */
+function telaSong(id){
+  el('app').innerHTML=topo()+'<div class="w wz"><div class="load"><div class="spin"></div><div>Loading your song…</div></div></div>';
+  var n=0;
+  (function ver(){
+    fetch('/.netlify/functions/presente?id='+encodeURIComponent(id),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+      if(d&&d.pago&&d.presente) return mostrar(d.presente);
+      if(d&&d.encontrado===false){ el('app').innerHTML=topo()+'<div class="w wz"><h2>Song not found</h2><p class="hint">Check the link in your email.</p><a class="btn btn-p" href="#/">Go to home</a></div>'; return; }
+      if(++n<30){ if(n===3) el('app').querySelector('.load div:last-child').textContent='Confirming your payment…'; setTimeout(ver,2500); return; }
+      el('app').innerHTML=topo()+'<div class="w wz"><h2>Payment not confirmed yet</h2><p class="hint">If you completed the payment, this page will unlock in a moment. Otherwise, go back and finish checkout.</p><a class="btn btn-p" href="#/song/'+esc(id)+'">Check again</a></div>';
+    }).catch(function(){ setTimeout(ver,3000); });
+  })();
+}
+function mostrar(g){
+  var para=g.musicaParaNome||'', link=location.origin+'/us/#/song/'+g.id;
+  el('app').innerHTML=topo()+'<div class="w wz">'+
+    '<div class="ok-h"><div>🎉</div><h2>Your song'+(para?' for '+esc(para):'')+' is ready!</h2><p class="hint">Full length, both versions. Save this page to listen anytime — we\'ll also email you the link.</p></div>'+
+    player('Version 1',g.musicaPreviewUrl,false)+'<div class="dl" style="margin:-4px 0 12px"><a href="/.netlify/functions/baixar-musica?id='+encodeURIComponent(g.id)+'&v=1">⬇ Download MP3</a></div>'+
+    (g.musicaPreviewUrl2?player('Version 2',g.musicaPreviewUrl2,false)+'<div class="dl" style="margin:-4px 0 12px"><a href="/.netlify/functions/baixar-musica?id='+encodeURIComponent(g.id)+'&v=2">⬇ Download MP3</a></div>':'')+
+    '<button class="btn btn-p" id="bShare">💌 Send it to '+(para?esc(para.split(',')[0]):'them')+'</button>'+
+    (g.musicaLetra?'<div class="box"><div class="sub-t" style="margin-top:0">Lyrics</div><pre class="lt">'+esc(g.musicaLetra)+'</pre></div>':'')+
+    '<div class="mini" style="margin-top:16px"><button id="bOutra">🎶 Create another song</button></div>'+
+  '</div><footer>Keep this link to listen anytime:<br>'+esc(link)+'</footer>';
+  limitar();
+  el('bShare').onclick=function(){ var txt='I made a song just for you 💗'; if(navigator.share){ navigator.share({title:'A song for you',text:txt,url:link}).catch(function(){}); } else { try{ navigator.clipboard.writeText(txt+' '+link); toast('Link copied! Paste it in a message.'); }catch(e){ prompt('Copy this link:',link); } } };
+  el('bOutra').onclick=function(){ var em=S.email, mn=S.meuNome; S=novo(); S.email=em; S.meuNome=mn; salvar(); location.hash='#/create'; };
+}
+
+/* ---------- router ---------- */
+function rota(){
+  try{ if(_ck){ _ck.destroy(); _ck=null; } }catch(e){}
+  var h=location.hash.replace(/^#\/?/,'').split('/');
+  window.scrollTo(0,0);
+  if(h[0]==='create'){ if(passo>=PASSOS.indexOf('letra') && !S.letra) passo=PASSOS.indexOf('historia'); wizard(); if(PASSOS[passo]==='letra'&&!S.letra&&!_letraBusy) gerarLetra(); return; }
+  if(h[0]==='song'&&h[1]){ telaSong(h[1]); return; }
+  home();
+}
+window.addEventListener('hashchange',rota);
+/* resume where the person left off */
+(function(){ if(S.url) passo=PASSOS.indexOf('musica'); else if(S.letra) passo=PASSOS.indexOf('letra'); })();
+rota();
+</script>
+</body>
+</html>

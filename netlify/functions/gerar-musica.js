@@ -232,7 +232,10 @@ const GENEROS = {
   rapnacional:'brazilian rap, boom bap beat, sample, rap vocals',
   anos90:     '90s eurodance pop, retro synths, dance beat, catchy chorus, 1990s',
   zoeira:     'comedy song, funny parody, upbeat, playful, humorous brazilian',
-  natal:      'christmas song, jingle bells, sleigh bells, piano, strings, choir, festive holiday'
+  natal:      'christmas song, jingle bells, sleigh bells, piano, strings, choir, festive holiday',
+  country:    'modern country, nashville, acoustic guitar, pedal steel, fiddle, warm storytelling vocals, big singalong chorus',
+  hiphop:     'romantic hip hop, r&b hook, smooth beat, 808, melodic chorus',
+  worship:    'contemporary christian worship, ccm, acoustic guitar, piano, building drums, anthemic chorus'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
@@ -327,6 +330,7 @@ export default async (req) => {
     const frase = String((body && body.frase) || '').trim();
     const voz = String((body && body.voz) || '').trim();
     const letraAprovada = String((body && body.letraAprovada) || '').trim();
+    const idioma = (body && body.idioma) === 'en' ? 'en' : 'pt';
 
     if (!estilo) return json({ erro: 'Escolhe um estilo primeiro.' }, 400);
     if (texto.length < 50) return json({ erro: 'Conta um pouco mais da história (pelo menos 50 caracteres).' }, 400);
@@ -343,10 +347,11 @@ export default async (req) => {
     // "brazilian" sozinho foi removido: puxava tudo pra samba/bossa.
     const estiloOutro = String((body && body.estiloOutro) || '').trim().slice(0, 100);
     const gen = (estilo === 'outro' && estiloOutro) ? estiloOutro : (GENEROS[estilo] || GENEROS.romantica);
-    const tagsPartes = [gen, gen.split(',')[0], 'portuguese vocals'];
+    const genT = idioma === 'en' ? gen.replace(/,?\s*brazilian[^,]*/gi, '').replace(/^,\s*/, '') : gen;
+    const tagsPartes = idioma === 'en' ? [genT, genT.split(',')[0], 'english vocals', 'american english lyrics'] : [gen, gen.split(',')[0], 'portuguese vocals'];
     if (CLIMAS[clima]) tagsPartes.push(CLIMAS[clima]);
     if (VOZES[voz] && !/^infantil(peq|crianca)$/.test(estilo)) tagsPartes.push(VOZES[voz]); // voz de criança: não força voz adulta
-    tagsPartes.push(gen.split(',')[0]); // terceiro reforço do gênero
+    tagsPartes.push((idioma === 'en' ? genT : gen).split(',')[0]); // terceiro reforço do gênero
     const tagsEstilo = tagsPartes.join(', ');
 
     // BRIEFING (gpt_description_prompt): A DOCUMENTAÇÃO DA UNIFICALLY/SUNO
@@ -371,7 +376,7 @@ export default async (req) => {
     if (nomesLetra) fixos.push('Cite os nomes: ' + nomesLetra);
     if (NICHO_EVITAR[relacao]) fixos.push(NICHO_EVITAR[relacao]);
     var sufixo = fixos.length ? ('. ' + fixos.join('. ')) : '';
-    var prefixo = 'Gênero ' + genNome + '. Letra em português, sobre: ';
+    var prefixo = idioma === 'en' ? ('Genre ' + (GENEROS[estilo] || genNome).split(',')[0] + '. Lyrics in American English, about: ') : ('Gênero ' + genNome + '. Letra em português, sobre: ');
     var espacoHistoria = Math.max(40, LIMITE_BRIEFING - prefixo.length - sufixo.length);
     var historiaUsada = texto.length > espacoHistoria
       ? texto.slice(0, espacoHistoria - 1).trim() + '…'
@@ -390,14 +395,14 @@ export default async (req) => {
           custom: true,
           prompt: letraAprovada.slice(0, 5000),
           tags: tagsEstilo,
-          title: 'Nossa música'
+          title: idioma === 'en' ? 'Our Song' : 'Nossa música'
         }
       : {
           mv: 'chirp-bluejay',
           custom: false,
           gpt_description_prompt: prompt,
           tags: tagsEstilo,
-          title: 'Nossa música'
+          title: idioma === 'en' ? 'Our Song' : 'Nossa música'
         };
 
     // Registra exatamente o que vai pra Suno — é o que permite conferir,
@@ -451,6 +456,7 @@ export default async (req) => {
         nomes: nomesLetra,
         historia: texto.slice(0, 400),
         letraAprovada: usarLetraLiteral ? inputSuno.prompt : null,
+        idioma: idioma,
         whatsapp: String((body && body.whatsapp) || '').trim(),
         // Gerada pelo painel (ajuste de letra) → fica ligada ao pedido original
         // e não aparece como "nova cliente" na lista.

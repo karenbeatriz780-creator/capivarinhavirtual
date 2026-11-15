@@ -65,7 +65,10 @@ const GENERO_PT = {
   rapnacional:'rap nacional (rimas, flow e verdade)',
   anos90:'hits dos anos 90 (pop/dance dos anos 90, refrão marcante e nostálgico)',
   zoeira:'música de zoeira / trollagem (paródia engraçada e debochada, cheia de piadas, sem ofensa pesada e sem palavrão)',
-  natal:'música natalina / de Natal (clima de Natal, família reunida, luzes, Papai Noel, gratidão e esperança)'
+  natal:'música natalina / de Natal (clima de Natal, família reunida, luzes, Papai Noel, gratidão e esperança)',
+  country:'country americano moderno (Nashville, histórias reais, refrão grande)',
+  hiphop:'hip-hop / rap americano romântico (rimas, flow, refrão melódico)',
+  worship:'louvor cristão contemporâneo americano (worship, fé, gratidão a Deus)'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
@@ -199,8 +202,18 @@ function montarPrompt(p) {
     '500 e 1400 caracteres — nem curta demais, nem longa demais.');
   partes.push('');
   partes.push('Responda SOMENTE com a letra formatada — nada antes, nada depois.');
+  if (p.idioma === 'en') partes.push(EN_REGRAS);
   return partes.join('\n');
 }
+// 🇺🇸 Site em inglês (/us): a letra sai INTEIRA em inglês americano
+const EN_REGRAS = '\n\nLANGUAGE OVERRIDE (MANDATORY, overrides everything above): write the ENTIRE lyrics in natural, modern AMERICAN ENGLISH ' +
+  '(not Portuguese — translate any Portuguese details from the story into English). The buyer is in the United States. ' +
+  'Use these section tags exactly, each on its own line: [Verse 1], [Chorus], [Verse 2], [Chorus], [Bridge], [Final Chorus] ([Bridge] optional). ' +
+  'Keep every name exactly as written. Simple, singable, heartfelt lines with natural rhymes. Length: 500 to 1400 characters without the tags. ' +
+  'Reply ONLY with the lyrics.';
+const SYSTEM_PROMPT_EN = 'You are a professional American songwriter who writes original, heartfelt personalized songs as gifts for real customers. ' +
+  'Never copy or paraphrase existing songs. Reply ONLY with the final lyrics in English — no explanations, no quotes, no markdown, no title. Start directly with the first section tag.';
+const AJUSTE_EN = '\n\nThe lyrics are in ENGLISH: keep them in English and keep the same section tags.';
 
 function montarPromptAjuste(letraAtual, instrucao, nomes) {
   var partes = [];
@@ -251,6 +264,7 @@ export default async (req) => {
     const de = String((body && body.de) || '').trim();             // mulher | homem | varios
     const paraGen = String((body && body.paraGen) || '').trim();   // ela | ele
     const paraOutro = String((body && body.paraOutro) || '').trim().slice(0, 120);
+    const idioma = (body && body.idioma) === 'en' ? 'en' : 'pt';
 
     // Ajuste pontual: já existe uma letra, e a pessoa só quer mudar um
     // detalhe dela — não precisa (nem deve) repetir estilo/história/etc.
@@ -272,12 +286,12 @@ export default async (req) => {
     // texto da história limitado por segurança (custo/tokens) — 2000 caracteres
     // já é bem mais espaço do que a Suno aceitava no modo antigo (500).
     const prompt = modoAjuste
-      ? montarPromptAjuste(letraAtual.slice(0, 3000), instrucao.slice(0, 500), nomesLetra)
+      ? montarPromptAjuste(letraAtual.slice(0, 3000), instrucao.slice(0, 500), nomesLetra) + (idioma === 'en' ? AJUSTE_EN : '')
       : montarPrompt({
-          estilo, estiloOutro, clima, relacao, ocasiao, nomesLetra, frase, voz, de, paraGen, paraOutro,
+          estilo, estiloOutro, clima, relacao, ocasiao, nomesLetra, frase, voz, de, paraGen, paraOutro, idioma,
           texto: texto.slice(0, 2000)
         });
-    const systemPrompt = modoAjuste ? AJUSTE_SYSTEM_PROMPT : SYSTEM_PROMPT;
+    const systemPrompt = modoAjuste ? AJUSTE_SYSTEM_PROMPT : (idioma === 'en' ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT);
 
     console.log('PEDIDO DE LETRA >> modo=' + (modoAjuste ? 'ajuste pontual' : 'geração') +
       (modoAjuste ? ' | pedido=' + instrucao.slice(0, 80) : ' | genero=' + estilo + ' | clima=' + clima + ' | relacao=' + relacao + ' | ocasiao=' + ocasiao + ' | de=' + de + ' | paraGen=' + paraGen));
@@ -378,4 +392,4 @@ export default async (req) => {
 };
 
 // usados também pela letra rápida (letra-rapida.mjs)
-export { montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT };
+export { montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT, SYSTEM_PROMPT_EN, AJUSTE_EN };

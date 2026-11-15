@@ -2,7 +2,7 @@
 //    POST {acao:'confirmar', id, sessao} → confere no Stripe e libera a música (e manda 1 mensagem no WhatsApp)
 import { getStore } from '@netlify/blobs';
 import { stripeLigado, criarSessaoStripe, confirmarSessaoStripe, pk } from './_stripe.mjs';
-import { entregarPedidoPagoZap } from './_zap.mjs';
+import { entregarPago } from './_email.mjs';
 
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 export default async (req, context) => {
@@ -23,7 +23,7 @@ export default async (req, context) => {
     if (b.acao === 'confirmar') {
       const g = await confirmarSessaoStripe(String(b.sessao || ''), 'stripe-site');
       if (!g || g.id !== id) return json({ ok: true, pago: false });
-      const ent = entregarPedidoPagoZap(g).catch((e) => console.error('stripe zap', e && e.message));
+      const ent = entregarPago(g).catch((e) => console.error('stripe zap', e && e.message));
       if (context && context.waitUntil) context.waitUntil(ent);
       return json({ ok: true, pago: true });
     }

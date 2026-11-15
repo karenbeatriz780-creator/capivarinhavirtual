@@ -109,16 +109,19 @@ export async function rodarRobo(simular) {
     let g3 = 0, v3m = 0, v3s = 0, diasDados = 0;
     for (const d of dias3) { const x = (c.dias || {})[d] || {}; g3 += x.gasto || 0; v3m += x.compras || 0; v3s += s.porDia[d] || 0; if ((x.gasto || 0) > 0) diasDados++; }
     const v3 = v3m || v3s, aprendeu = diasDados >= 2;
+    // 🇺🇸 campanha dos EUA (nome com "EUA", "USA" ou "US"): venda de US$ 7,99 → aceita custo por compra até R$ 30 (lucro > R$ 10)
+    const eua = /(^|[^a-z])(eua|usa|us)([^a-z]|$)/i.test(String(c.nome || ''));
+    const CPA_C = eua ? 30 : CPA_MAX, PRIM_C = eua ? 30 : prim, TRAVA_C = eua ? 45 : 15;
     let pausar = null;
     const lucroH = vH * tk - gH * (1 + imp);
     const vMeta = dh.compras || 0, vCpa = vMeta || vH; // custo por compra = o do app do Meta (se o Meta ainda não contou, usa as do site)
     if (cfg.autoPausar && !voceAtivou && aprendeu) { // REGRA DE 14/11: campanha com 2+ dias de dados → decide pela MÉDIA DE 3 DIAS
-      if (v3 === 0 && g3 >= prim) pausar = 'em 3 dias gastou ' + brl(g3) + ' e não fez nenhuma compra';
-      else if (v3 > 0 && g3 / v3 > CPA_MAX) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou do máximo de ' + brl(CPA_MAX);
-      else if (vH === 0 && gH >= 15) pausar = 'trava de segurança: hoje gastou ' + brl(gH) + ' sem nenhuma compra (limite R$ 15)';
+      if (v3 === 0 && g3 >= PRIM_C) pausar = 'em 3 dias gastou ' + brl(g3) + ' e não fez nenhuma compra' + (eua ? ' (EUA, limite ' + brl(PRIM_C) + ')' : '');
+      else if (v3 > 0 && g3 / v3 > CPA_C) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou do máximo de ' + brl(CPA_C);
+      else if (vH === 0 && gH >= TRAVA_C) pausar = 'trava de segurança: hoje gastou ' + brl(gH) + ' sem nenhuma compra (limite ' + brl(TRAVA_C) + ')';
     } else if (cfg.autoPausar && !voceAtivou) { // campanha nova (menos de 2 dias de dados): regra só do dia de hoje
-      if (vH === 0 && gH >= prim) pausar = 'hoje gastou ' + brl(gH) + ' e não fez nenhuma venda (limite ' + brl(prim) + ')';
-      else if (vCpa > 0 && gH / vCpa > CPA_MAX) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s) no Meta, gasto ' + brl(gH) + ') — passou do máximo de ' + brl(CPA_MAX);
+      if (vH === 0 && gH >= PRIM_C) pausar = 'hoje gastou ' + brl(gH) + ' e não fez nenhuma venda (limite ' + brl(PRIM_C) + ')';
+      else if (vCpa > 0 && gH / vCpa > CPA_C) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s) no Meta, gasto ' + brl(gH) + ') — passou do máximo de ' + brl(CPA_C);
     }
     // 🛡️ VIGIA desta campanha (você ligou no painel): o SEU limite vale sempre, mesmo se foi você quem ligou/subiu hoje
     const vg = vigias[c.id];
