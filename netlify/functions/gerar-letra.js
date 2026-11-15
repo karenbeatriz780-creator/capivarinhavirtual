@@ -68,7 +68,8 @@ const GENERO_PT = {
   natal:'música natalina / de Natal (clima de Natal, família reunida, luzes, Papai Noel, gratidão e esperança)',
   country:'country americano moderno (Nashville, histórias reais, refrão grande)',
   hiphop:'hip-hop / rap americano romântico (rimas, flow, refrão melódico)',
-  worship:'louvor cristão contemporâneo americano (worship, fé, gratidão a Deus)'
+  worship:'louvor cristão contemporâneo americano (worship, fé, gratidão a Deus)',
+  latinpop:'pop latino romântico (reggaeton suave, dançante e apaixonado)'
 };
 const CLIMA_PT = {
   alegre:'alegre e contagiante', emocionante:'emocionante, de arrepiar',
