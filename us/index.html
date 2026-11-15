@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Capivarinha Love — A Personalized Song for Someone You Love</title>
-<meta name="description" content="A one-of-a-kind song with their name and your story. Hear a free preview before you pay. Full song for $7.99.">
+<meta name="description" content="A one-of-a-kind song with their name and your story. Hear a free preview before you pay.">
 <meta property="og:title" content="A personalized song with their name and your story">
-<meta property="og:description" content="Hear a free preview before you pay. Ready in minutes. $7.99.">
+<meta property="og:description" content="Hear a free preview before you pay. Ready in minutes.">
 <meta property="og:image" content="https://capivarinhalove.com.br/favicon-512.png">
 <meta name="theme-color" content="#1E0B18">
 <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png">
@@ -43,9 +43,10 @@ h1,h2,h3{font-family:Fraunces,Georgia,serif;letter-spacing:-.01em;line-height:1.
 .hero-f{--hw:560px;padding-top:12px}
 @media(min-width:561px){.hero-f{--hw:440px}.hf-img img{-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}}
 .hero-f:before{display:none}
-.hf-img{position:absolute;top:calc(min(100vw,var(--hw))*-.10);left:50%;transform:translateX(-50%);width:100%;max-width:var(--hw)}
+.hero-f{overflow:hidden}
+.hf-img{position:absolute;top:calc(min(100vw,var(--hw))*-.19);left:50%;transform:translateX(-50%);width:118%;max-width:calc(var(--hw)*1.18)}
 .hf-img img{display:block;width:100%;height:auto}
-.hf-img:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,11,24,.75) 0%,rgba(30,11,24,.25) 24%,rgba(30,11,24,0) 38%,rgba(30,11,24,0) 60%,rgba(30,11,24,.8) 80%,var(--bg) 94%)}
+.hf-img:after{content:"";position:absolute;inset:0;background:radial-gradient(120% 60% at 50% 46%,transparent 55%,rgba(30,11,24,.55) 100%),linear-gradient(180deg,rgba(30,11,24,.85) 0%,rgba(30,11,24,.55) 18%,rgba(30,11,24,.12) 30%,rgba(30,11,24,0) 36%,rgba(30,11,24,0) 56%,rgba(30,11,24,.55) 64%,rgba(30,11,24,.92) 74%,var(--bg) 86%)}
 .hero-f h1,.hero-f .sub{text-shadow:0 2px 16px rgba(0,0,0,.6)}
 .hero-f .sub{color:#F4E4EC;max-width:17rem}
 .hf-esp{height:calc(min(100vw,var(--hw))*1.791*.60 - 13.6rem);min-height:9rem}
@@ -56,6 +57,8 @@ h1,h2,h3{font-family:Fraunces,Georgia,serif;letter-spacing:-.01em;line-height:1.
 .offer-row b{display:block;font-size:1.15rem}
 .offer-row small{color:#FFD6E5;font-size:.85rem}
 .price{font-family:Fraunces,serif;font-size:2.4rem;font-weight:700;color:#fff;white-space:nowrap}
+.free{font-family:Inter;font-weight:900;font-size:1.05rem;line-height:1.05;text-align:right;color:#FBE3A0;letter-spacing:.02em}
+.reflink{background:rgba(255,255,255,.06);border:1px dashed var(--line);border-radius:10px;padding:.55rem .7rem;font-size:.8rem;word-break:break-all;color:var(--mut)}
 .price s{font-family:Inter;font-size:.9rem;color:#FFC2D6;font-weight:500;margin-right:.3rem}
 .btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;min-height:54px;border:0;border-radius:16px;font-weight:800;font-size:1.05rem;padding:.7rem 1rem;text-decoration:none;transition:transform .15s}
 .btn:active{transform:scale(.98)}
@@ -149,7 +152,7 @@ function track(ev,p){ try{ if(window.fbq) fbq('track',ev,p||{}); }catch(e){} }
 
 /* ---------- state ---------- */
 var S={};
-function novo(){ return {para:'',paraGen:'',paraOutro:'',de:'',nome:'',ocasiao:'',estilo:'',clima:'',voz:'',historia:'',frase:'',letra:'',taskId:'',url:'',url2:'',email:'',meuNome:'',pedido:''}; }
+function novo(){ return {para:'',paraGen:'',paraOutro:'',de:'',nome:'',ocasiao:'',estilo:'',clima:'',voz:'',historia:'',frase:'',letra:'',taskId:'',url:'',url2:'',email:'',meuNome:'',pedido:'',bonusDe:''}; }
 function salvar(){ LS.set('us_state',JSON.stringify(S)); }
 try{ S=JSON.parse(LS.get('us_state')||'null')||novo(); }catch(e){ S=novo(); }
 
@@ -166,32 +169,42 @@ function paraLabel(){ var p=PARA.filter(function(x){ return x[0]===S.para; })[0]
 /* ---------- landing ---------- */
 function home(){
   el('app').innerHTML=topo()+
-  '<header class="hero hero-f"><div class="hf-img"><img src="/a/hero-musica-560.webp" srcset="/a/hero-musica-560.webp 560w, /a/hero-musica.webp 860w" sizes="(max-width:560px) 100vw, 560px" width="560" height="1003" alt="Woman with headphones, moved by a song made for her" fetchpriority="high"></div><div class="w">'+
+  '<header class="hero hero-f"><div class="hf-img"><img src="/a/hero-musica2-560.webp" srcset="/a/hero-musica2-560.webp 560w, /a/hero-musica2.webp 860w" sizes="(max-width:560px) 100vw, 560px" width="560" height="1003" alt="Woman smiling while listening to a song made for her" fetchpriority="high"></div><div class="w">'+
     '<span class="pill">🎧 Free preview · listen before you pay</span>'+
     '<h1>A song made<br>just for <em>them</em></h1>'+
     '<p class="sub">Their name, your story, a real song. Ready in minutes.</p>'+
     '<div class="hf-esp"></div>'+
     '<div class="offer">'+
-      '<div class="offer-row"><div><b>Personalized song</b><small>2 full versions · yours forever</small></div><div class="price">'+money(PRECO)+'</div></div>'+
+      '<div class="offer-row"><div><b>Personalized song</b><small>2 full versions · yours forever</small></div><div class="free">FREE<br>preview</div></div>'+
       '<a class="btn btn-w" href="#/create">▶ Create my song</a>'+
       '<div class="trust" style="color:#FFE0EC;margin-top:12px"><span>✓ No account needed</span><span>✓ Secure checkout</span></div>'+
     '</div>'+
     payLogos()+
   '</div></header>'+
+  '<section class="s" id="exSec" hidden><div class="w"><h2>Listen to examples</h2><p class="lead">Real songs made with our studio. Tap play 🎧</p><div id="exList"></div></div></section>'+
   '<section class="s"><div class="w"><h2>How it works</h2><p class="lead">Three quick steps, right on your phone.</p>'+
     '<div class="steps3"><div><b>📝</b><strong>Tell the story</strong>Who it\'s for, their name, your memories</div><div><b>🎶</b><strong>We write it</strong>Lyrics + music made just for them</div><div><b>🎁</b><strong>Listen &amp; send</strong>Hear the preview, then unlock it</div></div>'+
   '</div></section>'+
   '<section class="s faq"><div class="w"><h2>Questions</h2><p class="lead">&nbsp;</p>'+
     '<details><summary>Do I hear it before paying?</summary><p>Yes. You read the lyrics, approve them, and listen to a preview of your song before you pay anything.</p></details>'+
-    '<details><summary>What do I get for '+money(PRECO)+'?</summary><p>Two full-length versions of your song with the lyrics you approved — play, download as MP3 and share with a link. No subscription.</p></details>'+
+    '<details><summary>What do I get?</summary><p>Two full-length versions of your song with the lyrics you approved — play, download as MP3 and share with a link. One-time payment, no subscription. You only see the price after you hear your preview.</p></details>'+
     '<details><summary>How do I pay?</summary><p>Credit or debit card, Apple Pay or Google Pay, through Stripe secure checkout.</p></details>'+
-    '<details><summary>How do I get my song?</summary><p>It unlocks on the screen right after payment, and we email you the link so you can always come back to it.</p></details>'+
+    '<details><summary>How do I get my song?</summary><p>It unlocks on the screen right after payment. Come back anytime: tap <b>My songs</b> and type your email.</p></details>'+
   '</div></section>'+
-  '<div class="w"><a class="btn btn-p" href="#/create">Create my song — '+money(PRECO)+'</a></div>'+
+  '<div class="w"><a class="btn btn-p" href="#/create">▶ Create my song</a></div>'+
   '<footer>Capivarinha Love · Personalized songs made with love 💗<br>Questions? songs@capivarinhalove.com.br</footer>';
   track('ViewContent',{content_name:'us_home'});
+  carregarExemplos();
 }
-function topo(){ return '<div class="top"><a class="logo" href="#/"><img src="'+MASCOTE+'" alt="">Capivarinha <i>Love</i></a>'+(S.pedido?'<a class="my" href="#/song/'+esc(S.pedido)+'">My song</a>':'')+'</div>'; }
+function carregarExemplos(){
+  fetch('/.netlify/functions/us-extra?acao=exemplos').then(function(r){ return r.json(); }).then(function(d){
+    var ex=(d&&d.exemplos)||[], sec=el('exSec'), box=el('exList'); if(!sec||!box||!ex.length) return;
+    box.innerHTML=ex.map(function(x){ return '<div class="player"><b>'+esc(x.titulo)+'</b>'+(x.sub?'<div class="note" style="margin:-4px 0 8px">'+esc(x.sub)+'</div>':'')+'<audio controls preload="none" src="'+esc(x.url)+'"></audio></div>'; }).join('')+
+      '<a class="btn btn-p" href="#/create" style="margin-top:6px">▶ Create my song</a>';
+    sec.hidden=false; limitar();
+  }).catch(function(){});
+}
+function topo(){ return '<div class="top"><a class="logo" href="#/"><img src="'+MASCOTE+'" alt="">Capivarinha <i>Love</i></a><a class="my" href="#/my">🎁 My songs</a></div>'; }
 
 /* ---------- wizard ---------- */
 var PASSOS=['para','nome','ocasiao','estilo','clima','voz','historia','letra','musica','checkout'];
@@ -222,7 +235,7 @@ function wizard(n){
   /* botão principal SEMPRE visível na barra de baixo (pessoa leiga não precisa rolar) */
   var acao='<button class="btn btn-p" id="bNext">Continue</button>';
   if(k==='letra') acao=(_letraBusy||!S.letra)?'':'<button class="btn btn-p" id="bAprovar">Create my song 🎵</button>';
-  if(k==='musica') acao=S.url?'<button class="btn btn-p" id="bUnlock">Unlock full songs — '+money(PRECO)+'</button>':'';
+  if(k==='musica') acao=S.url?'<button class="btn btn-p" id="bUnlock">'+(S.bonusDe?'Get my free song 🎁':'Unlock full songs')+'</button>':'';
   if(k==='checkout') acao='';
   el('app').innerHTML=topo()+'<div class="w wz"><div class="bar"><i style="width:'+pct+'%"></i></div>'+h+'<div class="err" id="err"></div></div>'+
     '<div class="navb"><div class="in"><button class="back" id="bBack" aria-label="Back">‹</button>'+acao+'</div></div>';
@@ -344,12 +357,12 @@ function stripeJs(){ if(window.Stripe) return Promise.resolve(); if(_stJs) retur
 function htmlCheckout(){
   return '<h2>Unlock your song</h2><p class="hint">Where should we send your song?</p>'+
     '<div class="box">'+
-      '<div class="tot"><span>Total</span><b>'+money(PRECO)+' USD</b></div>'+
+      (S.bonusDe?'<div class="tot"><span>Your referral reward</span><b>FREE 🎁</b></div>':'<div class="tot"><span>Total</span><b>'+money(PRECO)+' USD</b></div>')+
       '<ul class="incl"><li>2 full-length versions of your song</li><li>Download MP3 + share link</li><li>Lyrics included · yours forever</li></ul>'+
       '<div class="sub-t">Your email</div><input class="inp" id="fEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com" value="'+esc(S.email)+'">'+
       '<div class="sub-t">Your first name <span style="color:var(--mut);font-weight:500">(optional)</span></div><input class="inp" id="fMeu" maxlength="60" autocomplete="given-name" placeholder="e.g. Michael" value="'+esc(S.meuNome)+'">'+
-      '<button class="btn btn-p" id="bPagar" style="margin-top:16px">Continue to payment</button>'+
-      payLogos()+
+      '<button class="btn btn-p" id="bPagar" style="margin-top:16px">'+(S.bonusDe?'Get my free song 🎁':'Continue to payment')+'</button>'+
+      (S.bonusDe?'':payLogos())+
       '<div id="stBox" hidden><div class="stmsg">Opening secure checkout…</div></div>'+
     '</div>';
 }
@@ -359,14 +372,15 @@ function ligarCheckout(){
   el('bPagar').onclick=function(){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(S.email)){ erro('Please enter a valid email so we can send your song.'); e.focus(); return; }
     erro(''); var b=el('bPagar'); b.disabled=true; b.textContent='Opening checkout…';
-    var pedidoP = S.pedido ? Promise.resolve({id:S.pedido}) : api('us-pedido',{taskId:S.taskId,email:S.email,nome:S.meuNome,paraNome:S.nome,estilo:S.estilo,clima:S.clima,relacao:S.para,ocasiao:S.ocasiao,voz:S.voz,letra:S.letra});
+    var pedidoP = S.pedido ? Promise.resolve({id:S.pedido}) : api('us-pedido',{ref:LS.get('us_ref')||'',bonusDe:S.bonusDe||'',taskId:S.taskId,email:S.email,nome:S.meuNome,paraNome:S.nome,estilo:S.estilo,clima:S.clima,relacao:S.para,ocasiao:S.ocasiao,voz:S.voz,letra:S.letra});
     pedidoP.then(function(p){
       if(!p||!p.id) throw new Error((p&&p.erro)||'Couldn\'t create your order.');
       S.pedido=p.id; salvar();
+      if(p.gratis){ S.bonusDe=''; salvar(); location.hash='#/song/'+p.id; return [null,{pago:true}]; }
       return Promise.all([cfg(), api('stripe-pagar',{acao:'sessao',id:p.id})]);
     }).then(function(r){
       var c=r[0], d=r[1];
-      if(d&&d.pago){ location.hash='#/song/'+S.pedido; return; }
+      if(d&&d.pago){ if(location.hash!=='#/song/'+S.pedido) location.hash='#/song/'+S.pedido; return; }
       if(!d||!d.clientSecret) throw new Error('Card payment is unavailable right now. Please try again in a moment.');
       var sessao=d.sessao;
       return stripeJs().then(function(){
@@ -399,16 +413,38 @@ function telaSong(id){
 function mostrar(g){
   var para=g.musicaParaNome||'', link=location.origin+'/us/#/song/'+g.id;
   el('app').innerHTML=topo()+'<div class="w wz">'+
-    '<div class="ok-h"><div>🎉</div><h2>Your song'+(para?' for '+esc(para):'')+' is ready!</h2><p class="hint">Full length, both versions. Save this page to listen anytime — we\'ll also email you the link.</p></div>'+
+    '<div class="ok-h"><div>🎉</div><h2>Your song'+(para?' for '+esc(para):'')+' is ready!</h2><p class="hint">Full length, both versions. Find it anytime in <b>🎁 My songs</b> with your email.</p></div>'+
     player('Version 1',g.musicaPreviewUrl,false)+'<div class="dl" style="margin:-4px 0 12px"><a href="/.netlify/functions/baixar-musica?id='+encodeURIComponent(g.id)+'&v=1">⬇ Download MP3</a></div>'+
     (g.musicaPreviewUrl2?player('Version 2',g.musicaPreviewUrl2,false)+'<div class="dl" style="margin:-4px 0 12px"><a href="/.netlify/functions/baixar-musica?id='+encodeURIComponent(g.id)+'&v=2">⬇ Download MP3</a></div>':'')+
     '<button class="btn btn-p" id="bShare">💌 Send it to '+(para?esc(para.split(',')[0]):'them')+'</button>'+
     (g.musicaLetra?'<div class="box"><div class="sub-t" style="margin-top:0">Lyrics</div><pre class="lt">'+esc(g.musicaLetra)+'</pre></div>':'')+
+    '<div class="box ref" id="refBox"><div class="sub-t" style="margin-top:0">🎁 Share &amp; earn a free song</div><p class="note" style="margin:0 0 10px">Every friend who buys a song with your link gives you <b>1 free song</b> (2 versions).</p>'+
+      '<div class="reflink">'+esc(location.origin+'/us/#/r/'+g.id)+'</div><div class="mini"><button id="bRef">📤 Share my link</button></div><div id="refSt" class="note"></div></div>'+
     '<div class="mini" style="margin-top:16px"><button id="bOutra">🎶 Create another song</button></div>'+
+    (LS.get('cl_admin_key')?'<div class="mini"><button id="bEx1">⭐ Use version 1 as example</button><button id="bEx2">⭐ Use version 2</button></div>':'')+
   '</div><footer>Keep this link to listen anytime:<br>'+esc(link)+'</footer>';
   limitar();
   el('bShare').onclick=function(){ var txt='I made a song just for you 💗'; if(navigator.share){ navigator.share({title:'A song for you',text:txt,url:link}).catch(function(){}); } else { try{ navigator.clipboard.writeText(txt+' '+link); toast('Link copied! Paste it in a message.'); }catch(e){ prompt('Copy this link:',link); } } };
   el('bOutra').onclick=function(){ var em=S.email, mn=S.meuNome; S=novo(); S.email=em; S.meuNome=mn; salvar(); location.hash='#/create'; };
+  var rl=location.origin+'/us/#/r/'+g.id;
+  el('bRef').onclick=function(){ var t='I made a personalized song for someone I love 💗 Make one too — you hear it free before paying:'; if(navigator.share){ navigator.share({title:'Personalized songs',text:t,url:rl}).catch(function(){}); } else { try{ navigator.clipboard.writeText(t+' '+rl); toast('Link copied!'); }catch(e){ prompt('Copy your link:',rl); } } };
+  fetch('/.netlify/functions/us-extra?acao=ref&id='+encodeURIComponent(g.id),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+    var st=el('refSt'); if(!st||!d) return;
+    if(d.disponiveis>0){ st.innerHTML='<b style="color:var(--gold)">You have '+d.disponiveis+' free song'+(d.disponiveis>1?'s':'')+'!</b>'; var b=document.createElement('button'); b.className='btn btn-p'; b.style.marginTop='10px'; b.textContent='🎁 Create my free song'; b.onclick=function(){ var em=S.email||g.email||'', mn=S.meuNome; S=novo(); S.email=em; S.meuNome=mn; S.bonusDe=g.id; salvar(); location.hash='#/create'; }; st.appendChild(b); }
+    else if(d.confirmadas>0) st.textContent=d.confirmadas+' friend(s) bought with your link.';
+  }).catch(function(){});
+  [1,2].forEach(function(v){ var b=el('bEx'+v); if(b) b.onclick=function(){ var t=prompt('Example title (shown on the site):','Song for '+(para||'someone special')); if(t===null) return; var sub=prompt('Small line under it (style · occasion):',(g.musicaEstilo||'')+(g.musicaOcasiao?' · '+g.musicaOcasiao:'')); fetch('/.netlify/functions/us-extra',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':LS.get('cl_admin_key')},body:JSON.stringify({acao:'exemplo-add',id:g.id,v:v,titulo:t,sub:sub||''})}).then(function(r){ return r.json(); }).then(function(d){ toast(d&&d.ok?'Added to examples ✓':((d&&d.erro)||'Error')); }); }; });
+}
+/* ---------- my songs (by email) ---------- */
+function telaMeus(){
+  el('app').innerHTML=topo()+'<div class="w wz"><h2>My songs 🎁</h2><p class="hint">Type the email you used to buy and we\'ll show your songs.</p>'+
+    '<input class="inp" id="mEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com" value="'+esc(S.email||'')+'">'+
+    '<button class="btn btn-p" id="mVer" style="margin-top:12px">Show my songs</button><div class="err" id="err"></div><div id="mLista" style="margin-top:14px"></div></div>';
+  function ver(){ var em=(el('mEmail').value||'').trim(); if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){ erro('Please enter a valid email.'); return; } erro(''); var b=el('mVer'); b.disabled=true;
+    fetch('/.netlify/functions/us-extra?acao=meus&email='+encodeURIComponent(em),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){ b.disabled=false;
+      var it=(d&&d.itens)||[]; el('mLista').innerHTML=it.length?it.map(function(x){ return '<a class="opt" style="margin-bottom:8px;text-decoration:none" href="#/song/'+esc(x.id)+'"><span class="e">🎵</span><span>Song'+(x.para?' for '+esc(x.para):'')+'<small>'+new Date(x.em).toLocaleDateString('en-US')+'</small></span></a>'; }).join(''):'<p class="hint">No songs found for this email yet.</p>';
+    }).catch(function(){ b.disabled=false; erro('Connection problem. Try again.'); }); }
+  el('mVer').onclick=ver; el('mEmail').onkeydown=function(e){ if(e.key==='Enter') ver(); };
 }
 
 /* ---------- router ---------- */
@@ -418,6 +454,8 @@ function rota(){
   window.scrollTo(0,0);
   if(h[0]==='create'){ if(passo>=PASSOS.indexOf('letra') && !S.letra) passo=PASSOS.indexOf('historia'); wizard(); if(PASSOS[passo]==='letra'&&!S.letra&&!_letraBusy) gerarLetra(); return; }
   if(h[0]==='song'&&h[1]){ telaSong(h[1]); return; }
+  if(h[0]==='my'){ telaMeus(); return; }
+  if(h[0]==='r'&&h[1]){ LS.set('us_ref',h[1]); location.replace('#/'); return; }
   home();
 }
 window.addEventListener('hashchange',rota);

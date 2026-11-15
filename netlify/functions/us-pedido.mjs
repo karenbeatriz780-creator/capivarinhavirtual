@@ -4,6 +4,8 @@
 import { getStore } from '@netlify/blobs';
 import crypto from 'node:crypto';
 import { indexarDia } from './_indice.mjs';
+import { statusIndicacao, registrarIndicado, registrarUso } from './_indicacao.mjs';
+import { indexarEmail } from './us-extra.mjs';
 
 export const PRECO_US = Number(process.env.PRECO_US) || 7.99;
 const USD_BRL = () => Number(process.env.USD_BRL) || 5.65; // só estimativa; ao pagar, entra o valor exato em reais do Stripe
@@ -31,8 +33,25 @@ export default async (req) => {
     criadoEm: agora, pago: false,
     pagamento: { provedor: 'stripe', status: 'ATIVA', moeda: 'usd', valorMoeda: PRECO_US, valor: Math.round(PRECO_US * USD_BRL() * 100) / 100 }
   };
+  // 🎁 indique e ganhe: música GRÁTIS de quem já tem indicação confirmada
+  const bonusDe = str(b, 'bonusDe', 80);
+  if (bonusDe) {
+    const dono = await getStore('presentes').get(bonusDe, { type: 'json' }).catch(() => null);
+    const st = dono && dono.pago ? await statusIndicacao(bonusDe) : { disponiveis: 0 };
+    if (!(st.disponiveis >= 1)) return json({ erro: 'You don\'t have a free song available yet.' }, 400);
+    Object.assign(g, { pago: true, pagoEm: agora, bonusDe, pagamento: { provedor: 'bonus', status: 'CONCLUIDA', valor: 0, pagoEm: agora } });
+    await getStore('presentes').setJSON(id, g);
+    await registrarUso(bonusDe, id);
+    try { await indexarDia('p', id); } catch (e) {}
+    try { await indexarEmail(email, id); } catch (e) {}
+    return json({ ok: true, id, gratis: true });
+  }
+  // veio pelo link de um cliente → conta pra ele quando pagar
+  const ref = str(b, 'ref', 80);
+  if (ref && /^[A-Za-z0-9_-]{4,80}$/.test(ref) && ref !== id) { try { await registrarIndicado(ref, id); g.refDe = ref; } catch (e) {} }
   await getStore('presentes').setJSON(id, g);
   try { await indexarDia('p', id); } catch (e) {}
+  try { await indexarEmail(email, id); } catch (e) {}
   try { reg.pedidoId = id; reg.email = email; await getStore('musicas').setJSON(taskId, reg); } catch (e) {}
   return json({ ok: true, id, preco: PRECO_US });
 };
