@@ -3842,7 +3842,7 @@ function iniciarProgressoFake(){
     if(!pctEl || !barEl){ clearInterval(_mcTimer); return; }
     var passado=Date.now()-t0;
     // sobe rápido no início, desacelera bem perto de 92% e fica ali esperando o resultado de verdade
-    var pct=Math.min(92, Math.round(92*(1-Math.exp(-passado/25000))));
+    var pct=Math.min(97, Math.floor(97*(1-Math.exp(-passado/20000)))); /* rápido no começo e vai desacelerando: 30 s ≈ 75%, 45 s ≈ 87% */
     pctEl.textContent=pct+'%';
     barEl.style.width=pct+'%';
     if(faseEl){

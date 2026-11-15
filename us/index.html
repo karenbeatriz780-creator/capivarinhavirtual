@@ -352,7 +352,7 @@ var MSG_MUS=['Composing the melody…','Writing the arrangement…','Recording t
 var MSG_LET=['Reading your story…','Finding the perfect words…','Adding their name…','Writing the chorus…','Polishing the lyrics…'];
 var _msgT=null;
 function girarMsgs(lista,ms){ clearInterval(_msgT); var i=0; _msgT=setInterval(function(){ var m=el('mkMsg'); if(!m){ clearInterval(_msgT); return; } i=(i+1)%lista.length; m.style.opacity=0; setTimeout(function(){ m.textContent=lista[i]; m.style.opacity=1; },250); },ms); }
-function progresso(){ clearInterval(_progT); var t0=Date.now(); girarMsgs(MSG_MUS,6000); _progT=setInterval(function(){ var p=el('pg'), c=el('pgPct'); if(!p){ clearInterval(_progT); return; } var t=(Date.now()-t0)/1000, x=t<45?t*2:Math.min(97,90+(t-45)/12); p.style.width=x+'%'; if(c) c.textContent=Math.floor(x)+'%'; },400); }
+function progresso(){ clearInterval(_progT); var t0=Date.now(); girarMsgs(MSG_MUS,6000); _progT=setInterval(function(){ var p=el('pg'), c=el('pgPct'); if(!p){ clearInterval(_progT); return; } var t=(Date.now()-t0)/1000, x=Math.min(97,97*(1-Math.exp(-t/20))); p.style.width=x+'%'; if(c) c.textContent=Math.floor(x)+'%'; },300); }
 function gerarMusica(){
   if(_musBusy) return; _musBusy=true;
   api('gerar-musica',Object.assign(dados(),{letraAprovada:S.letra})).then(function(d){
