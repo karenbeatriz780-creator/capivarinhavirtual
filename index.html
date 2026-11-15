@@ -1440,6 +1440,9 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .pxc-copiar,.pxc-ja{min-height:52px;border-radius:14px;font:inherit;font-weight:800;font-size:.95rem;cursor:pointer;padding:.5rem;}
 .pxc-copiar{border:0;color:#fff;background:linear-gradient(180deg,#F0407C,#C41857);box-shadow:0 6px 16px rgba(196,24,87,.3);}
 .pxc-ja{border:1.5px solid #E7C3D3;background:#fff;color:#3B1527;}
+.pxc-cartao{display:block;width:100%;margin:.7rem 0 .2rem;min-height:48px;border-radius:14px;border:1.5px dashed #C9A3B6;background:#FFF8FB;color:#3B1527;font:inherit;font-weight:700;font-size:.9rem;cursor:pointer;padding:.5rem .7rem;}
+.pxc-cartao[hidden],.pxc-stripe[hidden]{display:none;}
+.pxc-stripe{margin:.6rem 0 1rem;border-radius:14px;overflow:hidden;background:#fff;min-height:120px;}
 .pxc-ja:disabled{opacity:.6;}
 .pxc-lb{font-weight:800;font-size:.85rem;color:#3B1527;margin:1rem 0 .4rem;}
 .pxc-cod{width:100%;box-sizing:border-box;border:1.5px solid #E7C3D3;border-radius:12px;padding:.7rem;font:600 .8rem/1.5 ui-monospace,Menlo,Consolas,monospace;color:#3B1527;background:#fff;resize:none;word-break:break-all;}
@@ -7530,8 +7533,8 @@ function ipVigiarVolta(id){
 /* abriu o site de novo depois de ir pra InfinitePay (últimas 3 h): confere se já pagou */
 (function(){ try{ var ip=JSON.parse(Store.get('cl_ip')||'null'); if(ip&&ip.id&&Date.now()-(ip.em||0)<3*3600e3) setTimeout(function(){ ipVigiarVolta(ip.id); },1500); }catch(e){} })();
 /* o pagamento está pela InfinitePay? (só muda o texto dos botões) */
-var IP_ON=false;
-try{ fetch('/.netlify/functions/pagamento-cfg').then(function(r){ return r.json(); }).then(function(d){ IP_ON=!!(d&&d.ip); if(IP_ON) ipTextos(); }).catch(function(){}); }catch(e){}
+var IP_ON=false, ST_ON=false, ST_PK='';
+try{ fetch('/.netlify/functions/pagamento-cfg').then(function(r){ return r.json(); }).then(function(d){ IP_ON=!!(d&&d.ip); if(IP_ON) ipTextos(); ST_ON=!!(d&&d.stripe&&d.pk); ST_PK=(d&&d.pk)||''; if(ST_ON) document.querySelectorAll('#pxCartao').forEach(function(b){ b.hidden=false; }); }).catch(function(){}); }catch(e){}
 function noPix(){ return IP_ON?' no Pix ou cartão':' no Pix'; }
 function ipTextos(){ document.querySelectorAll('#ouvirPagar').forEach(function(b){ b.textContent=b.textContent.replace(/ no Pix$/,' no Pix ou cartão'); });
   ['xpGo','xpGo2'].forEach(function(k){ var b=el(k); if(b) b.textContent=b.textContent.replace(/^(Concluir e g|G)erar Pix/,function(m,a){ return a==='G'?'Pagar (Pix ou cartão)':'Concluir e pagar'; }); });
@@ -7549,6 +7552,8 @@ function htmlPixLimpo(payload, valor, teste, info){
         '<div class="pxc-bts"><button type="button" class="pxc-copiar" id="pxCopiar">Copiar código Pix</button>'+
           '<button type="button" class="pxc-ja" id="pxJa">Já paguei</button></div>'+
         '<div class="pix-msg" id="pxMsg" hidden></div>'+
+        '<button type="button" class="pxc-cartao" id="pxCartao"'+(ST_ON?'':' hidden')+'>💳 Prefere cartão? Pagar com cartão, Apple Pay ou Google Pay</button>'+
+        '<div class="pxc-stripe" id="pxStripe" hidden></div>'+
         '<div class="pxc-lb">Código Pix Copia e Cola</div>'+
         '<textarea class="pxc-cod" id="pxTxt" readonly rows="6">'+esc(payload)+'</textarea>'+
         '<details class="pxc-qr"><summary>Ver QR Code para pagar em outro aparelho</summary>'+(svg?'<div class="qr">'+svg+'</div>':'')+'<p>Escaneie com o app do banco em outro celular.</p></details>'+
@@ -7556,6 +7561,37 @@ function htmlPixLimpo(payload, valor, teste, info){
       '<ul class="pxc-it" style="margin-top:1rem">'+info.itens.map(function(t){ return '<li><span>✓</span>'+esc(t)+'</li>'; }).join('')+'</ul>'+
       '<div class="pxc-rod">A liberação acontece quando o pagamento é confirmado. Sua música continua salva se você fechar esta página.</div>'+
     '</div>';
+}
+/* 💳 Cartão / Apple Pay / Google Pay (Stripe) embutido na tela do Pix. Libera sozinho quando o pagamento passa. */
+var _stJs=null, _stCk=null;
+function carregarStripeJs(){ if(window.Stripe) return Promise.resolve(); if(_stJs) return _stJs;
+  _stJs=new Promise(function(ok,erro){ var sc=document.createElement('script'); sc.src='https://js.stripe.com/v3/'; sc.onload=function(){ ok(); }; sc.onerror=function(){ _stJs=null; erro(new Error('js')); }; document.head.appendChild(sc); }); return _stJs; }
+function ligarCartaoStripe(id, checar){
+  var b=el('pxCartao'), box=el('pxStripe'); if(!b||!box) return;
+  b.onclick=function(){
+    if(!ST_ON||!ST_PK){ toast('Pagamento por cartão indisponível agora. Use o Pix.'); return; }
+    b.disabled=true; b.textContent='Abrindo o pagamento por cartão...';
+    var sessao='';
+    fetch('/.netlify/functions/stripe-pagar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'sessao',id:id})})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d&&d.pago){ checar(); return; }
+      if(!d||!d.clientSecret) throw new Error((d&&d.erro)||'Não consegui abrir o pagamento por cartão.');
+      sessao=d.sessao;
+      return carregarStripeJs().then(function(){
+        try{ if(_stCk){ _stCk.destroy(); _stCk=null; } }catch(e){}
+        return Stripe(d.pk||ST_PK).initEmbeddedCheckout({ fetchClientSecret:function(){ return Promise.resolve(d.clientSecret); }, onComplete:function(){ confirmar(0); } });
+      }).then(function(ck){ _stCk=ck; box.hidden=false; ck.mount('#pxStripe'); b.hidden=true; try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} });
+    })
+    .catch(function(e){ b.disabled=false; b.textContent='💳 Prefere cartão? Pagar com cartão, Apple Pay ou Google Pay'; toast((e&&e.message&&e.message!=='js')?e.message:'Não consegui abrir o cartão agora. Use o Pix ou tente de novo.'); });
+    function confirmar(n){
+      fetch('/.netlify/functions/stripe-pagar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'confirmar',id:id,sessao:sessao})})
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if(d&&d.pago){ toast('Pagamento aprovado! Liberando sua música...'); checar(); } else if(n<8) setTimeout(function(){ confirmar(n+1); },2500); else checar(); })
+      .catch(function(){ if(n<8) setTimeout(function(){ confirmar(n+1); },2500); });
+    }
+  };
+  aoSair(function(){ try{ if(_stCk){ _stCk.destroy(); _stCk=null; } }catch(e){} });
 }
 function ligarPixLimpo(payload, id, aoPagar){
   var feito=false, iv=null, rapido=0, tent=0;
@@ -7571,6 +7607,7 @@ function ligarPixLimpo(payload, id, aoPagar){
     var c=el('pxCopiar'); c.textContent='✓ Copiado!'; setTimeout(function(){ if(el('pxCopiar')) c.textContent='Copiar código Pix'; },2000);
     var t=el('pxTxt'); if(t){ t.focus(); t.select(); }
   };
+  ligarCartaoStripe(id, checar);
   var manual=pixEhManual(payload);
   var jaFn=null;
   if(manual) rapido=24; /* Pix manual: confere a cada 5 s nos 2 primeiros min (em 1 min libera sozinho) */
@@ -8050,6 +8087,7 @@ function pnlPixManHtml(){
     ((_pnlPMAberto||conf.length)?'<div class="pm-corpo">'+
       '<div class="pm-cfg"><label>Pix do site<select data-pmmodo><option value="auto"'+(D.cfg.modo==='auto'?' selected':'')+'>Automático (Efí; se falhar, o meu Pix)</option><option value="manual"'+(D.cfg.modo==='manual'?' selected':'')+'>Só o meu Pix (Bradesco)</option><option value="efi"'+(D.cfg.modo==='efi'?' selected':'')+'>Só Efí</option></select></label>'+
         '<label class="pm-ck"><input type="checkbox" data-pmip'+(D.cfg.infinitepay===true?' checked':'')+'> 💳 <b>Usar InfinitePay</b> (Pix e cartão, libera sozinho). Se falhar, usa o Pix acima.</label>'+
+        '<label class="pm-ck"><input type="checkbox" data-pmst'+(D.cfg.stripe!==false?' checked':'')+'> 💳 <b>Cartão / Apple Pay / Google Pay (Stripe)</b> — botão extra na tela do Pix, libera sozinho. O Pix continua no Nubank.</label>'+
         '<label class="pm-ck"><input type="checkbox" data-pmauto'+(D.cfg.autoLiberar?' checked':'')+'> Liberar sozinho quando a IA aprovar o comprovante</label>'+
         (D.cfg.efiErro?'<small>Último erro da Efí: '+esc(D.cfg.efiErro)+'</small>':'')+'</div>'+
       (conf.length?'<div class="pm-sec">⏳ Para conferir</div>'+conf.map(item).join(''):'')+
@@ -8063,6 +8101,7 @@ function pnlPMLigar(){
   var post=function(c){ return fetch('/.netlify/functions/admin-pix-manual',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify(c)}).then(function(r){ return r.json(); }); };
   var tp=bx.querySelector('[data-pmabre]'); if(tp) tp.onclick=function(){ _pnlPMAberto=!_pnlPMAberto; var t=document.createElement('div'); t.innerHTML=pnlPixManHtml(); bx.replaceWith(t.firstChild); pnlPMLigar(); };
   var md=bx.querySelector('[data-pmmodo]'); if(md) md.onchange=function(){ post({acao:'cfg',modo:md.value}).then(function(){ toast('Pix do site: '+md.options[md.selectedIndex].text); pnlPMCarregar(true); }); };
+  var stc=bx.querySelector('[data-pmst]'); if(stc) stc.onchange=function(){ post({acao:'cfg',stripe:stc.checked}).then(function(){ toast(stc.checked?'Cartão (Stripe) ligado ✓':'Cartão (Stripe) desligado — só Pix'); pnlPMCarregar(true); }); };
   var ipc=bx.querySelector('[data-pmip]'); if(ipc) ipc.onchange=function(){ post({acao:'cfg',infinitepay:ipc.checked}).then(function(){ toast(ipc.checked?'InfinitePay ligada ✓':'InfinitePay desligada — usando o Pix de reserva'); pnlPMCarregar(true); }); };
   var au=bx.querySelector('[data-pmauto]'); if(au) au.onchange=function(){ post({acao:'cfg',autoLiberar:au.checked}).then(function(){ toast(au.checked?'Liberação automática ligada':'Agora você confere cada comprovante'); pnlPMCarregar(true); }); };
   bx.querySelectorAll('[data-pmac]').forEach(function(b){ b.onclick=function(){ var ac=b.dataset.pmac;
