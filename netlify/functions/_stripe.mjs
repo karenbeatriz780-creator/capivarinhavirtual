@@ -48,6 +48,11 @@ export async function prepararStripe() {
       s.whSecret = w.secret; s.whId = w.id; mudou = true;
     } catch (e) { console.error('stripe webhook:', e.message); }
   }
+  // 16/11: o aviso também cobre o pagamento direto (Apple Pay / Google Pay / cartão separados na tela)
+  if (s.whId && !s.evPI) {
+    try { await st('POST', 'webhook_endpoints/' + s.whId, { enabled_events: ['checkout.session.completed', 'checkout.session.async_payment_succeeded', 'payment_intent.succeeded'] }); s.evPI = Date.now(); mudou = true; }
+    catch (e) { console.error('stripe webhook eventos:', e.message); }
+  }
   if (!s.dominio) {
     for (const dom of ['capivarinhalove.com.br', 'www.capivarinhalove.com.br']) {
       try { await st('POST', 'payment_method_domains', { domain_name: dom }); } catch (e) { if (!/already|exist/i.test(e.message)) console.error('stripe domínio', dom, e.message); }
@@ -76,6 +81,54 @@ export async function criarSessaoStripe(g) {
     customer_email: g.email && /@/.test(g.email) ? g.email : undefined
   });
   return { clientSecret: s.client_secret, sessao: s.id, valor };
+}
+
+function valorDoPedido(g) {
+  const moeda = (g.pagamento && g.pagamento.moeda) || 'brl';
+  const valor = moeda === 'brl' ? Number((g.pagamento && g.pagamento.valor) || g.precoFinal || 0) : Number(g.pagamento.valorMoeda || 0);
+  return { moeda, valor, cents: Math.round(valor * 100) };
+}
+const nomeProduto = (g) => g.idioma === 'en' ? ('4 Personalized Songs' + ((g.extrasPix || []).length ? ' + ' + g.extrasPix.map((k) => k === 'clipe' ? 'Photo Clip' : 'Portrait').join(' + ') : '')) : (g.produto === 'livro' || g.livro) ? 'Livro Mágico personalizado' : 'Música personalizada';
+
+// 💳 pagamento DIRETO (tela com 3 opções: Pix · Cartão de crédito · Apple Pay/Google Pay): cria o PaymentIntent do pedido
+export async function criarIntentStripe(g) {
+  await prepararStripe().catch(() => {});
+  const { moeda, valor, cents } = valorDoPedido(g);
+  if (!(cents >= 100)) throw new Error('Valor do pedido inválido.');
+  const pg = g.pagamento || {};
+  if (pg.stPI && pg.stPICents === cents && pg.stPIMoeda === moeda) { // reaproveita o mesmo (não cria um por clique)
+    try { const pi = await st('GET', 'payment_intents/' + pg.stPI); if (pi && /requires_(payment_method|confirmation|action)/.test(pi.status)) return { clientSecret: pi.client_secret, pi: pi.id, valor, moeda }; } catch (e) {}
+  }
+  const nome = nomeProduto(g);
+  const pi = await st('POST', 'payment_intents', { amount: cents, currency: moeda, payment_method_types: ['card'], metadata: { pedido: g.id }, description: nome + ' ' + g.id, receipt_email: g.email && /@/.test(g.email) ? g.email : undefined });
+  try { const pres = getStore('presentes'), g2 = await pres.get(g.id, { type: 'json' }); if (g2 && !g2.pago) { g2.pagamento = Object.assign({}, g2.pagamento, { stPI: pi.id, stPICents: cents, stPIMoeda: moeda }); await pres.setJSON(g.id, g2); } } catch (e) {}
+  return { clientSecret: pi.client_secret, pi: pi.id, valor, moeda };
+}
+// confere o PaymentIntent no Stripe e libera o pedido (site e webhook)
+export async function confirmarIntentStripe(piId, origem) {
+  if (!/^pi_[A-Za-z0-9]+$/.test(String(piId || ''))) return null;
+  const pi = await st('GET', 'payment_intents/' + piId, { expand: ['latest_charge.balance_transaction'] });
+  const id = pi.metadata && pi.metadata.pedido;
+  if (!id || pi.status !== 'succeeded') return null;
+  const pres = getStore('presentes'), g = await pres.get(id, { type: 'json' }).catch(() => null);
+  if (!g) return null;
+  if (g.pago) return g;
+  const { moeda, cents } = valorDoPedido(g);
+  if (String(pi.currency || '').toLowerCase() !== moeda || Number(pi.amount_received || pi.amount || 0) + 1 < cents) { console.error('stripe PI: valor/moeda diferente', id, pi.amount, pi.currency, cents, moeda); return null; }
+  let valorReais = Number(pi.amount_received || pi.amount) / 100;
+  if (moeda !== 'brl') {
+    valorReais = Number(g.pagamento.valor) || 0;
+    const bt = pi.latest_charge && pi.latest_charge.balance_transaction;
+    if (bt && bt.currency === 'brl' && bt.amount > 0) { valorReais = bt.amount / 100; g.pagamento.taxaStripe = (bt.fee || 0) / 100; g.pagamento.liquido = (bt.net || 0) / 100; }
+    g.pagamento.valor = Math.round(valorReais * 100) / 100;
+  }
+  aplicarPagamento(g, { e2eid: String(pi.id), valor: valorReais }, origem || 'stripe');
+  g.pagamento.provedor = 'stripe';
+  Object.assign(g.pagamento, { stIntent: pi.id, stCentavos: pi.amount_received || pi.amount, stCarteira: (pi.latest_charge && pi.latest_charge.payment_method_details && pi.latest_charge.payment_method_details.card && pi.latest_charge.payment_method_details.card.wallet && pi.latest_charge.payment_method_details.card.wallet.type) || null });
+  await pres.setJSON(id, g);
+  try { await indexarDia('pg', g.id, g.pagoEm); } catch (e) {}
+  try { await getStore('comprovantes').delete('pend_' + id); } catch (e) {}
+  return g;
 }
 
 // confere no Stripe e libera o pedido (usado pelo site e pelo webhook)

@@ -135,7 +135,8 @@ textarea.inp{min-height:160px;resize:vertical;line-height:1.45}
 .incl{list-style:none;margin:10px 0 0;color:var(--mut);font-size:.9rem}
 .incl li{margin:4px 0}
 .incl li:before{content:'✓ ';color:var(--ok);font-weight:800}
-#stBox{background:#fff;border-radius:16px;overflow:hidden;min-height:140px;margin-top:12px}
+#stBox{background:#fff;border-radius:16px;overflow:hidden;min-height:140px;margin-top:12px;color:#2A0F1E}
+.pay-in{padding:16px}.pay-t{font-weight:800;margin:0 0 8px;color:#2A0F1E}.pay-or{display:flex;align-items:center;gap:8px;color:#8a7380;font-size:.85rem;margin:14px 0}.pay-or:before,.pay-or:after{content:'';flex:1;height:1px;background:#e5d6dd}.pay-in .note{color:#8a7380}
 .stmsg{padding:24px;text-align:center;color:#6b4a5a}
 .dl{display:flex;gap:8px;margin-top:10px}
 .dl a{flex:1;text-align:center;font-size:.88rem;font-weight:700;text-decoration:none;padding:.7rem;border-radius:12px;border:1.5px solid var(--line)}
@@ -703,26 +704,52 @@ function ligarCheckout(){
     pedidoP.then(function(p){
       if(!p||!p.id) throw new Error((p&&p.erro)||'Couldn\'t create your order.');
       S.pedido=p.id; salvar();
-      if(p.gratis){ S.bonusDe=''; salvar(); location.hash='#/song/'+p.id; return [null,{pago:true}]; }
-      return Promise.all([cfg(), api('stripe-pagar',{acao:'sessao',id:p.id})]);
-    }).then(function(r){
-      var c=r[0], d=r[1];
-      if(d&&d.pago){ if(location.hash!=='#/song/'+S.pedido) location.hash='#/song/'+S.pedido; return; }
-      if(!d||!d.clientSecret) throw new Error('Card payment is unavailable right now. Please try again in a moment.');
-      var sessao=d.sessao;
-      return stripeJs().then(function(){
-        try{ if(_ck){ _ck.destroy(); _ck=null; } }catch(x){}
-        return Stripe(d.pk||c.pk).initEmbeddedCheckout({fetchClientSecret:function(){ return Promise.resolve(d.clientSecret); }, onComplete:function(){ confirmar(sessao,0); }});
-      }).then(function(ck){ _ck=ck; var bx=el('stBox'); bx.hidden=false; bx.innerHTML=''; ck.mount('#stBox'); b.style.display='none'; try{ bx.scrollIntoView({behavior:'smooth',block:'start'}); }catch(x){} });
+      if(p.gratis){ S.bonusDe=''; salvar(); location.hash='#/song/'+p.id; return null; }
+      return cfg();
+    }).then(function(c){
+      if(!c) return;
+      if(!c.stripe||!c.pk) throw new Error('Card payment is unavailable right now. Please try again in a moment.');
+      return stripeJs().then(function(){ montarPagamentoUS(c.pk); b.style.display='none'; });
     }).catch(function(x){ b.disabled=false; b.textContent='Continue to payment'; erro(x&&x.message&&x.message!=='js'?x.message:'Couldn\'t open the checkout. Please try again.'); });
   };
 }
-function confirmar(sessao,n){
-  api('stripe-pagar',{acao:'confirmar',id:S.pedido,sessao:sessao}).then(function(d){
-    if(d&&d.pago){ try{ fbq('track','Purchase',{value:totalUS(),currency:'USD',content_name:'musica_us'},{eventID:'compra_'+S.pedido}); }catch(e){} location.hash='#/song/'+S.pedido; return; }
-    if(n<10) setTimeout(function(){ confirmar(sessao,n+1); },2500); else location.hash='#/song/'+S.pedido;
-  }).catch(function(){ if(n<10) setTimeout(function(){ confirmar(sessao,n+1); },2500); });
+/* 💳 3 options like the Brazilian site: Apple Pay / Google Pay (1 tap) · Credit card (form). Stripe confirms → unlocks. */
+var _stp=null;
+function montarPagamentoUS(pk){
+  if(!_stp) _stp=Stripe(pk,{locale:'en'});
+  var cents=Math.round(totalUS()*100), bx=el('stBox'), ap={theme:'stripe',variables:{colorPrimary:'#E91E63',borderRadius:'12px'}};
+  bx.hidden=false;
+  bx.innerHTML='<div class="pay-in"><div class="pay-t" id="pwT" hidden>Pay in 1 tap</div><div id="pwBtn"></div><div class="pay-or" id="pwOr" hidden><span>or pay with card</span></div><div class="pay-t" id="pcT">💳 Credit or debit card</div><div id="pcEl"></div><button class="btn btn-p" id="pcPay" style="margin-top:14px">🔒 Pay '+money(totalUS())+'</button><div class="note" style="text-align:center;margin-top:6px">Secure payment by Stripe</div></div>';
+  function pagar(elements){
+    return api('stripe-pagar',{acao:'intent',id:S.pedido}).then(function(d){
+      if(d&&d.pago){ location.hash='#/song/'+S.pedido; return; }
+      if(!d||!d.clientSecret) throw new Error((d&&d.erro)||'Couldn\'t start the payment.');
+      return _stp.confirmPayment({elements:elements,clientSecret:d.clientSecret,confirmParams:{return_url:location.origin+'/us/?stpi=1&ped='+encodeURIComponent(S.pedido)},redirect:'if_required'})
+        .then(function(r){ if(r.error) throw new Error(r.error.message||'Payment declined.'); confirmar((r.paymentIntent&&r.paymentIntent.id)||d.pi,0); });
+    });
+  }
+  var elW=_stp.elements({mode:'payment',amount:cents,currency:'usd',paymentMethodTypes:['card'],appearance:ap});
+  var ece=elW.create('expressCheckout',{paymentMethods:{applePay:'always',googlePay:'always',link:'never',paypal:'never',amazonPay:'never'},buttonHeight:52,buttonType:{applePay:'buy',googlePay:'buy'}});
+  ece.on('ready',function(e){ var m=(e&&e.availablePaymentMethods)||{}; if(m.applePay||m.googlePay){ el('pwT').hidden=false; el('pwOr').hidden=false; } });
+  ece.on('confirm',function(){ pagar(elW).catch(function(x){ toast(x.message); }); });
+  ece.mount('#pwBtn');
+  var elC=_stp.elements({mode:'payment',amount:cents,currency:'usd',paymentMethodTypes:['card'],appearance:ap});
+  var pe=elC.create('payment',{wallets:{applePay:'never',googlePay:'never'},layout:'tabs'}); pe.mount('#pcEl');
+  el('pcPay').onclick=function(){ var b=this; if(b.disabled) return; b.disabled=true; b.textContent='Processing…';
+    elC.submit().then(function(r){ if(r&&r.error) throw new Error(r.error.message); return pagar(elC); })
+      .then(function(){ b.textContent='✓ Approved'; })
+      .catch(function(x){ b.disabled=false; b.textContent='🔒 Pay '+money(totalUS()); toast(x.message||'Payment declined.'); }); };
+  try{ bx.scrollIntoView({behavior:'smooth',block:'start'}); }catch(x){}
 }
+function confirmar(pi,n){
+  api('stripe-pagar',{acao:'confirmar-pi',id:S.pedido,pi:pi}).then(function(d){
+    if(d&&d.pago){ try{ fbq('track','Purchase',{value:totalUS(),currency:'USD',content_name:'musica_us'},{eventID:'compra_'+S.pedido}); }catch(e){} location.hash='#/song/'+S.pedido; return; }
+    if(n<10) setTimeout(function(){ confirmar(pi,n+1); },2500); else location.hash='#/song/'+S.pedido;
+  }).catch(function(){ if(n<10) setTimeout(function(){ confirmar(pi,n+1); },2500); });
+}
+/* back from the bank (3D Secure) */
+(function(){ try{ var q=new URLSearchParams(location.search); if(!q.get('stpi')||!q.get('payment_intent')) return; var ped=q.get('ped')||''; history.replaceState(null,'','/us/#/song/'+encodeURIComponent(ped));
+  fetch('/.netlify/functions/stripe-pagar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'confirmar-pi',id:ped,pi:q.get('payment_intent')})}).catch(function(){}); }catch(e){} })();
 
 /* ---------- song page (after payment) ---------- */
 function telaSong(id){

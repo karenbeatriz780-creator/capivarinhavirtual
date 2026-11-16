@@ -1491,6 +1491,10 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 .pxc-cc{display:flex;width:26px;justify-content:center;}
 .pxc-wal{display:flex;gap:.35rem;margin-left:auto;}
 .pxc-lg{display:flex;align-items:center;justify-content:center;width:46px;height:30px;border:1px solid #DDD;border-radius:6px;background:#fff;}
+.pxc-wallet{margin:.6rem 0 1rem}.pxc-wallet[hidden]{display:none}
+.pxc-stripe{padding:.9rem .8rem}
+.pxc-pagar{display:block;width:100%;margin-top:.9rem;min-height:52px;border:0;border-radius:14px;background:linear-gradient(135deg,#E2307F,#A8146A);color:#fff;font:inherit;font-weight:800;font-size:1.02rem;cursor:pointer}.pxc-pagar:disabled{opacity:.6}
+.pxc-st-seg{text-align:center;font-size:.75rem;color:#8C6E7E;margin-top:.5rem}
 .pxc-st-msg{padding:1rem;text-align:center;color:#7A5A69;font-size:.9rem;}
 .pxc-stripe{margin:.6rem 0 1rem;border-radius:14px;overflow:hidden;background:#fff;min-height:120px;}
 .pxc-ja:disabled{opacity:.6;}
@@ -7600,6 +7604,7 @@ function htmlPixLimpo(payload, valor, teste, info){
         (valor?'<div class="pxc-pr">R$ '+fmtPreco(valor)+'</div>':'')+'</div>'+
       htmlEscolhaPag(valor)+
       '<div class="pxc-stripe" id="pxStripe" hidden><div class="pxc-st-msg" id="pxStMsg">Abrindo o pagamento por cartão...</div></div>'+
+      '<div class="pxc-wallet" id="pxWallet" hidden></div>'+
       '<div class="pxc-box" id="pxPixBox">'+
         '<p class="pxc-txt">Copie o código abaixo, abra o aplicativo do seu banco e escolha <b>Pix Copia e Cola</b>. '+(pixEhManual(payload)?'Depois de pagar, toque em <b>Já paguei</b> e a sua música libera em cerca de 1 minuto:':'A aprovação é imediata:')+'</p>'+
         '<div class="pxc-bts"><button type="button" class="pxc-copiar" id="pxCopiar">Copiar código Pix</button>'+
@@ -7615,56 +7620,81 @@ function htmlPixLimpo(payload, valor, teste, info){
 }
 var LG_PIX='M5.283 18.36a3.5 3.5 0 0 0 2.493-1.032l3.6-3.6a.684.684 0 0 1 .946 0l3.613 3.613a3.5 3.5 0 0 0 2.493 1.032h.71l-4.56 4.56a3.647 3.647 0 0 1-5.156 0L4.85 18.36ZM18.428 5.627a3.5 3.5 0 0 0-2.493 1.032l-3.613 3.614a.67.67 0 0 1-.946 0l-3.6-3.6A3.5 3.5 0 0 0 5.283 5.64h-.434l4.573-4.572a3.646 3.646 0 0 1 5.156 0l4.559 4.559ZM1.068 9.422 3.79 6.699h1.492a2.48 2.48 0 0 1 1.744.722l3.6 3.6a1.73 1.73 0 0 0 2.443 0l3.614-3.613a2.48 2.48 0 0 1 1.744-.723h1.767l2.737 2.737a3.646 3.646 0 0 1 0 5.156l-2.736 2.736h-1.768a2.48 2.48 0 0 1-1.744-.722l-3.613-3.613a1.77 1.77 0 0 0-2.444 0l-3.6 3.6a2.48 2.48 0 0 1-1.744.722H3.791l-2.723-2.723a3.646 3.646 0 0 1 0-5.156', LG_APAY='m2.15 4.318-.454.003c-.15.005-.303.013-.452.04a1.44 1.44 0 0 0-1.06.772c-.07.138-.114.278-.14.43-.028.148-.037.3-.04.45L0 6.222v11.557q0 .104.003.207c.004.15.013.303.04.452q.039.224.142.429a1.44 1.44 0 0 0 .63.63c.138.07.278.115.43.142.148.027.3.036.45.04l.208.003h20.194l.207-.003c.15-.004.303-.013.452-.04s.291-.071.428-.141a1.43 1.43 0 0 0 .631-.631c.07-.138.115-.278.141-.43.027-.148.036-.3.04-.45q.003-.104.003-.208l.001-.246V6.221q0-.104-.004-.207a3 3 0 0 0-.04-.452 1.45 1.45 0 0 0-1.2-1.201 3 3 0 0 0-.452-.04 11 11 0 0 0-.453-.003zm0 .512h19.942q.098 0 .197.003c.115.004.25.01.375.032.109.02.2.05.287.094a.93.93 0 0 1 .407.407 1 1 0 0 1 .094.288c.022.123.028.258.031.374q.003.097.003.197v11.552q0 .097-.003.196c-.003.115-.009.25-.032.375a.93.93 0 0 1-.5.693 1 1 0 0 1-.286.094 3 3 0 0 1-.373.032l-.2.003H1.906q-.1 0-.196-.003a3 3 0 0 1-.375-.032c-.109-.02-.2-.05-.288-.094a.9.9 0 0 1-.406-.407 1 1 0 0 1-.094-.288 2.5 2.5 0 0 1-.032-.373l-.002-.197V6.224q0-.098.002-.197c.004-.114.01-.248.032-.375.02-.108.05-.199.094-.287a.93.93 0 0 1 .407-.406 1 1 0 0 1 .287-.094c.125-.022.26-.029.375-.032q.098-.002.196-.003zm4.71 3.7c-.3.016-.668.199-.88.456-.191.22-.36.58-.316.918.338.03.675-.169.888-.418.205-.258.345-.603.308-.955zm2.207.42v5.493h.852v-1.877h1.18c1.078 0 1.835-.739 1.835-1.812 0-1.07-.742-1.805-1.808-1.805zm.852.719h.982c.739 0 1.161.396 1.161 1.089 0 .692-.422 1.092-1.164 1.092h-.979zm-3.154.3c-.45.01-.83.28-1.05.28-.235 0-.593-.264-.981-.257a1.45 1.45 0 0 0-1.23.747c-.527.908-.139 2.255.374 2.995.249.366.549.769.944.754.373-.014.52-.242.973-.242.454 0 .586.242.98.235.41-.007.667-.366.915-.733.286-.417.403-.82.41-.841-.007-.008-.79-.308-.797-1.209-.008-.754.615-1.113.644-1.135-.352-.52-.9-.578-1.09-.593zm8.204.397c-.99 0-1.606.533-1.652 1.256h.777c.072-.358.369-.586.845-.586.502 0 .803.266.803.711v.309l-1.097.064c-.951.054-1.488.484-1.488 1.184 0 .72.548 1.207 1.332 1.207.526 0 1.032-.281 1.264-.727h.019v.659h.788v-2.76c0-.803-.62-1.317-1.591-1.317m1.94.072 1.446 4.009c0 .003-.073.24-.073.247-.125.41-.33.571-.711.571-.069 0-.206 0-.267-.015v.666c.06.011.267.019.335.019.83 0 1.226-.312 1.568-1.283l1.5-4.214h-.868l-1.012 3.259h-.015l-1.013-3.26zm-1.167 2.189v.316c0 .521-.45.917-1.024.917-.442 0-.731-.228-.731-.579 0-.342.278-.56.769-.593z', LG_GPAY='M3.963 7.235A3.96 3.96 0 0 0 .422 9.419a3.96 3.96 0 0 0 0 3.559 3.96 3.96 0 0 0 3.541 2.184c1.07 0 1.97-.352 2.627-.957.748-.69 1.18-1.71 1.18-2.916a5 5 0 0 0-.07-.806H3.964v1.526h2.14a1.84 1.84 0 0 1-.79 1.205c-.356.241-.814.379-1.35.379-1.034 0-1.911-.697-2.225-1.636a2.38 2.38 0 0 1 0-1.517c.314-.94 1.191-1.636 2.225-1.636a2.15 2.15 0 0 1 1.52.594l1.132-1.13a3.8 3.8 0 0 0-2.652-1.033zm6.501.55v6.9h.886V11.89h1.465q.904 0 1.522-.588a1.91 1.91 0 0 0 .635-1.464 1.92 1.92 0 0 0-.635-1.456 2.13 2.13 0 0 0-1.522-.598zm2.427.85a1.16 1.16 0 0 1 .823.365 1.176 1.176 0 0 1 0 1.686 1.17 1.17 0 0 1-.877.357H11.35V8.635h1.541m4.124 1.175q-1.262 0-1.907.925l.781.491q.432-.626 1.175-.626a1.25 1.25 0 0 1 .856.323 1 1 0 0 1 .366.785v.202q-.51-.29-1.3-.289-.926 0-1.479.434-.555.432-.554 1.165a1.48 1.48 0 0 0 .525 1.156q.525.463 1.305.463.915 0 1.465-.81h.038v.655h.848v-2.909q0-.915-.568-1.44-.57-.525-1.551-.525m2.263.154 1.946 4.422-1.098 2.38h.915L24 9.963h-.965l-1.368 3.391h-.02l-1.406-3.39zm-2.146 2.368q.741 0 1.156.33 0 .558-.44.973a1.41 1.41 0 0 1-.997.414 1.08 1.08 0 0 1-.69-.232.71.71 0 0 1-.293-.578q0-.383.363-.647.36-.26.9-.26Z';
 function lgSvg(d,cor,w,h,vb){ return '<svg viewBox="'+(vb||'0 0 24 24')+'" width="'+w+'" height="'+h+'" fill="'+cor+'" aria-hidden="true"><path d="'+d+'"/></svg>'; }
+/* volta do banco (3D Secure) depois de pagar no cartão → confere e abre o pedido */
+(function(){ try{ var q=new URLSearchParams(location.search); if(!q.get('stpi')||!q.get('payment_intent')) return; var ped=q.get('ped')||'', pi=q.get('payment_intent');
+  history.replaceState(null,'','/#/p/'+encodeURIComponent(ped)+'/c');
+  fetch('/.netlify/functions/stripe-pagar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'confirmar-pi',id:ped,pi:pi})}).then(function(){ setTimeout(function(){ location.reload(); },400); }).catch(function(){});
+}catch(e){} })();
+function ehIOS(){ var u=navigator.userAgent||''; return /iPhone|iPad|iPod/.test(u)||(/Macintosh/.test(u)&&'ontouchend' in document)||(/Safari/.test(u)&&!/Chrome|CriOS|Android/.test(u)); }
 function htmlEscolhaPag(valor){
-  return '<div class="pxc-esc" id="pxEsc"'+(ST_ON?'':' hidden')+'>'+
+  var ios=ehIOS();
+  return '<div class="pxc-esc" id="pxEsc" data-valor="'+(valor||0)+'"'+(ST_ON?'':' hidden')+'>'+
     (valor?'<div class="pxc-tot"><span>Total a pagar</span><b>R$ '+fmtPreco(valor)+'</b></div>':'')+
     '<div class="pxc-esc-t">Como você quer pagar?</div>'+
     '<button type="button" class="pxc-op on" data-op="pix" aria-pressed="true"><span class="pxc-rd"></span>'+
       '<span class="pxc-op-l">'+lgSvg(LG_PIX,'#32BCAD',26,26)+'<span><b>Pix</b><small>Liberação em cerca de 1 minuto</small></span></span></button>'+
     '<button type="button" class="pxc-op" data-op="cartao" aria-pressed="false"><span class="pxc-rd"></span>'+
       '<span class="pxc-op-l"><span class="pxc-cc"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#3B1527" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 9.5h19M6 15h4"/></svg></span>'+
-      '<span><b>Cartão de crédito</b><small>Libera na hora</small></span></span>'+
-      '<span class="pxc-wal"><span class="pxc-lg" title="Apple Pay">'+lgSvg(LG_APAY,'#000',34,34)+'</span><span class="pxc-lg" title="Google Pay">'+lgSvg(LG_GPAY,'#3C4043',34,34)+'</span></span></button>'+
+      '<span><b>Cartão de crédito</b><small>Libera na hora</small></span></span></button>'+
+    '<button type="button" class="pxc-op" data-op="carteira" aria-pressed="false" id="pxOpCart" hidden><span class="pxc-rd"></span>'+
+      '<span class="pxc-op-l"><span class="pxc-lg" id="pxCartLg">'+(ios?lgSvg(LG_APAY,'#000',34,34):lgSvg(LG_GPAY,'#3C4043',34,34))+'</span>'+
+      '<span><b id="pxCartNm">'+(ios?'Apple Pay':'Google Pay')+'</b><small>Paga com 1 toque · libera na hora</small></span></span></button>'+
   '</div>';
 }
-/* 💳 Cartão / Apple Pay / Google Pay (Stripe) embutido na tela do Pix. Libera sozinho quando o pagamento passa. */
-var _stJs=null, _stCk=null;
+/* 💳 3 opções separadas: Pix · Cartão de crédito (a pessoa preenche) · Apple Pay / Google Pay (1 toque). Stripe, libera sozinho. */
+var _stJs=null, _stCk=null, _stObj=null;
 function carregarStripeJs(){ if(window.Stripe) return Promise.resolve(); if(_stJs) return _stJs;
   _stJs=new Promise(function(ok,erro){ var sc=document.createElement('script'); sc.src='https://js.stripe.com/v3/'; sc.onload=function(){ ok(); }; sc.onerror=function(){ _stJs=null; erro(new Error('js')); }; document.head.appendChild(sc); }); return _stJs; }
+function stAparencia(){ return {theme:'stripe',variables:{colorPrimary:'#C2185B',borderRadius:'12px',fontFamily:'Inter, system-ui, sans-serif'}}; }
 function ligarCartaoStripe(id, checar){
-  var esc=el('pxEsc'), box=el('pxStripe'), pixBox=el('pxPixBox'), ok=el('pxOk'); if(!esc||!box) return;
-  var sessao='', aberto=false, abrindo=false;
+  var esc=el('pxEsc'), box=el('pxStripe'), wal=el('pxWallet'), pixBox=el('pxPixBox'), ok=el('pxOk'); if(!esc||!box) return;
+  var valor=Number(esc.getAttribute('data-valor'))||0, cents=Math.round(valor*100), cardPronto=false, montando=false, pagando=false, elCard=null;
+  function post(b){ return fetch('/.netlify/functions/stripe-pagar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({id:id},b))}).then(function(r){ return r.json(); }); }
   function marcar(op){
     esc.querySelectorAll('.pxc-op').forEach(function(x){ var on=x.getAttribute('data-op')===op; x.classList.toggle('on',on); x.setAttribute('aria-pressed',on?'true':'false'); });
-    var cartao=op==='cartao'; if(pixBox) pixBox.hidden=cartao; if(ok) ok.hidden=cartao; box.hidden=!cartao;
-    if(cartao && !aberto) abrir();
+    if(pixBox) pixBox.hidden=op!=='pix'; if(ok) ok.hidden=op!=='pix'; box.hidden=op!=='cartao'; if(wal) wal.hidden=op!=='carteira';
+    if(op==='cartao' && !cardPronto) montarCartao();
   }
   esc.querySelectorAll('.pxc-op').forEach(function(x){ x.onclick=function(){ marcar(x.getAttribute('data-op')); }; });
-  function erro(msg){ abrindo=false; toast(msg||'Não consegui abrir o cartão agora. Use o Pix ou tente de novo.'); marcar('pix'); }
-  function abrir(){
-    if(abrindo) return;
-    if(!ST_ON||!ST_PK){ erro('Pagamento por cartão indisponível agora. Use o Pix.'); return; }
-    abrindo=true;
-    fetch('/.netlify/functions/stripe-pagar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'sessao',id:id})})
-    .then(function(r){ return r.json(); })
-    .then(function(d){
+  if(!ST_ON||!ST_PK||cents<100) return;
+  function stripe(){ return carregarStripeJs().then(function(){ if(!_stObj) _stObj=Stripe(ST_PK,{locale:'pt-BR'}); return _stObj; }); }
+  function confirmar(pi,n){
+    post({acao:'confirmar-pi',pi:pi}).then(function(d){ if(d&&d.pago){ toast('Pagamento aprovado! Liberando...'); checar(); } else if(n<10) setTimeout(function(){ confirmar(pi,n+1); },2500); else checar(); })
+      .catch(function(){ if(n<10) setTimeout(function(){ confirmar(pi,n+1); },2500); });
+  }
+  function pagar(elements, origem){
+    return post({acao:'intent'}).then(function(d){
       if(d&&d.pago){ checar(); return; }
-      if(!d||!d.clientSecret) throw new Error((d&&d.erro)||'');
-      sessao=d.sessao;
-      return carregarStripeJs().then(function(){
-        try{ if(_stCk){ _stCk.destroy(); _stCk=null; } }catch(e){}
-        return Stripe(d.pk||ST_PK).initEmbeddedCheckout({ fetchClientSecret:function(){ return Promise.resolve(d.clientSecret); }, onComplete:function(){ confirmar(0); } });
-      }).then(function(ck){ _stCk=ck; box.innerHTML=''; ck.mount('#pxStripe'); aberto=true; abrindo=false; });
-    })
-    .catch(function(e){ erro(e&&e.message&&e.message!=='js'?e.message:''); });
+      if(!d||!d.clientSecret) throw new Error((d&&d.erro)||'Não consegui iniciar o pagamento.');
+      return _stObj.confirmPayment({elements:elements,clientSecret:d.clientSecret,confirmParams:{return_url:location.origin+'/?stpi=1&ped='+encodeURIComponent(id)},redirect:'if_required'})
+        .then(function(r){ if(r.error) throw new Error(r.error.message||'Pagamento não aprovado.'); confirmar((r.paymentIntent&&r.paymentIntent.id)||d.pi,0); });
+    });
   }
-  function confirmar(n){
-    fetch('/.netlify/functions/stripe-pagar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'confirmar',id:id,sessao:sessao})})
-    .then(function(r){ return r.json(); })
-    .then(function(d){ if(d&&d.pago){ toast('Pagamento aprovado! Liberando sua música...'); checar(); } else if(n<8) setTimeout(function(){ confirmar(n+1); },2500); else checar(); })
-    .catch(function(){ if(n<8) setTimeout(function(){ confirmar(n+1); },2500); });
+  /* Apple Pay / Google Pay: só aparece se o celular tiver */
+  stripe().then(function(stp){
+    var elW=stp.elements({mode:'payment',amount:cents,currency:'brl',paymentMethodTypes:['card'],appearance:stAparencia()});
+    var ece=elW.create('expressCheckout',{paymentMethods:{applePay:'always',googlePay:'always',link:'never',paypal:'never',amazonPay:'never'},buttonHeight:52,buttonType:{applePay:'buy',googlePay:'buy'}});
+    ece.on('ready',function(e){ var m=(e&&e.availablePaymentMethods)||{}; var b=el('pxOpCart'); if(!b) return;
+      if(m.applePay||m.googlePay){ b.hidden=false; if(m.applePay){ el('pxCartNm').textContent='Apple Pay'; el('pxCartLg').innerHTML=lgSvg(LG_APAY,'#000',34,34); } else { el('pxCartNm').textContent='Google Pay'; el('pxCartLg').innerHTML=lgSvg(LG_GPAY,'#3C4043',34,34); } } });
+    ece.on('confirm',function(){ pagar(elW,'carteira').catch(function(e){ toast(e.message); }); });
+    if(wal){ wal.innerHTML=''; ece.mount('#pxWallet'); }
+  }).catch(function(){});
+  /* Cartão de crédito: formulário (sem Apple/Google Pay dentro) */
+  function montarCartao(){
+    if(montando) return; montando=true;
+    stripe().then(function(stp){
+      elCard=stp.elements({mode:'payment',amount:cents,currency:'brl',paymentMethodTypes:['card'],appearance:stAparencia()});
+      var pe=elCard.create('payment',{wallets:{applePay:'never',googlePay:'never'},layout:'tabs'});
+      box.innerHTML='<div id="pxCardEl"></div><button type="button" class="pxc-pagar" id="pxCardPagar">🔒 Pagar R$ '+fmtPreco(valor)+'</button><div class="pxc-st-seg">Pagamento seguro processado pela Stripe</div>';
+      pe.mount('#pxCardEl'); cardPronto=true;
+      el('pxCardPagar').onclick=function(){
+        if(pagando) return; var bt=this; pagando=true; bt.disabled=true; bt.textContent='Processando…';
+        elCard.submit().then(function(r){ if(r&&r.error) throw new Error(r.error.message); return pagar(elCard,'cartao'); })
+          .then(function(){ pagando=false; bt.textContent='✓ Aprovado'; })
+          .catch(function(e){ pagando=false; bt.disabled=false; bt.textContent='🔒 Pagar R$ '+fmtPreco(valor); toast(e.message||'Pagamento não aprovado.'); });
+      };
+    }).catch(function(){ montando=false; toast('Não consegui abrir o cartão agora. Use o Pix ou tente de novo.'); marcar('pix'); });
   }
-  aoSair(function(){ try{ if(_stCk){ _stCk.destroy(); _stCk=null; } }catch(e){} });
 }
 function ligarPixLimpo(payload, id, aoPagar){
   var feito=false, iv=null, rapido=0, tent=0;

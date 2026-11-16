@@ -1,6 +1,6 @@
 // 🔔 Aviso automático do Stripe: pagamento aprovado → libera a música e manda 1 mensagem no WhatsApp.
 // (Reserva do confirmar pelo site: funciona mesmo se a pessoa fechar a página logo depois de pagar.)
-import { webhookValido, confirmarSessaoStripe } from './_stripe.mjs';
+import { webhookValido, confirmarSessaoStripe, confirmarIntentStripe } from './_stripe.mjs';
 import { entregarPago } from './_email.mjs';
 
 export default async (req, context) => {
@@ -13,6 +13,13 @@ export default async (req, context) => {
       const g = await confirmarSessaoStripe(s.id, 'stripe-webhook');
       if (g) { const ent = entregarPago(g).catch(() => {}); if (context && context.waitUntil) context.waitUntil(ent); else await ent; }
     } catch (e) { console.error('stripe-webhook:', e.message); return new Response('erro', { status: 500 }); }
+  }
+  if (ev.type === 'payment_intent.succeeded') {
+    const pi = (ev.data && ev.data.object) || {};
+    if (pi.metadata && pi.metadata.pedido) {
+      try { const g = await confirmarIntentStripe(pi.id, 'stripe-webhook'); if (g) { const ent = entregarPago(g).catch(() => {}); if (context && context.waitUntil) context.waitUntil(ent); else await ent; } }
+      catch (e) { console.error('stripe-webhook PI:', e.message); return new Response('erro', { status: 500 }); }
+    }
   }
   return new Response('ok');
 };
