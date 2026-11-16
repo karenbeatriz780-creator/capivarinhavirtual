@@ -1202,11 +1202,12 @@ function ligarDesbloquear(d,tema,t){
         if(!res.ok||!res.d.payload){ toast((res.d&&res.d.erro)||'Não consegui gerar o Pix.'); bt.disabled=false; rotulo(); return; }
         bt.remove(); document.querySelectorAll('[data-pac],[data-t2]').forEach(function(x){ x.style.pointerEvents='none'; });
         var box=el('lvPix');
-        box.innerHTML='<div class="lv-relogio">⏳ O Pix vale por <b id="lvRel">20:00</b></div>'+
+        var manual=!!res.d.manual;
+        box.innerHTML=(manual?'':'<div class="lv-relogio">⏳ O Pix vale por <b id="lvRel">20:00</b></div>')+
           htmlPixLimpo(res.d.payload, res.d.valor, res.d.teste, {titulo:'Livro Mágico de '+d.nome+(pac==='dois'?' (2 livros)':pac==='todos'?' (coleção completa)':''), itens:[pac==='um'?'Livro completo com '+nIlusTema(tema)+' ilustrações':pac==='dois'?'2 livros completos':'Todas as aventuras','2 músicas completas em cada livro','PDF pra ler e pra imprimir']});
-        var rod=box.querySelector('.pxc-rod'); if(rod) rod.textContent='O livro é liberado assim que o Pix for confirmado. A sua prévia continua salva se você fechar esta página.';
+        var rod=box.querySelector('.pxc-rod'); if(rod) rod.textContent=manual?'Pagou? Toque em "Já paguei" e o livro é liberado. A sua prévia continua salva se você fechar esta página.':'O livro é liberado assim que o Pix for confirmado. A sua prévia continua salva se você fechar esta página.';
         var fim=res.d.expiraEm||(Date.now()+20*60000);
-        relIv=setInterval(function(){
+        if(!manual) relIv=setInterval(function(){
           var r=el('lvRel'); if(!r){ clearInterval(relIv); return; }
           var s=Math.max(0,Math.round((fim-Date.now())/1000));
           r.textContent=Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);

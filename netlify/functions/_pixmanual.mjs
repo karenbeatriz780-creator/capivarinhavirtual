@@ -37,9 +37,10 @@ export async function lerCfgPix() {
 }
 export async function salvarCfgPix(m) { const c = Object.assign({}, await lerCfgPix(), m); await cfgLoja().setJSON('cfg_pixmanual', c); cache = c; cacheEm = Date.now(); return c; }
 // Efí recusou há pouco? (não fica batendo nela a cada pedido: pula por 10 min)
-export async function pularEfi() { const c = await lerCfgPix(); return c.modo === 'manual' || (c.modo === 'auto' && Date.now() - c.efiFalhouEm < 10 * 60e3); }
+// 16/11 (regra do Gusthavo): TODOS os pagamentos no Pix do Nubank (+ cartão pelo Stripe) — a Efí não é mais usada pra gerar Pix
+export async function pularEfi() { return true; }
 export async function marcarEfiFalhou(erro) { try { await salvarCfgPix({ efiFalhouEm: Date.now(), efiErro: String(erro || '').slice(0, 200) }); } catch (e) {} }
-export async function podeManual() { return (await lerCfgPix()).modo !== 'efi'; }
+export async function podeManual() { return true; }
 
 // SEM COMPROVANTE (regra do Gusthavo, 12/11): liberou o Pix manual → libera a música em 1 minuto (ou na hora no "Já paguei")
 export const ESPERA_LIBERAR = 60e3;
