@@ -12776,12 +12776,17 @@ function telaPixExtra(g, tipo, item, payload, teste){
       '<div class="wz-s">'+precoBR(precoDo(tipo))+' · '+
         (tipo==='moldura' ? 'depois de pagar você escolhe as fotos.' : 'liberado assim que o Pix cair.')+'</div>'+
       (teste?'<div class="demo-note info" style="margin-bottom:1rem">'+IC.shield+'<div><b>Modo de homologação da Efí.</b> Nenhum valor real será cobrado.</div></div>':'')+
+      htmlEscolhaPag(precoDo(tipo))+
+      '<div class="pxc-stripe" id="pxStripe" hidden><div class="pxc-st-msg" id="pxStMsg">Abrindo o pagamento por cartão...</div></div>'+
+      '<div class="pxc-wallet" id="pxWallet" hidden></div>'+
+      '<div id="pxPixBox">'+
       '<div class="qrbox">'+(svg?'<div class="qr">'+svg+'</div>':'')+
         '<p style="font-size:.83rem;color:var(--muted);line-height:1.5">Escaneie no app do banco ou use o copia e cola.</p>'+
         '<div class="pix-code"><input id="pxT" readonly value="'+esc(payload)+'">'+
         '<button class="btn btn-ghost" id="pxC" style="padding:.6rem 1rem;font-size:.8rem">Copiar</button></div></div>'+
       (teste?'<button class="btn btn-primary btn-block" id="pxSim" style="margin-top:1rem">🧪 Simular pagamento (só teste)</button>':'')+
       (pixEhManual(payload)?'<div class="cpv" id="cpvBox"><div class="cpv-t">Já pagou?</div><button type="button" class="cpv-bt" id="cpvJa" style="width:100%;border:0;font-family:inherit">✅ Já paguei</button><div class="cpv-msg" id="cpvMsg" hidden></div></div>':'')+
+      '</div>'+
       '<div id="pxSt" style="text-align:center;margin-top:1.2rem;font-size:.87rem;color:var(--muted)">'+
         '<span class="cur"></span> Aguardando o pagamento cair...</div>'+
     '</div>';
@@ -12801,7 +12806,8 @@ function telaPixExtra(g, tipo, item, payload, teste){
       }).catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent='🧪 Simular pagamento (só teste)'; });
     };
   }
-  var tent=0, iv=setInterval(function(){
+  var tent=0, iv=null;
+  function tick(){
     tent++;
     fetch('/.netlify/functions/presente?id='+encodeURIComponent(extraId(g.id, tipo, item.id)))
       .then(function(r){ return r.json(); })
@@ -12817,7 +12823,9 @@ function telaPixExtra(g, tipo, item, payload, teste){
           var s=el('pxSt'); if(s) s.innerHTML='Ainda não caiu. Assim que confirmar, é só voltar aqui.';
         }
       }).catch(function(){});
-  },3000);
+  }
+  iv=setInterval(tick,3000);
+  ligarCartaoStripe(id, function(){ tent=0; tick(); });
   aoSair(function(){ clearInterval(iv); });
 }
 
