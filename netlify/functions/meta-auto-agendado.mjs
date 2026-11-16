@@ -16,11 +16,15 @@
 //  Se o custo de hoje cair pra R$ 8,50 ou menos → volta ao normal (ligada o dia todo). Se bater o limite → desliga de vez.
 //  À meia-noite volta ao normal. Se VOCÊ religar ou desligar uma campanha no modo, o robô larga ela.
 // Se VOCÊ religar uma campanha (pelo painel OU pelo app do Meta), o robô não mexe nela até a meia-noite.
+// REGRA DE 15/11 (atual): 🌙 À MEIA-NOITE liga TODAS as campanhas marcadas na aba "🌙 Meia-noite" do painel.
+//   Durante o dia, gasto SEM NENHUMA COMPRA: campanha BOA (vendeu nos 3 dias anteriores com custo/compra até R$ 9,99) → até R$ 9,99;
+//   campanha nova/parada → até R$ 7. Passou → desliga e fica 40 min vigiando: se o Meta contar uma compra atrasada, religa.
+//   Vendendo: continua o dia todo; só desliga se a média de 3 dias (custo por compra) passar de R$ 9,50 (prejudica no longo prazo).
 // REGRA DE 14/11: campanha com 2+ dias de dados decide pela MÉDIA DE 3 DIAS (custo/compra até R$ 9,50; R$ 10 em 3 dias sem compra → desliga;
 //   trava: R$ 15 hoje sem compra → desliga). Campanha nova (menos de 2 dias) segue a regra só de hoje.
 import { getStore } from '@netlify/blobs';
 import { metaAds, recomendar, ultimasAcoes, TICKET, avaliarSubir } from './_gastos.mjs';
-import { lerCfg, aplicarAcao, logRobo, avisar, vendasSitePorCampanha } from './_meta.mjs';
+import { lerCfg, aplicarAcao, logRobo, avisar, vendasSitePorCampanha, graphConta } from './_meta.mjs';
 import { registrarAcao } from './_gastos.mjs';
 import { diaBR, brl, imposto, cpa3dias } from './_resumo.mjs';
 import { calcHorarios } from './_horarios.mjs';
@@ -72,14 +76,24 @@ export async function rodarRobo(simular) {
     m.fim = true;
   }
   if (!simular && Object.keys(modoOntem).length) await L().setJSON('modohor_' + ontem, modoOntem).catch(() => {});
-  // 🌙 MEIA-NOITE: religa as que o ROBÔ desligou ontem (as que VOCÊ desligou ficam desligadas)
-  if (cfg.autoPausar && agora >= Date.parse('2026-11-12T03:00:00Z')) for (const c of (meta.campanhas || [])) { // começa na meia-noite de 12/11
-    const a = acoes[c.id];
-    if (c.status === 'ACTIVE' || !a || a.tipo !== 'pausar' || !/^robô/.test(a.quem || '') || diaBR(a.em) !== ontem) continue;
-    try { if (!simular) { await aplicarAcao(c, 'ativar', 'robô (meia-noite)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (meia-noite)', em: agora }; } c.status = 'ACTIVE'; c._religada = true;
-      feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: 'dia novo: religuei (ontem eu tinha desligado)' }); }
-    catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui religar à meia-noite: ' + e.message }); }
+  // 🌙 MEIA-NOITE (regra de 15/11): liga TODAS as campanhas marcadas na aba "🌙 Meia-noite" (as que você desmarcou ficam como estão)
+  const flagMN = 'meianoite_feito_' + hoje;
+  if (cfg.autoPausar && !(await L().get(flagMN, { type: 'json' }).catch(() => null))) {
+    if (!simular) await L().setJSON(flagMN, { em: agora }).catch(() => {});
+    if (horaBR(agora) === 0) { // só na primeira rodada do dia novo (00h17)
+      const mn = (await L().get('meianoite_cfg', { type: 'json' }).catch(() => null)) || {}, fora = mn.fora || [];
+      let todas = [];
+      try { todas = ((await graphConta('GET', 'campaigns', { fields: 'name,effective_status', limit: 400 })).data || []).map((x) => ({ id: String(x.id), nome: x.name, status: x.effective_status })); } catch (e) { todas = (meta.campanhas || []).map((x) => ({ id: String(x.id), nome: x.nome, status: x.status })); }
+      for (const c of todas) {
+        if (c.status === 'ACTIVE' || fora.indexOf(String(c.id)) >= 0 || !/PAUSED/.test(String(c.status || ''))) continue;
+        const mc = (meta.campanhas || []).find((x) => String(x.id) === c.id); if (mc) mc.status = 'ACTIVE';
+        try { if (!simular) { await aplicarAcao(c, 'ativar', 'robô (meia-noite)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (meia-noite)', em: agora }; }
+          feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: '🌙 dia novo: liguei (está marcada na aba Meia-noite)' }); }
+        catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui ligar à meia-noite: ' + e.message }); }
+      }
+    }
   }
+  const atraso = (await L().get('vigia_atraso', { type: 'json' }).catch(() => null)) || {};
   const ativas = (meta.campanhas || []).filter((c) => c.status === 'ACTIVE' || (modo[c.id] && !modo[c.id].fim));
   const fotos = (await L().get('cpa_hist_' + hoje, { type: 'json' }).catch(() => null)) || {}; // custo por venda de hoje a cada conferência
   // 🧹 LIMPEZA ÚNICA (14/11): olha a média de 3 dias de TODAS as ligadas, mesmo as que você ligou hoje (só nessa primeira rodada)
@@ -115,12 +129,21 @@ export async function rodarRobo(simular) {
     let pausar = null;
     const lucroH = vH * tk - gH * (1 + imp);
     const vMeta = dh.compras || 0, vCpa = vMeta || vH; // custo por compra = o do app do Meta (se o Meta ainda não contou, usa as do site)
-    if (cfg.autoPausar && !voceAtivou && aprendeu) { // REGRA DE 14/11: campanha com 2+ dias de dados → decide pela MÉDIA DE 3 DIAS
+    // ⭐ campanha BOA = vendeu nos 3 dias ANTERIORES a hoje com custo por compra até R$ 9,99
+    let gP = 0, vPm = 0, vPs = 0;
+    for (const d of [ontem, diaBR(agora - 2 * 864e5), diaBR(agora - 3 * 864e5)]) { const x = (c.dias || {})[d] || {}; gP += x.gasto || 0; vPm += x.compras || 0; vPs += s.porDia[d] || 0; }
+    const vP = vPm || vPs, boa = vP > 0 && gP / vP <= 9.99, LIM_SEM = boa ? 9.99 : 7;
+    let semCompra = false;
+    if (cfg.autoPausar && !voceAtivou && !eua) { // REGRA DE 15/11 (Brasil)
+      if (vH === 0 && gH >= LIM_SEM) { pausar = 'hoje gastou ' + brl(gH) + ' sem nenhuma compra (' + (boa ? '⭐ campanha boa, limite R$ 9,99' : 'campanha nova/parada, limite R$ 7') + ')'; semCompra = true; }
+      else if (aprendeu && gH >= 3 && v3 > 0 && g3 / v3 > CPA_MAX) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou de ' + brl(CPA_MAX) + ', está dando prejuízo';
+      else if (!aprendeu && vCpa > 0 && gH / vCpa > CPA_MAX) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s), gasto ' + brl(gH) + ') — passou de ' + brl(CPA_MAX);
+    } else if (cfg.autoPausar && !voceAtivou && aprendeu) { // 🇺🇸 EUA: média de 3 dias
       if (v3 === 0 && g3 >= PRIM_C) pausar = 'em 3 dias gastou ' + brl(g3) + ' e não fez nenhuma compra' + (eua ? ' (EUA, limite ' + brl(PRIM_C) + ')' : '');
       else if (v3 > 0 && g3 / v3 > CPA_C) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou do máximo de ' + brl(CPA_C);
-      else if (vH === 0 && gH >= TRAVA_C) pausar = 'trava de segurança: hoje gastou ' + brl(gH) + ' sem nenhuma compra (limite ' + brl(TRAVA_C) + ')';
-    } else if (cfg.autoPausar && !voceAtivou) { // campanha nova (menos de 2 dias de dados): regra só do dia de hoje
-      if (vH === 0 && gH >= PRIM_C) pausar = 'hoje gastou ' + brl(gH) + ' e não fez nenhuma venda (limite ' + brl(PRIM_C) + ')';
+      else if (vH === 0 && gH >= TRAVA_C) { pausar = 'trava de segurança: hoje gastou ' + brl(gH) + ' sem nenhuma compra (limite ' + brl(TRAVA_C) + ')'; semCompra = true; }
+    } else if (cfg.autoPausar && !voceAtivou) { // 🇺🇸 EUA campanha nova: regra só do dia de hoje
+      if (vH === 0 && gH >= PRIM_C) { pausar = 'hoje gastou ' + brl(gH) + ' e não fez nenhuma venda (limite ' + brl(PRIM_C) + ')'; semCompra = true; }
       else if (vCpa > 0 && gH / vCpa > CPA_C) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s) no Meta, gasto ' + brl(gH) + ') — passou do máximo de ' + brl(CPA_C);
     }
     // 🛡️ VIGIA desta campanha (você ligou no painel): o SEU limite vale sempre, mesmo se foi você quem ligou/subiu hoje
@@ -139,7 +162,8 @@ export async function rodarRobo(simular) {
     if (pausar) {
       if (m) { m.fim = true; m.saiu = 'bateu o limite'; }
       if (c.status !== 'ACTIVE') { if (!simular) await registrarAcao(c.id, 'pausar', { quem: 'robô' }).catch(() => {}); feitas.push({ tipo: 'pausou', camp: c.nome, id: c.id, aviso: true, motivo: pausar + ' — estava no modo horário barato, agora fica desligada até amanhã' }); continue; }
-      try { if (!simular) await aplicarAcao(c, 'pausar', 'robô'); feitas.push({ tipo: 'pausou', camp: c.nome, id: c.id, aviso: true, motivo: pausar }); }
+      try { if (!simular) await aplicarAcao(c, 'pausar', 'robô'); feitas.push({ tipo: 'pausou', camp: c.nome, id: c.id, aviso: true, motivo: pausar + (semCompra ? ' — vou vigiar 40 min: se o Meta contar uma compra atrasada, eu religo' : '') });
+        if (semCompra) atraso[c.id] = { em: agora, nome: c.nome, gasto: +gH.toFixed(2), dia: hoje }; }
       catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui desligar: ' + e.message }); }
       continue;
     }
@@ -185,6 +209,7 @@ export async function rodarRobo(simular) {
     if (limpezaAgora) await L().setJSON(LIMPEZA, { em: agora }).catch(() => {});
     await L().setJSON('cpa_hist_' + hoje, fotos).catch(() => {});
     await L().setJSON('modohor_' + hoje, modo).catch(() => {});
+    await L().setJSON('vigia_atraso', atraso).catch(() => {});
     const avisos = [];
     for (const f of feitas) {
       await logRobo(f);
