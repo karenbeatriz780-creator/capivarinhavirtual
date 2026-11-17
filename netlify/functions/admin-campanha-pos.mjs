@@ -55,6 +55,30 @@ function tirar(t, chave) {
   return { t: n, aviso };
 }
 
+export async function tirarDaCampanha(camp, chave) {
+  const sets = (await graph('GET', camp + '/adsets', { fields: 'id,name,targeting', limit: 50 })).data || [];
+  const feitos = [], erros = [], avisos = [];
+  for (const s of sets) {
+    const atual = posicoesDe(s.targeting);
+    if (!atual.auto && atual.lista.indexOf(chave) < 0) continue; // esse conjunto já não usa
+    try {
+      const r = tirar(s.targeting, chave);
+      try { await graph('POST', s.id, { targeting: r.t }); }
+      catch (e1) { // o Meta recusou alguma posição da lista completa → tenta com as principais (sem a que você tirou)
+        const t2 = JSON.parse(JSON.stringify(r.t)), BASE = { facebook: ['feed', 'story', 'facebook_reels'], instagram: ['stream', 'story', 'reels', 'explore'], whatsapp: ['status'] };
+        t2.publisher_platforms = t2.publisher_platforms.filter((pf) => BASE[pf]);
+        ['messenger', 'audience_network', 'threads'].forEach((pf) => { delete t2[pf + '_positions']; });
+        t2.publisher_platforms.forEach((pf) => { t2[pf + '_positions'] = (t2[pf + '_positions'] || BASE[pf]).filter((x) => BASE[pf].indexOf(x) >= 0 && pf + '|' + x !== chave); if (!t2[pf + '_positions'].length) { t2.publisher_platforms = t2.publisher_platforms.filter((y) => y !== pf); delete t2[pf + '_positions']; } });
+        if (!t2.publisher_platforms.length) throw e1;
+        await graph('POST', s.id, { targeting: t2 });
+        r.aviso.push('O Meta não aceitou todos os posicionamentos automáticos, então ficaram os principais (Feed, Stories, Reels e Explorar).');
+      }
+      feitos.push(s.name); r.aviso.forEach((a) => { if (avisos.indexOf(a) < 0) avisos.push(a); });
+    } catch (e) { erros.push(s.name + ': ' + e.message); }
+  }
+  return { feitos, erros, avisos };
+}
+
 export default async (req) => {
   const senha = (process.env.ADMIN_SENHA || '').trim();
   if (!senha || (req.headers.get('x-admin-key') || '') !== senha) return json({ erro: 'Senha de administrador incorreta.' }, 401);
@@ -72,26 +96,7 @@ export default async (req) => {
     let b = {}; try { b = await req.json(); } catch (e) {}
     const camp = String(b.camp || ''), chave = String(b.chave || '');
     if (!/^\d{5,30}$/.test(camp) || !/^[a-z_]+\|[a-z_]+$/.test(chave)) return json({ erro: 'Pedido inválido.' }, 400);
-    const sets = (await graph('GET', camp + '/adsets', { fields: 'id,name,targeting', limit: 50 })).data || [];
-    const feitos = [], erros = [], avisos = [];
-    for (const s of sets) {
-      const atual = posicoesDe(s.targeting);
-      if (!atual.auto && atual.lista.indexOf(chave) < 0) continue; // esse conjunto já não usa
-      try {
-        const r = tirar(s.targeting, chave);
-        try { await graph('POST', s.id, { targeting: r.t }); }
-        catch (e1) { // o Meta recusou alguma posição da lista completa → tenta com as principais (sem a que você tirou)
-          const t2 = JSON.parse(JSON.stringify(r.t)), BASE = { facebook: ['feed', 'story', 'facebook_reels'], instagram: ['stream', 'story', 'reels', 'explore'], whatsapp: ['status'] };
-          t2.publisher_platforms = t2.publisher_platforms.filter((pf) => BASE[pf]);
-          ['messenger', 'audience_network', 'threads'].forEach((pf) => { delete t2[pf + '_positions']; });
-          t2.publisher_platforms.forEach((pf) => { t2[pf + '_positions'] = (t2[pf + '_positions'] || BASE[pf]).filter((x) => BASE[pf].indexOf(x) >= 0 && pf + '|' + x !== chave); if (!t2[pf + '_positions'].length) { t2.publisher_platforms = t2.publisher_platforms.filter((y) => y !== pf); delete t2[pf + '_positions']; } });
-          if (!t2.publisher_platforms.length) throw e1;
-          await graph('POST', s.id, { targeting: t2 });
-          r.aviso.push('O Meta não aceitou todos os posicionamentos automáticos, então ficaram os principais (Feed, Stories, Reels e Explorar).');
-        }
-        feitos.push(s.name); r.aviso.forEach((a) => { if (avisos.indexOf(a) < 0) avisos.push(a); });
-      } catch (e) { erros.push(s.name + ': ' + e.message); }
-    }
+    const { feitos, erros, avisos } = await tirarDaCampanha(camp, chave);
     if (feitos.length) await logRobo({ tipo: 'posicao', camp: String(b.nome || camp), id: camp, motivo: 'você tirou o posicionamento "' + (NOME[chave] || chave) + '" (' + feitos.length + ' conjunto(s))' }).catch(() => {});
     if (!feitos.length && !erros.length) return json({ ok: true, nada: true });
     return json({ ok: !erros.length, feitos, erros, avisos }, erros.length && !feitos.length ? 409 : 200);

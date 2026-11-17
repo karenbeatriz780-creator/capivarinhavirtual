@@ -11,6 +11,13 @@ export default async () => {
       console.log('QR corrigido: livros refeitos', await refazerLivros(10));
     }
   } catch (e) { console.error('qrfix:', e && e.message); }
+  // 17/11: tira os Stories do Facebook das campanhas sem futuro (uma vez, em segundo plano)
+  try {
+    if (!(await getStore('gastos').get('semstoryfb_20261117', { type: 'json' }).catch(() => null))) {
+      const base = process.env.URL || 'https://capivarinhalove.com.br';
+      await fetch(base + '/.netlify/functions/posicoes-fracas-background', { method: 'POST', headers: { 'x-admin-key': (process.env.ADMIN_SENHA || '').trim() } });
+    }
+  } catch (e) { console.error('semstoryfb:', e && e.message); }
   try {
     const feita = await getStore('gastos').get('limpeza3d_20261114', { type: 'json' }).catch(() => null);
     if (feita) return new Response('ok');

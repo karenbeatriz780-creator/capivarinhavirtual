@@ -231,7 +231,7 @@ export async function checarTudo() {
 //  • destino só o site, botão Comprar
 // ORDEM SEGURA: criativo primeiro (não gasta) → campanha/conjunto/anúncio PAUSADOS → confere tudo lendo de volta
 //  → só então liga. Qualquer erro: apaga o que criou. Nunca fica nada pela metade gastando.
-const POSICOES = { publisher_platforms: ['facebook', 'instagram'], facebook_positions: ['feed', 'story', 'facebook_reels'], instagram_positions: ['stream', 'story', 'reels'] };
+const POSICOES = { publisher_platforms: ['facebook', 'instagram'], facebook_positions: ['feed', 'facebook_reels'], instagram_positions: ['stream', 'story', 'reels'] }; // 17/11: sem Stories do Facebook
 const REGRA_FEED = { publisher_platforms: ['facebook', 'instagram'], facebook_positions: ['feed'], instagram_positions: ['stream'] };
 const REGRA_VERT = { publisher_platforms: ['facebook', 'instagram', 'whatsapp'], facebook_positions: ['story', 'facebook_reels'], instagram_positions: ['story', 'reels'], whatsapp_positions: ['status'] };
 export const SEM_APRIMORAMENTOS = ['adapt_to_placement', 'add_text_overlay', 'ads_with_benefits', 'biz_ai', 'creative_stickers', 'description_automation',
