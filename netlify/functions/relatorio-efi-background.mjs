@@ -29,23 +29,28 @@ async function listar(caminho, campo, token, ini, fim, avisos) {
 
 const nomePagador = (p) => (p.gnExtras && p.gnExtras.pagador && p.gnExtras.pagador.nome) || (p.pagador && p.pagador.nome) || '';
 const ehLivro = (g) => g.produto === 'livro' || !!g.livro;
+const temMus = (g) => !!(g.musicaPreviewUrl || g.musicaPreviewId || (g.ofertaM1 && g.ofertaM1.url) || (g.musica && (g.musica.url || g.musica.taskId || typeof g.musica === 'string')));
+const NOMES = { carta: 'Carta digital personalizada', convite: 'Convite digital personalizado', jogo: 'Jogo/quiz digital personalizado', relampago: 'Presente digital personalizado',
+  presente: 'Presente digital personalizado (página com fotos e mensagem)', completo: 'Presente digital personalizado + música' };
 function produto(g) {
   if (!g) return '';
   if (ehLivro(g)) return 'Livro infantil personalizado + músicas';
-  if (String(g.produto || '').startsWith('extra')) return 'Item extra do pedido (' + String(g.produto).replace('extra_', '') + ')';
-  return 'Música personalizada (' + (g.quatro ? '4 versões' : '2 versões') + ')';
+  const pr = String(g.produto || '');
+  if (pr.startsWith('extra')) return 'Item extra do pedido (' + pr.replace('extra_', '') + ')';
+  if (pr === 'musica' || (!NOMES[pr] && temMus(g))) return 'Música personalizada (' + (g.quatro ? '4 versões' : '2 versões') + ')';
+  return NOMES[pr] || 'Presente digital personalizado';
 }
 function linkEntrega(g) {
   if (!g) return '';
   if (ehLivro(g)) return SITE + '/#/livro/' + g.id;
   if (String(g.produto || '').startsWith('extra') && g.refPresente) return SITE + '/#/p/' + g.refPresente + '/c';
-  return SITE + '/#/p/' + g.id + '/c';
+  return SITE + '/#/p/' + g.id + (g.produto === 'musica' || temMus(g) ? '/c' : '');
 }
 function entregue(g) {
   if (!g || !g.pago) return false;
-  if (ehLivro(g)) return !!(g.capa || (g.paginas && g.paginas.length) || g.pdf);
-  if (String(g.produto || '').startsWith('extra')) return true;
-  return !!(g.musicaPreviewUrl || (g.ofertaM1 && g.ofertaM1.url));
+  if (ehLivro(g)) { const L = g.livro || {}; return L.status === 'pronto' || !!(L.capa && L.capa.ok) || (L.paginas || []).some((x) => x && x.ok) || !!g.capa; }
+  if (g.produto === 'musica') return temMus(g);
+  return true; // presente / carta / convite / jogo / extras: o produto é a própria página personalizada, liberada no pagamento
 }
 
 export default async (req) => {
@@ -54,6 +59,7 @@ export default async (req) => {
   const gastos = getStore('gastos');
   let b = {}; try { b = await req.json(); } catch (e) {}
   const fim = b.fim ? Date.parse(b.fim + 'T23:59:59-03:00') : Date.now();
+  const marcados = new Set((Array.isArray(b.contestados) ? b.contestados : []).map((x) => String(x).trim()).filter((x) => /^E[0-9A-Za-z]{20,40}$/.test(x)));
   const ini = b.inicio ? Date.parse(b.inicio + 'T00:00:00-03:00') : fim - 120 * DIA;
   await gastos.setJSON('relatorio_efi', { status: 'gerando', inicio: ini, fim, em: Date.now() });
   try {
@@ -79,7 +85,7 @@ export default async (req) => {
         e2e: p.endToEndId || '', txid: p.txid || '', valor: Number(p.valor) || 0, pagoEm: p.horario || '', pagador: nomePagador(p),
         pedido: g ? g.id : '', produto: produto(g), cliente: g ? (g.meuNome || '') : '', para: g ? (g.musicaParaNome || g.nome || g.parceiroNome || '') : '',
         entregue: entregue(g), entregueEm: g ? (g.pagoEm || null) : null, link: linkEntrega(g), canceladoSite: !!(g && g.cancelado),
-        devolucoes: devs, infracoes: infs, contestado: devs.length > 0 || infs.length > 0
+        devolucoes: devs, infracoes: infs, informado: marcados.has(p.endToEndId), contestado: devs.length > 0 || infs.length > 0 || marcados.has(p.endToEndId)
       });
     }
     // infrações de Pix que não vieram na lista (fora do período da lista)
@@ -93,6 +99,7 @@ export default async (req) => {
       contestados: contest.length, valorContestado: +contest.reduce((s, l) => s + l.valor, 0).toFixed(2),
       percentual: linhas.length ? +(contest.length * 100 / linhas.length).toFixed(2) : 0,
       contestadosEntregues: contest.filter((l) => l.entregue).length,
+      semPedido: linhas.filter((l) => !l.pedido).length, informadosNaoAchados: [...marcados].filter((x) => !vistos.has(x)),
       reembolsosPeloSite: linhas.filter((l) => l.canceladoSite).length,
       infracoesMED: ri.itens.length, medLiberado: !ri.negado
     };
