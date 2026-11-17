@@ -85,6 +85,8 @@ export default async (req) => {
         e2e: p.endToEndId || '', txid: p.txid || '', valor: Number(p.valor) || 0, pagoEm: p.horario || '', pagador: nomePagador(p),
         pedido: g ? g.id : '', produto: produto(g), cliente: g ? (g.meuNome || '') : '', para: g ? (g.musicaParaNome || g.nome || g.parceiroNome || '') : '',
         entregue: entregue(g), entregueEm: g ? (g.pagoEm || null) : null, link: linkEntrega(g), canceladoSite: !!(g && g.cancelado),
+        diag: g && !entregue(g) ? { produto: g.produto || '(vazio)', pago: !!g.pago, cancelado: !!g.cancelado, livro: g.livro ? (g.livro.status || '?') : null,
+          campos: Object.keys(g).filter((k) => /musica|livro|oferta|url|pagin|capa|foto|pdf/i.test(k)).slice(0, 14) } : null,
         devolucoes: devs, infracoes: infs, informado: marcados.has(p.endToEndId), contestado: devs.length > 0 || infs.length > 0 || marcados.has(p.endToEndId)
       });
     }
@@ -99,11 +101,12 @@ export default async (req) => {
       contestados: contest.length, valorContestado: +contest.reduce((s, l) => s + l.valor, 0).toFixed(2),
       percentual: linhas.length ? +(contest.length * 100 / linhas.length).toFixed(2) : 0,
       contestadosEntregues: contest.filter((l) => l.entregue).length,
-      semPedido: linhas.filter((l) => !l.pedido).length, informadosNaoAchados: [...marcados].filter((x) => !vistos.has(x)),
+      semPedido: linhas.filter((l) => !l.pedido).length,
+      naoEntreguesPorTipo: linhas.filter((l) => l.diag).reduce((o, l) => { const k = l.diag.produto + (l.diag.livro ? ' / livro ' + l.diag.livro : '') + (l.diag.pago ? '' : ' / não pago no site'); o[k] = (o[k] || 0) + 1; return o; }, {}), informadosNaoAchados: [...marcados].filter((x) => !vistos.has(x)),
       reembolsosPeloSite: linhas.filter((l) => l.canceladoSite).length,
       infracoesMED: ri.itens.length, medLiberado: !ri.negado
     };
-    await gastos.setJSON('relatorio_efi', { status: 'pronto', inicio: ini, fim, em: Date.now(), resumo, linhas, infSoltas, avisos: avisos.slice(0, 8) });
+    await gastos.setJSON('relatorio_efi', { status: 'pronto', versao: 2, inicio: ini, fim, em: Date.now(), resumo, linhas, infSoltas, avisos: avisos.slice(0, 8) });
   } catch (e) {
     await gastos.setJSON('relatorio_efi', { status: 'erro', erro: String(e && e.message || e), inicio: ini, fim, em: Date.now() });
   }
