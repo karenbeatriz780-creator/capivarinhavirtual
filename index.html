@@ -8141,6 +8141,60 @@ var RELACAO_NOME={
   avo:'Pra vó/vô', tio:'Pra tia/tio', sogro:'Pra sogra/sogro', padrinho:'Pra dinda/padrinho', familia:'Pra família',
   comercial:'Comercial (empresa)', louvor:'Louvor a Deus', outro:'Outro'
 };
+/* 📄 Relatório para a Efí */
+var _pnlRef=null, _pnlRefIv=null;
+function pnlRefSt(d){
+  var st=el('pnlRefSt'), ab=el('pnlRefAbrir'); if(!st) return;
+  if(!d||d.status==='nada'){ st.textContent='Ainda não foi gerado.'; return; }
+  if(d.status==='gerando'){ st.textContent='⏳ Gerando… puxando os Pix da Efí (pode levar alguns minutos).'; return; }
+  if(d.status==='erro'){ st.textContent='⚠️ Erro: '+(d.erro||''); return; }
+  var r=d.resumo||{}; _pnlRef=d; if(ab) ab.hidden=false;
+  st.innerHTML='✅ Pronto ('+new Date(d.em).toLocaleString('pt-BR')+'): <b>'+r.pagamentos+'</b> Pix · <b>'+r.entregues+'</b> entregues · <b style="color:#c62828">'+r.contestados+'</b> contestados ('+String(r.percentual).replace('.',',')+'%)'+(r.medLiberado?'':'<br>⚠️ A Efí não liberou a lista de contestações MED (falta ativar a permissão "infrações" na aplicação da Efí). As devoluções aparecem mesmo assim.');
+}
+function pnlRefLer(){ return fetch('/.netlify/functions/admin-relatorio-efi',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); }); }
+function pnlRefVigiar(){ clearInterval(_pnlRefIv); _pnlRefIv=setInterval(function(){ if(!el('pnlRefSt')){ clearInterval(_pnlRefIv); return; } pnlRefLer().then(function(d){ pnlRefSt(d); if(d.status!=='gerando') clearInterval(_pnlRefIv); }).catch(function(){}); },6000); }
+document.addEventListener('click',function(e){
+  var g=e.target&&e.target.closest&&e.target.closest('#pnlRefGerar');
+  if(g){ g.disabled=true; var ini=(el('pnlRefIni')||{}).value||'', fim=(el('pnlRefFim')||{}).value||'';
+    fetch('/.netlify/functions/relatorio-efi-background',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({inicio:ini,fim:fim})})
+      .then(function(){ g.disabled=false; pnlRefSt({status:'gerando'}); pnlRefVigiar(); }).catch(function(){ g.disabled=false; toast('Sem conexão.'); });
+    return; }
+  var a=e.target&&e.target.closest&&e.target.closest('#pnlRefAbrir');
+  if(a&&_pnlRef){ var w=window.open('','_blank'); if(!w){ toast('Libere as janelas (pop-up) pra abrir o relatório.'); return; } w.document.open(); w.document.write(htmlRelatorioEfi(_pnlRef)); w.document.close(); }
+});
+function htmlRelatorioEfi(d){
+  var r=d.resumo||{}, L=d.linhas||[], C=L.filter(function(l){ return l.contestado; });
+  function e(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function dt(t){ if(!t) return '—'; var x=new Date(t); return isNaN(x)?e(t):x.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  function rs(v){ return 'R$ '+Number(v||0).toFixed(2).replace('.',','); }
+  function dia(t){ return new Date(t).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'}); }
+  function contest(l){ return l.infracoes.map(function(x){ return '<div><b>MED '+e(x.status)+'</b>'+(x.razao?' · motivo: '+e(x.razao):'')+(x.tipoSituacao?' · '+e(x.tipoSituacao):'')+(x.tipoFraude?' · '+e(x.tipoFraude):'')+(x.comentario?'<br><i>"'+e(x.comentario)+'"</i>':'')+'</div>'; }).join('')+
+      l.devolucoes.map(function(x){ return '<div><b>Devolução '+e(x.status)+'</b> '+rs(x.valor)+(x.natureza?' · '+e(x.natureza):'')+(x.motivo?' · '+e(x.motivo):'')+(x.quando?' · '+dt(x.quando):'')+'</div>'; }).join(''); }
+  function lk(l){ return l.link?'<a href="'+e(l.link)+'">'+e(l.link.replace('https://',''))+'</a>':'—'; }
+  var periodo=dia(d.inicio)+' a '+dia(d.fim);
+  var resposta='Olá, equipe Efí.\n\nSegue o relatório dos pagamentos recebidos de '+periodo+'.\n\n'+
+    'Sobre o serviço: o site capivarinhalove.com.br vende músicas personalizadas (criadas a partir da história e dos nomes enviados pelo próprio cliente) e livros infantis personalizados com o nome e a foto da criança. Antes de pagar, o cliente preenche o pedido e ouve uma prévia da própria música. Depois do Pix, a liberação é automática: as músicas completas ficam num link permanente, que também é enviado pelo WhatsApp. O produto é digital e entregue em poucos minutos.\n\n'+
+    'No período foram '+r.pagamentos+' pagamentos ('+rs(r.valorTotal)+'), dos quais '+r.entregues+' tiveram o produto entregue. Apenas '+r.contestados+' foram contestados ('+String(r.percentual).replace('.',',')+'% do total'+(r.contestados?'; '+r.contestadosEntregues+' deles com o produto já entregue antes da contestação':'')+'). No relatório, cada pagamento contestado aparece destacado com a data do pagamento, a data da entrega e o link do produto entregue, que continua funcionando.\n\n'+
+    'Nunca recusamos atendimento: o cliente tem suporte pelo WhatsApp e pelo site. Ficamos à disposição para qualquer informação adicional.\n\nAtenciosamente,\nGusthavo dos Santos de Jesus';
+  var linhaT=function(l){ return '<tr'+(l.contestado?' class="ct"':'')+'><td>'+dt(l.pagoEm)+'</td><td>'+rs(l.valor)+'</td><td>'+e(l.pagador)+'</td><td>'+e(l.produto||'—')+(l.para?'<br><small>para '+e(l.para)+'</small>':'')+'</td><td>'+(l.entregue?'✅ '+dt(l.entregueEm):'—')+'</td><td class="lk">'+lk(l)+'</td><td>'+(l.contestado?contest(l):'')+'</td></tr>'; };
+  var cab='<tr><th>Pagamento</th><th>Valor</th><th>Pagador</th><th>Produto</th><th>Entregue</th><th>Link entregue</th><th>Contestação</th></tr>';
+  return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Relatório de pagamentos Pix — Capivarinha Love</title><style>'+
+    'body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#222;margin:20px;font-size:12px;background:#fff}h1{font-size:20px;margin:0}h2{font-size:15px;margin:22px 0 8px;border-bottom:2px solid #eee;padding-bottom:4px}'+
+    '.sub{color:#666}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:12px}.card{border:1px solid #e3e3e3;border-radius:10px;padding:10px}.card b{display:block;font-size:20px}.card.red{border-color:#e57373;background:#fff5f5}.card.red b{color:#c62828}.card.ok b{color:#2e7d32}'+
+    'table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #e5e5e5;padding:5px;text-align:left;vertical-align:top}th{background:#f6f6f6}tr.ct td{background:#ffecec}td.lk a{word-break:break-all;color:#1565c0}'+
+    'pre{white-space:pre-wrap;background:#f8f8f8;border:1px solid #e5e5e5;border-radius:8px;padding:10px;font-family:inherit;font-size:12px}.bt{position:fixed;right:14px;bottom:14px;display:flex;gap:6px}.bt button{border:0;border-radius:10px;padding:10px 14px;background:#C2185B;color:#fff;font-weight:700}'+
+    '@media print{.bt{display:none}body{margin:8mm}tr{page-break-inside:avoid}}</style></head><body>'+
+    '<h1>Relatório de pagamentos Pix — Capivarinha Love</h1><div class="sub">capivarinhalove.com.br · Responsável: Gusthavo dos Santos de Jesus · Período: '+periodo+' · Gerado em '+dt(d.em)+' com dados puxados da API da Efí</div>'+
+    '<h2>Resumo</h2><div class="cards"><div class="card"><b>'+r.pagamentos+'</b>Pix recebidos</div><div class="card"><b>'+rs(r.valorTotal)+'</b>valor total</div><div class="card ok"><b>'+r.entregues+'</b>produtos entregues</div><div class="card red"><b>'+r.contestados+'</b>contestados ('+String(r.percentual).replace('.',',')+'%)</div><div class="card"><b>'+rs(r.valorContestado)+'</b>valor contestado</div><div class="card"><b>'+r.contestadosEntregues+'</b>contestados que já tinham sido entregues</div></div>'+
+    (r.medLiberado?'':'<p class="sub">Obs.: a lista de infrações MED não foi liberada para esta aplicação na Efí; as contestações abaixo vêm das devoluções registradas em cada Pix.</p>')+
+    '<h2>Sobre o serviço prestado</h2><p>Venda de <b>músicas personalizadas</b> (criadas a partir da história e dos nomes informados pelo próprio cliente) e de <b>livros infantis personalizados</b> com o nome e a foto da criança. O cliente preenche o pedido no site e <b>ouve uma prévia da própria música antes de pagar</b>. Após o Pix, a liberação é automática: o produto fica disponível num <b>link permanente</b> (coluna "Link entregue"), enviado também pelo WhatsApp. Produto 100% digital, entregue em poucos minutos. Suporte pelo WhatsApp e pelo site.</p>'+
+    '<h2>Pagamentos contestados ('+C.length+')</h2>'+(C.length?'<table>'+cab+C.map(linhaT).join('')+'</table>':'<p>Nenhum pagamento contestado no período.</p>')+
+    ((d.infSoltas||[]).length?'<h2>Outras contestações MED (Pix fora do período listado)</h2><table><tr><th>Data</th><th>Valor</th><th>ID do Pix</th><th>Situação</th><th>Motivo</th></tr>'+d.infSoltas.map(function(x){ return '<tr class="ct"><td>'+dt(x.data)+'</td><td>'+rs(x.valor)+'</td><td>'+e(x.e2e)+'</td><td>'+e(x.status)+'</td><td>'+e(x.razao)+(x.comentario?'<br><i>"'+e(x.comentario)+'"</i>':'')+'</td></tr>'; }).join('')+'</table>':'')+
+    '<h2>Texto de resposta para a Efí</h2><pre id="resp">'+e(resposta)+'</pre>'+
+    '<h2>Todos os pagamentos ('+L.length+')</h2><p class="sub">Linhas em vermelho = contestados.</p><table>'+cab+L.map(linhaT).join('')+'</table>'+
+    '<div class="bt"><button onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById(\'resp\').innerText).then(function(){alert(\'Texto copiado\')})">Copiar texto</button><button onclick="window.print()">Baixar PDF</button></div>'+
+    '</body></html>';
+}
 /* período do painel: '8' (padrão), '30p' / '90p' (só pagos), 'tudo', ou busca por número */
 var _pnlModo='8', _pnlTel='';
 document.addEventListener('click',function(e){
@@ -9503,6 +9557,7 @@ function pnlCampLigar(body){
   if(_pnlAba==='subir'){ if(!_pnlCamp) pnlCampCarregar(); pnlSubirLigar(body); }
   if(_pnlAba==='vigiar'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlVig) pnlVigCarregar(); pnlVigiarLigar(body); }
   if(_pnlAba==='meianoite'){ if(!_pnlMN) pnlMNCarregar(); pnlMNLigar(); }
+  if(_pnlAba==='pagos' && el('pnlRefSt')){ pnlRefLer().then(function(d){ pnlRefSt(d); if(d.status==='gerando') pnlRefVigiar(); }).catch(function(){}); }
 }
 /* ⬆️ ABA SUBIR: todas as campanhas — ativas que podem subir, desligadas que podem subir e as bloqueadas (com o motivo) */
 function pnlSubirHtml(){
@@ -10166,6 +10221,9 @@ function desenharPainel(pedidos, visitas, musicas){
           '<form class="pnl-busca" id="pnlBuscaPix" style="margin-top:.5rem"><input type="text" id="pnlBuscaPixQ" placeholder="Ex.: E6070119… ou Jean Carlos"><button type="submit">Buscar</button></form><div id="pnlBuscaPixRes"></div></div>'+
         pnlPixSemPedidoHtml()+
         pnlAudiosHtml()+
+        '<div class="pnl-sec" id="pnlRef"><h2>📄 Relatório para a Efí (MED)</h2><div class="sub">Puxa da Efí todos os Pix recebidos, as devoluções e as contestações MED (com o motivo), e mostra cada pedido com o link entregue. Demora uns minutos.</div>'+
+          '<div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.5rem"><label style="font-size:.8rem">De <input type="date" id="pnlRefIni" value="2026-07-01"></label><label style="font-size:.8rem">Até <input type="date" id="pnlRefFim"></label></div>'+
+          '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"><button type="button" class="pnl-btn" id="pnlRefGerar">Gerar relatório</button><button type="button" class="pnl-btn" id="pnlRefAbrir" hidden>📄 Abrir relatório (PDF)</button></div><div id="pnlRefSt" class="sub" style="margin-top:.4rem"></div></div>'+
         '<div class="pnl-sec" id="pnlQr"><h2>🔧 QR Code corrigido — quadros dos últimos dias</h2><div class="sub">O QR dos quadros (retrato) feitos até 15/11 podia não ler. Mande o link pra cliente baixar o quadro de novo (o novo já vem com o QR certo). Os livros foram refeitos sozinhos.</div><button type="button" class="pnl-btn" id="pnlQrVer" style="margin-top:.5rem">Ver quadros dos últimos 7 dias</button><div id="pnlQrLista"></div></div>'+
         '<div class="pnl-sec"><h2>Pedidos pagos</h2><div class="sub">Mais recentes primeiro.</div>'+
         '<div class="pnl-lista">'+pagosHtml+'</div></div>'

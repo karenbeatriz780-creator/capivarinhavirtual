@@ -1,0 +1,103 @@
+// 📄 Relatório para a Efí (pedido de informações sobre MED / contestações).
+// Roda em segundo plano (pode demorar uns minutos): puxa da Efí TODOS os Pix recebidos no período,
+// as devoluções de cada um e as infrações MED (com o motivo), liga cada Pix ao pedido do site
+// (produto, cliente, data da entrega, link entregue) e salva o resultado em gastos/relatorio_efi.
+// POST {inicio?:'AAAA-MM-DD', fim?:'AAAA-MM-DD'}  (senha de administrador em x-admin-key)
+import { getStore } from '@netlify/blobs';
+import { obterToken, efiRequest, erroEfi } from './_efi.mjs';
+
+const SITE = 'https://capivarinhalove.com.br';
+const DIA = 864e5, PASSO = 5 * DIA; // a Efí aceita períodos curtos: vai de 5 em 5 dias
+
+async function listar(caminho, campo, token, ini, fim, avisos) {
+  const todos = [];
+  for (let t = ini; t < fim; t += PASSO) {
+    const a = new Date(t), b = new Date(Math.min(fim, t + PASSO));
+    for (let pag = 0; pag < 60; pag++) {
+      const q = '?inicio=' + encodeURIComponent(a.toISOString()) + '&fim=' + encodeURIComponent(b.toISOString()) +
+        '&paginacao.paginaAtual=' + pag + '&paginacao.itensPorPagina=100';
+      const r = await efiRequest(caminho + q, { token });
+      if (!r.ok || !r.data) { avisos.push(caminho + ' (' + a.toISOString().slice(0, 10) + '): ' + erroEfi(r.data, r.status)); if (r.status === 403 || r.status === 401) return { itens: todos, negado: true }; break; }
+      const lista = Array.isArray(r.data[campo]) ? r.data[campo] : [];
+      todos.push(...lista);
+      const tot = r.data.parametros && r.data.parametros.paginacao && r.data.parametros.paginacao.quantidadeDePaginas;
+      if (!tot || pag + 1 >= tot || !lista.length) break;
+    }
+  }
+  return { itens: todos, negado: false };
+}
+
+const nomePagador = (p) => (p.gnExtras && p.gnExtras.pagador && p.gnExtras.pagador.nome) || (p.pagador && p.pagador.nome) || '';
+const ehLivro = (g) => g.produto === 'livro' || !!g.livro;
+function produto(g) {
+  if (!g) return '';
+  if (ehLivro(g)) return 'Livro infantil personalizado + músicas';
+  if (String(g.produto || '').startsWith('extra')) return 'Item extra do pedido (' + String(g.produto).replace('extra_', '') + ')';
+  return 'Música personalizada (' + (g.quatro ? '4 versões' : '2 versões') + ')';
+}
+function linkEntrega(g) {
+  if (!g) return '';
+  if (ehLivro(g)) return SITE + '/#/livro/' + g.id;
+  if (String(g.produto || '').startsWith('extra') && g.refPresente) return SITE + '/#/p/' + g.refPresente + '/c';
+  return SITE + '/#/p/' + g.id + '/c';
+}
+function entregue(g) {
+  if (!g || !g.pago) return false;
+  if (ehLivro(g)) return !!(g.capa || (g.paginas && g.paginas.length) || g.pdf);
+  if (String(g.produto || '').startsWith('extra')) return true;
+  return !!(g.musicaPreviewUrl || (g.ofertaM1 && g.ofertaM1.url));
+}
+
+export default async (req) => {
+  const senha = (process.env.ADMIN_SENHA || '').trim();
+  if (!senha || (req.headers.get('x-admin-key') || '') !== senha) return;
+  const gastos = getStore('gastos');
+  let b = {}; try { b = await req.json(); } catch (e) {}
+  const fim = b.fim ? Date.parse(b.fim + 'T23:59:59-03:00') : Date.now();
+  const ini = b.inicio ? Date.parse(b.inicio + 'T00:00:00-03:00') : fim - 120 * DIA;
+  await gastos.setJSON('relatorio_efi', { status: 'gerando', inicio: ini, fim, em: Date.now() });
+  try {
+    const token = await obterToken(), avisos = [];
+    const rp = await listar('/v2/pix', 'pix', token, ini, fim, avisos);
+    const ri = await listar('/v2/gn/infracoes', 'infracoes', token, ini, fim, avisos);
+    const infPorE2e = {};
+    ri.itens.forEach((x) => { if (x.endToEndId) (infPorE2e[x.endToEndId] = infPorE2e[x.endToEndId] || []).push(x); });
+
+    const txs = getStore('efi-txid'), presentes = getStore('presentes');
+    const linhas = [];
+    for (const p of rp.itens) {
+      let g = null;
+      if (p.txid) {
+        const m = await txs.get(p.txid, { type: 'json' }).catch(() => null);
+        if (m && m.giftId) g = await presentes.get(m.giftId, { type: 'json' }).catch(() => null);
+      }
+      const devs = (p.devolucoes || []).map((d) => ({ valor: d.valor, status: d.status, natureza: d.natureza || '', motivo: d.motivo || d.descricao || '',
+        quando: (d.horario && (d.horario.liquidacao || d.horario.solicitacao)) || '' }));
+      const infs = (infPorE2e[p.endToEndId] || []).map((x) => ({ id: x.idInfracao, status: x.status, razao: x.razao || '', tipoSituacao: x.tipoSituacao || '',
+        tipoFraude: x.tipoFraude || '', comentario: x.comentario || '', aberta: (x.dadosAnalise && x.dadosAnalise.abertura) || x.criadoEm || '', defesa: x.defesa || '' }));
+      linhas.push({
+        e2e: p.endToEndId || '', txid: p.txid || '', valor: Number(p.valor) || 0, pagoEm: p.horario || '', pagador: nomePagador(p),
+        pedido: g ? g.id : '', produto: produto(g), cliente: g ? (g.meuNome || '') : '', para: g ? (g.musicaParaNome || g.nome || g.parceiroNome || '') : '',
+        entregue: entregue(g), entregueEm: g ? (g.pagoEm || null) : null, link: linkEntrega(g), canceladoSite: !!(g && g.cancelado),
+        devolucoes: devs, infracoes: infs, contestado: devs.length > 0 || infs.length > 0
+      });
+    }
+    // infrações de Pix que não vieram na lista (fora do período da lista)
+    const vistos = new Set(linhas.map((l) => l.e2e));
+    const infSoltas = ri.itens.filter((x) => !vistos.has(x.endToEndId)).map((x) => ({ e2e: x.endToEndId, valor: Number(x.valor) || 0, data: x.dataTransacao || '', status: x.status, razao: x.razao || '', comentario: x.comentario || '' }));
+    linhas.sort((a, c) => String(c.pagoEm).localeCompare(String(a.pagoEm)));
+    const contest = linhas.filter((l) => l.contestado);
+    const resumo = {
+      pagamentos: linhas.length, valorTotal: +linhas.reduce((s, l) => s + l.valor, 0).toFixed(2),
+      ligados: linhas.filter((l) => l.pedido).length, entregues: linhas.filter((l) => l.entregue).length,
+      contestados: contest.length, valorContestado: +contest.reduce((s, l) => s + l.valor, 0).toFixed(2),
+      percentual: linhas.length ? +(contest.length * 100 / linhas.length).toFixed(2) : 0,
+      contestadosEntregues: contest.filter((l) => l.entregue).length,
+      reembolsosPeloSite: linhas.filter((l) => l.canceladoSite).length,
+      infracoesMED: ri.itens.length, medLiberado: !ri.negado
+    };
+    await gastos.setJSON('relatorio_efi', { status: 'pronto', inicio: ini, fim, em: Date.now(), resumo, linhas, infSoltas, avisos: avisos.slice(0, 8) });
+  } catch (e) {
+    await gastos.setJSON('relatorio_efi', { status: 'erro', erro: String(e && e.message || e), inicio: ini, fim, em: Date.now() });
+  }
+};
