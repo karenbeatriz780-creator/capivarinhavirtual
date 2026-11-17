@@ -79,29 +79,34 @@ export async function rodarRobo(simular) {
   if (!simular && Object.keys(modoOntem).length) await L().setJSON('modohor_' + ontem, modoOntem).catch(() => {});
   // 🌙 MEIA-NOITE (regra de 17/11): liga SÓ as campanhas marcadas que TÊM FUTURO (última semana: 3+ vendas a até R$ 9,50 cada).
   //    As ligadas SEM futuro que já gastaram R$ 10+ na semana sem provar que vendem → desliga. Campanha nova (gastou menos de R$ 10) fica.
-  const flagMN = 'meianoite_feito_' + hoje;
-  if (cfg.autoPausar && !(await L().get(flagMN, { type: 'json' }).catch(() => null))) {
-    if (!simular) await L().setJSON(flagMN, { em: agora }).catch(() => {});
-    if (horaBR(agora) === 0) { // só na primeira rodada do dia novo (00h17)
+  const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117';
+  // ⚡ aplicação ÚNICA agora (17/11 à noite): mesma análise da meia-noite, com a semana até hoje
+  const jaAgora = cfg.autoPausar && !simular && !(await L().get(FLAG_JA, { type: 'json' }).catch(() => null));
+  if (jaAgora) await L().setJSON(FLAG_JA, { em: agora }).catch(() => {});
+  if (cfg.autoPausar && (jaAgora || !(await L().get(flagMN, { type: 'json' }).catch(() => null)))) {
+    if (!simular && !jaAgora) await L().setJSON(flagMN, { em: agora }).catch(() => {});
+    if (horaBR(agora) === 0 || jaAgora) { // só na primeira rodada do dia novo (00h17) — ou na aplicação única
       const mn = (await L().get('meianoite_cfg', { type: 'json' }).catch(() => null)) || {}, fora = mn.fora || [];
       let todas = [];
       try { todas = ((await graphConta('GET', 'campaigns', { fields: 'name,effective_status', limit: 400 })).data || []).map((x) => ({ id: String(x.id), nome: x.name, status: x.effective_status })); } catch (e) { todas = (meta.campanhas || []).map((x) => ({ id: String(x.id), nome: x.nome, status: x.status })); }
       for (const c of todas) {
         const mc = (meta.campanhas || []).find((x) => String(x.id) === c.id);
-        const f = futuro(mc || { id: c.id, nome: c.nome, dias: {} }, site, agora - 864e5);
+        const f = futuro(mc || { id: c.id, nome: c.nome, dias: {} }, site, jaAgora ? agora : agora - 864e5);
         const txt = f.vendas + ' venda(s) na semana' + (f.cpa != null ? ' a ' + brl(f.cpa) + ' cada' : '') + ', gasto ' + brl(f.gasto);
         if (c.status === 'ACTIVE') { // ligada sem futuro → desliga (só se já teve chance: R$ 10+ na semana)
+          const ac = acoes[c.id]; if (ac && ac.tipo === 'ativar' && !/^robô/.test(ac.quem || '') && diaBR(ac.em) === hoje) continue; // você ligou hoje → respeita
           if (f.tem || f.gasto < 10 || f.eua) continue; // EUA segue as regras próprias (média de 3 dias, R$ 30)
           try { if (!simular) { await aplicarAcao(c, 'pausar', 'robô'); acoes[c.id] = { tipo: 'pausar', quem: 'robô', em: agora }; } if (mc) mc.status = 'PAUSED';
-            feitas.push({ tipo: 'pausou', camp: c.nome, id: c.id, aviso: true, motivo: '🌙 dia novo: desliguei, não tem futuro (' + txt + ')' }); }
+            feitas.push({ tipo: 'pausou', camp: c.nome, id: c.id, aviso: true, motivo: (jaAgora ? '⚡ análise de agora' : '🌙 dia novo') + ': desliguei, não tem futuro (' + txt + ')' }); }
           catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui desligar à meia-noite: ' + e.message }); }
           continue;
         }
         if (fora.indexOf(String(c.id)) >= 0 || !/PAUSED/.test(String(c.status || ''))) continue;
         if (!f.tem) continue; // sem futuro: o robô não liga (só se VOCÊ ligar)
+        if (jaAgora) { const ap = acoes[c.id]; if (ap && ap.tipo === 'pausar' && diaBR(ap.em) === hoje) continue; } // desligada hoje pela regra do dia → não religa agora
         if (mc) mc.status = 'ACTIVE';
         try { if (!simular) { await aplicarAcao(c, 'ativar', 'robô (meia-noite)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (meia-noite)', em: agora }; }
-          feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: '🌙 dia novo: liguei — ⭐ tem futuro (' + txt + ')' }); }
+          feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: (jaAgora ? '⚡ análise de agora' : '🌙 dia novo') + ': liguei — ⭐ tem futuro (' + txt + ')' }); }
         catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui ligar à meia-noite: ' + e.message }); }
       }
     }
