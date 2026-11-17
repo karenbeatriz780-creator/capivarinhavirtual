@@ -9596,15 +9596,15 @@ function pnlMNCarregar(){
 }
 function pnlMNHtml(){
   var D=_pnlMN;
-  var topo='<div class="dsh-card"><div class="dsh-t">🌙 Ligar à meia-noite</div><div class="dsh-nota">Quando o dia vira no Meta (00h), o robô <b>liga todas as campanhas marcadas</b>. Desmarque as que você <b>não quer que liguem de jeito nenhum</b>. Campanha nova já entra marcada.<br>'+
-    '<b>Regra do dia</b> (gasto sem nenhuma compra): ⭐ campanha boa (vendeu nos 3 dias anteriores a até R$ 9,99) → até <b>R$ 9,99</b>; nova ou parada → até <b>R$ 7</b>. Sem chance (2 dos últimos 3 dias sem nenhuma venda) → até <b>R$ 5</b>. Passou → desliga e <b>vigia 40 min</b>: se aparecer compra atrasada, religa. E a cada 30 min revisa as que desligou: se o dia ficou <b>positivo</b> (até R$ 9,99 por compra), religa. Vendendo → roda o dia todo (só desliga se a média de 3 dias passar de R$ 9,50 por compra). EUA: regra própria (até R$ 30).</div></div>';
+  var topo='<div class="dsh-card"><div class="dsh-t">🌙 Ligar à meia-noite</div><div class="dsh-nota">À meia-noite o robô <b>só liga as campanhas ⭐ com futuro</b>: na última semana fizeram <b>3 ou mais vendas a até R$ 9,50 cada</b> (EUA: 1+ venda a até R$ 30). As <b>✖ sem futuro</b> ele não liga — só se você ligar. E as ligadas sem futuro que já gastaram R$ 10+ na semana sem provar que vendem, ele <b>desliga</b> à meia-noite (campanha nova fica). Desmarque as que você não quer que liguem de jeito nenhum.<br><br>'+
+    '<b>Durante o dia</b> (gasto sem nenhuma compra): ⭐ com futuro → até <b>R$ 9,99</b>; nova → até <b>R$ 7</b>; sem chance → até <b>R$ 5</b>. Vendendo, mas a média de 3 dias passou de <b>R$ 9,50</b> por venda → desliga. Campanha que você ligou na mão hoje é respeitada até a meia-noite.</div></div>';
   if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>';
   if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
   var fora=D.fora||[], cs=D.campanhas||[], marc=cs.filter(function(c){ return fora.indexOf(c.id)<0; }).length;
   return topo+'<div class="dsh-card"><div class="mn-bar"><b id="mnCont">'+marc+' de '+cs.length+' marcadas</b><span><a href="#" id="mnTodas">marcar todas</a> · <a href="#" id="mnNenhuma">desmarcar todas</a></span></div>'+
     '<input type="search" id="mnBusca" class="mn-busca" placeholder="Buscar pelo nome…">'+
     '<div class="mn-lista">'+cs.map(function(c){ var on=fora.indexOf(c.id)<0, at=c.status==='ACTIVE';
-      return '<label class="mn-it" data-mnnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-mn="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+'</span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
+      return '<label class="mn-it" data-mnnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-mn="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+(c.fut?'<br><small style="color:'+(c.fut.tem?'#1F8A4C':'#b23')+'">'+(c.fut.tem?'⭐ tem futuro':'✖ sem futuro')+' · '+c.fut.vendas+' venda(s) na semana'+(c.fut.cpa!=null?' a R$ '+fmtPreco(c.fut.cpa)+' cada':'')+'</small>':'')+'</span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
     '<div class="sub" id="mnSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
 }
 function pnlMNLigar(){

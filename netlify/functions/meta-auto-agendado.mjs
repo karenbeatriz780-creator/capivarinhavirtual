@@ -28,6 +28,7 @@ import { lerCfg, aplicarAcao, logRobo, avisar, vendasSitePorCampanha, graphConta
 import { registrarAcao } from './_gastos.mjs';
 import { diaBR, brl, imposto, cpa3dias } from './_resumo.mjs';
 import { calcHorarios } from './_horarios.mjs';
+import { futuro } from './_futuro.mjs';
 
 const CPA_MAX = 9.5; // regra de 12/11 6h30: custo por compra (do Meta) acima de R$ 9,50 hoje → desliga até meia-noite
 const HB_LIGADO = false; // modo horário barato desligado na regra de 11/11 19h (prejuízo → desliga até meia-noite)
@@ -76,7 +77,8 @@ export async function rodarRobo(simular) {
     m.fim = true;
   }
   if (!simular && Object.keys(modoOntem).length) await L().setJSON('modohor_' + ontem, modoOntem).catch(() => {});
-  // 🌙 MEIA-NOITE (regra de 15/11): liga TODAS as campanhas marcadas na aba "🌙 Meia-noite" (as que você desmarcou ficam como estão)
+  // 🌙 MEIA-NOITE (regra de 17/11): liga SÓ as campanhas marcadas que TÊM FUTURO (última semana: 3+ vendas a até R$ 9,50 cada).
+  //    As ligadas SEM futuro que já gastaram R$ 10+ na semana sem provar que vendem → desliga. Campanha nova (gastou menos de R$ 10) fica.
   const flagMN = 'meianoite_feito_' + hoje;
   if (cfg.autoPausar && !(await L().get(flagMN, { type: 'json' }).catch(() => null))) {
     if (!simular) await L().setJSON(flagMN, { em: agora }).catch(() => {});
@@ -85,10 +87,21 @@ export async function rodarRobo(simular) {
       let todas = [];
       try { todas = ((await graphConta('GET', 'campaigns', { fields: 'name,effective_status', limit: 400 })).data || []).map((x) => ({ id: String(x.id), nome: x.name, status: x.effective_status })); } catch (e) { todas = (meta.campanhas || []).map((x) => ({ id: String(x.id), nome: x.nome, status: x.status })); }
       for (const c of todas) {
-        if (c.status === 'ACTIVE' || fora.indexOf(String(c.id)) >= 0 || !/PAUSED/.test(String(c.status || ''))) continue;
-        const mc = (meta.campanhas || []).find((x) => String(x.id) === c.id); if (mc) mc.status = 'ACTIVE';
+        const mc = (meta.campanhas || []).find((x) => String(x.id) === c.id);
+        const f = futuro(mc || { id: c.id, nome: c.nome, dias: {} }, site, agora - 864e5);
+        const txt = f.vendas + ' venda(s) na semana' + (f.cpa != null ? ' a ' + brl(f.cpa) + ' cada' : '') + ', gasto ' + brl(f.gasto);
+        if (c.status === 'ACTIVE') { // ligada sem futuro → desliga (só se já teve chance: R$ 10+ na semana)
+          if (f.tem || f.gasto < 10 || f.eua) continue; // EUA segue as regras próprias (média de 3 dias, R$ 30)
+          try { if (!simular) { await aplicarAcao(c, 'pausar', 'robô'); acoes[c.id] = { tipo: 'pausar', quem: 'robô', em: agora }; } if (mc) mc.status = 'PAUSED';
+            feitas.push({ tipo: 'pausou', camp: c.nome, id: c.id, aviso: true, motivo: '🌙 dia novo: desliguei, não tem futuro (' + txt + ')' }); }
+          catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui desligar à meia-noite: ' + e.message }); }
+          continue;
+        }
+        if (fora.indexOf(String(c.id)) >= 0 || !/PAUSED/.test(String(c.status || ''))) continue;
+        if (!f.tem) continue; // sem futuro: o robô não liga (só se VOCÊ ligar)
+        if (mc) mc.status = 'ACTIVE';
         try { if (!simular) { await aplicarAcao(c, 'ativar', 'robô (meia-noite)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (meia-noite)', em: agora }; }
-          feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: '🌙 dia novo: liguei (está marcada na aba Meia-noite)' }); }
+          feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: '🌙 dia novo: liguei — ⭐ tem futuro (' + txt + ')' }); }
         catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui ligar à meia-noite: ' + e.message }); }
       }
     }
@@ -146,7 +159,7 @@ export async function rodarRobo(simular) {
     // ⭐ campanha BOA = vendeu nos 3 dias ANTERIORES a hoje com custo por compra até R$ 9,99
     let gP = 0, vPm = 0, vPs = 0;
     for (const d of [ontem, diaBR(agora - 2 * 864e5), diaBR(agora - 3 * 864e5)]) { const x = (c.dias || {})[d] || {}; gP += x.gasto || 0; vPm += x.compras || 0; vPs += s.porDia[d] || 0; }
-    const vP = vPm || vPs, boa = vP > 0 && gP / vP <= 9.99;
+    const vP = vPm || vPs, boa = (vP > 0 && gP / vP <= 9.99) || futuro(c, site, agora - 864e5).tem;
     // ❌ sem chance: nos 3 dias anteriores gastou R$ 5+ e não vendeu NADA em 2 ou mais dias → corta mais cedo (R$ 5)
     let diasRuins = 0; for (const d of [ontem, diaBR(agora - 2 * 864e5), diaBR(agora - 3 * 864e5)]) { const x = (c.dias || {})[d] || {}; if ((x.gasto || 0) >= 5 && !(x.compras || 0) && !(s.porDia[d] || 0)) diasRuins++; }
     const semChance = !boa && diasRuins >= 2, LIM_SEM = boa ? 9.99 : semChance ? 5 : 7;
