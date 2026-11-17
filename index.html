@@ -9567,6 +9567,7 @@ function pnlCampLigar(body){
   if(_pnlAba==='subir'){ if(!_pnlCamp) pnlCampCarregar(); pnlSubirLigar(body); }
   if(_pnlAba==='vigiar'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlVig) pnlVigCarregar(); pnlVigiarLigar(body); }
   if(_pnlAba==='meianoite'){ if(!_pnlMN) pnlMNCarregar(); pnlMNLigar(); }
+  if(_pnlAba==='aprender'){ if(!_pnlApr) pnlAprCarregar(); pnlAprLigar(); }
   if(_pnlAba==='pagos' && el('pnlRefIds')){ try{ el('pnlRefIds').value=localStorage.getItem('cl_ref_ids')||''; }catch(x){} }
   if(_pnlAba==='pagos' && el('pnlRefSt')){ pnlRefLer().then(function(d){ pnlRefSt(d); if(d.status==='gerando') pnlRefVigiar(); }).catch(function(){}); }
 }
@@ -9607,8 +9608,8 @@ function pnlMNCarregar(){
 }
 function pnlMNHtml(){
   var D=_pnlMN;
-  var topo='<div class="dsh-card"><div class="dsh-t">🌙 Ligar à meia-noite</div><div class="dsh-nota">À meia-noite o robô <b>só liga as campanhas ⭐ com futuro</b>: na última semana fizeram <b>3 ou mais vendas a até R$ 9,50 cada</b> (EUA: 1+ venda a até R$ 30). As <b>✖ sem futuro</b> ele não liga — só se você ligar. E as ligadas sem futuro que já gastaram R$ 10+ na semana sem provar que vendem, ele <b>desliga</b> à meia-noite (campanha nova fica). Desmarque as que você não quer que liguem de jeito nenhum.<br><br>'+
-    '<b>Durante o dia</b> (gasto sem nenhuma compra): ⭐ com futuro → até <b>R$ 9,99</b>; nova → até <b>R$ 7</b>; sem chance → até <b>R$ 5</b>. Vendendo, mas a média de 3 dias passou de <b>R$ 9,50</b> por venda → desliga. Campanha que você ligou na mão hoje é respeitada até a meia-noite.</div></div>';
+  var topo='<div class="dsh-card"><div class="dsh-t">🌙 Ligar à meia-noite</div><div class="dsh-nota">À meia-noite o robô <b>só liga as campanhas ⭐ com futuro</b>: na última semana fizeram <b>3 ou mais vendas com ROAS 1,5 ou mais</b> (até R$ 6,66 de anúncio por venda de R$ 9,99) (EUA: 1+ venda a até R$ 30). As <b>✖ sem futuro</b> ele não liga — só se você ligar. E as ligadas sem futuro que já gastaram R$ 10+ na semana sem provar que vendem, ele <b>desliga</b> à meia-noite (campanha nova fica). Desmarque as que você não quer que liguem de jeito nenhum.<br><br>'+
+    '<b>Durante o dia</b> (gasto sem nenhuma compra): ⭐ com futuro → até <b>R$ 9,99</b>; nova → até <b>R$ 7</b>; sem chance → até <b>R$ 5</b>. Vendendo, mas a média de 3 dias ficou com <b>ROAS abaixo de 1,5</b> → desliga. 🎓 Campanhas de aprendizagem nunca são desligadas. Campanha que você ligou na mão hoje é respeitada até a meia-noite.</div></div>';
   if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>';
   if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
   var fora=D.fora||[], cs=D.campanhas||[], marc=cs.filter(function(c){ return fora.indexOf(c.id)<0; }).length;
@@ -9617,6 +9618,45 @@ function pnlMNHtml(){
     '<div class="mn-lista">'+cs.map(function(c){ var on=fora.indexOf(c.id)<0, at=c.status==='ACTIVE';
       return '<label class="mn-it" data-mnnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-mn="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+(c.fut?'<br><small style="color:'+(c.fut.tem?'#1F8A4C':'#b23')+'">'+(c.fut.tem?'⭐ tem futuro':'✖ sem futuro')+' · '+c.fut.vendas+' venda(s) na semana'+(c.fut.cpa!=null?' a R$ '+fmtPreco(c.fut.cpa)+' cada':'')+'</small>':'')+'</span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
     '<div class="sub" id="mnSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
+}
+/* 🎓 APRENDIZAGEM: até 2 campanhas que o robô nunca desliga (meta 50 compras/semana) */
+var _pnlApr=null, _pnlAprCarr=false;
+function pnlAprCarregar(){
+  if(_pnlAprCarr) return; _pnlAprCarr=true;
+  fetch('/.netlify/functions/admin-aprendizagem',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
+    .then(function(d){ _pnlAprCarr=false; _pnlApr=d||{}; if(_pnlAba==='aprender') pnlRedesenhar(); })
+    .catch(function(){ _pnlAprCarr=false; _pnlApr={erro:'Sem conexão.'}; if(_pnlAba==='aprender') pnlRedesenhar(); });
+}
+function pnlAprHtml(){
+  var D=_pnlApr;
+  var topo='<div class="dsh-card"><div class="dsh-t">🎓 Campanhas de aprendizagem</div><div class="dsh-nota">Escolha até <b>2 campanhas</b>. O robô <b>nunca desliga</b> elas (e liga à meia-noite se estiverem desligadas) — elas precisam de <b>50 compras na semana</b> pra sair do aprendizado do Meta. Se gastar R$ 50+ num dia sem venda, ele só te <b>avisa</b>.</div></div>';
+  if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>';
+  if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
+  var ids=D.ids||[], cs=D.campanhas||[];
+  function rs(v){ return v==null?'—':'R$ '+fmtPreco(v); }
+  var TD={progredindo:['📈 progredindo','#1F8A4C'],estavel:['➡️ estável','#8a6d00'],regredindo:['📉 regredindo','#c62828']};
+  var esc2=cs.filter(function(c){ return ids.indexOf(c.id)>=0; });
+  var cards=esc2.map(function(c){ var pct=Math.min(100,Math.round(c.semana.v*2)), t=TD[c.tend]||TD.estavel;
+    return '<div class="dsh-card"><div style="display:flex;gap:.5rem;align-items:center"><b style="flex:1">'+esc(c.nome)+'</b><span style="color:'+t[1]+';font-weight:700;font-size:.85rem">'+t[0]+'</span></div>'+
+      '<div style="margin-top:.5rem;font-size:.85rem">Semana: <b>'+c.semana.v+' de 50 compras</b></div><div style="height:10px;background:#eee;border-radius:6px;overflow:hidden;margin-top:.3rem"><div style="height:100%;width:'+pct+'%;background:#1F8A4C"></div></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.6rem;font-size:.8rem"><div><b>Últimos 3 dias</b><br>'+c.ult3.v+' vendas · '+rs(c.ult3.cpa)+'/venda<br>ROAS '+(c.ult3.roas==null?'—':String(c.ult3.roas).replace('.',','))+' · gasto '+rs(c.ult3.g)+'</div><div><b>3 dias antes</b><br>'+c.ant3.v+' vendas · '+rs(c.ant3.cpa)+'/venda<br>ROAS '+(c.ant3.roas==null?'—':String(c.ant3.roas).replace('.',','))+' · gasto '+rs(c.ant3.g)+'</div></div>'+
+      '<div style="font-size:.78rem;color:#888;margin-top:.3rem">'+(c.status==='ACTIVE'?'🟢 ligada':'⚪ '+esc(c.status))+'</div></div>'; }).join('');
+  return topo+cards+'<div class="dsh-card"><div class="mn-bar"><b id="aprCont">'+ids.length+' de 2 escolhidas</b></div><input type="search" id="aprBusca" class="mn-busca" placeholder="Buscar pelo nome…">'+
+    '<div class="mn-lista">'+cs.map(function(c){ var on=ids.indexOf(c.id)>=0;
+      return '<label class="mn-it" data-aprnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-apr="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+'<br><small style="color:#888">'+c.semana.v+' compras na semana · '+rs(c.semana.cpa)+'/venda</small></span><i class="'+(c.status==='ACTIVE'?'on':'')+'">'+(c.status==='ACTIVE'?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
+    '<div class="sub" id="aprSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
+}
+function pnlAprLigar(){
+  if(!_pnlApr||!_pnlApr.campanhas) return;
+  document.querySelectorAll('[data-apr]').forEach(function(x){ x.onchange=function(){
+    var ids=_pnlApr.ids=_pnlApr.ids||[], id=x.dataset.apr, i=ids.indexOf(id);
+    if(x.checked){ if(ids.length>=2){ x.checked=false; toast('Máximo de 2 campanhas de aprendizagem. Desmarque uma antes.'); return; } if(i<0) ids.push(id); } else if(i>=0) ids.splice(i,1);
+    var sv=el('aprSalvo'); if(sv) sv.textContent='Salvando…';
+    fetch('/.netlify/functions/admin-aprendizagem',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({ids:ids})}).then(function(r){ return r.json(); })
+      .then(function(d){ if(d&&d.ok){ _pnlApr.ids=d.ids; pnlRedesenhar(); toast('Salvo ✓'); } else { var sv=el('aprSalvo'); if(sv) sv.textContent='⚠️ Não salvou: '+((d&&d.erro)||''); } })
+      .catch(function(){ var sv=el('aprSalvo'); if(sv) sv.textContent='⚠️ Sem conexão — não salvou'; });
+  }; });
+  var b=el('aprBusca'); if(b) b.oninput=function(){ var q=b.value.trim().toLowerCase(); document.querySelectorAll('[data-aprnome]').forEach(function(l){ l.style.display=!q||l.dataset.aprnome.indexOf(q)>=0?'':'none'; }); };
 }
 function pnlMNLigar(){
   if(!_pnlMN||!_pnlMN.campanhas) return;
@@ -10206,7 +10246,7 @@ function desenharPainel(pedidos, visitas, musicas){
 
   body.innerHTML=
     '<div class="pnl-abas pnl-abas-main" id="pnlAbas">'+
-      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
+      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
         return '<button type="button" class="pnl-aba'+(_pnlAba===a[0]?' on':'')+'" data-aba="'+a[0]+'"><i>'+a[1]+'</i><span>'+a[2]+'</span></button>'; }).join('')+
     '</div>'+
     '<div class="pnl-abas pnl-abas-mais"><small>Mais:</small>'+
@@ -10224,6 +10264,7 @@ function desenharPainel(pedidos, visitas, musicas){
     (_pnlAba==='subir' ? pnlSubirHtml() : '')+
     (_pnlAba==='vigiar' ? pnlVigiarHtml() : '')+
     (_pnlAba==='meianoite' ? pnlMNHtml() : '')+
+    (_pnlAba==='aprender' ? pnlAprHtml() : '')+
     (_pnlAba==='hoje' ? pnlHojeHtml(pedidos, _pnlCache.custos||{}) : '')+
     (_pnlAba==='pagos'
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+

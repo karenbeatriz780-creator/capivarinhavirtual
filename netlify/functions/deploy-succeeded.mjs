@@ -11,6 +11,15 @@ export default async () => {
       console.log('QR corrigido: livros refeitos', await refazerLivros(10));
     }
   } catch (e) { console.error('qrfix:', e && e.message); }
+  // 17/11 20h: regras novas (ROAS 1,5 + aprendizagem) → roda o robô uma vez na hora do deploy
+  try {
+    const G = getStore('gastos');
+    if (!(await G.get('roda_deploy_20261117b', { type: 'json' }).catch(() => null))) {
+      await G.setJSON('roda_deploy_20261117b', { em: Date.now() });
+      const { rodarRobo } = await import('./meta-auto-agendado.mjs');
+      console.log('robô no deploy:', JSON.stringify(await rodarRobo(false)).slice(0, 500));
+    }
+  } catch (e) { console.error('roda_deploy:', e && e.message); }
   // 17/11: tira os Stories do Facebook das campanhas sem futuro (uma vez, em segundo plano)
   try {
     if (!(await getStore('gastos').get('semstoryfb_20261117', { type: 'json' }).catch(() => null))) {

@@ -28,7 +28,7 @@ import { lerCfg, aplicarAcao, logRobo, avisar, vendasSitePorCampanha, graphConta
 import { registrarAcao } from './_gastos.mjs';
 import { diaBR, brl, imposto, cpa3dias } from './_resumo.mjs';
 import { calcHorarios } from './_horarios.mjs';
-import { futuro } from './_futuro.mjs';
+import { futuro, cpaMaxDe } from './_futuro.mjs';
 
 const CPA_MAX = 9.5; // regra de 12/11 6h30: custo por compra (do Meta) acima de R$ 9,50 hoje → desliga até meia-noite
 const HB_LIGADO = false; // modo horário barato desligado na regra de 11/11 19h (prejuízo → desliga até meia-noite)
@@ -79,7 +79,9 @@ export async function rodarRobo(simular) {
   if (!simular && Object.keys(modoOntem).length) await L().setJSON('modohor_' + ontem, modoOntem).catch(() => {});
   // 🌙 MEIA-NOITE (regra de 17/11): liga SÓ as campanhas marcadas que TÊM FUTURO (última semana: 3+ vendas a até R$ 9,50 cada).
   //    As ligadas SEM futuro que já gastaram R$ 10+ na semana sem provar que vendem → desliga. Campanha nova (gastou menos de R$ 10) fica.
-  const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117';
+  // 🎓 APRENDIZAGEM (17/11): até 2 campanhas que você escolheu no painel — o robô NUNCA desliga, liga à meia-noite e só AVISA se regredir
+  const aprend = new Set(((await L().get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
+  const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117b';
   // ⚡ aplicação ÚNICA agora (17/11 à noite): mesma análise da meia-noite, com a semana até hoje
   const jaAgora = cfg.autoPausar && !simular && !(await L().get(FLAG_JA, { type: 'json' }).catch(() => null));
   if (jaAgora) await L().setJSON(FLAG_JA, { em: agora }).catch(() => {});
@@ -91,6 +93,10 @@ export async function rodarRobo(simular) {
       try { todas = ((await graphConta('GET', 'campaigns', { fields: 'name,effective_status', limit: 400 })).data || []).map((x) => ({ id: String(x.id), nome: x.name, status: x.effective_status })); } catch (e) { todas = (meta.campanhas || []).map((x) => ({ id: String(x.id), nome: x.nome, status: x.status })); }
       for (const c of todas) {
         const mc = (meta.campanhas || []).find((x) => String(x.id) === c.id);
+        if (aprend.has(c.id)) { // 🎓 aprendizagem: nunca desliga; se estiver desligada, liga
+          if (c.status !== 'ACTIVE' && /PAUSED/.test(String(c.status || ''))) { try { if (!simular) { await aplicarAcao(c, 'ativar', 'robô (aprendizagem)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (aprendizagem)', em: agora }; } if (mc) mc.status = 'ACTIVE'; feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: '🎓 campanha de aprendizagem: liguei (o robô não desliga)' }); } catch (e) {} }
+          continue;
+        }
         const f = futuro(mc || { id: c.id, nome: c.nome, dias: {} }, site, jaAgora ? agora : agora - 864e5);
         const txt = f.vendas + ' venda(s) na semana' + (f.cpa != null ? ' a ' + brl(f.cpa) + ' cada' : '') + ', gasto ' + brl(f.gasto);
         if (c.status === 'ACTIVE') { // ligada sem futuro → desliga (só se já teve chance: R$ 10+ na semana)
@@ -119,9 +125,10 @@ export async function rodarRobo(simular) {
     if (c.status === 'ACTIVE' || !a || a.tipo !== 'pausar' || a.quem !== 'robô' || diaBR(a.em) !== hoje) continue;
     if (/(^|[^a-z])(eua|usa|us)([^a-z]|$)/i.test(String(c.nome || ''))) continue;
     const s0 = site[c.id] || { porDia: {} }, d0 = (c.dias || {})[hoje] || {}, g0 = d0.gasto || 0, v0 = Math.max(d0.compras || 0, s0.porDia[hoje] || 0);
-    if (!v0 || g0 / v0 > 9.99) continue;
+    if (aprend.has(c.id)) continue;
+    const limR = cpaMaxDe(c.id, site); if (!v0 || g0 / v0 > limR) continue;
     let g3r = 0, v3r = 0; for (const d of [hoje, ontem, diaBR(agora - 2 * 864e5)]) { const x = (c.dias || {})[d] || {}; g3r += x.gasto || 0; v3r += Math.max(x.compras || 0, s0.porDia[d] || 0); }
-    if (v3r && g3r / v3r > CPA_MAX) continue;
+    if (v3r && g3r / v3r > limR) continue;
     try { if (!simular) { await aplicarAcao(c, 'ativar', 'robô (dia positivo)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (dia positivo)', em: agora }; } c.status = 'ACTIVE'; delete atraso[c.id];
       feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: true, motivo: '▶️ religuei: depois que eu desliguei o Meta contou ' + v0 + ' compra(s) — hoje está positivo (' + brl(g0 / v0) + ' por compra, gasto ' + brl(g0) + '). Ela continua o dia.' }); }
     catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui religar: ' + e.message }); }
@@ -150,6 +157,10 @@ export async function rodarRobo(simular) {
       acoes[c.id] = a = { tipo: 'ativar', quem: 'você (app do Meta)', em: agora }; m.fim = true; m.saiu = 'você religou'; m = null;
     } else if (m && m.ultimo === 'on' && c.status !== 'ACTIVE') { m.fim = true; m.saiu = 'você desligou'; continue; }
     if (c.status !== 'ACTIVE' && !m) continue;
+    if (aprend.has(c.id)) { // 🎓 aprendizagem: não desliga; só avisa (1x por dia) se gastar R$ 50+ hoje sem venda
+      if (gH >= 50 && vH === 0) { const k = 'aprend_alerta_' + c.id + '_' + hoje; if (simular || !(await L().get(k).catch(() => null))) { if (!simular) await L().set(k, '1').catch(() => {}); feitas.push({ tipo: 'alerta', camp: c.nome, id: c.id, aviso: true, motivo: '🎓 campanha de aprendizagem gastou ' + brl(gH) + ' hoje sem nenhuma venda. NÃO desliguei — veja na aba 🎓 Aprendizagem se ela está progredindo e decida.' }); } }
+      continue;
+    }
     const voceAtivou = !limpezaAgora && a && a.tipo === 'ativar' && !/^robô/.test(a.quem || '') && diaBR(a.em) === hoje;
     // 📊 MÉDIA DE 3 DIAS (hoje + 2 anteriores): gasto e compras do Meta (se o Meta não contou, as do site)
     let g3 = 0, v3m = 0, v3s = 0, diasDados = 0;
@@ -157,22 +168,23 @@ export async function rodarRobo(simular) {
     const v3 = v3m || v3s, aprendeu = diasDados >= 2;
     // 🇺🇸 campanha dos EUA (nome com "EUA", "USA" ou "US"): venda de US$ 7,99 → aceita custo por compra até R$ 30 (lucro > R$ 10)
     const eua = /(^|[^a-z])(eua|usa|us)([^a-z]|$)/i.test(String(c.nome || ''));
-    const CPA_C = eua ? 30 : CPA_MAX, PRIM_C = eua ? 30 : prim, TRAVA_C = eua ? 45 : 15;
+    const CPA_BR = cpaMaxDe(c.id, site); // ROAS mínimo 1,5
+    const CPA_C = eua ? 30 : CPA_BR, PRIM_C = eua ? 30 : prim, TRAVA_C = eua ? 45 : 15;
     let pausar = null;
     const lucroH = vH * tk - gH * (1 + imp);
     const vMeta = dh.compras || 0, vCpa = vMeta || vH; // custo por compra = o do app do Meta (se o Meta ainda não contou, usa as do site)
     // ⭐ campanha BOA = vendeu nos 3 dias ANTERIORES a hoje com custo por compra até R$ 9,99
     let gP = 0, vPm = 0, vPs = 0;
     for (const d of [ontem, diaBR(agora - 2 * 864e5), diaBR(agora - 3 * 864e5)]) { const x = (c.dias || {})[d] || {}; gP += x.gasto || 0; vPm += x.compras || 0; vPs += s.porDia[d] || 0; }
-    const vP = vPm || vPs, boa = (vP > 0 && gP / vP <= 9.99) || futuro(c, site, agora - 864e5).tem;
+    const vP = vPm || vPs, boa = (vP > 0 && gP / vP <= cpaMaxDe(c.id, site)) || futuro(c, site, agora - 864e5).tem;
     // ❌ sem chance: nos 3 dias anteriores gastou R$ 5+ e não vendeu NADA em 2 ou mais dias → corta mais cedo (R$ 5)
     let diasRuins = 0; for (const d of [ontem, diaBR(agora - 2 * 864e5), diaBR(agora - 3 * 864e5)]) { const x = (c.dias || {})[d] || {}; if ((x.gasto || 0) >= 5 && !(x.compras || 0) && !(s.porDia[d] || 0)) diasRuins++; }
     const semChance = !boa && diasRuins >= 2, LIM_SEM = boa ? 9.99 : semChance ? 5 : 7;
     let semCompra = false;
     if (cfg.autoPausar && !voceAtivou && !eua) { // REGRA DE 15/11 (Brasil)
       if (vH === 0 && gH >= LIM_SEM) { pausar = 'hoje gastou ' + brl(gH) + ' sem nenhuma compra (' + (boa ? '⭐ campanha boa, limite R$ 9,99' : semChance ? 'sem chance: ' + diasRuins + ' dos últimos 3 dias sem nenhuma venda, limite R$ 5' : 'campanha nova/parada, limite R$ 7') + ')'; semCompra = true; }
-      else if (aprendeu && gH >= 3 && v3 > 0 && g3 / v3 > CPA_MAX) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou de ' + brl(CPA_MAX) + ', está dando prejuízo';
-      else if (!aprendeu && vCpa > 0 && gH / vCpa > CPA_MAX) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s), gasto ' + brl(gH) + ') — passou de ' + brl(CPA_MAX);
+      else if (aprendeu && gH >= 3 && v3 > 0 && g3 / v3 > CPA_BR) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou de ' + brl(CPA_BR) + ' (ROAS abaixo de 1,5)';
+      else if (!aprendeu && vCpa > 0 && gH / vCpa > CPA_BR) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s), gasto ' + brl(gH) + ') — passou de ' + brl(CPA_BR) + ' (ROAS abaixo de 1,5)';
     } else if (cfg.autoPausar && !voceAtivou && aprendeu) { // 🇺🇸 EUA: média de 3 dias
       if (v3 === 0 && g3 >= PRIM_C) pausar = 'em 3 dias gastou ' + brl(g3) + ' e não fez nenhuma compra' + (eua ? ' (EUA, limite ' + brl(PRIM_C) + ')' : '');
       else if (v3 > 0 && g3 / v3 > CPA_C) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou do máximo de ' + brl(CPA_C);
