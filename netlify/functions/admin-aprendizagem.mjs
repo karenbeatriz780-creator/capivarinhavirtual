@@ -2,7 +2,7 @@
 // GET  → campanhas + as escolhidas, com compras da semana, custo/ROAS dos últimos 3 dias vs 3 anteriores e tendência
 // POST {ids:[...]} → salva (máximo 2)
 import { getStore } from '@netlify/blobs';
-import { graphConta, vendasSitePorCampanha } from './_meta.mjs';
+import { graphConta, vendasSitePorCampanha, graph, aplicarAcao } from './_meta.mjs';
 import { metaAds } from './_gastos.mjs';
 import { ticketDe } from './_futuro.mjs';
 import { diaBR } from './_resumo.mjs';
@@ -15,8 +15,13 @@ export default async (req) => {
     if (req.method === 'POST') {
       let b = {}; try { b = await req.json(); } catch (e) {}
       const ids = (Array.isArray(b.ids) ? b.ids : []).map(String).filter((x) => /^\d{5,30}$/.test(x)).slice(0, 2);
+      const antes = ((await L.get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}).ids || [];
       await L.setJSON('aprendizagem_cfg', { ids, em: Date.now() });
-      return json({ ok: true, ids });
+      const ligou = [];
+      for (const id of ids.filter((x) => antes.indexOf(x) < 0)) { // escolhida agora e desligada → liga já
+        try { const c = await graph('GET', id, { fields: 'name,effective_status' }); if (String(c.effective_status || '') === 'PAUSED') { await aplicarAcao({ id, nome: c.name }, 'ativar', 'você (aprendizagem)'); ligou.push(c.name); } } catch (e) {}
+      }
+      return json({ ok: true, ids, ligou });
     }
     const cfg = (await L.get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}, ids = cfg.ids || [];
     const [lista, meta, site] = await Promise.all([graphConta('GET', 'campaigns', { fields: 'name,effective_status,created_time', limit: 400 }), metaAds(7), vendasSitePorCampanha(10)]);
