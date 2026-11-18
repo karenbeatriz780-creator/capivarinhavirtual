@@ -3935,8 +3935,20 @@ function fbEvento(nome, params){
 function ttqEvento(nome, params){
   try{ if(typeof ttq!=='undefined' && ttq && typeof ttq.track==='function') ttq.track(nome, params||{}); }catch(e){}
 }
+/* 🔻 funil da música (painel "Onde desistem"): 1 marca por visitante, por etapa, por dia */
+var FUNIL_M=['entrou','musicaPara','musicaNome','musicaOcasiao','musicaGenero','musicaClima','musicaHistoria','musicaLetra','musicaFinal','escolha','pagamento','pagou'];
+function funilM(e){
+  try{
+    if(FUNIL_M.indexOf(e)<0 || Store.get('cl_sou_dev')) return;
+    var v=Store.get('cl_vid'); if(!v){ v=Math.random().toString(36).slice(2,12)+Date.now().toString(36); Store.set('cl_vid',v); }
+    var dia=new Date(Date.now()-3*36e5).toISOString().slice(0,10), k='cl_fm_'+dia, ja=jget(k,{}); if(ja[e]) return; ja[e]=1; Store.set(k,JSON.stringify(ja));
+    var ua=navigator.userAgent||'', so=/iPhone|iPad|iPod/i.test(ua)?'ios':/Android/i.test(ua)?'android':'outro';
+    fetch('/.netlify/functions/funil-evento',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:v,e:e,so:so}),keepalive:true}).catch(function(){});
+  }catch(x){}
+}
 function gaPasso(){
   var ps=passos(); var k=ps[wStep];
+  if(W && W.produto==='musica') funilM(k==='checkout'?'escolha':k);
   gaEvento('passo_wizard', {passo:k, indice:wStep+1, total_passos:ps.length, produto:W.produto||'(nenhum)'});
   try{
     fetch('/.netlify/functions/log-passo', {
@@ -3959,6 +3971,7 @@ function gaCompraUnica(id, g){
   var feitas=jget('cl_ga_compras',{});
   if(feitas[id]) return;
   feitas[id]=1; jset('cl_ga_compras',feitas);
+  if(g.produto==='musica') funilM('pagou');
   gaEvento('purchase',{
     transaction_id:id, value:valor, currency:'BRL',
     produto:g.produto, duracao:g.duracao
@@ -4470,6 +4483,7 @@ function limpar(){ _limpezas.forEach(function(f){ try{f();}catch(e){} }); _limpe
 function aoSair(f){ _limpezas.push(f); }
 
 function navegar(){
+  funilM('entrou');
   limpar();
   document.body.style.overflow='';
   var r=rota();
@@ -7265,6 +7279,7 @@ function enviarFotosExtras(id, w){
     .catch(function(){ toast('Não consegui salvar as fotos agora. Depois de pagar, você manda de novo em "Seus extras".'); });
 }
 function abrirExtrasPix(seguir, base){
+  if(W && W.produto==='musica') funilM('escolha');
   if(!extrasElegivel(W)){ seguir(); return; }
   var esc1={}; extrasValidos(W).forEach(function(k){ esc1[k]=true; });
   /* 17/11: 3 opções com o COMBO já marcado (a pessoa troca com 1 toque; o valor aparece grande) */
@@ -7488,6 +7503,7 @@ function verExemploExtra(k){
 }
 function finalizarDeVerdade(){
   gaEvento('begin_checkout',{produto:W.produto, duracao:W.duracao, valor:precoTotal(W)});
+  if(W.produto==='musica') funilM('pagamento');
   fbEvento('InitiateCheckout',{value:precoTotal(W), currency:'BRL', content_name:W.produto, content_type:'product'});
   ttqEvento('InitiateCheckout',{value:precoTotal(W), currency:'BRL', content_name:W.produto, content_type:'product'});
   var btn=el('wzNext');
@@ -9586,6 +9602,7 @@ function pnlCampLigar(body){
   if(_pnlAba==='vigiar'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlVig) pnlVigCarregar(); pnlVigiarLigar(body); }
   if(_pnlAba==='meianoite'){ if(!_pnlMN) pnlMNCarregar(); pnlMNLigar(); }
   if(_pnlAba==='aprender'){ if(!_pnlApr) pnlAprCarregar(); pnlAprLigar(); }
+  if(_pnlAba==='desistem'){ if(!_pnlFm||_pnlFm.p!==_pnlFmP) pnlFmCarregar(); pnlFmLigar(); }
   if(_pnlAba==='pagos' && el('pnlRefIds')){ try{ el('pnlRefIds').value=localStorage.getItem('cl_ref_ids')||''; }catch(x){} }
   if(_pnlAba==='pagos' && el('pnlRefSt')){ pnlRefLer().then(function(d){ pnlRefSt(d); if(d.status==='gerando') pnlRefVigiar(); }).catch(function(){}); }
 }
@@ -9636,6 +9653,48 @@ function pnlMNHtml(){
     '<div class="mn-lista">'+cs.map(function(c){ var on=fora.indexOf(c.id)<0, at=c.status==='ACTIVE';
       return '<label class="mn-it" data-mnnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-mn="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+(c.fut?'<br><small style="color:'+(c.top||c.aprend?'#1F8A4C':'#b23')+'">'+(c.aprend?'🎓 aprendizagem (sempre ligada)':c.top?'🏆 entre as 10 melhores — vai ligar':'✖ fora das 10 — não liga')+' · '+c.fut.vendas+' venda(s) na semana'+(c.fut.cpa!=null?' a R$ '+fmtPreco(c.fut.cpa)+' cada':'')+'</small>':'')+'</span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
     '<div class="sub" id="mnSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
+}
+/* 🔻 ONDE DESISTEM: funil da música por etapa */
+var _pnlFm=null, _pnlFmP='hoje', _pnlFmCarr=false;
+var FM_NOME={entrou:'Entrou no site',musicaPara:'Começou a criar (pra quem?)',musicaNome:'Nome de quem vai receber',musicaOcasiao:'Ocasião',musicaGenero:'Ritmo',musicaClima:'Clima',musicaHistoria:'Contou a história',musicaLetra:'Viu a letra',musicaFinal:'Ouviu a prévia',escolha:'Viu a escolha do pedido',pagamento:'Foi pagar (Pix/cartão)',pagou:'Pagou ✅'};
+var FM_DICA={
+  musicaPara:'Saem da página inicial sem começar: deixar um exemplo de música tocando logo no topo e o botão "Criar minha música (prévia grátis)" ainda mais chamativo.',
+  musicaNome:'Formulário no começo trava: mostrar "faltam só 4 passos · leva 1 minuto".',
+  musicaOcasiao:'Formulário no começo trava: mostrar "faltam só 4 passos · leva 1 minuto".',
+  musicaGenero:'Muitas opções de ritmo confundem: destacar os 3 mais pedidos no topo.',
+  musicaClima:'Muitas opções confundem: já deixar um clima marcado.',
+  musicaHistoria:'Escrever a história assusta: botões de história pronta ("como se conheceram", "momento marcante") e aceitar texto curto.',
+  musicaLetra:'Saem esperando a letra: mostrar o carregamento divertido e "você pode editar a letra depois".',
+  musicaFinal:'Saem antes de ouvir a prévia: a música demora? Mostrar o progresso e "falta pouco".',
+  escolha:'Ouviram a prévia e não seguiram: OFERTA aqui — ex.: "🎁 só hoje: +1 música grátis se fechar agora" ou contador "preço especial por 10 min".',
+  pagamento:'Viram os preços e desistiram: destacar "Só as músicas R$ 9,99", selo "satisfação garantida" e depoimentos reais.',
+  pagou:'Abriram o pagamento e não pagaram: OFERTA aqui — ex.: "pague com cartão/Apple Pay em 1 toque", ou "R$ 2 de desconto pagando nos próximos 5 min".'
+};
+function pnlFmCarregar(){
+  if(_pnlFmCarr) return; _pnlFmCarr=true; var p=_pnlFmP;
+  fetch('/.netlify/functions/admin-funil-musica?p='+p,{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
+    .then(function(d){ _pnlFmCarr=false; _pnlFm=d||{}; _pnlFm.p=p; if(_pnlAba==='desistem') pnlRedesenhar(); })
+    .catch(function(){ _pnlFmCarr=false; _pnlFm={erro:'Sem conexão.',p:p}; if(_pnlAba==='desistem') pnlRedesenhar(); });
+}
+function pnlFmHtml(){
+  var per='<div class="mn-bar" style="gap:.4rem">'+[['hoje','Hoje'],['ontem','Ontem'],['7d','7 dias']].map(function(a){ return '<button type="button" class="pnl-btn'+(_pnlFmP===a[0]?' on':'')+'" data-fmp="'+a[0]+'"'+(_pnlFmP===a[0]?' style="background:#E91E63;color:#fff"':'')+'>'+a[1]+'</button>'; }).join('')+'</div>';
+  var topo='<div class="dsh-card"><div class="dsh-t">🔻 Onde as pessoas desistem (música)</div><div class="dsh-nota">Quantas pessoas chegaram em cada etapa. Em <b style="color:#c62828">vermelho</b> a etapa que mais perde gente — é ali que vale colocar uma oferta. Conta a partir de 17/11 (não conta os seus testes).</div>'+per+'</div>';
+  var D=_pnlFm;
+  if(!D||D.p!==_pnlFmP) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando…</div></div>';
+  if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
+  var E=(D.etapas||[]).filter(function(x){ return x.e!=='musicaNome' || x.total>0; }), base=(E[0]&&E[0].total)||0, prev=null, pior=null;
+  E.forEach(function(x,i){ x.perde=null; if(i>0 && prev && prev.total>0){ x.perde=Math.max(0,Math.round((1-x.total/prev.total)*100)); x.perdeN=Math.max(0,prev.total-x.total); if(x.perdeN>0 && (!pior || x.perdeN>pior.perdeN)) pior=x; } prev=x; });
+  var conv=base?((E[E.length-1].total*100/base).toFixed(1).replace('.',',')):'0';
+  var linhas=E.map(function(x){ var w=base?Math.max(2,Math.round(x.total*100/base)):0, rd=x===pior;
+    return '<div style="padding:.5rem .2rem;border-bottom:1px solid #f1e6eb'+(rd?';background:#fff1f1':'')+'"><div style="display:flex;gap:.5rem;align-items:baseline"><b style="flex:1;font-size:.88rem'+(rd?';color:#c62828':'')+'">'+esc(FM_NOME[x.e]||x.e)+'</b><b>'+x.total+'</b>'+(x.perde!=null?'<span style="min-width:72px;text-align:right;font-size:.8rem;color:'+(rd?'#c62828':'#8a7380')+'">−'+x.perde+'% ('+x.perdeN+')</span>':'<span style="min-width:72px"></span>')+'</div>'+
+      '<div style="height:8px;background:#f3e9ee;border-radius:5px;margin-top:.3rem;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:'+(rd?'#e53935':'#E91E63')+'"></i></div>'+
+      '<div style="font-size:.72rem;color:#9a8590;margin-top:.2rem">iPhone '+(x.ios||0)+' · Android '+(x.android||0)+(x.outro?' · outros '+x.outro:'')+'</div></div>'; }).join('');
+  var dica=pior&&FM_DICA[pior.e]?'<div class="dsh-card" style="border:2px solid #e53935"><div class="dsh-t">💡 Onde colocar a oferta</div><div class="dsh-nota">A maior perda está antes de <b>"'+esc(FM_NOME[pior.e])+'"</b>: <b>'+pior.perdeN+' pessoas</b> ('+pior.perde+'%) saíram aí.<br><br>'+esc(FM_DICA[pior.e])+'</div></div>':'';
+  return topo+'<div class="dsh-card"><div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.4rem"><span>De quem entrou, <b>'+conv+'%</b> pagou</span><a href="#" id="fmAtual">↻ atualizar</a></div>'+linhas+'</div>'+dica;
+}
+function pnlFmLigar(){
+  document.querySelectorAll('[data-fmp]').forEach(function(b){ b.onclick=function(){ _pnlFmP=b.dataset.fmp; pnlRedesenhar(); pnlFmCarregar(); }; });
+  var a=el('fmAtual'); if(a) a.onclick=function(e){ e.preventDefault(); _pnlFm=null; pnlRedesenhar(); pnlFmCarregar(); };
 }
 /* 🎓 APRENDIZAGEM: até 2 campanhas que o robô nunca desliga (meta 50 compras/semana) */
 var _pnlApr=null, _pnlAprCarr=false;
@@ -10264,7 +10323,7 @@ function desenharPainel(pedidos, visitas, musicas){
 
   body.innerHTML=
     '<div class="pnl-abas pnl-abas-main" id="pnlAbas">'+
-      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
+      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['desistem','🔻','Onde desistem'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
         return '<button type="button" class="pnl-aba'+(_pnlAba===a[0]?' on':'')+'" data-aba="'+a[0]+'"><i>'+a[1]+'</i><span>'+a[2]+'</span></button>'; }).join('')+
     '</div>'+
     '<div class="pnl-abas pnl-abas-mais"><small>Mais:</small>'+
@@ -10283,6 +10342,7 @@ function desenharPainel(pedidos, visitas, musicas){
     (_pnlAba==='vigiar' ? pnlVigiarHtml() : '')+
     (_pnlAba==='meianoite' ? pnlMNHtml() : '')+
     (_pnlAba==='aprender' ? pnlAprHtml() : '')+
+    (_pnlAba==='desistem' ? pnlFmHtml() : '')+
     (_pnlAba==='hoje' ? pnlHojeHtml(pedidos, _pnlCache.custos||{}) : '')+
     (_pnlAba==='pagos'
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+
