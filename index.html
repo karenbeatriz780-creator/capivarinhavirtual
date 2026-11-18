@@ -826,6 +826,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mc-bar i{transition:width .35s linear}.mc-fase{transition:opacity .25s}
 .mv-cta{margin:1rem 0 .4rem;text-align:center}.mv-fim{background:#fff6d6;border:1px solid #f1d27a;color:#6b4e00;border-radius:12px;padding:.6rem .8rem;font-size:.88rem;font-weight:700;margin-bottom:.6rem}.mv-cta-b{display:block;width:100%;border:0;border-radius:16px;padding:1rem;font-size:1.02rem;font-weight:900;color:#fff;background:linear-gradient(90deg,#E91E63,#ff5c8a);box-shadow:0 10px 24px rgba(233,30,99,.35);cursor:pointer;font-family:inherit}.mv-cta-b.pulsa{animation:mvPulsa 1.2s ease-in-out 4}@keyframes mvPulsa{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}.mv-cta-s{font-size:.75rem;color:var(--muted,#8a7380);margin-top:.35rem}.wz-rapido{display:inline-block;margin:.1rem 0 .7rem;padding:.35rem .7rem;border-radius:999px;background:#fff0f6;color:#a0144a;font-size:.8rem;font-weight:700}.sem-nome{display:block;margin:.8rem auto 0;background:none;border:1.5px dashed #d9b8c7;border-radius:12px;padding:.6rem .9rem;color:#7a5a68;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit}
 .pxc-volte{margin:.6rem 0 .2rem;padding:.55rem .7rem;border-radius:12px;background:#eefaf3;color:#14532d;font-size:.82rem}
+.mh-ditar2{display:flex;align-items:center;justify-content:center;gap:.4rem;width:100%;padding:.85rem;border-radius:14px;border:0;background:linear-gradient(90deg,#E91E63,#ff5c8a);color:#fff;font-weight:800;font-size:.95rem;box-shadow:0 8px 20px rgba(233,30,99,.25);cursor:pointer;font-family:inherit}details.sug-musica>summary{cursor:pointer;list-style:none}details.sug-musica>summary::-webkit-details-marker{display:none}
 .xp-combo{display:block;width:100%;margin:10px 0 2px;padding:11px 12px;border:2px dashed #E91E63;border-radius:14px;background:#fff0f6;color:#7a1040;font-size:.9rem;text-align:left;cursor:pointer}.xp-combo s{opacity:.6;margin-left:4px}.xp-combo.on{border-style:solid;background:#e9f8ee;border-color:#1F8A4C;color:#14532d;cursor:default}
 .xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
@@ -6175,18 +6176,19 @@ function htmlPasso(k){
       'A gente se conheceu numa festa em 2021, em Parauapebas. Eu chamo ela de Nega. No primeiro encontro a gente ficou até 4 da manhã conversando no carro. Hoje temos a Helo, nossa filha.';
     var ROMANTICOS=['namorada','namorado','esposa','marido'];
     var ehRomantico=ROMANTICOS.indexOf(W.musicaPara)!==-1;
-    var sugestoes=['Como nos conhecemos','Qualidades e virtudes', ehRomantico?'Declaração de amor':'Um momento marcante'];
+    var sugestoes=['Como nos conhecemos','Qualidades','Uma aventura','Um momento marcante'];
     var LOUVOR=ehLouvor();
     if(LOUVOR){
       exemplo='Meu versículo é Isaías 41:10: "Não temas, porque eu sou contigo". Em 2023 eu perdi o emprego e achei que não ia aguentar, mas Deus abriu uma porta na minha cidade, Parauapebas. Hoje eu quero agradecer por cada livramento e dizer que sem Ele eu não sou nada.';
       sugestoes=['Meu versículo','Meu testemunho','Gratidão a Deus','O que Deus fez por mim'];
     }
-    return guia("Digite ou use o microfone para contar os detalhes. Faremos uma composição inesquecível!")+
-      '<div class="wz-t">'+(LOUVOR?'Seu louvor 🙏':'Conte sua história 📜')+'</div>'+
+    _guia='';
+    return '<div class="wz-t">'+(LOUVOR?'Seu louvor 🙏':'Conte sua história')+'</div>'+
+      '<div class="wz-s">Quanto mais detalhes (nomes, apelidos, lugares, datas), mais a música vai parecer de vocês.</div>'+
       '<div class="mh-top">'+
-        '<button type="button" class="btn btn-ghost mh-ditar" id="musicaDitar">🎙️ Ditar por Voz (Gravar Fala)</button>'+
-        '<div class="mh-sug"><span class="mh-sug-lbl">Sugestões rápidas:</span>'+
-          sugestoes.map(function(s){ return '<button type="button" class="mh-chip" data-sug="'+esc(s)+'">💡 '+esc(s)+'</button>'; }).join('')+
+        '<button type="button" class="mh-ditar mh-ditar2" id="musicaDitar">🎙️ Falar em vez de digitar</button>'+
+        '<div class="mh-sug"><span class="mh-sug-lbl">Toque pra começar:</span>'+
+          sugestoes.map(function(s){ return '<button type="button" class="mh-chip" data-sug="'+esc(s)+'">'+({'Como nos conhecemos':'💞','Qualidades':'⭐','Uma aventura':'🗺️','Um momento marcante':'📸'}[s]||'💡')+' '+esc(s)+'</button>'; }).join('')+
         '</div>'+
       '</div>'+
       (LOUVOR ? htmlInspiraLouvor() : '')+
@@ -6194,9 +6196,7 @@ function htmlPasso(k){
       '<textarea class="inp" id="musicaTexto" rows="6" maxlength="2000" placeholder="'+(LOUVOR?'Qual versículo toca seu coração? O que Deus já fez na sua vida? Pelo que você quer agradecer? (Ou toque no microfone acima pra falar)':'Como vocês se conheceram? Qual o momento mais especial? O que essa pessoa significa pra você? (Ou toque no microfone acima pra falar)')+'">'+esc(W.musicaTexto)+'</textarea>'+
       '<div class="mh-counts"><div class="mh-contador" id="mhContador"></div><span class="mh-max" id="mhMax"></span></div>'+
       '<div class="mh-checklist" id="mhCheck"></div>'+
-      '<label class="mh-label" for="musicaMomentos" style="margin-top:1.1rem">Momentos especiais para mencionar <span class="opc">(opcional)</span></label>'+
-      '<textarea class="inp" id="musicaMomentos" rows="3" maxlength="500" placeholder="'+(LOUVOR?'Ex: a cura da minha mãe, o batismo do meu filho, a vitória no hospital...':'Ex: primeiro encontro no parque, viagem para a praia, pedido de casamento...')+'">'+esc(W.musicaMomentos||'')+'</textarea>'+
-      '<div class="sug-musica"><span class="sug-lbl">💡 O que deixa a letra boa</span>'+
+      '<details class="sug-musica"><summary class="sug-lbl">💡 O que deixa a letra boa</summary>'+
         '<ul class="sug-lista">'+
           (LOUVOR ? ['<b>Um versículo</b> — "Salmos 23: o Senhor é meu pastor"',
            '<b>Seu testemunho</b> — "Deus me curou em 2022"',
@@ -6210,7 +6210,7 @@ function htmlPasso(k){
           }).join('')+
         '</ul>'+
         '<button type="button" class="sug-exemplo" id="mhExemplo" data-exemplo="'+esc(exemplo)+'">Ver um exemplo pronto</button>'+
-      '</div>';
+      '</details>';
   }
 
   case 'musicaGenero': {
@@ -6246,14 +6246,14 @@ function htmlPasso(k){
 
   case 'musicaClima': {
     var climas=[
-      ['alegre','☀️','Alegre','ritmo contagiante'],['emocionante','🥺','Emocionante','faz chorar'],
+      ['emocionante','🥺','Emocionante','faz chorar de emoção'],['alegre','☀️','Alegre','ritmo contagiante'],
       ['romantica','💗','Romântica','declaração amorosa'],['calma','🍃','Calma','suave e acolhedora'],
       ['nostalgica','🍂','Nostálgica','recordações e saudade'],['festiva','🎉','Festiva','clima de celebração'],
       ['energetica','🔥','Energética','cheia de ritmo'],['divertida','😄','Divertida','leve e bem-humorada'],
       ['inspiradora','✨','Inspiradora','superação e motivação'],['melancolica','🕊️','Melancólica','saudade e homenagem'],
       ['triste','😢','Triste','pra chorar junto'],['zoeira','🤪','Modo trollagem','zoeira e deboche']
     ];
-    if(ehLouvor()) climas=climas.filter(function(c){ return c[0]!=='zoeira' && c[0]!=='divertida' && c[0]!=='romantica'; });
+    if(ehLouvor()) climas=climas.filter(function(c){ return c[0]!=='zoeira' && c[0]!=='divertida' && c[0]!=='romantica' && c[0]!=='triste'; });
     return guia(ehLouvor()?"E o clima do louvor? Como você quer se sentir na presença de Deus?":"E o clima? Como você quer que ela faça vocês se sentirem?")+
       '<div class="wz-t">Clima da música</div>'+
       '<div class="cards2" id="musicaClimaChips">'+climas.map(function(c){
@@ -6269,11 +6269,7 @@ function htmlPasso(k){
     return guia(temTexto
         ? "Essa é a prévia da letra escrita pela nossa IA. Lê com calma: você pode editar direto no texto, ou pedir um ajuste pontual pra IA. O que estiver aqui vai sair igualzinho, cantado na música."
         : "Antes de compor a música, a nossa inteligência artificial escreve a letra pra você aprovar primeiro. O que ficar aqui depois sai exatamente igual na música.")+
-      '<div class="wz-t">Nomes que devem aparecer na letra (opcional)</div>'+
-      '<input class="inp" id="musicaNomesLetra" value="'+esc(W.musicaParaNome)+'" placeholder="Ex: João e Maria">'+
-      '<div class="wz-t" style="margin-top:1rem">Frase especial pra incluir (opcional)</div>'+
-      '<input class="inp" id="musicaFrase" value="'+esc(W.musicaFrase)+'" placeholder="Ex: te amo mais que ontem">'+
-      '<div class="letra-wrap" id="letraWrap" style="margin-top:1.3rem">'+
+      '<div class="letra-wrap" id="letraWrap" style="margin-top:.6rem">'+
         (W.musicaLetraGerando ? htmlLetraCarregando('Escrevendo a letra da sua música...')
           : (W.musicaLetraAjustando ? htmlLetraCarregando('Ajustando a letra da sua música...')
             : (temTexto
@@ -6312,7 +6308,7 @@ function htmlPasso(k){
       '</div>'+
       '<div class="wz-t" id="musicaAjustesTit"'+(W.musicaPreviewUrl?' style="margin-top:1.8rem"':'')+'>'+
         (W.musicaPreviewUrl?'Quer mudar algo?':'Últimos ajustes')+'</div>'+
-      '<div class="field" id="musicaCapaField"><label>Capa da música (opcional)</label>'+
+      '<div class="field" id="musicaCapaField"><label>📸 Foto de vocês <span class="opc">(opcional)</span></label>'+
         (W.musicaCapa
           ? '<div class="capa-previa"><img src="'+esc(W.musicaCapa)+'" alt="">'+
             '<div class="capa-tx"><b>Capa escolhida</b><span>Ela aparece no disco quando a música tocar</span></div>'+
@@ -6325,9 +6321,9 @@ function htmlPasso(k){
             '</label>')+
         '<input type="file" id="musicaCapaInp" accept="image/*" style="display:none">'+
       '</div>'+
-      '<div class="field" id="musicaVozField" style="margin-top:1rem"><label>Tipo de voz</label>'+
+      '<div class="field" id="musicaVozField" style="margin-top:1rem"><label>🎤 Quem canta?</label>'+
         '<div class="voz-cards">'+
-          [['masculina','🎙️','Masculina','Voz grave'],['feminina','🎙️','Feminina','Voz aguda'],['dueto','🎤','Dueto','Masc. + fem.']].map(function(v){
+          [['masculina','👨','Masculina','Voz de homem'],['feminina','👩','Feminina','Voz de mulher'],['dueto','👫','Dueto','Homem + mulher']].map(function(v){
             return '<button type="button" class="voz-card'+(W.musicaVoz===v[0]?' on':'')+'" data-voz="'+v[0]+'">'+
               '<span class="voz-check">'+IC.check+'</span>'+
               '<span class="voz-ic">'+v[1]+'</span>'+
@@ -6787,6 +6783,8 @@ function ligarPasso(k){
     var SUG_FRASES={
       'Como nos conhecemos':'Nos conhecemos ',
       'Qualidades e virtudes':'O que eu mais admiro é ',
+      'Qualidades':'O que eu mais admiro é ',
+      'Uma aventura':'Uma aventura que vivemos juntos foi ',
       'Declaração de amor':'Quero dizer que ',
       'Um momento marcante':'Teve um momento que eu nunca esqueço: ',
       'Meu versículo':'O versículo que mais fala comigo é ',
