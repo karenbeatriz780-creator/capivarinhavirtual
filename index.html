@@ -8251,7 +8251,7 @@ function pnlRefVigiar(){ clearInterval(_pnlRefIv); _pnlRefIv=setInterval(functio
 document.addEventListener('click',function(e){
   var g=e.target&&e.target.closest&&e.target.closest('#pnlRefGerar');
   if(g){ g.disabled=true; var ini=(el('pnlRefIni')||{}).value||'', fim=(el('pnlRefFim')||{}).value||'', ids=((el('pnlRefIds')||{}).value||'').match(/E[0-9A-Za-z]{20,40}/g)||[], tst=((el('pnlRefTestes')||{}).value||'').match(/[A-Za-z0-9_-]{4,80}/g)||[]; try{ localStorage.setItem('cl_ref_testes',tst.join('\n')); }catch(x){} try{ localStorage.setItem('cl_ref_ids',ids.join('\n')); }catch(x){}
-    fetch('/.netlify/functions/relatorio-efi-background',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({inicio:ini,fim:fim,contestados:ids,testes:tst})})
+    fetch('/.netlify/functions/relatorio-efi-background',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({inicio:ini,fim:fim,contestados:ids,testes:tst,pendTeste:!!(el('pnlRefPendTeste')||{}).checked})})
       .then(function(){ g.disabled=false; pnlRefSt({status:'gerando'}); pnlRefVigiar(); }).catch(function(){ g.disabled=false; toast('Sem conexão.'); });
     return; }
   var a=e.target&&e.target.closest&&e.target.closest('#pnlRefAbrir');
@@ -10425,6 +10425,7 @@ function desenharPainel(pedidos, visitas, musicas){
         pnlAudiosHtml()+
         '<div class="pnl-sec" id="pnlRef"><h2>📄 Relatório para a Efí (MED)</h2><div class="sub">Puxa da Efí todos os Pix recebidos, as devoluções e as contestações MED (com o motivo), e mostra cada pedido com o link entregue. Demora uns minutos.</div>'+
           '<div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.5rem"><label style="font-size:.8rem">De <input type="date" id="pnlRefIni" value="2026-07-01"></label><label style="font-size:.8rem">Até <input type="date" id="pnlRefFim"></label></div>'+
+          '<label style="display:flex;gap:.4rem;align-items:center;font-size:.85rem;margin-top:.5rem"><input type="checkbox" id="pnlRefPendTeste" checked> Pedidos pagos sem entrega são <b>testes meus</b> (ficam fora da contagem)</label>'+
           '<label style="display:block;font-size:.8rem;margin-top:.5rem">Pedidos que foram TESTE seus (opcional) — cole o código do pedido, um por linha (aparece na lista de pendentes abaixo):<textarea id="pnlRefTestes" rows="2" style="width:100%;font-size:.75rem;margin-top:.25rem"></textarea></label>'+
           '<label style="display:block;font-size:.8rem;margin-top:.5rem">IDs dos Pix contestados (opcional) — copie do app da Efí, na área de MED/contestações, o <b>ID do Pix (começa com E)</b> de cada um, um por linha:<textarea id="pnlRefIds" rows="4" style="width:100%;font-size:.75rem;margin-top:.25rem" placeholder="E18236120202610101318s0123abcd45"></textarea></label>'+
           '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"><button type="button" class="pnl-btn" id="pnlRefGerar">Gerar relatório</button><button type="button" class="pnl-btn" id="pnlRefAbrir" hidden>📄 Abrir relatório (PDF)</button></div><div id="pnlRefSt" class="sub" style="margin-top:.4rem"></div></div>'+

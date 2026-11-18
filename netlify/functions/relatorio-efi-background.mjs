@@ -100,6 +100,8 @@ export default async (req) => {
       });
     }
     // infrações de Pix que não vieram na lista (fora do período da lista)
+    // o responsável declarou: pedidos pagos sem entrega detectada (depois da liberação automática acima) são testes dele
+    if (b.pendTeste) linhas.forEach((l) => { if (l.pedido && !l.entregue) l.teste = true; });
     const vistos = new Set(linhas.map((l) => l.e2e));
     const infSoltas = ri.itens.filter((x) => !vistos.has(x.endToEndId)).map((x) => ({ e2e: x.endToEndId, valor: Number(x.valor) || 0, data: x.dataTransacao || '', status: x.status, razao: x.razao || '', comentario: x.comentario || '' }));
     linhas.sort((a, c) => String(c.pagoEm).localeCompare(String(a.pagoEm)));
