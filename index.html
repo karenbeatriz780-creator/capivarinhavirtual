@@ -6259,13 +6259,14 @@ function htmlPasso(k){
   case 'musicaClima': {
     var climas=[
       ['emocionante','🥺','Emocionante','faz chorar de emoção'],['alegre','☀️','Alegre','ritmo contagiante'],
+      ['reconquista','💔','Reconquista','pra pedir pra voltar'],['sofrencia','🥀','Sofrência','coração partido'],
       ['romantica','💗','Romântica','declaração amorosa'],['calma','🍃','Calma','suave e acolhedora'],
       ['nostalgica','🍂','Nostálgica','recordações e saudade'],['festiva','🎉','Festiva','clima de celebração'],
       ['energetica','🔥','Energética','cheia de ritmo'],['divertida','😄','Divertida','leve e bem-humorada'],
       ['inspiradora','✨','Inspiradora','superação e motivação'],['melancolica','🕊️','Melancólica','saudade e homenagem'],
       ['triste','😢','Triste','pra chorar junto'],['zoeira','🤪','Modo trollagem','zoeira e deboche']
     ];
-    if(ehLouvor()) climas=climas.filter(function(c){ return c[0]!=='zoeira' && c[0]!=='divertida' && c[0]!=='romantica' && c[0]!=='triste'; });
+    if(ehLouvor()) climas=climas.filter(function(c){ return c[0]!=='zoeira' && c[0]!=='divertida' && c[0]!=='romantica' && c[0]!=='triste' && c[0]!=='reconquista' && c[0]!=='sofrencia'; });
     return guia(ehLouvor()?"E o clima do louvor? Como você quer se sentir na presença de Deus?":"E o clima? Como você quer que ela faça vocês se sentirem?")+
       '<div class="wz-t">Clima da música</div>'+
       '<div class="cards2" id="musicaClimaChips">'+climas.map(function(c){

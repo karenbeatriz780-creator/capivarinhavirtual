@@ -246,7 +246,8 @@ const CLIMA_PT = {
   nostalgica:'nostálgico, de saudade', festiva:'festivo, de celebração',
   energetica:'energético e vibrante', divertida:'divertido e bem-humorado',
   inspiradora:'inspirador, de superação', melancolica:'melancólico',
-  triste:'triste e emocionante', zoeira:'engraçado e debochado, de zoeira'
+  triste:'triste e emocionante', zoeira:'engraçado e debochado, de zoeira',
+  reconquista:'de reconquista, pedindo pra voltar', sofrencia:'sofrência, coração partido'
 };
 // O clima tem que mudar o ARRANJO, não só a letra. Sem isso, "rock animado"
 // sai com a mesma pegada de "rock melancólico".
@@ -262,13 +263,16 @@ const CLIMA_ARRANJO = {
   inspiradora:'crescimento gradual até um final grandioso e triunfante',
   melancolica:'andamento lento, arranjo contido e sentido',
   triste:'andamento lento, piano e cordas, arranjo triste e emocionado',
+  reconquista:'andamento médio, começa intimista e cresce num refrão de esperança',
+  sofrencia:'andamento lento a médio, arranjo sofrido e intenso, refrão pra cantar junto',
   zoeira:'andamento animado, arranjo cômico e exagerado, com efeitos engraçados'
 };
 const CLIMAS = {
   alegre:'joyful', emocionante:'emotional', romantica:'romantic', calma:'gentle',
   nostalgica:'nostalgic', festiva:'celebratory', energetica:'energetic',
   divertida:'playful', inspiradora:'uplifting', melancolica:'melancholic',
-  triste:'sad, emotional', zoeira:'funny, comedic, humorous'
+  triste:'sad, emotional', zoeira:'funny, comedic, humorous',
+  reconquista:'heartfelt, hopeful, asking for another chance', sofrencia:'heartbreak, emotional, longing'
 };
 const VOZES = { masculina:'male vocals', feminina:'female vocals', dueto:'male and female duet vocals' };
 

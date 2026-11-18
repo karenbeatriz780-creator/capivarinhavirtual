@@ -80,6 +80,8 @@ const CLIMA_PT = {
   energetica:'energético e vibrante', divertida:'divertido e bem-humorado',
   inspiradora:'inspirador, de superação', melancolica:'melancólico',
   triste:'triste, de saudade e dor, emocionante',
+  reconquista:'RECONQUISTA: quem canta quer a pessoa de volta depois de um término ou briga — reconhece os erros, lembra os melhores momentos, mostra que mudou e pede mais uma chance, com esperança e sem cobrar nem culpar',
+  sofrencia:'SOFRÊNCIA / CORAÇÃO PARTIDO: dor de quem perdeu ou terminou, saudade forte, desabafo sincero — sofrido mas bonito, sem ódio nem ofensa à outra pessoa',
   zoeira:'MODO TROLLAGEM / ZOEIRA: engraçado, debochado, com piadas e provocações de brincadeira (zoeira entre amigos), exagerado e cômico — mas sem ofensa pesada, sem palavrão pesado e sem preconceito'
 };
 const NICHO_TEXTO = {
