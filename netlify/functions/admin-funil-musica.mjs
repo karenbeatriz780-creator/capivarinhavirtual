@@ -6,6 +6,10 @@ export default async (req) => {
   const senha = (process.env.ADMIN_SENHA || '').trim();
   if (!senha || (req.headers.get('x-admin-key') || '') !== senha) return json({ erro: 'Senha de administrador incorreta.' }, 401);
   const u = new URL(req.url), per = u.searchParams.get('p') || 'hoje';
+  if (/^r(1|7|15)$/.test(per)) { // histórico retroativo (calculado em segundo plano)
+    const r = await getStore('gastos').get('funil_retro_' + per.slice(1), { type: 'json' }).catch(() => null);
+    return json(Object.assign({ periodo: per, retro: true }, r || { status: 'nada' }));
+  }
   const dia = (i) => new Date(Date.now() - 3 * 36e5 - i * 864e5).toISOString().slice(0, 10);
   const dias = per === 'ontem' ? [dia(1)] : per === '7d' ? [0, 1, 2, 3, 4, 5, 6].map(dia) : [dia(0)];
   const st = getStore('funil-musica');

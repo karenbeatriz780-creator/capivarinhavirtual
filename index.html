@@ -9677,24 +9677,33 @@ function pnlFmCarregar(){
     .catch(function(){ _pnlFmCarr=false; _pnlFm={erro:'Sem conexão.',p:p}; if(_pnlAba==='desistem') pnlRedesenhar(); });
 }
 function pnlFmHtml(){
-  var per='<div class="mn-bar" style="gap:.4rem">'+[['hoje','Hoje'],['ontem','Ontem'],['7d','7 dias']].map(function(a){ return '<button type="button" class="pnl-btn'+(_pnlFmP===a[0]?' on':'')+'" data-fmp="'+a[0]+'"'+(_pnlFmP===a[0]?' style="background:#E91E63;color:#fff"':'')+'>'+a[1]+'</button>'; }).join('')+'</div>';
+  function bts(L){ return L.map(function(a){ return '<button type="button" class="pnl-btn'+(_pnlFmP===a[0]?' on':'')+'" data-fmp="'+a[0]+'"'+(_pnlFmP===a[0]?' style="background:#E91E63;color:#fff"':'')+'>'+a[1]+'</button>'; }).join(''); }
+  var per='<div class="mn-bar" style="gap:.4rem;flex-wrap:wrap">'+bts([['hoje','Hoje'],['ontem','Ontem'],['7d','7 dias']])+'</div>'+
+    '<div style="font-size:.78rem;color:#8a7380;margin-top:.5rem">📜 Histórico (antes de 17/11, sem "entrou no site"):</div><div class="mn-bar" style="gap:.4rem;flex-wrap:wrap">'+bts([['r1','Ontem'],['r7','7 dias'],['r15','15 dias']])+'</div>';
   var topo='<div class="dsh-card"><div class="dsh-t">🔻 Onde as pessoas desistem (música)</div><div class="dsh-nota">Quantas pessoas chegaram em cada etapa. Em <b style="color:#c62828">vermelho</b> a etapa que mais perde gente — é ali que vale colocar uma oferta. Conta a partir de 17/11 (não conta os seus testes).</div>'+per+'</div>';
   var D=_pnlFm;
   if(!D||D.p!==_pnlFmP) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando…</div></div>';
   if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
+  if(D.retro && D.status!=='pronto') return topo+'<div class="dsh-card"><div class="pnl-nota">'+(D.status==='gerando'?'⏳ Calculando o histórico… (leva 1 a 3 minutos, a tela atualiza sozinha)':D.status==='erro'?'⚠️ '+esc(D.erro||'erro')+' <a href="#" id="fmCalc">tentar de novo</a>':'<a href="#" id="fmCalc" class="pnl-btn">📜 Calcular o histórico</a>')+'</div></div>';
   var E=(D.etapas||[]).filter(function(x){ return x.e!=='musicaNome' || x.total>0; }), base=(E[0]&&E[0].total)||0, prev=null, pior=null;
   E.forEach(function(x,i){ x.perde=null; if(i>0 && prev && prev.total>0){ x.perde=Math.max(0,Math.round((1-x.total/prev.total)*100)); x.perdeN=Math.max(0,prev.total-x.total); if(x.e!=='musicaPara' && x.perdeN>0 && (!pior || x.perde>pior.perde)) pior=x; } prev=x; });
-  var conv=base?((E[E.length-1].total*100/base).toFixed(1).replace('.',',')):'0';
+  var conv=base?((E[E.length-1].total*100/base).toFixed(1).replace('.',',')):'0', quem=D.retro?'De quem começou a criar':'De quem entrou';
   var linhas=E.map(function(x){ var w=base?Math.max(2,Math.round(x.total*100/base)):0, rd=x===pior;
     return '<div style="padding:.5rem .2rem;border-bottom:1px solid #f1e6eb'+(rd?';background:#fff1f1':'')+'"><div style="display:flex;gap:.5rem;align-items:baseline"><b style="flex:1;font-size:.88rem'+(rd?';color:#c62828':'')+'">'+esc(FM_NOME[x.e]||x.e)+'</b><b>'+x.total+'</b>'+(x.perde!=null?'<span style="min-width:72px;text-align:right;font-size:.8rem;color:'+(rd?'#c62828':'#8a7380')+'">−'+x.perde+'% ('+x.perdeN+')</span>':'<span style="min-width:72px"></span>')+'</div>'+
       '<div style="height:8px;background:#f3e9ee;border-radius:5px;margin-top:.3rem;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:'+(rd?'#e53935':'#E91E63')+'"></i></div>'+
-      '<div style="font-size:.72rem;color:#9a8590;margin-top:.2rem">iPhone '+(x.ios||0)+' · Android '+(x.android||0)+(x.outro?' · outros '+x.outro:'')+'</div></div>'; }).join('');
+      (x.ios!=null?'<div style="font-size:.72rem;color:#9a8590;margin-top:.2rem">iPhone '+(x.ios||0)+' · Android '+(x.android||0)+(x.outro?' · outros '+x.outro:'')+'</div>':'')+'</div>'; }).join('');
   var ent=E.filter(function(x){ return x.e==='musicaPara'; })[0];
   var dica0=ent&&ent.perde!=null?'<div class="dsh-card"><div class="dsh-t">🏠 Página inicial</div><div class="dsh-nota">'+ent.perde+'% de quem entra sai sem começar (é normal ficar entre 40% e 70%). '+esc(FM_DICA.musicaPara)+'</div></div>':'';
   var dica=pior&&FM_DICA[pior.e]?'<div class="dsh-card" style="border:2px solid #e53935"><div class="dsh-t">💡 Onde colocar a oferta</div><div class="dsh-nota">Depois que começam a criar, a maior perda está antes de <b>"'+esc(FM_NOME[pior.e])+'"</b>: <b>'+pior.perdeN+' pessoas</b> ('+pior.perde+'%) saíram aí.<br><br>'+esc(FM_DICA[pior.e])+'</div></div>':'';
-  return topo+'<div class="dsh-card"><div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.4rem"><span>De quem entrou, <b>'+conv+'%</b> pagou</span><a href="#" id="fmAtual">↻ atualizar</a></div>'+linhas+'</div>'+dica+dica0;
+  return topo+'<div class="dsh-card"><div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.4rem"><span>'+quem+(D.retro&&D.de?' ('+D.de.split('-').reverse().slice(0,2).join('/')+' a '+D.ate.split('-').reverse().slice(0,2).join('/')+')':'')+', <b>'+conv+'%</b> pagou</span><a href="#" id="fmAtual">↻ atualizar</a></div>'+linhas+'</div>'+dica+dica0+(D.retro?'<div class="pnl-nota" style="text-align:center;margin:.5rem 0">Calculado em '+new Date(D.em).toLocaleString('pt-BR')+' · <a href="#" id="fmCalc">↻ recalcular</a></div>':'');
 }
+var _pnlFmIv=null;
 function pnlFmLigar(){
+  clearInterval(_pnlFmIv);
+  if(_pnlFm && _pnlFm.retro && _pnlFm.status==='gerando') _pnlFmIv=setTimeout(function(){ if(_pnlAba==='desistem'){ pnlFmCarregar(); } },5000);
+  var c=el('fmCalc'); if(c) c.onclick=function(e){ e.preventDefault(); var n=_pnlFmP.slice(1);
+    fetch('/.netlify/functions/funil-retro-background',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({dias:+n})}).catch(function(){});
+    _pnlFm={p:_pnlFmP,retro:true,status:'gerando'}; pnlRedesenhar(); };
   document.querySelectorAll('[data-fmp]').forEach(function(b){ b.onclick=function(){ _pnlFmP=b.dataset.fmp; pnlRedesenhar(); pnlFmCarregar(); }; });
   var a=el('fmAtual'); if(a) a.onclick=function(e){ e.preventDefault(); _pnlFm=null; pnlRedesenhar(); pnlFmCarregar(); };
 }
