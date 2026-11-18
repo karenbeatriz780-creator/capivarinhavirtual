@@ -9683,14 +9683,16 @@ function pnlFmHtml(){
   if(!D||D.p!==_pnlFmP) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando…</div></div>';
   if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
   var E=(D.etapas||[]).filter(function(x){ return x.e!=='musicaNome' || x.total>0; }), base=(E[0]&&E[0].total)||0, prev=null, pior=null;
-  E.forEach(function(x,i){ x.perde=null; if(i>0 && prev && prev.total>0){ x.perde=Math.max(0,Math.round((1-x.total/prev.total)*100)); x.perdeN=Math.max(0,prev.total-x.total); if(x.perdeN>0 && (!pior || x.perdeN>pior.perdeN)) pior=x; } prev=x; });
+  E.forEach(function(x,i){ x.perde=null; if(i>0 && prev && prev.total>0){ x.perde=Math.max(0,Math.round((1-x.total/prev.total)*100)); x.perdeN=Math.max(0,prev.total-x.total); if(x.e!=='musicaPara' && x.perdeN>0 && (!pior || x.perde>pior.perde)) pior=x; } prev=x; });
   var conv=base?((E[E.length-1].total*100/base).toFixed(1).replace('.',',')):'0';
   var linhas=E.map(function(x){ var w=base?Math.max(2,Math.round(x.total*100/base)):0, rd=x===pior;
     return '<div style="padding:.5rem .2rem;border-bottom:1px solid #f1e6eb'+(rd?';background:#fff1f1':'')+'"><div style="display:flex;gap:.5rem;align-items:baseline"><b style="flex:1;font-size:.88rem'+(rd?';color:#c62828':'')+'">'+esc(FM_NOME[x.e]||x.e)+'</b><b>'+x.total+'</b>'+(x.perde!=null?'<span style="min-width:72px;text-align:right;font-size:.8rem;color:'+(rd?'#c62828':'#8a7380')+'">−'+x.perde+'% ('+x.perdeN+')</span>':'<span style="min-width:72px"></span>')+'</div>'+
       '<div style="height:8px;background:#f3e9ee;border-radius:5px;margin-top:.3rem;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:'+(rd?'#e53935':'#E91E63')+'"></i></div>'+
       '<div style="font-size:.72rem;color:#9a8590;margin-top:.2rem">iPhone '+(x.ios||0)+' · Android '+(x.android||0)+(x.outro?' · outros '+x.outro:'')+'</div></div>'; }).join('');
-  var dica=pior&&FM_DICA[pior.e]?'<div class="dsh-card" style="border:2px solid #e53935"><div class="dsh-t">💡 Onde colocar a oferta</div><div class="dsh-nota">A maior perda está antes de <b>"'+esc(FM_NOME[pior.e])+'"</b>: <b>'+pior.perdeN+' pessoas</b> ('+pior.perde+'%) saíram aí.<br><br>'+esc(FM_DICA[pior.e])+'</div></div>':'';
-  return topo+'<div class="dsh-card"><div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.4rem"><span>De quem entrou, <b>'+conv+'%</b> pagou</span><a href="#" id="fmAtual">↻ atualizar</a></div>'+linhas+'</div>'+dica;
+  var ent=E.filter(function(x){ return x.e==='musicaPara'; })[0];
+  var dica0=ent&&ent.perde!=null?'<div class="dsh-card"><div class="dsh-t">🏠 Página inicial</div><div class="dsh-nota">'+ent.perde+'% de quem entra sai sem começar (é normal ficar entre 40% e 70%). '+esc(FM_DICA.musicaPara)+'</div></div>':'';
+  var dica=pior&&FM_DICA[pior.e]?'<div class="dsh-card" style="border:2px solid #e53935"><div class="dsh-t">💡 Onde colocar a oferta</div><div class="dsh-nota">Depois que começam a criar, a maior perda está antes de <b>"'+esc(FM_NOME[pior.e])+'"</b>: <b>'+pior.perdeN+' pessoas</b> ('+pior.perde+'%) saíram aí.<br><br>'+esc(FM_DICA[pior.e])+'</div></div>':'';
+  return topo+'<div class="dsh-card"><div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.4rem"><span>De quem entrou, <b>'+conv+'%</b> pagou</span><a href="#" id="fmAtual">↻ atualizar</a></div>'+linhas+'</div>'+dica+dica0;
 }
 function pnlFmLigar(){
   document.querySelectorAll('[data-fmp]').forEach(function(b){ b.onclick=function(){ _pnlFmP=b.dataset.fmp; pnlRedesenhar(); pnlFmCarregar(); }; });
