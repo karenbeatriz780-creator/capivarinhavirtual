@@ -7741,7 +7741,6 @@ function htmlPixLimpo(payload, valor, teste, info){
         '<div class="pxc-volte">📲 Pagou no app do banco? <b>Volte para esta página</b> — sua música libera aqui mesmo.</div>'+
         '<div class="pxc-lb">Código Pix Copia e Cola</div>'+
         '<textarea class="pxc-cod" id="pxTxt" readonly rows="6">'+esc(payload)+'</textarea>'+
-        (pixEhManual(payload)?'<button type="button" class="pxc-outro" id="pxOutroBanco">⚠️ O Pix deu erro no seu banco? <b>Gerar código de outro banco</b></button>':'')+
         '<details class="pxc-qr"><summary>Ver QR Code para pagar em outro aparelho</summary>'+(svg?'<div class="qr">'+svg+'</div>':'')+'<p>Escaneie com o app do banco em outro celular.</p></details>'+
       '</div>'+
       '<ul class="pxc-it" style="margin-top:1rem">'+info.itens.map(function(t){ return '<li><span>✓</span>'+esc(t)+'</li>'; }).join('')+'</ul>'+
