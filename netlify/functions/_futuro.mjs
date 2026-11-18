@@ -15,3 +15,13 @@ export function futuro(c, site, agora) {
   const tem = eua ? (v >= 1 && cpa <= FUT_CPA_EUA) : (v >= FUT_VENDAS && cpa <= lim);
   return { tem, vendas: v, gasto: +g.toFixed(2), cpa: cpa == null ? null : +cpa.toFixed(2), roas: g ? +((v * ticketDe(c.id, site)) / g).toFixed(2) : null, lim, eua };
 }
+// 🏆 As 10 melhores (17/11 21h): mais vendas na última semana com custo médio até R$ 9,50 (empate: mais barata). Brasil só.
+export const TOP_N = 10;
+export function top10(campanhas, site, agora, excluir) {
+  const fora = excluir || new Set();
+  return (campanhas || []).filter((c) => !ehEUA(c.nome) && !fora.has(String(c.id)))
+    .map((c) => ({ id: String(c.id), f: futuro(c, site, agora) }))
+    .filter((x) => x.f.vendas >= 1 && x.f.cpa != null && x.f.cpa <= CPA_LIM)
+    .sort((a, b) => b.f.vendas - a.f.vendas || a.f.cpa - b.f.cpa)
+    .slice(0, TOP_N).map((x) => x.id);
+}

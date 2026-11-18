@@ -149,7 +149,7 @@ export default async (req) => {
     const extrasPix = extrasOk && Array.isArray(presente.extrasPix)
       ? presente.extrasPix.filter((k, i, a) => EXTRAS_PIX[k] && a.indexOf(k) === i) : [];
     presente.extrasPix = extrasPix;
-    const valorExtras = extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0);
+    const valorExtras = (extrasPix.length >= 2 ? 7.90 : extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0)) /* 17/11: clipe + quadro juntos R$ 7,90 */;
     const precoFinal = Math.round((precoProduto + valorExtras) * 100) / 100;
     const txid = criarTxid(presente.id);
     const criadoEm = Date.now();

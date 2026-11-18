@@ -144,7 +144,7 @@ export default async (req) => {
     const extrasOk = (g.produto || 'musica') === 'musica' && !g.comboDaMusica && !g.bonusDe && !g.dobroDe;
     const extrasIn = Array.isArray(body.extras) ? body.extras : (body.manterExtras ? (pg0.extras || g.extrasPix || []) : []);
     const extrasPix = extrasOk && Array.isArray(extrasIn) ? extrasIn.filter((k, i, a) => EXTRAS_PIX[k] && a.indexOf(k) === i) : [];
-    const valorExtras = Math.round(extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0) * 100) / 100;
+    const valorExtras = Math.round((extrasPix.length >= 2 ? 7.90 : extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0)) /* 17/11: clipe + quadro juntos R$ 7,90 */ * 100) / 100;
     const valor = Math.round((base + valorExtras) * 100) / 100;
     const oferta4 = quatroOk(g) || await ofertaRec(String(body.t || ''));
     // 💳 PIX MANUAL (reserva): Efí recusou/bloqueada → Pix com a chave do Gusthavo + comprovante

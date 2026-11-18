@@ -4,7 +4,7 @@
 import { getStore } from '@netlify/blobs';
 import { graphConta, vendasSitePorCampanha } from './_meta.mjs';
 import { metaAds } from './_gastos.mjs';
-import { futuro } from './_futuro.mjs';
+import { futuro, top10 } from './_futuro.mjs';
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 export default async (req) => {
   const senha = (process.env.ADMIN_SENHA || '').trim();
@@ -21,8 +21,11 @@ export default async (req) => {
       try {
         const [meta, site] = await Promise.all([metaAds(7), vendasSitePorCampanha(10)]);
         const mc = {}; (meta.campanhas || []).forEach((c) => { mc[String(c.id)] = c; });
-        campanhas.forEach((c) => { c.fut = futuro(mc[c.id] || { id: c.id, nome: c.nome, dias: {} }, site, Date.now() - 864e5); });
-        campanhas.sort((a, b) => ((b.fut && b.fut.tem ? 1 : 0) - (a.fut && a.fut.tem ? 1 : 0)) || ((b.fut ? b.fut.vendas : 0) - (a.fut ? a.fut.vendas : 0)));
+        const apr = ((await L.get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}).ids || [];
+        const hj = new Date(Date.now() - 3 * 36e5).getUTCHours() === 23 ? Date.now() : Date.now() - 864e5; // às 23h de hoje vale a semana até hoje
+        const top = new Set(top10(meta.campanhas, site, hj, new Set((cfg.fora || []).map(String).concat(apr))));
+        campanhas.forEach((c) => { c.fut = futuro(mc[c.id] || { id: c.id, nome: c.nome, dias: {} }, site, Date.now() - 864e5); c.top = top.has(c.id); c.aprend = apr.indexOf(c.id) >= 0; });
+        campanhas.sort((a, b) => ((b.top ? 1 : 0) - (a.top ? 1 : 0)) || ((b.fut && b.fut.tem ? 1 : 0) - (a.fut && a.fut.tem ? 1 : 0)) || ((b.fut ? b.fut.vendas : 0) - (a.fut ? a.fut.vendas : 0)));
       } catch (e) {}
       return json({ campanhas, fora: cfg.fora || [] });
     }

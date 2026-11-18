@@ -815,6 +815,9 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .xp-add{font-size:.8rem;font-weight:800;color:#fff;background:var(--rose);border:0;border-radius:999px;padding:.45rem .85rem;cursor:pointer}
 .xp-op.on .xp-add{background:#1F9D55}
 .xp-tag{position:absolute;top:-9px;right:12px;font-size:.62rem;font-weight:800;letter-spacing:.06em;background:#FFE45C;color:#3a0a2a;padding:3px 8px;border-radius:999px}
+.gf-l{display:block;font-weight:700;font-size:.85rem;margin:12px 0 4px;color:#3b1d2c}.gf-l input,.gf-l textarea{display:block;width:100%;margin-top:4px;padding:11px;border:1.5px solid #e5d6dd;border-radius:12px;font-size:1rem;font-family:inherit;box-sizing:border-box}.gf-op{display:flex;gap:8px}.gf-op button{flex:1;padding:10px;border:1.5px solid #e5d6dd;border-radius:12px;background:#fff;font-weight:700;font-size:.85rem;cursor:pointer}.gf-op button.on{border-color:#E91E63;background:#fff0f6;color:#a0144a}
+.hx-natal{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:999px;background:linear-gradient(90deg,#b71c1c,#1b5e20);color:#fff;font-weight:800;font-size:.8rem;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.xp-combo{display:block;width:100%;margin:10px 0 2px;padding:11px 12px;border:2px dashed #E91E63;border-radius:14px;background:#fff0f6;color:#7a1040;font-size:.9rem;text-align:left;cursor:pointer}.xp-combo s{opacity:.6;margin-left:4px}.xp-combo.on{border-style:solid;background:#e9f8ee;border-color:#1F8A4C;color:#14532d;cursor:default}
 .xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
 .xp-nao{display:block;width:100%;margin-top:.55rem;background:none;border:0;font-size:.85rem;color:var(--muted);text-decoration:underline;padding:.5rem;cursor:pointer}
@@ -3682,7 +3685,9 @@ var EXTRAS_PIX = {
 };
 function extrasElegivel(w){ return !!(w && w.produto==='musica' && !w.bonusDe && !w.dobroDe && !w.comboDaMusica); }
 function extrasValidos(w){ return extrasElegivel(w) ? (w.extrasPix||[]).filter(function(k,i,a){ return EXTRAS_PIX[k] && a.indexOf(k)===i; }) : []; }
-function precoExtras(w){ return extrasValidos(w).reduce(function(t,k){ return t+EXTRAS_PIX[k].preco; },0); }
+var PRECO_COMBO_EXTRAS = 7.90; /* clipe + quadro juntos — tem que bater com criar-pagamento.mjs e recuperar-pix.mjs */
+function somaExtras(l){ return l.length>=2 ? PRECO_COMBO_EXTRAS : l.reduce(function(t,k){ return t+EXTRAS_PIX[k].preco; },0); }
+function precoExtras(w){ return somaExtras(extrasValidos(w)); }
 var PRECO_PACOTE6 = 19.99; /* 6 músicas (3 letras × 2 versões) — tem que bater com criar-pagamento.mjs */
 function numMusicaAtual(){ return W.ofertaM2 ? 3 : (W.ofertaM1 ? 2 : 1); }
 var ZAP_API='5511924826268';
@@ -4450,6 +4455,7 @@ function observarReveal(root){
 }
 
 /* ---------- roteador ---------- */
+function natalAtivo(){ var d=new Date(), t=d.getMonth()*100+d.getDate(); return t>=1020&&t<=1125; } /* 20/11 a 25/12 */
 function rota(){
   var h=location.hash.replace(/^#\/?/,'');
   var parts=h.split('/').filter(Boolean);
@@ -4651,6 +4657,7 @@ function telaHome(){
     '<div class="hxf-img"><img src="/a/hero-musica2-560.webp" srcset="/a/hero-musica2-560.webp 560w, /a/hero-musica2.webp 860w" sizes="(max-width:560px) 100vw, 560px" width="560" height="1003" alt="Mulher sorrindo ouvindo uma música feita pra ela" fetchpriority="high"></div>'+
     '<div class="shell hx-in">'+
     '<span class="hx-tag">🎧 Prévia grátis · ouça antes de pagar</span>'+
+    (natalAtivo()?'<div class="hx-natal">🎄 O presente de Natal que emociona</div>':'')+
     '<h1 class="hx-t">A trilha sonora<br>do seu <em>amor</em></h1>'+
     '<p class="hx-sub">Com o nome e a história de quem você ama. Pronta em 1 minuto.</p>'+
     '<div class="hxf-esp" aria-hidden="true"></div>'+
@@ -7265,7 +7272,7 @@ function abrirExtrasPix(seguir, base){
       t:'🖼️ Quadro com QR Code', d:'Arte linda com a foto de vocês pra imprimir e dar de presente. Aponta a câmera e a música toca.'}
   ];
   var box=document.createElement('div'); box.className='xp-fundo'; box.id='xpFundo';
-  function total(){ var t=(base!=null?Number(base):precoTotalBase(W)); Object.keys(esc1).forEach(function(k){ if(esc1[k]) t+=EXTRAS_PIX[k].preco; }); return Math.round(t*100)/100; }
+  function total(){ var t=(base!=null?Number(base):precoTotalBase(W)); t+=somaExtras(Object.keys(esc1).filter(function(k){ return esc1[k]; })); return Math.round(t*100)/100; }
   function desenhar(){
     box.innerHTML='<div class="xp" role="dialog" aria-label="Adicionais">'+
       '<div class="xp-top"><button type="button" class="xp-vt" id="xpVt" aria-label="Voltar">‹</button><b>✨ Deixe o presente inesquecível</b></div>'+
@@ -7276,6 +7283,7 @@ function abrirExtrasPix(seguir, base){
             '<div class="xp-pr"><s>R$ '+fmtPreco(x.de)+'</s><b>R$ '+fmtPreco(x.preco)+'</b></div>'+
             '<div class="xp-bts"><button type="button" class="xp-ex" data-xpex="'+o.k+'">▶ Ver exemplo</button>'+
             '<button type="button" class="xp-add" data-xpadd="'+o.k+'">'+(on?'✓ Adicionado':'+ Adicionar')+'</button></div></div></div>'; }).join('')+
+      (esc1.clipe&&esc1.quadro?'<div class="xp-combo on">🎉 <b>Combo ativado:</b> clipe + quadro por <b>R$ '+fmtPreco(PRECO_COMBO_EXTRAS)+'</b> (economia de R$ '+fmtPreco(EXTRAS_PIX.clipe.preco+EXTRAS_PIX.quadro.preco-PRECO_COMBO_EXTRAS)+')</div>':'<button type="button" class="xp-combo" id="xpCombo">🎁 <b>Leve os dois por R$ '+fmtPreco(PRECO_COMBO_EXTRAS)+'</b> <s>R$ '+fmtPreco(EXTRAS_PIX.clipe.preco+EXTRAS_PIX.quadro.preco)+'</s> — toque pra adicionar</button>')+
       '<div class="xp-tot"><span>Total do seu pedido</span><b>R$ '+fmtPreco(total())+'</b></div>'+
       '<button type="button" class="xp-go" id="xpGo">'+(IP_ON?'Pagar (Pix ou cartão)':'Gerar Pix')+' · R$ '+fmtPreco(total())+'</button>'+
       '<button type="button" class="xp-nao" id="xpNao">Agora não, só as músicas</button>'+
@@ -7288,6 +7296,7 @@ function abrirExtrasPix(seguir, base){
       gaEvento('extras_aceitou',{itens:W.extrasPix.join(','), valor:precoExtras(W)});
       desenharFotos();
     };
+    var cb=el('xpCombo'); if(cb) cb.onclick=function(){ esc1.clipe=true; esc1.quadro=true; gaEvento('extras_combo',{}); desenhar(); };
     box.querySelectorAll('[data-xpadd]').forEach(function(b){ b.onclick=function(){ var k=b.dataset.xpadd; esc1[k]=!esc1[k]; if(esc1[k]) gaEvento('extras_add',{item:k}); desenhar(); }; });
     box.querySelectorAll('[data-xpex]').forEach(function(b){ b.onclick=function(){ verExemploExtra(b.dataset.xpex); }; });
   }
@@ -9608,15 +9617,15 @@ function pnlMNCarregar(){
 }
 function pnlMNHtml(){
   var D=_pnlMN;
-  var topo='<div class="dsh-card"><div class="dsh-t">🌙 Ligar à meia-noite</div><div class="dsh-nota">À meia-noite o robô <b>só liga as campanhas ⭐ com futuro</b>: na última semana fizeram <b>3 ou mais vendas a até R$ 9,50 cada</b> (EUA: 1+ venda a até R$ 30). As <b>✖ sem futuro</b> ele não liga — só se você ligar. E as ligadas sem futuro que já gastaram R$ 10+ na semana sem provar que vendem, ele <b>desliga</b> à meia-noite (campanha nova fica). Desmarque as que você não quer que liguem de jeito nenhum.<br><br>'+
-    '<b>Durante o dia</b> (gasto sem nenhuma compra): ⭐ com futuro → até <b>R$ 9,99</b>; nova → até <b>R$ 7</b>; sem chance → até <b>R$ 5</b>. Vendendo, mas a média de 3 dias passou de <b>R$ 9,50</b> por venda → desliga. <b>ROAS 1,5 é a meta geral da conta</b> — não desliga campanha por isso. 🎓 Campanhas de aprendizagem nunca são desligadas. Campanha que você ligou na mão hoje é respeitada até a meia-noite.</div></div>';
+  var topo='<div class="dsh-card"><div class="dsh-t">🌙 Ligar à meia-noite</div><div class="dsh-nota">À meia-noite o robô <b>só liga as 🏆 10 melhores</b>: as que mais venderam na última semana com custo médio <b>até R$ 9,50 por venda</b> (empate: a mais barata). As outras ele não liga — só se você ligar. Pra tirar uma das 10, desmarque aqui que entra a próxima da fila. (Hoje começa às 23h.) E as ligadas sem futuro que já gastaram R$ 10+ na semana sem provar que vendem, ele <b>desliga</b> à meia-noite (campanha nova fica). Desmarque as que você não quer que liguem de jeito nenhum.<br><br>'+
+    '<b>Durante o dia</b> (gasto sem nenhuma compra): ⭐ boa → até <b>R$ 10</b>; nova → até <b>R$ 7</b>; sem chance → até <b>R$ 5</b>. Vendendo, mas a média de 3 dias passou de <b>R$ 9,50</b> por venda → desliga. <b>ROAS 1,5 é a meta geral da conta</b> — não desliga campanha por isso. 🎓 Campanhas de aprendizagem nunca são desligadas. Campanha que você ligou na mão hoje é respeitada até a meia-noite.</div></div>';
   if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>';
   if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
   var fora=D.fora||[], cs=D.campanhas||[], marc=cs.filter(function(c){ return fora.indexOf(c.id)<0; }).length;
   return topo+'<div class="dsh-card"><div class="mn-bar"><b id="mnCont">'+marc+' de '+cs.length+' marcadas</b><span><a href="#" id="mnTodas">marcar todas</a> · <a href="#" id="mnNenhuma">desmarcar todas</a></span></div>'+
     '<input type="search" id="mnBusca" class="mn-busca" placeholder="Buscar pelo nome…">'+
     '<div class="mn-lista">'+cs.map(function(c){ var on=fora.indexOf(c.id)<0, at=c.status==='ACTIVE';
-      return '<label class="mn-it" data-mnnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-mn="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+(c.fut?'<br><small style="color:'+(c.fut.tem?'#1F8A4C':'#b23')+'">'+(c.fut.tem?'⭐ tem futuro':'✖ sem futuro')+' · '+c.fut.vendas+' venda(s) na semana'+(c.fut.cpa!=null?' a R$ '+fmtPreco(c.fut.cpa)+' cada':'')+'</small>':'')+'</span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
+      return '<label class="mn-it" data-mnnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-mn="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+(c.fut?'<br><small style="color:'+(c.top||c.aprend?'#1F8A4C':'#b23')+'">'+(c.aprend?'🎓 aprendizagem (sempre ligada)':c.top?'🏆 entre as 10 melhores — vai ligar':'✖ fora das 10 — não liga')+' · '+c.fut.vendas+' venda(s) na semana'+(c.fut.cpa!=null?' a R$ '+fmtPreco(c.fut.cpa)+' cada':'')+'</small>':'')+'</span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
     '<div class="sub" id="mnSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
 }
 /* 🎓 APRENDIZAGEM: até 2 campanhas que o robô nunca desliga (meta 50 compras/semana) */
@@ -11314,12 +11323,36 @@ function ilustracaoTema(tema){
    - quem COMPROU (#/p/<id>/c, link que o painel manda): + oferta exclusiva,
      anúncio (2s), indique e ganhe
    ========================================================= */
+/* 🎁 Enviar a música de presente pelo WhatsApp de quem comprou (com nome ou anônimo) */
+function abrirEnviarPresente(g){
+  var para=String(g.musicaParaNome||g.parceiroNome||'').split(/,|\s+e\s+/)[0].trim(), meu=String(g.meuNome||'').trim().split(' ')[0];
+  var box=document.createElement('div'); box.className='xp-fundo'; box.id='gfFundo';
+  box.innerHTML='<div class="xp" role="dialog" aria-label="Enviar de presente"><div class="xp-top"><button type="button" class="xp-vt" id="gfVt" aria-label="Fechar">‹</button><b>🎁 Enviar de presente</b></div>'+
+    '<p class="xp-sub">A pessoa recebe no WhatsApp um link e ouve a música na hora.</p>'+
+    '<label class="gf-l">WhatsApp de quem vai receber<input type="tel" id="gfNum" inputmode="tel" placeholder="(91) 99999-9999" autocomplete="off"></label>'+
+    '<div class="gf-l">Quem está enviando?</div><div class="gf-op"><button type="button" class="on" data-gfde="nome">Com meu nome'+(meu?' ('+esc(meu)+')':'')+'</button><button type="button" data-gfde="anon">🤫 Anônimo</button></div>'+
+    '<label class="gf-l">Mensagem (opcional)<textarea id="gfMsg" rows="2" placeholder="Ex.: Fiz essa música pra você ❤️"></textarea></label>'+
+    '<button type="button" class="xp-go" id="gfGo">Abrir o WhatsApp e enviar</button><p class="xp-sub" style="text-align:center;margin-top:6px">Abre o seu WhatsApp com a mensagem pronta — é só tocar em enviar.</p></div>';
+  document.body.appendChild(box);
+  var anon=false;
+  function fechar(){ try{ box.remove(); }catch(e){} }
+  el('gfVt').onclick=fechar; box.onclick=function(e){ if(e.target===box) fechar(); };
+  box.querySelectorAll('[data-gfde]').forEach(function(b){ b.onclick=function(){ anon=b.dataset.gfde==='anon'; box.querySelectorAll('[data-gfde]').forEach(function(x){ x.classList.toggle('on',x===b); }); }; });
+  el('gfGo').onclick=function(){
+    var n=(el('gfNum').value||'').replace(/\D/g,''); if(n.length>=10&&n.length<=11) n='55'+n;
+    if(n.length<12){ toast('Digite o WhatsApp de quem vai receber, com DDD.'); return; }
+    var link=linkPresente(g.id)+(anon?'/a':''), extra=(el('gfMsg').value||'').trim();
+    var txt=(para?para+', ':'')+(anon?'alguém que gosta muito de você':(meu||'alguém especial'))+' fez uma música só pra você 🎵🎁'+(extra?'\n\n'+extra:'')+'\n\nAperta aqui pra ouvir: '+link;
+    gaEvento('presente_enviado',{anon:anon?1:0});
+    window.open('https://wa.me/'+n+'?text='+encodeURIComponent(txt),'_blank'); fechar();
+  };
+}
 function montarMusicaEntrega(g, opts){
   opts=opts||{};
   document.body.style.overflow='auto';
   var cliente = !!opts.cliente || rota().arg2==='c';
   var url=g.musicaPreviewUrl;
-  var de=(g.meuNome||'').trim().split(' ')[0];
+  var de=rota().arg2==='a' ? '' : (g.meuNome||'').trim().split(' ')[0]; /* #/p/<id>/a = presente anônimo */
   var para=(g.musicaParaNome||g.parceiroNome||'').trim();
   var capa=g.musicaCapa||(g.fotos||[]).filter(Boolean)[0]||g.capa||null;
   var letra=(g.musicaLetra||'').trim();
@@ -11403,6 +11436,14 @@ function montarMusicaEntrega(g, opts){
               '<span>Toque pra ver, montar ou ajustar. Se você já mandou as fotos, está pronto.</span>'+
               '<a class="mx-btn mx-btn-ouro" href="#/montar/'+encodeURIComponent(g.id)+'">'+(g.extrasPix.indexOf('clipe')>=0?'📸 Abrir meu clipe':'🖼️ Abrir meu quadro')+'</a></div>'
           : '')+
+        (cliente && g.pago
+          ? '<div class="mx-libera mx-gift"><span class="mx-lb-tag">🎁 SURPRESA</span><b>Envie de presente pelo WhatsApp</b>'+
+              '<span>Mande a música direto pra pessoa, com o seu nome ou <b>anônimo</b>. Ela abre e ouve na hora.</span>'+
+              '<button type="button" class="mx-btn mx-btn-ouro" id="mxPresente">🎁 Enviar de presente</button></div>'+
+            '<div class="mx-libera mx-lvof"><span class="mx-lb-tag">📚 NOVO</span><b>Transforme essa música num livro</b>'+
+              '<span>Um livro personalizado com o nome e a foto, e a música tocando no QR Code de cada página.</span>'+
+              '<button type="button" class="mx-btn" id="mxLivro">📚 Ver o livro</button></div>'
+          : '')+
         (cliente && temLiberadas(g)
           ? (g.dobroUsado
               ? '<div class="mx-libera feito"><b>🎵 Suas outras 2 músicas</b><span>Você já criou as suas 2 músicas extras.</span><a class="mx-btn mx-btn-ouro" href="#/p/'+encodeURIComponent(g.dobroUsado)+'/c">Ouvir as outras 2 músicas</a></div>'
@@ -11460,6 +11501,8 @@ function montarMusicaEntrega(g, opts){
   aoSair(function(){ try{ audio.pause(); }catch(e){} });
 
   /* enviar o MP3 de verdade pelo compartilhar do celular */
+  var mxL=el('mxLivro'); if(mxL) mxL.onclick=function(){ gaEvento('aceitou_upsell',{de:'musica',para:'livro',onde:'pagina_paga'}); var nm=String(g.musicaParaNome||'').split(/,|\s+e\s+/)[0].trim(); if(typeof window.lvOfertaDaMusica==='function') window.lvOfertaDaMusica({nome:nm, zap:g.musicaWhatsapp||''}); else location.hash='#/livro'; };
+  var mxP=el('mxPresente'); if(mxP) mxP.onclick=function(){ abrirEnviarPresente(g); };
   var envA=el('mxEnviarAudio');
   envA.onclick=function(){
     var f=faixas[atual];
