@@ -52,7 +52,9 @@ src="https://www.facebook.com/tr?id=2102013347063288&ev=PageView&noscript=1"
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Grand+Hotel&family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="/a/hero-musica2-560.webp" imagesrcset="/a/hero-musica2-560.webp 560w, /a/hero-musica2.webp 860w" imagesizes="(max-width:560px) 100vw, 560px" fetchpriority="high">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Grand+Hotel&family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Grand+Hotel&family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{
   --white:#FFFFFF; --paper:#FFF7F9; --tint:#FFF1F6; --line:#F1E4E8;
@@ -822,6 +824,8 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .lt-pronta{margin:0 0 1rem;max-height:none;background:#fff}.lc-cont{color:#f3d9e5}.lc-cont b{color:#fff}
 .lw-in{animation:lwIn .35s ease both}@keyframes lwIn{from{opacity:.25;transform:translateY(4px)}to{opacity:1;transform:none}}
 .mc-bar i{transition:width .35s linear}.mc-fase{transition:opacity .25s}
+.mv-cta{margin:1rem 0 .4rem;text-align:center}.mv-fim{background:#fff6d6;border:1px solid #f1d27a;color:#6b4e00;border-radius:12px;padding:.6rem .8rem;font-size:.88rem;font-weight:700;margin-bottom:.6rem}.mv-cta-b{display:block;width:100%;border:0;border-radius:16px;padding:1rem;font-size:1.02rem;font-weight:900;color:#fff;background:linear-gradient(90deg,#E91E63,#ff5c8a);box-shadow:0 10px 24px rgba(233,30,99,.35);cursor:pointer;font-family:inherit}.mv-cta-b.pulsa{animation:mvPulsa 1.2s ease-in-out 4}@keyframes mvPulsa{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}.mv-cta-s{font-size:.75rem;color:var(--muted,#8a7380);margin-top:.35rem}.wz-rapido{display:inline-block;margin:.1rem 0 .7rem;padding:.35rem .7rem;border-radius:999px;background:#fff0f6;color:#a0144a;font-size:.8rem;font-weight:700}.sem-nome{display:block;margin:.8rem auto 0;background:none;border:1.5px dashed #d9b8c7;border-radius:12px;padding:.6rem .9rem;color:#7a5a68;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit}
+.pxc-volte{margin:.6rem 0 .2rem;padding:.55rem .7rem;border-radius:12px;background:#eefaf3;color:#14532d;font-size:.82rem}
 .xp-combo{display:block;width:100%;margin:10px 0 2px;padding:11px 12px;border:2px dashed #E91E63;border-radius:14px;background:#fff0f6;color:#7a1040;font-size:.9rem;text-align:left;cursor:pointer}.xp-combo s{opacity:.6;margin-left:4px}.xp-combo.on{border-style:solid;background:#e9f8ee;border-color:#1F8A4C;color:#14532d;cursor:default}
 .xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
@@ -3760,8 +3764,16 @@ function htmlMusicaPlayer(url, url2, letra){
   return '<div class="musica-pronta">'+
     '<div class="mp-topo">🎉<b>'+(qtd>1?'Suas 2 músicas ficaram prontas':'Sua música ficou pronta')+'</b>'+
     '<span>'+(qtd>1?'Você leva as duas! Quando uma acaba, a outra começa sozinha.':'Dá o play e sente.')+'</span></div>'+
-    card(url,1)+card(url2,2)+htmlLetra+(combosPrev?'':oferta)+combosPrev+htmlBotaoZap()+
+    card(url,1)+card(url2,2)+htmlCtaPrevia()+htmlLetra+(combosPrev?'':oferta)+combosPrev+htmlBotaoZap()+
   '</div>';
+}
+/* ❤️ botão grande logo depois da prévia (17/11: era onde mais desistiam) */
+function htmlCtaPrevia(){
+  if(!W || (W.ofertaDe && !W.ofertaM1) || (W.pacote6 && !W.ofertaM2)) return '';
+  var nm=String(W.musicaParaNome||'').split(/,|\s+e\s+/)[0].trim().split(' ')[0];
+  var tx=W.dobroDe ? '✅ Liberar minhas músicas' : (quatroAtivo(W) ? '❤️ Gostou? Liberar as 4 músicas · R$ '+fmtPreco(precoTotalBase(W)) : '❤️ Gostou? Liberar a música completa · R$ '+fmtPreco(precoTotalBase(W)));
+  return '<div class="mv-cta"><div class="mv-fim" id="mvFim" hidden>🎶 Essa foi só uma parte… ouça a música inteira'+(nm?' com o nome '+(/a$/i.test(nm)?'da ':'do ')+esc(nm):'')+' 👇</div>'+
+    '<button type="button" class="mv-cta-b" id="mvLiberar">'+tx+'</button><div class="mv-cta-s">Sem o corte de 70 segundos · MP3 pra baixar e guardar</div></div>';
 }
 /* guarda a música atual e volta pro gênero pra criar a próxima */
 function guardarMusicaECriarOutra(campo, msg){
@@ -3774,9 +3786,10 @@ function guardarMusicaECriarOutra(campo, msg){
   desenharPasso(); window.scrollTo(0,0);
   toast(msg);
 }
+function fimPrevia(){ var f=el('mvFim'), b=el('mvLiberar'); if(!b) return; if(f) f.hidden=false; b.classList.add('pulsa'); try{ b.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} }
 function ligarPreviasLimitadas(){
   var auds=[].slice.call(document.querySelectorAll('.mv-audio'));
-  function proxima(a){ var i=auds.indexOf(a); var nx=auds[i+1]; if(nx){ try{ nx.currentTime=0; }catch(e){} nx.play().catch(function(){}); nx.scrollIntoView({behavior:'smooth',block:'center'}); } }
+  function proxima(a){ var i=auds.indexOf(a); var nx=auds[i+1]; if(nx){ try{ nx.currentTime=0; }catch(e){} nx.play().catch(function(){}); nx.scrollIntoView({behavior:'smooth',block:'center'}); } else fimPrevia(); }
   auds.forEach(function(a){
     if(a._limitada) return; a._limitada=true;
     a.addEventListener('timeupdate',function(){
@@ -3785,6 +3798,7 @@ function ligarPreviasLimitadas(){
     a.addEventListener('ended',function(){ proxima(a); });
     a.addEventListener('play',function(){ auds.forEach(function(o){ if(o!==a && !o.paused) o.pause(); }); });
   });
+  var lib=el('mvLiberar'); if(lib) lib.onclick=function(){ gaEvento('cta_previa',{}); proximoPasso(); };
   document.querySelectorAll('[data-pac6]').forEach(function(b){
     b.onclick=function(){
       if(!W.musicaPreviewUrl) return;
@@ -4710,7 +4724,7 @@ function telaHome(){
   '</div></header>'+
 
   '<section class="hx hx-foto">'+
-    '<div class="hxf-img"><img src="/a/hero-musica2-560.webp" srcset="/a/hero-musica2-560.webp 560w, /a/hero-musica2.webp 860w" sizes="(max-width:560px) 100vw, 560px" width="560" height="1003" alt="Mulher sorrindo ouvindo uma música feita pra ela" fetchpriority="high"></div>'+
+    '<div class="hxf-img"><img fetchpriority="high" decoding="async" src="/a/hero-musica2-560.webp" srcset="/a/hero-musica2-560.webp 560w, /a/hero-musica2.webp 860w" sizes="(max-width:560px) 100vw, 560px" width="560" height="1003" alt="Mulher sorrindo ouvindo uma música feita pra ela" fetchpriority="high"></div>'+
     '<div class="shell hx-in">'+
     '<span class="hx-tag">🎧 Prévia grátis · ouça antes de pagar</span>'+
     (natalAtivo()?'<div class="hx-natal">🎄 O presente de Natal que emociona</div>':'')+
@@ -4718,7 +4732,7 @@ function telaHome(){
     '<p class="hx-sub">Com o nome e a história de quem você ama. Pronta em 1 minuto.</p>'+
     '<div class="hxf-esp" aria-hidden="true"></div>'+
     '<a class="hxf-mus" href="#/criar/musica">'+
-      '<span class="hx-ic">🎵</span><span class="hxf-tx"><b>Criar música personalizada</b><small>4 músicas por <strong>R$ 9,99</strong> <span class="hxf-sel">MAIS PEDIDO</span></small></span><span class="ar">›</span></a>'+
+      '<span class="hx-ic">🎵</span><span class="hxf-tx"><b>Criar música personalizada</b><small>Ouça grátis antes de pagar <span class="hxf-sel">MAIS PEDIDO</span></small></span><span class="ar">›</span></a>'+
     '<div class="hxf-dois">'+
       '<a class="hxf-b hxf-livro" href="#/livro"><span class="e">📖</span><span><b>Criar livro infantil</b><small>Seu filho na história</small></span></a>'+
       '<a class="hxf-b hxf-ped" href="#/meus"><span class="e">🎁</span><span><b>Meus pedidos</b><small>Ouvir e baixar</small></span></a>'+
@@ -6094,6 +6108,7 @@ function htmlPasso(k){
     if(antigo) W.musicaPara=antigo;
     return guia("Pra quem é essa música? Isso me ajuda a dar o tom certo na letra.")+
       '<div class="wz-t">Quem vai receber</div>'+
+      '<div class="wz-rapido">⏱️ Leva 1 minuto · 🎧 você ouve a prévia grátis antes de pagar</div>'+
       '<button type="button" class="link-amostra dentro" id="passoAmostra">🎧 Ouvir exemplos antes de começar</button>'+
       '<div class="cards2" id="musicaParaChips">'+
       relacoes.map(function(r){
@@ -6116,7 +6131,8 @@ function htmlPasso(k){
     return guia("Qual o nome de quem vai receber a música?")+
       '<div class="wz-t">Nome de quem vai receber</div>'+
       '<div class="wz-s">Coloque o nome ou apelido de quem vai receber a homenagem. Esse nome vai aparecer na letra <b>exatamente como você escrever</b>.</div>'+
-      '<input class="inp" id="musicaParaNome" value="'+esc(W.musicaParaNome)+'" placeholder="Digite o nome...">';
+      '<input class="inp" id="musicaParaNome" value="'+esc(W.musicaParaNome)+'" placeholder="Digite o nome...">'+
+      '<button type="button" class="sem-nome" id="semNome">🎵 Prefiro sem dedicatória (sem nome) →</button>';
   }
 
   case 'musicaOcasiao': {
@@ -6702,6 +6718,7 @@ function ligarPasso(k){
   if(k==='musicaNome'){
     var nomeInp=el('musicaParaNome');
     if(nomeInp) nomeInp.oninput=function(ev){ W.musicaParaNome=ev.target.value; };
+    var semN=el('semNome'); if(semN) semN.onclick=function(){ W.musicaParaNome=''; W.semNome=true; gaEvento('sem_nome',{}); proximoPasso(); };
   }
   if(k==='musicaOcasiao'){
     on('[data-ocasiao]','onclick',function(e){
@@ -7705,6 +7722,7 @@ function htmlPixLimpo(payload, valor, teste, info){
         '<div class="pxc-bts"><button type="button" class="pxc-copiar" id="pxCopiar">Copiar código Pix</button>'+
           '<button type="button" class="pxc-ja" id="pxJa">Já paguei</button></div>'+
         '<div class="pix-msg" id="pxMsg" hidden></div>'+
+        '<div class="pxc-volte">📲 Pagou no app do banco? <b>Volte para esta página</b> — sua música libera aqui mesmo.</div>'+
         '<div class="pxc-lb">Código Pix Copia e Cola</div>'+
         '<textarea class="pxc-cod" id="pxTxt" readonly rows="6">'+esc(payload)+'</textarea>'+
         '<details class="pxc-qr"><summary>Ver QR Code para pagar em outro aparelho</summary>'+(svg?'<div class="qr">'+svg+'</div>':'')+'<p>Escaneie com o app do banco em outro celular.</p></details>'+
@@ -7730,7 +7748,7 @@ function htmlEscolhaPag(valor){
       '<span class="pxc-op-l">'+lgSvg(LG_PIX,'#32BCAD',26,26)+'<span><b>Pix</b><small>Liberação em cerca de 1 minuto</small></span></span></button>'+
     '<button type="button" class="pxc-op" data-op="cartao" aria-pressed="false"><span class="pxc-rd"></span>'+
       '<span class="pxc-op-l"><span class="pxc-cc"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#3B1527" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 9.5h19M6 15h4"/></svg></span>'+
-      '<span><b>Cartão de crédito</b><small>Libera na hora</small></span></span></button>'+
+      '<span><b>Cartão de crédito</b><small>Sem sair do site · libera na hora</small></span></span></button>'+
     '<button type="button" class="pxc-op" data-op="carteira" aria-pressed="false" id="pxOpCart" hidden><span class="pxc-rd"></span>'+
       '<span class="pxc-op-l"><span class="pxc-lg" id="pxCartLg">'+(ios?lgSvg(LG_APAY,'#000',34,34):lgSvg(LG_GPAY,'#3C4043',34,34))+'</span>'+
       '<span><b id="pxCartNm">'+(ios?'Apple Pay':'Google Pay')+'</b><small>Paga com 1 toque · libera na hora</small></span></span></button>'+
