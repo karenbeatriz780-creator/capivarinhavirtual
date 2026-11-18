@@ -818,6 +818,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .gf-l{display:block;font-weight:700;font-size:.85rem;margin:12px 0 4px;color:#3b1d2c}.gf-l input,.gf-l textarea{display:block;width:100%;margin-top:4px;padding:11px;border:1.5px solid #e5d6dd;border-radius:12px;font-size:1rem;font-family:inherit;box-sizing:border-box}.gf-op{display:flex;gap:8px}.gf-op button{flex:1;padding:10px;border:1.5px solid #e5d6dd;border-radius:12px;background:#fff;font-weight:700;font-size:.85rem;cursor:pointer}.gf-op button.on{border-color:#E91E63;background:#fff0f6;color:#a0144a}
 .hx-natal{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:999px;background:linear-gradient(90deg,#b71c1c,#1b5e20);color:#fff;font-weight:800;font-size:.8rem;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .xp-planos{display:flex;flex-direction:column;gap:.6rem;margin:.6rem 0}.xp-pl{position:relative;display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;background:#fff;border:2px solid #F1D5E2;border-radius:16px;padding:.85rem .8rem;cursor:pointer;font-family:inherit;color:#2A0F1E}.xp-pl.on{border-color:var(--rose);background:#fff5f9;box-shadow:0 8px 22px rgba(227,43,109,.16)}.xp-rd{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid #d9b8c7;box-sizing:border-box}.xp-pl.on .xp-rd{border:7px solid var(--rose)}.xp-pl-tx{flex:1;min-width:0}.xp-pl-tx b{display:block;font-size:.98rem}.xp-pl-tx small{display:block;color:#7d6070;font-size:.78rem;margin-top:2px}.xp-pl-pr{text-align:right;white-space:nowrap}.xp-pl-pr s{display:block;color:#a8909b;font-size:.75rem}.xp-pl-pr b{font-size:1.15rem;color:#2A0F1E}.xp-pl .xp-tag{position:absolute;top:-10px;right:12px}.xp-pl-ex{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem}.xp-pl-ex .xp-ex{padding:.3rem .65rem;font-size:.75rem}
+.mc-cont{margin-top:.7rem;font-size:.85rem;color:#f3d9e5;text-align:center}.mc-cont b{color:#fff}.mc-letra{margin-top:1rem;text-align:left;background:rgba(255,255,255,.75);border:1px solid #f1d5e2;border-radius:16px;padding:.9rem 1rem;max-height:260px;overflow:auto}.mc-letra-t{font-weight:800;font-size:.85rem;margin-bottom:.4rem;color:#7a1040}.mc-lw{animation:mcLin .6s ease both}@keyframes mcLin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.mc-l{font-size:.92rem;line-height:1.45;color:#3b1d2c}.mc-l-sec{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#b08a9a;margin-top:.5rem}.mc-l-vazio{height:.4rem}.mc-nm{color:#b8860b;background:linear-gradient(90deg,#d4a017,#f5c542);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:900}
 .xp-combo{display:block;width:100%;margin:10px 0 2px;padding:11px 12px;border:2px dashed #E91E63;border-radius:14px;background:#fff0f6;color:#7a1040;font-size:.9rem;text-align:left;cursor:pointer}.xp-combo s{opacity:.6;margin-left:4px}.xp-combo.on{border-style:solid;background:#e9f8ee;border-color:#1F8A4C;color:#14532d;cursor:default}
 .xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
@@ -3829,7 +3830,36 @@ function htmlMusicaCompondo(){
     '<div id="mcZap"></div>'+
     '<div class="mc-fica"><b>Leva menos de 1 minuto.</b><br>'+
     '<b>Você vai receber 2 versões diferentes</b> pra escolher a que mais emocionar.</div>'+
+    '<div class="mc-cont" id="mcCont" hidden></div>'+
+    (W && W.musicaLetra ? '<div class="mc-letra"><div class="mc-letra-t">📝 A letra da sua música</div><div id="mcLetra"></div></div>' : '')+
   '</div>';
+}
+/* 🎶 contador real de músicas criadas hoje (cada pedido gera 2 versões) */
+function mcContador(){
+  fetch('/.netlify/functions/musicas-hoje').then(function(r){ return r.json(); }).then(function(d){
+    var c=el('mcCont'); if(c && d && d.n>=20){ c.innerHTML='🎶 <b>'+Number(d.n).toLocaleString('pt-BR')+' músicas</b> criadas hoje'; c.hidden=false; }
+  }).catch(function(){});
+}
+/* 📝 letra aparecendo linha por linha enquanto a música é produzida, com o nome em dourado */
+function mcLetraLinhas(){
+  var L=String((W&&W.musicaLetra)||'').split('\n').map(function(x){ return x.trim(); });
+  var nm=String((W&&W.musicaParaNome)||'').split(/,|\s+e\s+/).map(function(x){ return x.trim().split(' ')[0]; }).filter(function(x){ return x.length>=2; });
+  var re=nm.length?new RegExp('(^|[^A-Za-z0-9À-ÿ])('+nm.map(function(x){ return x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }).join('|')+')(?=[^A-Za-z0-9À-ÿ]|$)','gi'):null;
+  return L.map(function(x){ if(!x) return '<div class="mc-l-vazio"></div>'; var h=esc(x); if(/^\[.*\]$/.test(x)) return '<div class="mc-l-sec">'+esc(x.replace(/[\[\]]/g,''))+'</div>'; if(re) h=h.replace(re,'$1<b class="mc-nm">$2</b>'); return '<div class="mc-l">'+h+'</div>'; });
+}
+function mcFases(){
+  var nm=String((W&&W.musicaParaNome)||'').split(/,|\s+e\s+/)[0].trim().split(' ')[0];
+  var gen=''; try{ gen=nomeGeneroDe(W.musicaEstilo,W.musicaEstiloOutro)||''; }catch(e){}
+  var genL=gen?gen.toLowerCase():'';
+  return [
+    [0, nm?'📖 Lendo a história de vocês…':'📖 Lendo a sua história…'],
+    [12, nm?'✍️ Escrevendo o refrão com o nome '+(/a$/i.test(nm)?'da ':'do ')+nm+'…':'✍️ Escrevendo o refrão…'],
+    [28, genL?'🎸 Gravando os instrumentos no ritmo '+genL+'…':'🎸 Gravando os instrumentos…'],
+    [44, '🎹 Compondo a melodia…'],
+    [58, '🎤 Colocando a voz…'+(nm?' cantando pra '+nm:'')],
+    [72, '🎚️ Mixando tudo no estúdio…'],
+    [86, '✨ Últimos ajustes nas 2 versões, falta pouco!']
+  ];
 }
 function htmlLetraCarregando(msg){
   return '<div class="letra-carregando">'+
@@ -3841,15 +3871,8 @@ function htmlLetraCarregando(msg){
 var _mcTimer=null;
 function iniciarProgressoFake(){
   var t0=Date.now();
-  var fases=[
-    [0,'Lendo a história de vocês...'],
-    [14,'Escrevendo a letra...'],
-    [30,'Criando o refrão...'],
-    [46,'Compondo a melodia...'],
-    [60,'Gravando os vocais...'],
-    [74,'Mixando os instrumentos...'],
-    [86,'Finalizando as 2 versões...']
-  ];
+  var fases=mcFases(), linhas=mcLetraLinhas(), mostradas=0;
+  mcContador();
   clearInterval(_mcTimer);
   _mcTimer=setInterval(function(){
     var pctEl=el('mcPct'), barEl=el('mcBarFill'), faseEl=el('mcFase');
@@ -3859,6 +3882,9 @@ function iniciarProgressoFake(){
     var pct=Math.min(97, Math.floor(97*(1-Math.exp(-passado/20000)))); /* rápido no começo e vai desacelerando: 30 s ≈ 75%, 45 s ≈ 87% */
     pctEl.textContent=pct+'%';
     barEl.style.width=pct+'%';
+    var lb=el('mcLetra');
+    if(lb && linhas.length){ var quer=Math.min(linhas.length, Math.ceil(linhas.length*Math.min(1,passado/26000)));
+      while(mostradas<quer){ var d=document.createElement('div'); d.className='mc-lw'; d.innerHTML=linhas[mostradas]; lb.appendChild(d); mostradas++; } }
     if(faseEl){
       for(var i=fases.length-1;i>=0;i--){
         if(pct>=fases[i][0]){ 
