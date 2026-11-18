@@ -827,7 +827,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mv-cta{margin:1rem 0 .4rem;text-align:center}.mv-fim{background:#fff6d6;border:1px solid #f1d27a;color:#6b4e00;border-radius:12px;padding:.6rem .8rem;font-size:.88rem;font-weight:700;margin-bottom:.6rem}.mv-cta-b{display:block;width:100%;border:0;border-radius:16px;padding:1rem;font-size:1.02rem;font-weight:900;color:#fff;background:linear-gradient(90deg,#E91E63,#ff5c8a);box-shadow:0 10px 24px rgba(233,30,99,.35);cursor:pointer;font-family:inherit}.mv-cta-b.pulsa{animation:mvPulsa 1.2s ease-in-out 4}@keyframes mvPulsa{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}.mv-cta-s{font-size:.75rem;color:var(--muted,#8a7380);margin-top:.35rem}.wz-rapido{display:inline-block;margin:.1rem 0 .7rem;padding:.35rem .7rem;border-radius:999px;background:#fff0f6;color:#a0144a;font-size:.8rem;font-weight:700}.sem-nome{display:block;margin:.8rem auto 0;background:none;border:1.5px dashed #d9b8c7;border-radius:12px;padding:.6rem .9rem;color:#7a5a68;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit}
 .pxc-volte{margin:.6rem 0 .2rem;padding:.55rem .7rem;border-radius:12px;background:#eefaf3;color:#14532d;font-size:.82rem}
 .mh-ditar2{display:flex;align-items:center;justify-content:center;gap:.4rem;width:100%;padding:.85rem;border-radius:14px;border:0;background:linear-gradient(90deg,#E91E63,#ff5c8a);color:#fff;font-weight:800;font-size:.95rem;box-shadow:0 8px 20px rgba(233,30,99,.25);cursor:pointer;font-family:inherit}details.sug-musica>summary{cursor:pointer;list-style:none}details.sug-musica>summary::-webkit-details-marker{display:none}
-.mv-34{display:flex;flex-direction:column;gap:.6rem;margin-top:.7rem}.mv-34-c{border:2px dashed #e6c2d3;border-radius:16px;padding:.8rem .9rem;background:rgba(255,255,255,.6)}.mv-34-t{display:flex;align-items:center;justify-content:space-between;gap:.5rem}.mv-34-t b{font-size:.98rem;color:#6d4a5b;white-space:nowrap}.mv-34-selo{font-size:.72rem;font-weight:800;color:#a0144a;background:#ffe3ee;border-radius:999px;padding:.2rem .55rem;white-space:nowrap}.mv-34-d{font-size:.84rem;color:#7a5a68;margin-top:.3rem}
+.mv-34b{display:flex;align-items:center;gap:.75rem;width:100%;margin-top:.7rem;padding:.85rem .9rem;border-radius:18px;border:2px solid transparent;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(90deg,#E91E63,#f5c542) border-box;text-align:left;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(233,30,99,.12)}.mv-34-ic{flex:0 0 42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:linear-gradient(135deg,#ffe3ee,#fff3cf)}.mv-34-tx{flex:1;min-width:0}.mv-34-tx b{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:1rem;color:#2A0F1E;white-space:nowrap}.mv-34-tx small{display:block;font-size:.78rem;color:#7a5a68;margin-top:2px;line-height:1.3}.mv-34-go{flex:0 0 auto;margin-left:auto;font-size:.8rem;font-weight:900;color:#fff;background:#E91E63;border-radius:999px;padding:.45rem .7rem;white-space:nowrap}
 .xp-combo{display:block;width:100%;margin:10px 0 2px;padding:11px 12px;border:2px dashed #E91E63;border-radius:14px;background:#fff0f6;color:#7a1040;font-size:.9rem;text-align:left;cursor:pointer}.xp-combo s{opacity:.6;margin-left:4px}.xp-combo.on{border-style:solid;background:#e9f8ee;border-color:#1F8A4C;color:#14532d;cursor:default}
 .xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
@@ -3771,10 +3771,9 @@ function htmlMusicaPlayer(url, url2, letra){
 }
 /* 🎵 deixa claro que as músicas 3 e 4 são criadas depois do pagamento */
 function htmlMusicas34(){
-  return '<div class="mv-34">'+[3,4].map(function(n){
-    return '<div class="mv-34-c"><div class="mv-34-t"><b>🎵 Música '+n+'</b><span class="mv-34-selo">🔒 libera após pagar</span></div>'+
-      '<div class="mv-34-d">'+(n===3?'Você cria com <b>outra letra e outro estilo</b>, logo depois de pagar.':'Mais uma versão da nova letra — também é sua.')+'</div></div>';
-  }).join('')+'</div>';
+  return '<button type="button" class="mv-34b" id="mv34">'+
+    '<span class="mv-34-ic">🔒</span>'+
+    '<span class="mv-34-tx"><b>Músicas 3 e 4 <span class="mv-34-go">Desbloquear ›</span></b><small>Outra letra e outro estilo · você cria logo depois do pagamento</small></span></button>';
 }
 /* ❤️ botão grande logo depois da prévia (17/11: era onde mais desistiam) */
 function htmlCtaPrevia(){
@@ -3808,6 +3807,7 @@ function ligarPreviasLimitadas(){
     a.addEventListener('play',function(){ auds.forEach(function(o){ if(o!==a && !o.paused) o.pause(); }); });
   });
   var lib=el('mvLiberar'); if(lib) lib.onclick=function(){ gaEvento('cta_previa',{}); proximoPasso(); };
+  var m34=el('mv34'); if(m34) m34.onclick=function(){ gaEvento('cta_previa',{de:'34'}); proximoPasso(); };
   document.querySelectorAll('[data-pac6]').forEach(function(b){
     b.onclick=function(){
       if(!W.musicaPreviewUrl) return;
