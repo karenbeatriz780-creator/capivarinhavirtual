@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT, SYSTEM_PROMPT_EN, AJUSTE_EN } from './gerar-letra.js';
+import { nomeNoInicio, montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT, SYSTEM_PROMPT_EN, AJUSTE_EN } from './gerar-letra.js';
 import { indexarDia } from './_indice.mjs';
 import { iaFetch, RESERVA_OR, TEXTO_KIE, TEXTO_TOP } from './_ia.mjs';
 
@@ -82,7 +82,7 @@ export default async (req) => {
       const ch = d && d.choices && d.choices[0];
       const txt = ch && ch.message && ch.message.content;
       if (!r.ok || !txt || (ch.finish_reason === 'length')) { diag.push({ m, ms: Date.now() - t0, ok: false, erro: (r.status + ' ' + JSON.stringify((d && (d.error || d.msg)) || (ch && ch.finish_reason) || '').slice(0, 160)) }); console.log('letra-rapida FALHA ' + m + ' ' + r.status + ' ' + JSON.stringify(d).slice(0, 200)); return null; }
-      const letra = limparResposta(txt);
+      const letra = modoAjuste ? limparResposta(txt) : nomeNoInicio(limparResposta(txt), str(b, 'nomesLetra', 200), idioma, str(b, 'relacao', 40));
       if (letra.split('\n').filter((l) => l.trim()).length < 10) { console.log('letra-rapida curta ' + m); return null; }
       console.log('letra-rapida OK ' + m + ' em ' + (Date.now() - t0) + 'ms');
       diag.push({ m, ms: Date.now() - t0, ok: true });

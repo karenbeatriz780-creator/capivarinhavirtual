@@ -192,6 +192,9 @@ function montarPrompt(p) {
   if (p.nomesLetra) {
     partes.push('');
     partes.push('Cite estes nomes na letra, naturalmente: ' + p.nomesLetra);
+    if (p.relacao !== 'comercial' && p.relacao !== 'louvor') partes.push(p.idioma === 'en'
+      ? 'NAME AT THE START (mandatory): the VERY FIRST sung line of the song (first line right after the first section tag) must contain the name "' + String(p.nomesLetra).split(/,| and | e /)[0].trim() + '". The name must be heard in the first seconds — the preview is short. Repeat the name in the chorus too.'
+      : 'NOME LOGO NO INÍCIO (obrigatório): a PRIMEIRÍSSIMA linha cantada da música (a primeira linha logo depois da primeira marcação) tem que ter o nome "' + String(p.nomesLetra).split(/,| e /)[0].trim() + '". O nome precisa ser ouvido nos primeiros segundos — a prévia é curta. Repita o nome no refrão também.');
     partes.push('REGRA DOS NOMES (obrigatória): escreva cada nome EXATAMENTE como foi informado — ' +
       'mesma grafia, mesmas letras e acentos. NÃO corrija, NÃO troque por outro nome parecido, ' +
       'NÃO invente apelido, NÃO traduza. Se o nome for incomum, use ele mesmo assim, igualzinho.');
@@ -234,6 +237,22 @@ function montarPromptAjuste(letraAtual, instrucao, nomes) {
     'aproximado. Responda com a letra completa, já ajustada, do início ao fim — nada antes, ' +
     'nada depois.');
   return partes.join('\n');
+}
+
+// 🎤 garante o nome na 1ª linha cantada (a prévia tem ~70 s: o nome tem que aparecer logo)
+function nomeNoInicio(letra, nomes, idioma, relacao) {
+  try {
+    if (!letra || !nomes || relacao === 'comercial' || relacao === 'louvor') return letra;
+    const nome = String(nomes).split(/,| e | and /)[0].trim().split(' ')[0];
+    if (nome.length < 2) return letra;
+    const L = letra.split('\n');
+    const i = L.findIndex((x) => x.trim() && !/^\[.*\]$/.test(x.trim()));
+    if (i < 0) return letra;
+    const tem = (x) => new RegExp('(^|[^A-Za-zÀ-ÿ])' + nome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=[^A-Za-zÀ-ÿ]|$)', 'i').test(x || '');
+    if (tem(L[i]) || tem(L[i + 1])) return letra;
+    L.splice(i, 0, idioma === 'en' ? nome + ', this song is for you' : nome + ', essa canção é pra você');
+    return L.join('\n');
+  } catch (e) { return letra; }
 }
 
 function limparResposta(txt) {
@@ -382,7 +401,7 @@ export default async (req) => {
       return json({ erro: 'Não consegui escrever a letra agora. Tenta de novo em instantes.' }, 502);
     }
 
-    const letra = limparResposta(conteudo);
+    const letra = modoAjuste ? limparResposta(conteudo) : nomeNoInicio(limparResposta(conteudo), nomesLetra, idioma, relacao);
     console.log('LETRA GERADA >> ' + letra.slice(0, 120) + (letra.length > 120 ? '...' : ''));
 
     await indexarDia('l');
@@ -395,4 +414,4 @@ export default async (req) => {
 };
 
 // usados também pela letra rápida (letra-rapida.mjs)
-export { montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT, SYSTEM_PROMPT_EN, AJUSTE_EN };
+export { nomeNoInicio, montarPrompt, montarPromptAjuste, limparResposta, SYSTEM_PROMPT, AJUSTE_SYSTEM_PROMPT, SYSTEM_PROMPT_EN, AJUSTE_EN };
