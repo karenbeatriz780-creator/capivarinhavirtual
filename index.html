@@ -8244,21 +8244,21 @@ function pnlRefSt(d){
   if(d.status==='gerando'){ st.textContent='⏳ Gerando… puxando os Pix da Efí (pode levar alguns minutos).'; return; }
   if(d.status==='erro'){ st.textContent='⚠️ Erro: '+(d.erro||''); return; }
   var r=d.resumo||{}; _pnlRef=d; if(ab) ab.hidden=false;
-  st.innerHTML='✅ Pronto ('+new Date(d.em).toLocaleString('pt-BR')+'): <b>'+r.pagamentos+'</b> Pix · <b>'+r.entregues+'</b> entregues · <b style="color:#c62828">'+r.contestados+'</b> contestados ('+String(r.percentual).replace('.',',')+'%)'+(d.versao>=2?'':'<br><b>⚠️ Este relatório é da versão antiga — toque em "Gerar relatório" de novo.</b>')+(r.semPedido||r.naoEntreguesPorTipo?'<br>Sem pedido no site: <b>'+(r.semPedido||0)+'</b>'+Object.keys(r.naoEntreguesPorTipo||{}).map(function(k){ return '<br>Não entregue · '+esc(k)+': <b>'+r.naoEntreguesPorTipo[k]+'</b>'; }).join(''):'')+(r.medLiberado?'':'<br>⚠️ A Efí não liberou a lista de contestações MED (falta ativar a permissão "infrações" na aplicação da Efí). As devoluções aparecem mesmo assim.');
+  st.innerHTML='✅ Pronto ('+new Date(d.em).toLocaleString('pt-BR')+'): <b>'+r.pagamentos+'</b> Pix · <b>'+r.entregues+'</b> entregues · <b style="color:#c62828">'+r.contestados+'</b> contestados ('+String(r.percentual).replace('.',',')+'%)'+((r.liberadosAgora||[]).length?'<br>✅ <b>'+r.liberadosAgora.length+' pedido(s) pagos que não tinham sido liberados foram liberados e entregues agora.</b>':'')+(r.testes?'<br>🧪 '+r.testes+' teste(s) fora da contagem.':'')+((r.pendentes||[]).length?'<br><br><b>⚠️ '+r.pendentes.length+' pedido(s) pagos sem entrega detectada</b> — abra cada link: se for teste seu, cole o código no campo "teste" acima e gere de novo:'+r.pendentes.map(function(x){ return '<br>• <b>'+esc(x.pedido)+'</b> · R$ '+fmtPreco(x.valor)+' · '+esc(x.produto||'')+' · <a href="'+esc(x.link)+'" target="_blank">abrir</a>'+(x.diag?' <small>('+esc(x.diag.produto)+(x.diag.livro?' / livro '+esc(x.diag.livro):'')+')</small>':''); }).join(''):'')+(d.versao>=2?'':'<br><b>⚠️ Este relatório é da versão antiga — toque em "Gerar relatório" de novo.</b>')+(r.semPedido||r.naoEntreguesPorTipo?'<br>Sem pedido no site: <b>'+(r.semPedido||0)+'</b>'+Object.keys(r.naoEntreguesPorTipo||{}).map(function(k){ return '<br>Não entregue · '+esc(k)+': <b>'+r.naoEntreguesPorTipo[k]+'</b>'; }).join(''):'')+(r.medLiberado?'':'<br>⚠️ A Efí não liberou a lista de contestações MED (falta ativar a permissão "infrações" na aplicação da Efí). As devoluções aparecem mesmo assim.');
 }
 function pnlRefLer(){ return fetch('/.netlify/functions/admin-relatorio-efi',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); }); }
 function pnlRefVigiar(){ clearInterval(_pnlRefIv); _pnlRefIv=setInterval(function(){ if(!el('pnlRefSt')){ clearInterval(_pnlRefIv); return; } pnlRefLer().then(function(d){ pnlRefSt(d); if(d.status!=='gerando') clearInterval(_pnlRefIv); }).catch(function(){}); },6000); }
 document.addEventListener('click',function(e){
   var g=e.target&&e.target.closest&&e.target.closest('#pnlRefGerar');
-  if(g){ g.disabled=true; var ini=(el('pnlRefIni')||{}).value||'', fim=(el('pnlRefFim')||{}).value||'', ids=((el('pnlRefIds')||{}).value||'').match(/E[0-9A-Za-z]{20,40}/g)||[]; try{ localStorage.setItem('cl_ref_ids',ids.join('\n')); }catch(x){}
-    fetch('/.netlify/functions/relatorio-efi-background',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({inicio:ini,fim:fim,contestados:ids})})
+  if(g){ g.disabled=true; var ini=(el('pnlRefIni')||{}).value||'', fim=(el('pnlRefFim')||{}).value||'', ids=((el('pnlRefIds')||{}).value||'').match(/E[0-9A-Za-z]{20,40}/g)||[], tst=((el('pnlRefTestes')||{}).value||'').match(/[A-Za-z0-9_-]{4,80}/g)||[]; try{ localStorage.setItem('cl_ref_testes',tst.join('\n')); }catch(x){} try{ localStorage.setItem('cl_ref_ids',ids.join('\n')); }catch(x){}
+    fetch('/.netlify/functions/relatorio-efi-background',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({inicio:ini,fim:fim,contestados:ids,testes:tst})})
       .then(function(){ g.disabled=false; pnlRefSt({status:'gerando'}); pnlRefVigiar(); }).catch(function(){ g.disabled=false; toast('Sem conexão.'); });
     return; }
   var a=e.target&&e.target.closest&&e.target.closest('#pnlRefAbrir');
   if(a&&_pnlRef){ var w=window.open('','_blank'); if(!w){ toast('Libere as janelas (pop-up) pra abrir o relatório.'); return; } w.document.open(); w.document.write(htmlRelatorioEfi(_pnlRef)); w.document.close(); }
 });
 function htmlRelatorioEfi(d){
-  var Lall=d.linhas||[], L=Lall.filter(function(l){ return l.pedido; }), S=Lall.filter(function(l){ return !l.pedido; }), C=L.filter(function(l){ return l.contestado; });
+  var Lall=d.linhas||[], L=Lall.filter(function(l){ return l.pedido && !l.teste; }), S=Lall.filter(function(l){ return !l.pedido || l.teste; }), C=L.filter(function(l){ return l.contestado; });
   var nP=L.length, vP=L.reduce(function(t,l){ return t+l.valor; },0), eP=L.filter(function(l){ return l.entregue; }).length, vC=C.reduce(function(t,l){ return t+l.valor; },0), cE=C.filter(function(l){ return l.entregue; }).length;
   var pct=nP?(C.length*100/nP):0, pctE=nP?(eP*100/nP):0, medOk=!(d.resumo&&d.resumo.medLiberado===false);
   function e(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -8296,7 +8296,7 @@ function htmlRelatorioEfi(d){
     ((d.infSoltas||[]).length?'<h2>Outras contestações MED (Pix fora do período)</h2><table><tr><th>Data</th><th>Valor</th><th>ID do Pix</th><th>Situação</th><th>Motivo</th></tr>'+d.infSoltas.map(function(x){ return '<tr class="ct"><td>'+dt(x.data)+'</td><td>'+rs(x.valor)+'</td><td>'+e(x.e2e)+'</td><td>'+e(x.status)+'</td><td>'+e(x.razao)+(x.comentario?'<br><i>"'+e(x.comentario)+'"</i>':'')+'</td></tr>'; }).join('')+'</table>':'')+
     '<h2>Texto de resposta para a Efí</h2><pre id="resp">'+e(resposta)+'</pre>'+
     '<h2>Todos os pedidos pagos ('+nP+')</h2><p class="sub">Linhas em vermelho = contestados.</p><div class="tw"><table>'+cab+L.map(linhaT).join('')+'</table></div>'+
-    (S.length?'<p class="sub" style="margin-top:14px">Obs.: no mesmo período a conta também recebeu '+S.length+' Pix ('+rs(S.reduce(function(t,l){ return t+l.valor; },0))+') feitos direto na chave, fora do site (testes e transferências), que não são pedidos do site e por isso não entram na contagem acima'+'. IDs: '+S.map(function(l){ return e(l.e2e); }).join(', ')+'.</p>':'')+
+    (S.length?'<p class="sub" style="margin-top:14px">Obs.: no mesmo período a conta também recebeu '+S.length+' Pix ('+rs(S.reduce(function(t,l){ return t+l.valor; },0))+') de testes do responsável e transferências feitas direto na chave, que não são vendas a clientes e por isso não entram na contagem acima'+'. IDs: '+S.map(function(l){ return e(l.e2e); }).join(', ')+'.</p>':'')+
     '<div class="bt"><button onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById(\'resp\').innerText).then(function(){alert(\'Texto copiado\')})">Copiar texto</button><button onclick="window.print()">Baixar PDF</button></div>'+
     '</body></html>';
 }
@@ -9664,7 +9664,7 @@ function pnlCampLigar(body){
   if(_pnlAba==='meianoite'){ if(!_pnlMN) pnlMNCarregar(); pnlMNLigar(); }
   if(_pnlAba==='aprender'){ if(!_pnlApr) pnlAprCarregar(); pnlAprLigar(); }
   if(_pnlAba==='desistem'){ if(!_pnlFm||_pnlFm.p!==_pnlFmP) pnlFmCarregar(); pnlFmLigar(); }
-  if(_pnlAba==='pagos' && el('pnlRefIds')){ try{ el('pnlRefIds').value=localStorage.getItem('cl_ref_ids')||''; }catch(x){} }
+  if(_pnlAba==='pagos' && el('pnlRefIds')){ try{ el('pnlRefIds').value=localStorage.getItem('cl_ref_ids')||''; el('pnlRefTestes').value=localStorage.getItem('cl_ref_testes')||''; }catch(x){} }
   if(_pnlAba==='pagos' && el('pnlRefSt')){ pnlRefLer().then(function(d){ pnlRefSt(d); if(d.status==='gerando') pnlRefVigiar(); }).catch(function(){}); }
 }
 /* ⬆️ ABA SUBIR: todas as campanhas — ativas que podem subir, desligadas que podem subir e as bloqueadas (com o motivo) */
@@ -10425,6 +10425,7 @@ function desenharPainel(pedidos, visitas, musicas){
         pnlAudiosHtml()+
         '<div class="pnl-sec" id="pnlRef"><h2>📄 Relatório para a Efí (MED)</h2><div class="sub">Puxa da Efí todos os Pix recebidos, as devoluções e as contestações MED (com o motivo), e mostra cada pedido com o link entregue. Demora uns minutos.</div>'+
           '<div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.5rem"><label style="font-size:.8rem">De <input type="date" id="pnlRefIni" value="2026-07-01"></label><label style="font-size:.8rem">Até <input type="date" id="pnlRefFim"></label></div>'+
+          '<label style="display:block;font-size:.8rem;margin-top:.5rem">Pedidos que foram TESTE seus (opcional) — cole o código do pedido, um por linha (aparece na lista de pendentes abaixo):<textarea id="pnlRefTestes" rows="2" style="width:100%;font-size:.75rem;margin-top:.25rem"></textarea></label>'+
           '<label style="display:block;font-size:.8rem;margin-top:.5rem">IDs dos Pix contestados (opcional) — copie do app da Efí, na área de MED/contestações, o <b>ID do Pix (começa com E)</b> de cada um, um por linha:<textarea id="pnlRefIds" rows="4" style="width:100%;font-size:.75rem;margin-top:.25rem" placeholder="E18236120202610101318s0123abcd45"></textarea></label>'+
           '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"><button type="button" class="pnl-btn" id="pnlRefGerar">Gerar relatório</button><button type="button" class="pnl-btn" id="pnlRefAbrir" hidden>📄 Abrir relatório (PDF)</button></div><div id="pnlRefSt" class="sub" style="margin-top:.4rem"></div></div>'+
         '<div class="pnl-sec" id="pnlQr"><h2>🔧 QR Code corrigido — quadros dos últimos dias</h2><div class="sub">O QR dos quadros (retrato) feitos até 15/11 podia não ler. Mande o link pra cliente baixar o quadro de novo (o novo já vem com o QR certo). Os livros foram refeitos sozinhos.</div><button type="button" class="pnl-btn" id="pnlQrVer" style="margin-top:.5rem">Ver quadros dos últimos 7 dias</button><div id="pnlQrLista"></div></div>'+

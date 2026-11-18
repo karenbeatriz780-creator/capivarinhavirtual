@@ -4,7 +4,8 @@
 // (produto, cliente, data da entrega, link entregue) e salva o resultado em gastos/relatorio_efi.
 // POST {inicio?:'AAAA-MM-DD', fim?:'AAAA-MM-DD'}  (senha de administrador em x-admin-key)
 import { getStore } from '@netlify/blobs';
-import { obterToken, efiRequest, erroEfi } from './_efi.mjs';
+import { obterToken, efiRequest, erroEfi, aplicarPagamento } from './_efi.mjs';
+import { entregarPago } from './_email.mjs';
 
 const SITE = 'https://capivarinhalove.com.br';
 const DIA = 864e5, PASSO = 5 * DIA; // a Efí aceita períodos curtos: vai de 5 em 5 dias
@@ -59,6 +60,8 @@ export default async (req) => {
   const gastos = getStore('gastos');
   let b = {}; try { b = await req.json(); } catch (e) {}
   const fim = b.fim ? Date.parse(b.fim + 'T23:59:59-03:00') : Date.now();
+  const testes = new Set((Array.isArray(b.testes) ? b.testes : []).map((x) => String(x).trim()).filter((x) => /^[A-Za-z0-9_-]{4,80}$/.test(x)));
+  const liberados = [];
   const marcados = new Set((Array.isArray(b.contestados) ? b.contestados : []).map((x) => String(x).trim()).filter((x) => /^E[0-9A-Za-z]{20,40}$/.test(x)));
   const ini = b.inicio ? Date.parse(b.inicio + 'T00:00:00-03:00') : fim - 120 * DIA;
   await gastos.setJSON('relatorio_efi', { status: 'gerando', inicio: ini, fim, em: Date.now() });
@@ -81,7 +84,13 @@ export default async (req) => {
         quando: (d.horario && (d.horario.liquidacao || d.horario.solicitacao)) || '' }));
       const infs = (infPorE2e[p.endToEndId] || []).map((x) => ({ id: x.idInfracao, status: x.status, razao: x.razao || '', tipoSituacao: x.tipoSituacao || '',
         tipoFraude: x.tipoFraude || '', comentario: x.comentario || '', aberta: (x.dadosAnalise && x.dadosAnalise.abertura) || x.criadoEm || '', defesa: x.defesa || '' }));
+      // Pix recebido na Efí mas o pedido não ficou como pago (aviso perdido) → libera e entrega AGORA
+      if (g && !g.pago && !g.cancelado) {
+        try { aplicarPagamento(g, { e2eid: p.endToEndId, valor: p.valor }, 'relatorio-efi'); await presentes.setJSON(g.id, g); liberados.push(g.id); await entregarPago(g).catch(() => {}); } catch (e) {}
+      }
+      const ehTeste = !!(g && (testes.has(g.id) || /\bteste?\b/i.test(String(g.meuNome || '') + ' ' + String(g.musicaParaNome || '')))) || (Number(p.valor) || 0) <= 1;
       linhas.push({
+        teste: ehTeste,
         e2e: p.endToEndId || '', txid: p.txid || '', valor: Number(p.valor) || 0, pagoEm: p.horario || '', pagador: nomePagador(p),
         pedido: g ? g.id : '', produto: produto(g), cliente: g ? (g.meuNome || '') : '', para: g ? (g.musicaParaNome || g.nome || g.parceiroNome || '') : '',
         entregue: entregue(g), entregueEm: g ? (g.pagoEm || null) : null, link: linkEntrega(g), canceladoSite: !!(g && g.cancelado),
@@ -102,6 +111,8 @@ export default async (req) => {
       percentual: linhas.length ? +(contest.length * 100 / linhas.length).toFixed(2) : 0,
       contestadosEntregues: contest.filter((l) => l.entregue).length,
       semPedido: linhas.filter((l) => !l.pedido).length,
+      liberadosAgora: liberados, testes: linhas.filter((l) => l.teste).length,
+      pendentes: linhas.filter((l) => l.pedido && !l.teste && !l.entregue).slice(0, 40).map((l) => ({ pedido: l.pedido, valor: l.valor, pagoEm: l.pagoEm, produto: l.produto, link: l.link, diag: l.diag })),
       naoEntreguesPorTipo: linhas.filter((l) => l.diag).reduce((o, l) => { const k = l.diag.produto + (l.diag.livro ? ' / livro ' + l.diag.livro : '') + (l.diag.pago ? '' : ' / não pago no site'); o[k] = (o[k] || 0) + 1; return o; }, {}), informadosNaoAchados: [...marcados].filter((x) => !vistos.has(x)),
       reembolsosPeloSite: linhas.filter((l) => l.canceladoSite).length,
       infracoesMED: ri.itens.length, medLiberado: !ri.negado
