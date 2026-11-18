@@ -8,6 +8,10 @@ export const PIX_MANUAL = {
   banco: 'Nubank',
   cidade: (process.env.PIX_MANUAL_CIDADE || 'SAO PAULO').trim()
 };
+// 🏦 RESERVA (18/11, regra do Gusthavo): se o Pix do Nubank der erro, usa o Bradesco. O Nubank continua o principal.
+export const PIX_RESERVA = { chave: 'f0564b72-8404-4ff4-8b52-bba40164284d', nome: PIX_MANUAL.nome, banco: 'Bradesco', cidade: PIX_MANUAL.cidade };
+let CONTA_ATUAL = PIX_MANUAL; // muda pro Bradesco quando você escolhe no painel (lerCfgPix atualiza)
+export const contaAtual = () => CONTA_ATUAL;
 // "Já paguei" (sem comprovante): o pedido libera sozinho depois desse tempo, sem conferir o Pix.
 export const ESPERA_JA_PAGUEI = 45 * 1000;
 const semAcento = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 ]/g, '').toUpperCase();
@@ -19,11 +23,12 @@ function crc16(s) {
 }
 // referência do pedido (vai no Pix e aparece em muitos comprovantes): só letras/números, até 25
 export const refPedido = (id) => String(id || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 25) || '***';
-export function brcode(valor, ref) {
-  const conta = campo('00', 'br.gov.bcb.pix') + campo('01', PIX_MANUAL.chave);
+export function brcode(valor, ref, contaPix) {
+  const C = contaPix || CONTA_ATUAL;
+  const conta = campo('00', 'br.gov.bcb.pix') + campo('01', C.chave);
   let s = campo('00', '01') + campo('26', conta) + campo('52', '0000') + campo('53', '986') +
-    campo('54', Number(valor).toFixed(2)) + campo('58', 'BR') + campo('59', semAcento(PIX_MANUAL.nome).slice(0, 25)) +
-    campo('60', semAcento(PIX_MANUAL.cidade).slice(0, 15)) + campo('62', campo('05', refPedido(ref))) + '6304';
+    campo('54', Number(valor).toFixed(2)) + campo('58', 'BR') + campo('59', semAcento(C.nome).slice(0, 25)) +
+    campo('60', semAcento(C.cidade).slice(0, 15)) + campo('62', campo('05', refPedido(ref))) + '6304';
   return s + crc16(s);
 }
 // modo: 'auto' = tenta a Efí e, se ela recusar, usa o Pix manual · 'manual' = sempre Pix manual · 'efi' = só Efí
@@ -33,9 +38,10 @@ export async function lerCfgPix() {
   if (cache && Date.now() - cacheEm < 30000) return cache;
   const c = (await cfgLoja().get('cfg_pixmanual', { type: 'json' }).catch(() => null)) || {};
   cache = { modo: ['auto', 'manual', 'efi'].indexOf(c.modo) >= 0 ? c.modo : 'auto', autoLiberar: c.autoLiberar !== false, infinitepay: c.ipLigada === true, ipLigada: c.ipLigada === true, stripe: c.stripe !== false, semComprovante: c.semComprovante !== false, efiFalhouEm: c.efiFalhouEm || 0, efiErro: c.efiErro || '' };
+  cache.banco = c.banco === 'bradesco' ? 'bradesco' : 'nubank'; CONTA_ATUAL = cache.banco === 'bradesco' ? PIX_RESERVA : PIX_MANUAL;
   cacheEm = Date.now(); return cache;
 }
-export async function salvarCfgPix(m) { const c = Object.assign({}, await lerCfgPix(), m); await cfgLoja().setJSON('cfg_pixmanual', c); cache = c; cacheEm = Date.now(); return c; }
+export async function salvarCfgPix(m) { const c = Object.assign({}, await lerCfgPix(), m); await cfgLoja().setJSON('cfg_pixmanual', c); cache = null; return lerCfgPix(); }
 // Efí recusou há pouco? (não fica batendo nela a cada pedido: pula por 10 min)
 // 16/11 (regra do Gusthavo): TODOS os pagamentos no Pix do Nubank (+ cartão pelo Stripe) — a Efí não é mais usada pra gerar Pix
 export async function pularEfi() { return true; }

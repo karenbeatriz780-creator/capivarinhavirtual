@@ -4,7 +4,7 @@
 // POST {acao:'ja-paguei', id, segundo}        → mesma regra do site: 1 toque depois de 20 s OU 2 toques
 // GET  ?id=&t=                                → situação do pedido + o material (só se pago)
 import { getStore } from '@netlify/blobs';
-import { brcode } from './_pixmanual.mjs';
+import { lerCfgPix, brcode } from './_pixmanual.mjs';
 import crypto from 'node:crypto';
 
 const PRECO = 27, BUMP = 13.5, ESPERA = 20 * 1000;
@@ -40,7 +40,7 @@ export default async (req) => {
     if (zap.length < 10) return json({ erro: 'Digite seu WhatsApp com DDD.' }, 400);
     const id = 'C' + crypto.randomBytes(6).toString('hex'), token = crypto.randomBytes(9).toString('hex');
     const p = { id, token, nome, whatsapp: zap, bump: !!b.bump, criadoEm: Date.now(), manualEm: Date.now(), pago: false, origem: String(b.origem || '').slice(0, 40) };
-    p.payload = brcode(valorDe(p), id);
+    p.payload = (await lerCfgPix().catch(() => null), brcode(valorDe(p), id));
     await loja().setJSON(id, p);
     return json(Object.assign(publico(p), { token }));
   }
@@ -50,7 +50,7 @@ export default async (req) => {
   if (!p || p.token !== String(b.t || '')) return json({ erro: 'Pedido não encontrado.' }, 404);
   if (b.acao === 'bump') {
     if (p.pago) return json({ erro: 'Esse pedido já foi pago.' }, 400);
-    p.bump = !b.tirar; p.payload = brcode(valorDe(p), id); p.manualEm = Date.now();
+    p.bump = !b.tirar; p.payload = (await lerCfgPix().catch(() => null), brcode(valorDe(p), id)); p.manualEm = Date.now();
     await loja().setJSON(id, p);
     return json(publico(p));
   }

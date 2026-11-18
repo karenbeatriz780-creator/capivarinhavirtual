@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 import { criarLinkIP, ipLigada } from './_infinitepay.mjs';
-import { brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido, marcarPendente } from './_pixmanual.mjs';
+import { lerCfgPix, brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido, marcarPendente } from './_pixmanual.mjs';
 import { indexar, indexarDia, chaveTel, lerIndice, idsDoTel } from './_indice.mjs';
 
 // RECUPERAÇÃO DE VENDA
@@ -151,7 +151,7 @@ export default async (req) => {
     const pixManual = async (motivo) => {
       if (!(await podeManual())) return null;
       if (motivo) await marcarEfiFalhou(motivo);
-      const ref = refPedido(g.id), payload = brcode(valor, ref), agora = Date.now();
+      const ref = refPedido(g.id), payload = (await lerCfgPix().catch(() => null), brcode(valor, ref)), agora = Date.now();
       const at = Object.assign({}, g, { criadoEm: agora, recuperadoEm: agora, ...(oferta4 ? { quatro: true } : {}), extrasPix,
         pagamento: Object.assign({}, g.pagamento || {}, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', manualEm: (pg0.provedor === 'manual' && pg0.manualEm) || Date.now(), valor, extras: extrasPix, valorExtras, payload,
           duracao: (g.pagamento && g.pagamento.duracao) || 'vitalicio' }) });

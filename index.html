@@ -829,6 +829,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mh-ditar2{display:flex;align-items:center;justify-content:center;gap:.4rem;width:100%;padding:.85rem;border-radius:14px;border:0;background:linear-gradient(90deg,#E91E63,#ff5c8a);color:#fff;font-weight:800;font-size:.95rem;box-shadow:0 8px 20px rgba(233,30,99,.25);cursor:pointer;font-family:inherit}details.sug-musica>summary{cursor:pointer;list-style:none}details.sug-musica>summary::-webkit-details-marker{display:none}
 .mv-34b{display:flex;align-items:center;gap:.75rem;width:100%;margin-top:.7rem;padding:.85rem .9rem;border-radius:18px;border:2px solid transparent;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(90deg,#E91E63,#f5c542) border-box;text-align:left;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(233,30,99,.12)}.mv-34-ic{flex:0 0 42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:linear-gradient(135deg,#ffe3ee,#fff3cf)}.mv-34-tx{flex:1;min-width:0}.mv-34-tx b{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:1rem;color:#2A0F1E;white-space:nowrap}.mv-34-tx small{display:block;font-size:.78rem;color:#7a5a68;margin-top:2px;line-height:1.3}.mv-34-go{flex:0 0 auto;margin-left:auto;font-size:.8rem;font-weight:900;color:#fff;background:#E91E63;border-radius:999px;padding:.45rem .7rem;white-space:nowrap}
 .card2.c2-largo{grid-column:1/-1}
+.pxc-outro{display:block;width:100%;margin:.6rem 0 .2rem;padding:.6rem .7rem;border:1px dashed #e0b8c8;border-radius:12px;background:#fff;color:#7a5a68;font-size:.8rem;text-align:left;cursor:pointer;font-family:inherit}
 .xp-combo{display:block;width:100%;margin:10px 0 2px;padding:11px 12px;border:2px dashed #E91E63;border-radius:14px;background:#fff0f6;color:#7a1040;font-size:.9rem;text-align:left;cursor:pointer}.xp-combo s{opacity:.6;margin-left:4px}.xp-combo.on{border-style:solid;background:#e9f8ee;border-color:#1F8A4C;color:#14532d;cursor:default}
 .xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
@@ -7740,6 +7741,7 @@ function htmlPixLimpo(payload, valor, teste, info){
         '<div class="pxc-volte">📲 Pagou no app do banco? <b>Volte para esta página</b> — sua música libera aqui mesmo.</div>'+
         '<div class="pxc-lb">Código Pix Copia e Cola</div>'+
         '<textarea class="pxc-cod" id="pxTxt" readonly rows="6">'+esc(payload)+'</textarea>'+
+        (pixEhManual(payload)?'<button type="button" class="pxc-outro" id="pxOutroBanco">⚠️ O Pix deu erro no seu banco? <b>Gerar código de outro banco</b></button>':'')+
         '<details class="pxc-qr"><summary>Ver QR Code para pagar em outro aparelho</summary>'+(svg?'<div class="qr">'+svg+'</div>':'')+'<p>Escaneie com o app do banco em outro celular.</p></details>'+
       '</div>'+
       '<ul class="pxc-it" style="margin-top:1rem">'+info.itens.map(function(t){ return '<li><span>✓</span>'+esc(t)+'</li>'; }).join('')+'</ul>'+
@@ -7839,6 +7841,17 @@ function ligarPixLimpo(payload, id, aoPagar){
     var t=el('pxTxt'); if(t){ t.focus(); t.select(); }
   };
   ligarCartaoStripe(id, checar);
+  var ob=el('pxOutroBanco'); if(ob) ob.onclick=function(){
+    ob.disabled=true; ob.textContent='Gerando outro código…';
+    fetch('/.netlify/functions/pix-reserva',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}).then(function(r){ return r.json(); }).then(function(d){
+      if(d && d.pago){ checar(); return; }
+      if(!d || !d.payload) throw new Error((d&&d.erro)||'');
+      payload=d.payload; var t=el('pxTxt'); if(t) t.value=payload;
+      var q=document.querySelector('.pxc-qr .qr'); if(q){ try{ q.innerHTML=QRCodeGen.toSVG(payload,{ec:'M',quiet:2}); }catch(e){} }
+      gaEvento('pix_outro_banco',{banco:d.banco||''});
+      ob.innerHTML='✅ Novo código gerado (conta '+esc(d.banco||'')+'). Toque em <b>Copiar código Pix</b> e tente de novo.';
+    }).catch(function(){ ob.disabled=false; ob.innerHTML='⚠️ O Pix deu erro no seu banco? <b>Gerar código de outro banco</b>'; toast('Não consegui gerar agora. Tente de novo ou pague no cartão.'); });
+  };
   var manual=pixEhManual(payload);
   var jaFn=null;
   if(manual) rapido=24; /* Pix manual: confere a cada 5 s nos 2 primeiros min (em 1 min libera sozinho) */
@@ -8388,6 +8401,7 @@ function pnlPixManHtml(){
       '<small>'+(efiFora?(D.cfg.infinitepay===true?'💳 Pagamento principal: InfinitePay (Pix e cartão, libera sozinho) · reserva: Pix Nubank':'🟠 Efí fora: o site está usando o seu Pix (Nubank) com "Já paguei" (2 toques)'):'🟢 Efí funcionando')+' · hoje '+lib.filter(function(x){ return new Date(x.pagoEm||0).toDateString()===new Date().toDateString(); }).length+' liberado(s) por comprovante</small><span class="pm-seta">'+(_pnlPMAberto||conf.length?'▴':'▾')+'</span></div>'+
     ((_pnlPMAberto||conf.length)?'<div class="pm-corpo">'+
       '<div class="pm-cfg"><label>Pix do site<select data-pmmodo><option value="auto"'+(D.cfg.modo==='auto'?' selected':'')+'>Automático (Efí; se falhar, o meu Pix)</option><option value="manual"'+(D.cfg.modo==='manual'?' selected':'')+'>Só o meu Pix (Bradesco)</option><option value="efi"'+(D.cfg.modo==='efi'?' selected':'')+'>Só Efí</option></select></label>'+
+        '<label>🏦 Banco do Pix<select data-pmbanco><option value="nubank"'+(D.cfg.banco!=='bradesco'?' selected':'')+'>Nubank (principal)</option><option value="bradesco"'+(D.cfg.banco==='bradesco'?' selected':'')+'>Bradesco (reserva — use se o Nubank der erro)</option></select></label>'+
         '<label class="pm-ck"><input type="checkbox" data-pmip'+(D.cfg.infinitepay===true?' checked':'')+'> 💳 <b>Usar InfinitePay</b> (Pix e cartão, libera sozinho). Se falhar, usa o Pix acima.</label>'+
         '<label class="pm-ck"><input type="checkbox" data-pmst'+(D.cfg.stripe!==false?' checked':'')+'> 💳 <b>Cartão / Apple Pay / Google Pay (Stripe)</b> — botão extra na tela do Pix, libera sozinho. O Pix continua no Nubank.</label>'+
         '<label class="pm-ck"><input type="checkbox" data-pmauto'+(D.cfg.autoLiberar?' checked':'')+'> Liberar sozinho quando a IA aprovar o comprovante</label>'+
@@ -8403,6 +8417,7 @@ function pnlPMLigar(){
   var post=function(c){ return fetch('/.netlify/functions/admin-pix-manual',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify(c)}).then(function(r){ return r.json(); }); };
   var tp=bx.querySelector('[data-pmabre]'); if(tp) tp.onclick=function(){ _pnlPMAberto=!_pnlPMAberto; var t=document.createElement('div'); t.innerHTML=pnlPixManHtml(); bx.replaceWith(t.firstChild); pnlPMLigar(); };
   var md=bx.querySelector('[data-pmmodo]'); if(md) md.onchange=function(){ post({acao:'cfg',modo:md.value}).then(function(){ toast('Pix do site: '+md.options[md.selectedIndex].text); pnlPMCarregar(true); }); };
+  var bk=bx.querySelector('[data-pmbanco]'); if(bk) bk.onchange=function(){ post({acao:'cfg',banco:bk.value}).then(function(){ toast(bk.value==='bradesco'?'Pix agora no Bradesco 🏦':'Pix voltou pro Nubank ✓'); pnlPMCarregar(true); }); };
   var stc=bx.querySelector('[data-pmst]'); if(stc) stc.onchange=function(){ post({acao:'cfg',stripe:stc.checked}).then(function(){ toast(stc.checked?'Cartão (Stripe) ligado ✓':'Cartão (Stripe) desligado — só Pix'); pnlPMCarregar(true); }); };
   var ipc=bx.querySelector('[data-pmip]'); if(ipc) ipc.onchange=function(){ post({acao:'cfg',infinitepay:ipc.checked}).then(function(){ toast(ipc.checked?'InfinitePay ligada ✓':'InfinitePay desligada — usando o Pix de reserva'); pnlPMCarregar(true); }); };
   var au=bx.querySelector('[data-pmauto]'); if(au) au.onchange=function(){ post({acao:'cfg',autoLiberar:au.checked}).then(function(){ toast(au.checked?'Liberação automática ligada':'Agora você confere cada comprovante'); pnlPMCarregar(true); }); };

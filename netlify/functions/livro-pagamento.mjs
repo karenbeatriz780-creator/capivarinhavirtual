@@ -4,7 +4,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { modoTeste } from './_efi.mjs';
-import { brcode, refPedido, marcarPendente } from './_pixmanual.mjs';
+import { lerCfgPix, brcode, refPedido, marcarPendente } from './_pixmanual.mjs';
 import { indexar, indexarDia } from './_indice.mjs';
 import { json, acharTema, lerTemas, PACOTES_LIVRO } from './_livros.mjs';
 
@@ -39,7 +39,7 @@ export default async (req) => {
     if (mesmo && pg.provedor === 'manual' && pg.payload) return json({ payload: pg.payload, id, valor: pg.valor, manual: true, provedor: 'manual', teste: false });
 
     const valor = PACOTES_LIVRO[tipo].valor;
-    const ref = refPedido(id), payload = brcode(valor, ref), agora = Date.now();
+    const ref = refPedido(id), payload = (await lerCfgPix().catch(() => null), brcode(valor, ref)), agora = Date.now();
     g.criadoEm = g.criadoEm || agora;
     g.pagamento = { provedor: 'manual', txid: ref, status: 'AGUARDANDO', valor, duracao: 'vitalicio', manualEm: agora, payload, pacote: tipo, tema2 };
     g.pacote = { tipo, tema2 };

@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { obterToken, efiRequest, erroEfi, modoTeste } from './_efi.mjs';
 import { criarLinkIP, ipLigada } from './_infinitepay.mjs';
-import { brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido, marcarPendente } from './_pixmanual.mjs';
+import { lerCfgPix, brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido, marcarPendente } from './_pixmanual.mjs';
 import { statusOferta, registrarTentativa } from './_oferta.mjs';
 import { statusIndicacao, registrarIndicado, registrarUso } from './_indicacao.mjs';
 import { indexar, indexarDia } from './_indice.mjs';
@@ -190,7 +190,7 @@ export default async (req) => {
         if (!(await podeManual())) return null;
         if (motivo) await marcarEfiFalhou(motivo);
         const ref = refPedido(presente.id);
-        const payload = brcode(precoFinal, ref);
+        const payload = (await lerCfgPix().catch(() => null), brcode(precoFinal, ref));
         const m = Object.assign({}, salvo, { pagamento: Object.assign({}, salvo.pagamento, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', manualEm: Date.now(), payload }) });
         await getStore('presentes').setJSON(presente.id, m);
         await marcarPendente(presente.id);
