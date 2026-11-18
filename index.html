@@ -820,6 +820,8 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .xp-planos{display:flex;flex-direction:column;gap:.6rem;margin:.6rem 0}.xp-pl{position:relative;display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;background:#fff;border:2px solid #F1D5E2;border-radius:16px;padding:.85rem .8rem;cursor:pointer;font-family:inherit;color:#2A0F1E}.xp-pl.on{border-color:var(--rose);background:#fff5f9;box-shadow:0 8px 22px rgba(227,43,109,.16)}.xp-rd{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid #d9b8c7;box-sizing:border-box}.xp-pl.on .xp-rd{border:7px solid var(--rose)}.xp-pl-tx{flex:1;min-width:0}.xp-pl-tx b{display:block;font-size:.98rem}.xp-pl-tx small{display:block;color:#7d6070;font-size:.78rem;margin-top:2px}.xp-pl-pr{text-align:right;white-space:nowrap}.xp-pl-pr s{display:block;color:#a8909b;font-size:.75rem}.xp-pl-pr b{font-size:1.15rem;color:#2A0F1E}.xp-pl .xp-tag{position:absolute;top:-10px;right:12px}.xp-pl-ex{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem}.xp-pl-ex .xp-ex{padding:.3rem .65rem;font-size:.75rem}
 .mc-cont{margin-top:.7rem;font-size:.85rem;color:#f3d9e5;text-align:center}.mc-cont b{color:#fff}.mc-letra{margin-top:1rem;text-align:left;background:rgba(255,255,255,.75);border:1px solid #f1d5e2;border-radius:16px;padding:.9rem 1rem;max-height:260px;overflow:auto}.mc-letra-t{font-weight:800;font-size:.85rem;margin-bottom:.4rem;color:#7a1040}.mc-lw{animation:mcLin .6s ease both}@keyframes mcLin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.mc-l{font-size:.92rem;line-height:1.45;color:#3b1d2c}.mc-l-sec{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#b08a9a;margin-top:.5rem}.mc-l-vazio{height:.4rem}.mc-nm{color:#b8860b;background:linear-gradient(90deg,#d4a017,#f5c542);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:900}
 .lt-pronta{margin:0 0 1rem;max-height:none;background:#fff}.lc-cont{color:#f3d9e5}.lc-cont b{color:#fff}
+.lw-in{animation:lwIn .35s ease both}@keyframes lwIn{from{opacity:.25;transform:translateY(4px)}to{opacity:1;transform:none}}
+.mc-bar i{transition:width .35s linear}.mc-fase{transition:opacity .25s}
 .xp-combo{display:block;width:100%;margin:10px 0 2px;padding:11px 12px;border:2px dashed #E91E63;border-radius:14px;background:#fff0f6;color:#7a1040;font-size:.9rem;text-align:left;cursor:pointer}.xp-combo s{opacity:.6;margin-left:4px}.xp-combo.on{border-style:solid;background:#e9f8ee;border-color:#1F8A4C;color:#14532d;cursor:default}
 .xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
@@ -5621,6 +5623,7 @@ function dispararGeracao(gerarBtn){
   if(resultado) resultado.innerHTML=htmlMusicaCompondo();
   mostrarAjustesMusica(false);
   iniciarProgressoFake();
+  if(resultado) setTimeout(function(){ var r=resultado.getBoundingClientRect(); if(r.top<0 || r.top>window.innerHeight*0.45) resultado.scrollIntoView({behavior:'smooth', block:'start'}); },60);
   fetch('/.netlify/functions/gerar-musica', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
@@ -5775,6 +5778,23 @@ function desenharPasso(opts){
 }
 
 function redesenharSemPular(){
+  /* etapa da letra: troca SÓ a área da letra (sem redesenhar a página toda) — fica suave, sem piscar nem pular */
+  try{
+    var ps=passos(), k=ps[wStep], wrap=el('letraWrap');
+    if(k==='musicaLetra' && wrap){
+      var tmp=document.createElement('div'); tmp.innerHTML=htmlPasso(k);
+      var nw=tmp.querySelector('#letraWrap');
+      if(nw){
+        var gb=el('guideB'); if(gb && gb.textContent!==_guia){ clearInterval(_guiaT); gb.textContent=_guia; }
+        wrap.innerHTML=nw.innerHTML; wrap.classList.remove('lw-in'); void wrap.offsetWidth; wrap.classList.add('lw-in');
+        var ob=el('letraGerarBtn'), nb=tmp.querySelector('#letraGerarBtn');
+        if(ob && !nb) ob.remove(); else if(nb && !ob) wrap.insertAdjacentElement('afterend', nb); else if(ob && nb) ob.replaceWith(nb);
+        var nx=el('wzNext'); if(nx){ nx.disabled=false; nx.textContent=(precisaGeneroLetra() && !W.musicaLetraTexto) ? 'Escrever a letra' : 'Aprovar letra e compor música'; }
+        ligarPasso(k);
+        return;
+      }
+    }
+  }catch(e){}
   desenharPasso({preservarScroll:true,repetirGuia:false});
 }
 
