@@ -817,7 +817,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .xp-tag{position:absolute;top:-9px;right:12px;font-size:.62rem;font-weight:800;letter-spacing:.06em;background:#FFE45C;color:#3a0a2a;padding:3px 8px;border-radius:999px}
 .gf-l{display:block;font-weight:700;font-size:.85rem;margin:12px 0 4px;color:#3b1d2c}.gf-l input,.gf-l textarea{display:block;width:100%;margin-top:4px;padding:11px;border:1.5px solid #e5d6dd;border-radius:12px;font-size:1rem;font-family:inherit;box-sizing:border-box}.gf-op{display:flex;gap:8px}.gf-op button{flex:1;padding:10px;border:1.5px solid #e5d6dd;border-radius:12px;background:#fff;font-weight:700;font-size:.85rem;cursor:pointer}.gf-op button.on{border-color:#E91E63;background:#fff0f6;color:#a0144a}
 .hx-natal{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:999px;background:linear-gradient(90deg,#b71c1c,#1b5e20);color:#fff;font-weight:800;font-size:.8rem;box-shadow:0 4px 14px rgba(0,0,0,.18)}
-.xp-planos{display:flex;flex-direction:column;gap:.6rem;margin:.6rem 0}.xp-pl{position:relative;display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;background:#fff;border:2px solid #F1D5E2;border-radius:16px;padding:.85rem .8rem;cursor:pointer;font-family:inherit;color:#2A0F1E}.xp-pl.on{border-color:var(--rose);background:#fff5f9;box-shadow:0 8px 22px rgba(227,43,109,.16)}.xp-rd{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid #d9b8c7;box-sizing:border-box}.xp-pl.on .xp-rd{border:7px solid var(--rose)}.xp-pl-tx{flex:1;min-width:0}.xp-pl-tx b{display:block;font-size:.98rem}.xp-pl-tx small{display:block;color:#7d6070;font-size:.78rem;margin-top:2px}.xp-pl-pr{text-align:right;white-space:nowrap}.xp-pl-pr s{display:block;color:#a8909b;font-size:.75rem}.xp-pl-pr b{font-size:1.15rem;color:#2A0F1E}.xp-pl .xp-tag{position:absolute;top:-10px;right:12px}.xp-exs{display:flex;gap:.5rem;justify-content:center;margin:.2rem 0 .7rem}
+.xp-planos{display:flex;flex-direction:column;gap:.6rem;margin:.6rem 0}.xp-pl{position:relative;display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;background:#fff;border:2px solid #F1D5E2;border-radius:16px;padding:.85rem .8rem;cursor:pointer;font-family:inherit;color:#2A0F1E}.xp-pl.on{border-color:var(--rose);background:#fff5f9;box-shadow:0 8px 22px rgba(227,43,109,.16)}.xp-rd{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid #d9b8c7;box-sizing:border-box}.xp-pl.on .xp-rd{border:7px solid var(--rose)}.xp-pl-tx{flex:1;min-width:0}.xp-pl-tx b{display:block;font-size:.98rem}.xp-pl-tx small{display:block;color:#7d6070;font-size:.78rem;margin-top:2px}.xp-pl-pr{text-align:right;white-space:nowrap}.xp-pl-pr s{display:block;color:#a8909b;font-size:.75rem}.xp-pl-pr b{font-size:1.15rem;color:#2A0F1E}.xp-pl .xp-tag{position:absolute;top:-10px;right:12px}.xp-pl-ex{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem}.xp-pl-ex .xp-ex{padding:.3rem .65rem;font-size:.75rem}
 .xp-combo{display:block;width:100%;margin:10px 0 2px;padding:11px 12px;border:2px dashed #E91E63;border-radius:14px;background:#fff0f6;color:#7a1040;font-size:.9rem;text-align:left;cursor:pointer}.xp-combo s{opacity:.6;margin-left:4px}.xp-combo.on{border-style:solid;background:#e9f8ee;border-color:#1F8A4C;color:#14532d;cursor:default}
 .xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
@@ -7290,10 +7290,11 @@ function abrirExtrasPix(seguir, base){
     box.innerHTML='<div class="xp" role="dialog" aria-label="Escolha o seu pedido">'+
       '<div class="xp-top"><button type="button" class="xp-vt" id="xpVt" aria-label="Voltar">‹</button><b>Escolha o seu pedido</b></div>'+
       '<div class="xp-planos">'+P.map(function(o){ var on=o.id===pl;
-        return '<button type="button" class="xp-pl'+(on?' on':'')+'" data-xppl="'+o.id+'">'+(o.tag?'<span class="xp-tag">'+o.tag+'</span>':'')+
-          '<i class="xp-rd"></i><span class="xp-pl-tx"><b>'+o.t+'</b><small>'+o.d+'</small></span>'+
-          '<span class="xp-pl-pr">'+(o.de?'<s>R$ '+fmtPreco(o.de)+'</s>':'')+'<b>R$ '+fmtPreco(Math.round(o.v*100)/100)+'</b></span></button>'; }).join('')+'</div>'+
-      '<div class="xp-bts xp-exs"><button type="button" class="xp-ex" data-xpex="clipe">▶ Ver exemplo do clipe</button><button type="button" class="xp-ex" data-xpex="quadro">▶ Ver exemplo do quadro</button></div>'+
+        var exs=o.id==='combo'?[['clipe','▶ Ver o clipe'],['quadro','▶ Ver o quadro']]:o.id==='clipe'?[['clipe','▶ Ver exemplo']]:o.id==='quadro'?[['quadro','▶ Ver exemplo']]:[];
+        return '<div role="button" tabindex="0" class="xp-pl'+(on?' on':'')+'" data-xppl="'+o.id+'">'+(o.tag?'<span class="xp-tag">'+o.tag+'</span>':'')+
+          '<i class="xp-rd"></i><span class="xp-pl-tx"><b>'+o.t+'</b><small>'+o.d+'</small>'+
+          (exs.length?'<span class="xp-pl-ex">'+exs.map(function(e){ return '<button type="button" class="xp-ex" data-xpex="'+e[0]+'">'+e[1]+'</button>'; }).join('')+'</span>':'')+'</span>'+
+          '<span class="xp-pl-pr">'+(o.de?'<s>R$ '+fmtPreco(o.de)+'</s>':'')+'<b>R$ '+fmtPreco(Math.round(o.v*100)/100)+'</b></span></div>'; }).join('')+'</div>'+
       '<button type="button" class="xp-go" id="xpGo">'+(IP_ON?'Pagar':'Gerar Pix')+' · R$ '+fmtPreco(total())+'</button>'+
       '<p class="xp-sub" style="text-align:center;margin:8px 0 0">Você pode trocar a opção antes de pagar. O valor aparece no Pix antes de confirmar.</p>'+
     '</div>';
@@ -7306,7 +7307,7 @@ function abrirExtrasPix(seguir, base){
       gaEvento('extras_aceitou',{itens:W.extrasPix.join(','), valor:precoExtras(W)});
       desenharFotos();
     };
-    box.querySelectorAll('[data-xpex]').forEach(function(b){ b.onclick=function(){ verExemploExtra(b.dataset.xpex); }; });
+    box.querySelectorAll('[data-xpex]').forEach(function(b){ b.onclick=function(ev){ ev.stopPropagation(); verExemploExtra(b.dataset.xpex); }; });
   }
   /* etapa 2: fotos agora (opcional) */
   function maxFotos(){ return esc1.clipe ? 8 : 1; }
