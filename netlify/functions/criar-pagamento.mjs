@@ -22,6 +22,7 @@ const PRECO_PACOTE6 = 19.99; // 6 músicas (3 letras × 2 versões) — tem que 
 const PRODUTOS_COM_ADDON_MUSICA = ['completo', 'carta'];
 const PRECO_ADDON_MUSICA = 10;
 // EXTRAS NA HORA DO PIX (música): tem que bater com EXTRAS_PIX no index.html
+const PRECO_CLIENTE = 4.99; // promo de cliente — tem que bater com PRECO_CLIENTE no index.html
 const EXTRAS_PIX = { clipe: { preco: 4.90, nome: 'Clipe com fotos' }, quadro: { preco: 4.90, nome: 'Quadro QR' } };
 // Combo iniciado pela Música: ela mantém os R$9,99 e o presente entra
 // com desconto, sempre vitalício. Tem que bater com precoTotal() no index.html.
@@ -150,11 +151,18 @@ export default async (req) => {
       ? presente.extrasPix.filter((k, i, a) => EXTRAS_PIX[k] && a.indexOf(k) === i) : [];
     presente.extrasPix = extrasPix;
     const valorExtras = (extrasPix.length >= 2 ? 7.90 : extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0)) /* 17/11: clipe + quadro juntos R$ 7,90 */;
-    const precoFinal = Math.round((precoProduto + valorExtras) * 100) / 100;
+    // 🎁 PROMO CLIENTE (17/11): quem já comprou (link de um pedido PAGO) faz nova música (2 versões) por R$ 4,99
+    let clienteOk = false;
+    if (presente.produto === 'musica' && presente.clienteDe && !comboDaMusica && !pacote6 && !presente.bonusDe && !presente.dobroDe) {
+      const g0 = await getStore('presentes').get(String(presente.clienteDe), { type: 'json' }).catch(() => null);
+      clienteOk = !!(g0 && g0.pago && !g0.cancelado && g0.id !== presente.id);
+    }
+    if (!clienteOk) delete presente.clienteDe;
+    const precoFinal = Math.round(((clienteOk ? PRECO_CLIENTE : precoProduto) + valorExtras) * 100) / 100;
     const txid = criarTxid(presente.id);
     const criadoEm = Date.now();
     // pedido de música normal = 4 músicas: as 2 da prévia + 2 liberadas depois do Pix
-    const quatro = (presente.produto === 'musica' || comboDaMusica) && !pacote6 && !presente.ofertaM1 && !presente.ofertaDe;
+    const quatro = (presente.produto === 'musica' || comboDaMusica) && !pacote6 && !presente.ofertaM1 && !presente.ofertaDe && !clienteOk;
     const salvo = Object.assign({}, presente, {
       pago: false, quatro,
       criadoEm,

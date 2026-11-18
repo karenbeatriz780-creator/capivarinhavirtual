@@ -817,6 +817,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .xp-tag{position:absolute;top:-9px;right:12px;font-size:.62rem;font-weight:800;letter-spacing:.06em;background:#FFE45C;color:#3a0a2a;padding:3px 8px;border-radius:999px}
 .gf-l{display:block;font-weight:700;font-size:.85rem;margin:12px 0 4px;color:#3b1d2c}.gf-l input,.gf-l textarea{display:block;width:100%;margin-top:4px;padding:11px;border:1.5px solid #e5d6dd;border-radius:12px;font-size:1rem;font-family:inherit;box-sizing:border-box}.gf-op{display:flex;gap:8px}.gf-op button{flex:1;padding:10px;border:1.5px solid #e5d6dd;border-radius:12px;background:#fff;font-weight:700;font-size:.85rem;cursor:pointer}.gf-op button.on{border-color:#E91E63;background:#fff0f6;color:#a0144a}
 .hx-natal{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:999px;background:linear-gradient(90deg,#b71c1c,#1b5e20);color:#fff;font-weight:800;font-size:.8rem;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.xp-planos{display:flex;flex-direction:column;gap:.6rem;margin:.6rem 0}.xp-pl{position:relative;display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;background:#fff;border:2px solid #F1D5E2;border-radius:16px;padding:.85rem .8rem;cursor:pointer;font-family:inherit;color:#2A0F1E}.xp-pl.on{border-color:var(--rose);background:#fff5f9;box-shadow:0 8px 22px rgba(227,43,109,.16)}.xp-rd{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid #d9b8c7;box-sizing:border-box}.xp-pl.on .xp-rd{border:7px solid var(--rose)}.xp-pl-tx{flex:1;min-width:0}.xp-pl-tx b{display:block;font-size:.98rem}.xp-pl-tx small{display:block;color:#7d6070;font-size:.78rem;margin-top:2px}.xp-pl-pr{text-align:right;white-space:nowrap}.xp-pl-pr s{display:block;color:#a8909b;font-size:.75rem}.xp-pl-pr b{font-size:1.15rem;color:#2A0F1E}.xp-pl .xp-tag{position:absolute;top:-10px;right:12px}.xp-exs{display:flex;gap:.5rem;justify-content:center;margin:.2rem 0 .7rem}
 .xp-combo{display:block;width:100%;margin:10px 0 2px;padding:11px 12px;border:2px dashed #E91E63;border-radius:14px;background:#fff0f6;color:#7a1040;font-size:.9rem;text-align:left;cursor:pointer}.xp-combo s{opacity:.6;margin-left:4px}.xp-combo.on{border-style:solid;background:#e9f8ee;border-color:#1F8A4C;color:#14532d;cursor:default}
 .xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
@@ -3665,13 +3666,15 @@ function temAddonMusica(W){
    sempre vitalício. Tem que bater com criar-pagamento.mjs. */
 var COMBO_DA_MUSICA = { carta: 7.99, completo: 24.99 };
 /* 4 MÚSICAS POR R$ 9,99: paga as 2 da prévia e, depois do Pix, cria mais 2 (outra letra, outro estilo) já pagas */
-function quatroAtivo(W){ return !!W && W.produto==='musica' && !W.ofertaDe && !W.ofertaM1 && !W.bonusDe && !W.dobroDe && !W.pacote6; }
+function quatroAtivo(W){ return !!W && W.produto==='musica' && !W.ofertaDe && !W.ofertaM1 && !W.bonusDe && !W.dobroDe && !W.pacote6 && !W.clienteDe; }
+var PRECO_CLIENTE = 4.99; /* promo de cliente (nova música, 2 versões) — tem que bater com criar-pagamento.mjs */
 function temLiberadas(g){ return !!(g && g.pago && g.quatro && !g.dobroDe && !g.cancelado); }
 function precoTotal(W){
   if(W.bonusDe || W.dobroDe) return 0;
   return Math.round((precoTotalBase(W)+precoExtras(W))*100)/100;
 }
 function precoTotalBase(W){
+  if(W.clienteDe && W.produto==='musica' && !W.comboDaMusica && !W.pacote6) return PRECO_CLIENTE;
   if(W.pacote6 && W.ofertaM1 && W.ofertaM2) return PRECO_PACOTE6;
   if(W.comboDaMusica && COMBO_DA_MUSICA[W.produto]!=null){
     return PACOTES.musica.preco + COMBO_DA_MUSICA[W.produto];
@@ -7264,6 +7267,8 @@ function enviarFotosExtras(id, w){
 function abrirExtrasPix(seguir, base){
   if(!extrasElegivel(W)){ seguir(); return; }
   var esc1={}; extrasValidos(W).forEach(function(k){ esc1[k]=true; });
+  /* 17/11: 3 opções com o COMBO já marcado (a pessoa troca com 1 toque; o valor aparece grande) */
+  if(!(W.extrasPix&&W.extrasPix.length) && !W._xpEscolheu){ esc1={clipe:true, quadro:true}; }
   var EX=['1','2','3','4'].map(function(n){ return '/clipe-ex/'+n+'.webp'; });
   var ops=[
     {k:'clipe', tag:'MAIS ESCOLHIDO', th:'<div class="xp-th mosaico">'+EX.map(function(u){ return '<img src="'+u+'" alt="">'; }).join('')+'<span class="pl"><i></i></span></div>',
@@ -7273,31 +7278,34 @@ function abrirExtrasPix(seguir, base){
   ];
   var box=document.createElement('div'); box.className='xp-fundo'; box.id='xpFundo';
   function total(){ var t=(base!=null?Number(base):precoTotalBase(W)); t+=somaExtras(Object.keys(esc1).filter(function(k){ return esc1[k]; })); return Math.round(t*100)/100; }
+  function plano(){ return esc1.clipe&&esc1.quadro?'combo':esc1.clipe?'clipe':esc1.quadro?'quadro':'nada'; }
   function desenhar(){
-    box.innerHTML='<div class="xp" role="dialog" aria-label="Adicionais">'+
-      '<div class="xp-top"><button type="button" class="xp-vt" id="xpVt" aria-label="Voltar">‹</button><b>✨ Deixe o presente inesquecível</b></div>'+
-      '<p class="xp-sub">Adicione agora com desconto. Esse preço é só nesta tela.</p>'+
-      ops.map(function(o){ var x=EXTRAS_PIX[o.k], on=!!esc1[o.k];
-        return '<div class="xp-op'+(on?' on':'')+'">'+(o.tag?'<span class="xp-tag">'+o.tag+'</span>':'')+o.th+
-          '<div class="xp-tx"><b>'+o.t+'</b><small>'+o.d+'</small>'+
-            '<div class="xp-pr"><s>R$ '+fmtPreco(x.de)+'</s><b>R$ '+fmtPreco(x.preco)+'</b></div>'+
-            '<div class="xp-bts"><button type="button" class="xp-ex" data-xpex="'+o.k+'">▶ Ver exemplo</button>'+
-            '<button type="button" class="xp-add" data-xpadd="'+o.k+'">'+(on?'✓ Adicionado':'+ Adicionar')+'</button></div></div></div>'; }).join('')+
-      (esc1.clipe&&esc1.quadro?'<div class="xp-combo on">🎉 <b>Combo ativado:</b> clipe + quadro por <b>R$ '+fmtPreco(PRECO_COMBO_EXTRAS)+'</b> (economia de R$ '+fmtPreco(EXTRAS_PIX.clipe.preco+EXTRAS_PIX.quadro.preco-PRECO_COMBO_EXTRAS)+')</div>':'<button type="button" class="xp-combo" id="xpCombo">🎁 <b>Leve os dois por R$ '+fmtPreco(PRECO_COMBO_EXTRAS)+'</b> <s>R$ '+fmtPreco(EXTRAS_PIX.clipe.preco+EXTRAS_PIX.quadro.preco)+'</s> — toque pra adicionar</button>')+
-      '<div class="xp-tot"><span>Total do seu pedido</span><b>R$ '+fmtPreco(total())+'</b></div>'+
-      '<button type="button" class="xp-go" id="xpGo">'+(IP_ON?'Pagar (Pix ou cartão)':'Gerar Pix')+' · R$ '+fmtPreco(total())+'</button>'+
-      '<button type="button" class="xp-nao" id="xpNao">Agora não, só as músicas</button>'+
+    var b0=(base!=null?Number(base):precoTotalBase(W)), nM=quatroAtivo(W)?'4 músicas':'Suas músicas', pl=plano();
+    var P=[
+      {id:'combo', tag:'⭐ MAIS COMPLETO', t:'🎁 Combo completo', d:nM+' + clipe com as fotos + quadro com QR Code', v:b0+PRECO_COMBO_EXTRAS, de:b0+EXTRAS_PIX.clipe.de+EXTRAS_PIX.quadro.de},
+      {id:'clipe', tag:'', t:'📸 Músicas + clipe', d:nM+' + clipe com as fotos de vocês', v:b0+EXTRAS_PIX.clipe.preco, de:b0+EXTRAS_PIX.clipe.de},
+      {id:'nada', tag:'', t:'🎵 Só as músicas', d:nM, v:b0, de:null}
+    ];
+    if(pl==='quadro') P.splice(2,0,{id:'quadro', tag:'', t:'🖼️ Músicas + quadro', d:nM+' + quadro com QR Code', v:b0+EXTRAS_PIX.quadro.preco, de:b0+EXTRAS_PIX.quadro.de});
+    box.innerHTML='<div class="xp" role="dialog" aria-label="Escolha o seu pedido">'+
+      '<div class="xp-top"><button type="button" class="xp-vt" id="xpVt" aria-label="Voltar">‹</button><b>Escolha o seu pedido</b></div>'+
+      '<div class="xp-planos">'+P.map(function(o){ var on=o.id===pl;
+        return '<button type="button" class="xp-pl'+(on?' on':'')+'" data-xppl="'+o.id+'">'+(o.tag?'<span class="xp-tag">'+o.tag+'</span>':'')+
+          '<i class="xp-rd"></i><span class="xp-pl-tx"><b>'+o.t+'</b><small>'+o.d+'</small></span>'+
+          '<span class="xp-pl-pr">'+(o.de?'<s>R$ '+fmtPreco(o.de)+'</s>':'')+'<b>R$ '+fmtPreco(Math.round(o.v*100)/100)+'</b></span></button>'; }).join('')+'</div>'+
+      '<div class="xp-bts xp-exs"><button type="button" class="xp-ex" data-xpex="clipe">▶ Ver exemplo do clipe</button><button type="button" class="xp-ex" data-xpex="quadro">▶ Ver exemplo do quadro</button></div>'+
+      '<button type="button" class="xp-go" id="xpGo">'+(IP_ON?'Pagar':'Gerar Pix')+' · R$ '+fmtPreco(total())+'</button>'+
+      '<p class="xp-sub" style="text-align:center;margin:8px 0 0">Você pode trocar a opção antes de pagar. O valor aparece no Pix antes de confirmar.</p>'+
     '</div>';
     el('xpVt').onclick=function(){ gaEvento('extras_voltou',{}); fechar(); };
-    el('xpNao').onclick=function(){ gaEvento('extras_recusou',{}); W.extrasPix=[]; fechar(); seguir(); };
+    box.querySelectorAll('[data-xppl]').forEach(function(b){ b.onclick=function(){ var k=b.dataset.xppl; W._xpEscolheu=true;
+      esc1={clipe:k==='combo'||k==='clipe', quadro:k==='combo'||k==='quadro'}; gaEvento('extras_plano',{plano:k}); desenhar(); }; });
     el('xpGo').onclick=function(){
       W.extrasPix=Object.keys(esc1).filter(function(k){ return esc1[k]; });
-      if(!W.extrasPix.length){ _xpFotos=[]; fechar(); seguir(); return; }
+      if(!W.extrasPix.length){ gaEvento('extras_recusou',{}); _xpFotos=[]; fechar(); seguir(); return; }
       gaEvento('extras_aceitou',{itens:W.extrasPix.join(','), valor:precoExtras(W)});
       desenharFotos();
     };
-    var cb=el('xpCombo'); if(cb) cb.onclick=function(){ esc1.clipe=true; esc1.quadro=true; gaEvento('extras_combo',{}); desenhar(); };
-    box.querySelectorAll('[data-xpadd]').forEach(function(b){ b.onclick=function(){ var k=b.dataset.xpadd; esc1[k]=!esc1[k]; if(esc1[k]) gaEvento('extras_add',{item:k}); desenhar(); }; });
     box.querySelectorAll('[data-xpex]').forEach(function(b){ b.onclick=function(){ verExemploExtra(b.dataset.xpex); }; });
   }
   /* etapa 2: fotos agora (opcional) */
@@ -11436,6 +11444,11 @@ function montarMusicaEntrega(g, opts){
               '<span>Toque pra ver, montar ou ajustar. Se você já mandou as fotos, está pronto.</span>'+
               '<a class="mx-btn mx-btn-ouro" href="#/montar/'+encodeURIComponent(g.id)+'">'+(g.extrasPix.indexOf('clipe')>=0?'📸 Abrir meu clipe':'🖼️ Abrir meu quadro')+'</a></div>'
           : '')+
+        (cliente && g.pago && !g.cancelado
+          ? '<div class="mx-libera mx-promo"><span class="mx-lb-tag">🎉 SÓ PARA CLIENTES</span><b>Nova música pela METADE do preço</b>'+
+              '<span>Faça outra música pra quem você quiser: <b>2 versões por R$ '+fmtPreco(PRECO_CLIENTE)+'</b> <s>R$ 9,99</s>. Aniversário, mãe, amigo, Natal…</span>'+
+              '<button type="button" class="mx-btn mx-btn-ouro" id="mxPromo">🎁 Resgatar agora</button></div>'
+          : '')+
         (cliente && g.pago
           ? '<div class="mx-libera mx-gift"><span class="mx-lb-tag">🎁 SURPRESA</span><b>Envie de presente pelo WhatsApp</b>'+
               '<span>Mande a música direto pra pessoa, com o seu nome ou <b>anônimo</b>. Ela abre e ouve na hora.</span>'+
@@ -11503,6 +11516,7 @@ function montarMusicaEntrega(g, opts){
   /* enviar o MP3 de verdade pelo compartilhar do celular */
   var mxL=el('mxLivro'); if(mxL) mxL.onclick=function(){ gaEvento('aceitou_upsell',{de:'musica',para:'livro',onde:'pagina_paga'}); var nm=String(g.musicaParaNome||'').split(/,|\s+e\s+/)[0].trim(); if(typeof window.lvOfertaDaMusica==='function') window.lvOfertaDaMusica({nome:nm, zap:g.musicaWhatsapp||''}); else location.hash='#/livro'; };
   var mxP=el('mxPresente'); if(mxP) mxP.onclick=function(){ abrirEnviarPresente(g); };
+  var mxPr=el('mxPromo'); if(mxPr) mxPr.onclick=function(){ gaEvento('promo_cliente',{de:g.id}); W=null; telaWizard('musica'); W.clienteDe=g.id; if(g.meuNome) W.meuNome=g.meuNome; if(g.musicaWhatsapp) W.musicaWhatsapp=g.musicaWhatsapp; desenharPasso(); };
   var envA=el('mxEnviarAudio');
   envA.onclick=function(){
     var f=faixas[atual];
