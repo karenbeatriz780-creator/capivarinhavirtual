@@ -38,8 +38,16 @@ function produto(g) {
   if (ehLivro(g)) return 'Livro infantil personalizado + músicas';
   const pr = String(g.produto || '');
   if (pr.startsWith('extra')) return 'Item extra do pedido (' + pr.replace('extra_', '') + ')';
-  if (pr === 'musica' || (!NOMES[pr] && temMus(g))) return 'Música personalizada (' + (g.quatro ? '4 versões' : '2 versões') + ')';
+  if (pr === 'musica' || (!NOMES[pr] && temMus(g))) {
+    const ex = (Array.isArray(g.extrasPix) ? g.extrasPix : []).map((k) => (k === 'clipe' ? 'clipe com fotos' : k === 'quadro' ? 'quadro com QR Code' : k));
+    return 'Pacote: ' + (g.quatro ? '4 músicas personalizadas' : '2 músicas personalizadas') + (ex.length ? ' + ' + ex.join(' + ') : '');
+  }
   return NOMES[pr] || 'Presente digital personalizado';
+}
+function zapProtegido(n) {
+  const d = String(n || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '');
+  if (d.length < 10) return '';
+  return '(' + d.slice(0, 2) + ') ' + (d.length === 11 ? d[2] : '') + '••••-' + d.slice(-4);
 }
 function linkEntrega(g) {
   if (!g) return '';
@@ -72,7 +80,7 @@ export default async (req) => {
     const infPorE2e = {};
     ri.itens.forEach((x) => { if (x.endToEndId) (infPorE2e[x.endToEndId] = infPorE2e[x.endToEndId] || []).push(x); });
 
-    const txs = getStore('efi-txid'), presentes = getStore('presentes');
+    const txs = getStore('efi-txid'), presentes = getStore('presentes'), zapLoja = getStore('whatsapp');
     const linhas = [];
     for (const p of rp.itens) {
       let g = null;
@@ -89,8 +97,10 @@ export default async (req) => {
         try { aplicarPagamento(g, { e2eid: p.endToEndId, valor: p.valor }, 'relatorio-efi'); await presentes.setJSON(g.id, g); liberados.push(g.id); await entregarPago(g).catch(() => {}); } catch (e) {}
       }
       const ehTeste = !!(g && (testes.has(g.id) || /\bteste?\b/i.test(String(g.meuNome || '') + ' ' + String(g.musicaParaNome || '')))) || (Number(p.valor) || 0) <= 1;
+      const zp = g ? await zapLoja.get('pago_' + g.id, { type: 'json' }).catch(() => null) : null;
       linhas.push({
         teste: ehTeste,
+        zap: g ? zapProtegido(g.musicaWhatsapp || g.whatsapp || g.zap || (zp && zp.para)) : '', zapEnviadoEm: zp && zp.para && !zp.pulado ? zp.em : null,
         e2e: p.endToEndId || '', txid: p.txid || '', valor: Number(p.valor) || 0, pagoEm: p.horario || '', pagador: nomePagador(p),
         pedido: g ? g.id : '', produto: produto(g), cliente: g ? (g.meuNome || '') : '', para: g ? (g.musicaParaNome || g.nome || g.parceiroNome || '') : '',
         entregue: entregue(g), entregueEm: g ? (g.pagoEm || null) : null, link: linkEntrega(g), canceladoSite: !!(g && g.cancelado),
