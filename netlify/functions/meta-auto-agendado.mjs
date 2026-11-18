@@ -81,7 +81,20 @@ export async function rodarRobo(simular) {
   //    As ligadas SEM futuro que já gastaram R$ 10+ na semana sem provar que vendem → desliga. Campanha nova (gastou menos de R$ 10) fica.
   // 🎓 APRENDIZAGEM (17/11): até 2 campanhas que você escolheu no painel — o robô NUNCA desliga, liga à meia-noite e só AVISA se regredir
   const aprend = new Set(((await L().get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
-  const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117b';
+  const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117b', FLAG_DESFAZ = 'desfaz_roas_20261117';
+  // ↩️ 17/11 21h: desfaz o corte por ROAS 1,5 por campanha — religa (uma vez) as que o robô desligou desde 19h50 e passam na regra de R$ 9,50
+  if (cfg.autoPausar && !simular && !(await L().get(FLAG_DESFAZ, { type: 'json' }).catch(() => null))) {
+    await L().setJSON(FLAG_DESFAZ, { em: agora }).catch(() => {});
+    const desde = Date.parse('2026-11-17T22:50:00Z');
+    for (const c of (meta.campanhas || [])) {
+      const ac = acoes[c.id];
+      if (c.status === 'ACTIVE' || !ac || ac.tipo !== 'pausar' || !/^robô/.test(ac.quem || '') || !(ac.em >= desde)) continue;
+      const d0 = (c.dias || {})[hoje] || {}, v0 = Math.max(d0.compras || 0, ((site[c.id] || {}).porDia || {})[hoje] || 0);
+      if (!futuro(c, site, agora).tem && !(v0 > 0 && (d0.gasto || 0) / v0 <= 9.99)) continue;
+      try { await aplicarAcao(c, 'ativar', 'robô (desfez ROAS)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (desfez ROAS)', em: agora }; c.status = 'ACTIVE';
+        feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: true, motivo: '↩️ religuei: tinha desligado pela regra de ROAS 1,5 por campanha (errada). ROAS 1,5 é meta geral, não corta campanha.' }); } catch (e) {}
+    }
+  }
   // ⚡ aplicação ÚNICA agora (17/11 à noite): mesma análise da meia-noite, com a semana até hoje
   const jaAgora = cfg.autoPausar && !simular && !(await L().get(FLAG_JA, { type: 'json' }).catch(() => null));
   if (jaAgora) await L().setJSON(FLAG_JA, { em: agora }).catch(() => {});
@@ -126,7 +139,7 @@ export async function rodarRobo(simular) {
     if (/(^|[^a-z])(eua|usa|us)([^a-z]|$)/i.test(String(c.nome || ''))) continue;
     const s0 = site[c.id] || { porDia: {} }, d0 = (c.dias || {})[hoje] || {}, g0 = d0.gasto || 0, v0 = Math.max(d0.compras || 0, s0.porDia[hoje] || 0);
     if (aprend.has(c.id)) continue;
-    const limR = cpaMaxDe(c.id, site); if (!v0 || g0 / v0 > limR) continue;
+    const limR = cpaMaxDe(c.id, site); if (!v0 || g0 / v0 > 9.99) continue;
     let g3r = 0, v3r = 0; for (const d of [hoje, ontem, diaBR(agora - 2 * 864e5)]) { const x = (c.dias || {})[d] || {}; g3r += x.gasto || 0; v3r += Math.max(x.compras || 0, s0.porDia[d] || 0); }
     if (v3r && g3r / v3r > limR) continue;
     try { if (!simular) { await aplicarAcao(c, 'ativar', 'robô (dia positivo)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (dia positivo)', em: agora }; } c.status = 'ACTIVE'; delete atraso[c.id];
@@ -168,7 +181,7 @@ export async function rodarRobo(simular) {
     const v3 = v3m || v3s, aprendeu = diasDados >= 2;
     // 🇺🇸 campanha dos EUA (nome com "EUA", "USA" ou "US"): venda de US$ 7,99 → aceita custo por compra até R$ 30 (lucro > R$ 10)
     const eua = /(^|[^a-z])(eua|usa|us)([^a-z]|$)/i.test(String(c.nome || ''));
-    const CPA_BR = cpaMaxDe(c.id, site); // ROAS mínimo 1,5
+    const CPA_BR = cpaMaxDe(c.id, site); // R$ 9,50 por venda (ROAS 1,5 é meta geral da conta, não corta campanha)
     const CPA_C = eua ? 30 : CPA_BR, PRIM_C = eua ? 30 : prim, TRAVA_C = eua ? 45 : 15;
     let pausar = null;
     const lucroH = vH * tk - gH * (1 + imp);
@@ -176,15 +189,15 @@ export async function rodarRobo(simular) {
     // ⭐ campanha BOA = vendeu nos 3 dias ANTERIORES a hoje com custo por compra até R$ 9,99
     let gP = 0, vPm = 0, vPs = 0;
     for (const d of [ontem, diaBR(agora - 2 * 864e5), diaBR(agora - 3 * 864e5)]) { const x = (c.dias || {})[d] || {}; gP += x.gasto || 0; vPm += x.compras || 0; vPs += s.porDia[d] || 0; }
-    const vP = vPm || vPs, boa = (vP > 0 && gP / vP <= cpaMaxDe(c.id, site)) || futuro(c, site, agora - 864e5).tem;
+    const vP = vPm || vPs, boa = (vP > 0 && gP / vP <= 9.99) || futuro(c, site, agora - 864e5).tem;
     // ❌ sem chance: nos 3 dias anteriores gastou R$ 5+ e não vendeu NADA em 2 ou mais dias → corta mais cedo (R$ 5)
     let diasRuins = 0; for (const d of [ontem, diaBR(agora - 2 * 864e5), diaBR(agora - 3 * 864e5)]) { const x = (c.dias || {})[d] || {}; if ((x.gasto || 0) >= 5 && !(x.compras || 0) && !(s.porDia[d] || 0)) diasRuins++; }
     const semChance = !boa && diasRuins >= 2, LIM_SEM = boa ? 9.99 : semChance ? 5 : 7;
     let semCompra = false;
     if (cfg.autoPausar && !voceAtivou && !eua) { // REGRA DE 15/11 (Brasil)
       if (vH === 0 && gH >= LIM_SEM) { pausar = 'hoje gastou ' + brl(gH) + ' sem nenhuma compra (' + (boa ? '⭐ campanha boa, limite R$ 9,99' : semChance ? 'sem chance: ' + diasRuins + ' dos últimos 3 dias sem nenhuma venda, limite R$ 5' : 'campanha nova/parada, limite R$ 7') + ')'; semCompra = true; }
-      else if (aprendeu && gH >= 3 && v3 > 0 && g3 / v3 > CPA_BR) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou de ' + brl(CPA_BR) + ' (ROAS abaixo de 1,5)';
-      else if (!aprendeu && vCpa > 0 && gH / vCpa > CPA_BR) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s), gasto ' + brl(gH) + ') — passou de ' + brl(CPA_BR) + ' (ROAS abaixo de 1,5)';
+      else if (aprendeu && gH >= 3 && v3 > 0 && g3 / v3 > CPA_BR) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou de ' + brl(CPA_BR) + ', está dando prejuízo';
+      else if (!aprendeu && vCpa > 0 && gH / vCpa > CPA_BR) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s), gasto ' + brl(gH) + ') — passou de ' + brl(CPA_BR) + ', está dando prejuízo';
     } else if (cfg.autoPausar && !voceAtivou && aprendeu) { // 🇺🇸 EUA: média de 3 dias
       if (v3 === 0 && g3 >= PRIM_C) pausar = 'em 3 dias gastou ' + brl(g3) + ' e não fez nenhuma compra' + (eua ? ' (EUA, limite ' + brl(PRIM_C) + ')' : '');
       else if (v3 > 0 && g3 / v3 > CPA_C) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou do máximo de ' + brl(CPA_C);

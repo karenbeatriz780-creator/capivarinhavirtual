@@ -1,11 +1,12 @@
-// ⭐ "Campanha com futuro" (regra de 17/11): na última semana fez pelo menos 3 vendas com ROAS 1,5 ou mais
-// (custo por venda até ticket médio ÷ 1,5 — R$ 6,66 numa venda de R$ 9,99). EUA: 1+ venda até R$ 30. Só essas o robô liga à meia-noite.
+// ⭐ "Campanha com futuro" (regra de 17/11): na última semana fez pelo menos 3 vendas a até R$ 9,50 cada. EUA: 1+ venda até R$ 30.
+// Só essas o robô liga à meia-noite. ROAS 1,5 é META DA CONTA (geral), NÃO é regra pra desligar campanha (17/11 21h).
 import { diaBR } from './_resumo.mjs';
 export const FUT_VENDAS = 3, ROAS_MIN = 1.5, FUT_CPA_EUA = 30;
 export const ehEUA = (nome) => /(^|[^a-z])(eua|usa|us)([^a-z]|$)/i.test(String(nome || ''));
 // ticket médio da campanha (vendas do site com extras); sem dado → R$ 9,99
 export function ticketDe(id, site) { const s = site && site[id]; return s && s.vendas > 0 && s.valor > 0 ? Math.max(9.99, s.valor / s.vendas) : 9.99; }
-export const cpaMaxDe = (id, site) => +(ticketDe(id, site) / ROAS_MIN).toFixed(2);
+export const CPA_LIM = 9.5;
+export const cpaMaxDe = () => CPA_LIM; // limite por campanha: R$ 9,50 por venda (média)
 export function futuro(c, site, agora) {
   const s = (site && site[c.id]) || { porDia: {} };
   let g = 0, v = 0;

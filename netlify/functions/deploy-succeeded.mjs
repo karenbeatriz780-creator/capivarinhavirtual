@@ -11,11 +11,11 @@ export default async () => {
       console.log('QR corrigido: livros refeitos', await refazerLivros(10));
     }
   } catch (e) { console.error('qrfix:', e && e.message); }
-  // 17/11 20h: regras novas (ROAS 1,5 + aprendizagem) → roda o robô uma vez na hora do deploy
+  // 17/11 21h: desfaz corte por ROAS por campanha → roda o robô uma vez na hora do deploy
   try {
     const G = getStore('gastos');
-    if (!(await G.get('roda_deploy_20261117b', { type: 'json' }).catch(() => null))) {
-      await G.setJSON('roda_deploy_20261117b', { em: Date.now() });
+    if (!(await G.get('roda_deploy_20261117c', { type: 'json' }).catch(() => null))) {
+      await G.setJSON('roda_deploy_20261117c', { em: Date.now() });
       const { rodarRobo } = await import('./meta-auto-agendado.mjs');
       console.log('robô no deploy:', JSON.stringify(await rodarRobo(false)).slice(0, 500));
     }
