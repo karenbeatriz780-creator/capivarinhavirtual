@@ -167,6 +167,15 @@ function montarPrompt(p) {
   partes.push('PARA QUEM: ' + relacaoDesc + '.');
   if (restricao) partes.push('RESTRIÇÃO IMPORTANTE: ' + restricao);
   if (p.ocasiao) partes.push('OCASIÃO: ' + p.ocasiao + '.');
+  const DICA_OC = {
+    'Trollagem': 'Tom de brincadeira e zoeira entre amigos: engraçado, leve e carinhoso, SEM ofensa, palavrão ou humilhação.',
+    'Reconciliação': 'É um pedido de desculpas/reconciliação: reconheça o erro com humildade, fale do que vocês viveram e do desejo de recomeçar, sem cobrar nem culpar a outra pessoa.',
+    'Homenagem à distância': 'A pessoa está longe: fale de saudade, da distância que não apaga o amor e do reencontro.',
+    'Natal': 'Clima de Natal: luzes, família reunida, gratidão e o presente que é ter essa pessoa por perto.',
+    'Adoração a Deus': 'Música de adoração a Deus: reverente, de fé e gratidão.',
+    'Pedido de casamento': 'É um pedido de casamento: termine o refrão com o pedido ("casa comigo?") de forma emocionante.'
+  };
+  if (p.ocasiao && DICA_OC[p.ocasiao] && p.idioma !== 'en') partes.push(DICA_OC[p.ocasiao]);
   // GÊNERO DE QUEM DÁ A MÚSICA (eu-lírico): é isso que define "grata/grato",
   // "obrigada/obrigado", "cansada/cansado" etc. Vale mais que a voz.
   if (p.de === 'mulher') partes.push('QUEM ESTÁ DANDO A MÚSICA (quem fala na letra, o "eu") é uma MULHER: sempre que o "eu" falar de si mesma use o FEMININO (ex.: "grata", "obrigada", "apaixonada", "sozinha", "orgulhosa"). Nunca use o masculino pra ela.');

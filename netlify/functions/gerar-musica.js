@@ -313,7 +313,10 @@ const OCASIOES_TAG = {
   'Dia dos Pais':'fathers day', 'Declaração de amor':'love confession',
   'Pedido de namoro':'asking someone out', 'Aniversário de namoro':'dating anniversary',
   'Formatura':'graduation celebration', 'Chá revelação':'gender reveal celebration',
-  'Surpresa':'surprise gift', 'Homenagem':'heartfelt tribute'
+  'Surpresa':'surprise gift', 'Homenagem':'heartfelt tribute',
+  'Casamento':'wedding song', 'Pedido de casamento':'marriage proposal', 'Reconciliação':'reconciliation love song, heartfelt apology',
+  'Homenagem à distância':'long distance love, missing you', 'Natal':'christmas song, festive', 'Adoração a Deus':'worship song',
+  'Trollagem':'funny playful comedy song', 'Propaganda da empresa':'catchy commercial jingle'
 };
 
 export default async (req) => {
