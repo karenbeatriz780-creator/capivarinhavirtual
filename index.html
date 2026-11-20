@@ -9706,6 +9706,7 @@ function pnlCampLigar(body){
   if(_pnlAba==='vigiar'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlVig) pnlVigCarregar(); pnlVigiarLigar(body); }
   if(_pnlAba==='meianoite'){ if(!_pnlMN) pnlMNCarregar(); pnlMNLigar(); }
   if(_pnlAba==='aprender'){ if(!_pnlApr) pnlAprCarregar(); pnlAprLigar(); }
+  if(_pnlAba==='vendas5'){ if(!_pnlV5) pnlV5Carregar(); pnlV5Ligar(); }
   if(_pnlAba==='aumento'){ if(!_pnlAu) pnlAuCarregar(); pnlAuLigar(); }
   if(_pnlAba==='desistem'){ if(!_pnlFm||_pnlFm.p!==_pnlFmP) pnlFmCarregar(); pnlFmLigar(); }
   if(_pnlAba==='pagos' && el('pnlRefIds')){ try{ el('pnlRefIds').value=localStorage.getItem('cl_ref_ids')||''; el('pnlRefTestes').value=localStorage.getItem('cl_ref_testes')||''; }catch(x){} }
@@ -9758,6 +9759,35 @@ function pnlMNHtml(){
     '<div class="mn-lista">'+cs.map(function(c){ var on=fora.indexOf(c.id)<0, at=c.status==='ACTIVE';
       return '<label class="mn-it" data-mnnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-mn="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+(c.fut?'<br><small style="color:'+(c.top||c.aprend?'#1F8A4C':'#b23')+'">'+(c.aprend?'🎓 aprendizagem (sempre ligada)':c.top?'🏆 entre as 10 melhores — vai ligar':'✖ fora das 10 — não liga')+' · '+c.fut.vendas+' venda(s) na semana'+(c.fut.cpa!=null?' a R$ '+fmtPreco(c.fut.cpa)+' cada':'')+'</small>':'')+'</span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
     '<div class="sub" id="mnSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
+}
+/* ✅ VENDAS 5 DIAS: campanhas que venderam nos últimos 5 dias (ligadas e desligadas), com botão de ligar */
+var _pnlV5=null, _pnlV5Carr=false;
+function pnlV5Carregar(){
+  if(_pnlV5Carr) return; _pnlV5Carr=true;
+  fetch('/.netlify/functions/admin-vendas5',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
+    .then(function(d){ _pnlV5Carr=false; _pnlV5=d||{}; if(_pnlAba==='vendas5') pnlRedesenhar(); })
+    .catch(function(){ _pnlV5Carr=false; _pnlV5={erro:'Sem conexão.'}; if(_pnlAba==='vendas5') pnlRedesenhar(); });
+}
+function pnlV5Html(){
+  var topo='<div class="dsh-card"><div class="dsh-t">✅ Campanhas que venderam nos últimos 5 dias</div><div class="dsh-nota">Ligadas e desligadas. <b style="color:#1F8A4C">Verde</b> = venda boa (até R$ 9,50 por venda; EUA até R$ 30). Toque em <b>Ligar</b> pra ativar uma, ou ligue todas as boas de uma vez.</div></div>';
+  var D=_pnlV5;
+  if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando…</div></div>';
+  if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
+  var cs=D.campanhas||[], boasOff=cs.filter(function(c){ return c.boa && c.status!=='ACTIVE'; });
+  if(!cs.length) return topo+'<div class="dsh-card"><div class="pnl-nota">Nenhuma campanha vendeu nos últimos 5 dias.</div></div>';
+  return topo+'<div class="dsh-card">'+(boasOff.length?'<button type="button" class="pnl-btn" id="v5Todas" style="width:100%;background:#1F8A4C;color:#fff;margin-bottom:.6rem">▶️ Ligar todas as boas desligadas ('+boasOff.length+')</button>':'<div class="pnl-nota" style="margin-bottom:.5rem">✓ Todas as boas já estão ligadas.</div>')+
+    cs.map(function(c){ var on=c.status==='ACTIVE';
+      return '<div style="display:flex;gap:.5rem;align-items:center;padding:.55rem .2rem;border-bottom:1px solid #f1e6eb'+(c.boa?'':';opacity:.75')+'"><div style="flex:1;min-width:0"><b style="font-size:.88rem;'+(c.boa?'color:#1F8A4C':'')+'">'+(c.boa?'🟢 ':'🟠 ')+esc(c.nome)+'</b><br><small style="color:#888">'+c.vendas+' venda(s) · '+(c.cpa!=null?'R$ '+fmtPreco(c.cpa)+'/venda':'')+' · gasto R$ '+fmtPreco(c.gasto)+(c.orc?' · orç. R$ '+fmtPreco(c.orc)+'/dia':'')+'</small></div>'+
+        (on?'<span style="font-size:.75rem;color:#1F8A4C;font-weight:800">● ligada</span>':'<button type="button" class="pnl-btn" data-v5lig="'+esc(c.id)+'">▶️ Ligar</button>')+'</div>'; }).join('')+
+    '<div class="pnl-nota" style="margin-top:.5rem">Campanha que você liga aqui o robô respeita até a meia-noite.</div></div>';
+}
+function pnlV5Ligar(){
+  function post(corpo, btn){ if(btn) btn.disabled=true;
+    return fetch('/.netlify/functions/admin-meta-acao',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify(corpo)}).then(function(r){ return r.json(); })
+      .then(function(d){ if(d && (d.ok || (d.feitas&&d.feitas.length))){ toast('Ligada ✓'+(d.erros&&d.erros.length?' (algumas deram erro)':'')); _pnlV5=null; pnlRedesenhar(); pnlV5Carregar(); } else { toast((d&&(d.erro||(d.erros||[]).join('; ')))||'Não deu certo'); if(btn) btn.disabled=false; } })
+      .catch(function(){ toast('Sem conexão.'); if(btn) btn.disabled=false; }); }
+  document.querySelectorAll('[data-v5lig]').forEach(function(b){ b.onclick=function(){ post({acao:'ativar',id:b.dataset.v5lig}, b); }; });
+  var t=el('v5Todas'); if(t) t.onclick=function(){ var ids=(_pnlV5.campanhas||[]).filter(function(c){ return c.boa && c.status!=='ACTIVE'; }).map(function(c){ return c.id; }); post({acao:'ativarVarios',ids:ids}, t); };
 }
 /* 📈 AUMENTO DIÁRIO: campanhas que sobem +10% no orçamento todo dia */
 var _pnlAu=null, _pnlAuCarr=false;
@@ -10478,7 +10508,7 @@ function desenharPainel(pedidos, visitas, musicas){
 
   body.innerHTML=
     '<div class="pnl-abas pnl-abas-main" id="pnlAbas">'+
-      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['desistem','🔻','Onde desistem'],['aumento','📈','Aumento'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
+      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['desistem','🔻','Onde desistem'],['aumento','📈','Aumento'],['vendas5','✅','Vendas 5 dias'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
         return '<button type="button" class="pnl-aba'+(_pnlAba===a[0]?' on':'')+'" data-aba="'+a[0]+'"><i>'+a[1]+'</i><span>'+a[2]+'</span></button>'; }).join('')+
     '</div>'+
     '<div class="pnl-abas pnl-abas-mais"><small>Mais:</small>'+
@@ -10499,6 +10529,7 @@ function desenharPainel(pedidos, visitas, musicas){
     (_pnlAba==='aprender' ? pnlAprHtml() : '')+
     (_pnlAba==='desistem' ? pnlFmHtml() : '')+
     (_pnlAba==='aumento' ? pnlAuHtml() : '')+
+    (_pnlAba==='vendas5' ? pnlV5Html() : '')+
     (_pnlAba==='hoje' ? pnlHojeHtml(pedidos, _pnlCache.custos||{}) : '')+
     (_pnlAba==='pagos'
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+
