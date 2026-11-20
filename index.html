@@ -9810,6 +9810,7 @@ function pnlAuHtml(){
       return '<div style="background:#fff5f9;border-radius:12px;padding:.5rem .3rem"><small style="color:#888">'+a[1]+'</small><br><b>R$ '+fmtPreco(Math.round(v*100)/100)+'</b><br><small style="color:#888">por dia</small></div>'; }).join('')+'</div>'+
     '<div class="dsh-nota" style="margin-top:.5rem">Gasto total no mês, se todas ficarem ligadas: <b>R$ '+fmtPreco(Math.round((function(){ var t=0; for(var d=0;d<30;d++) t+=soma(d); return t; })()*100)/100)+'</b>'+(teto?' (com teto de R$ '+fmtPreco(teto)+' por campanha)':' (sem teto)')+'. É projeção: o robô ainda desliga as que gastarem sem vender.</div></div>':'';
   return topo+tabela+'<div class="dsh-card"><div class="mn-bar"><b>'+ids.length+' marcada(s)</b>'+(D.feitoHoje?'<small style="margin-left:auto;color:#1F8A4C">✓ aumento de hoje já feito</small>':'')+'</div>'+
+    (ids.length?'<button type="button" class="pnl-btn" id="auAgora" style="width:100%;background:#1F8A4C;color:#fff;margin:.5rem 0"'+(D.feitoHoje?' disabled':'')+'>'+(D.feitoHoje?'✓ Já subiu hoje — próximo aumento amanhã':'📈 Subir 10% agora nas '+ids.length+' marcada(s)')+'</button>':'')+
     '<label style="display:block;font-size:.85rem;margin:.4rem 0 .6rem">Teto por campanha (opcional): R$ <input type="number" id="auTeto" min="1" step="1" style="width:90px" value="'+(D.teto||'')+'" placeholder="sem teto"> <small style="color:#888">— quando chegar nele, para de subir</small></label>'+
     '<input type="search" id="auBusca" class="mn-busca" placeholder="Buscar pelo nome…">'+
     '<div class="mn-lista">'+cs.map(function(c){ var on=ids.indexOf(c.id)>=0, at=c.status==='ACTIVE';
@@ -9826,6 +9827,10 @@ function pnlAuLigar(){
   if(!_pnlAu||!_pnlAu.campanhas) return;
   document.querySelectorAll('[data-au]').forEach(function(x){ x.onchange=function(){ var ids=_pnlAu.ids=_pnlAu.ids||[], id=x.dataset.au, i=ids.indexOf(id); if(x.checked){ if(i<0) ids.push(id); } else if(i>=0) ids.splice(i,1); pnlAuSalvar(); }; });
   var t=el('auTeto'); if(t) t.onchange=pnlAuSalvar;
+  var ag=el('auAgora'); if(ag) ag.onclick=function(){ ag.disabled=true; ag.textContent='Subindo…';
+    fetch('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'subirAgora'})}).then(function(r){ return r.json(); })
+      .then(function(d){ if(d&&d.ok){ toast('📈 Subiu '+d.subiu+' campanha(s)'+(d.erros&&d.erros.length?' · '+d.erros.length+' com erro':'')); } else toast((d&&d.erro)||'Não deu certo'); _pnlAu=null; pnlRedesenhar(); pnlAuCarregar(); })
+      .catch(function(){ toast('Sem conexão.'); ag.disabled=false; }); };
   var b=el('auBusca'); if(b) b.oninput=function(){ var q=b.value.trim().toLowerCase(); document.querySelectorAll('[data-aunome]').forEach(function(l){ l.style.display=!q||l.dataset.aunome.indexOf(q)>=0?'':'none'; }); };
 }
 /* 🔻 ONDE DESISTEM: funil da música por etapa */

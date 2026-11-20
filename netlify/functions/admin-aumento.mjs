@@ -2,7 +2,8 @@
 // GET  → campanhas (nome, situação, orçamento do dia) + as marcadas + teto
 // POST {ids:[...], teto} → salva
 import { getStore } from '@netlify/blobs';
-import { graphConta } from './_meta.mjs';
+import { graphConta, logRobo } from './_meta.mjs';
+import { aplicarAumento } from './_aumento.mjs';
 import { metaAds } from './_gastos.mjs';
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 export default async (req) => {
@@ -12,6 +13,19 @@ export default async (req) => {
   try {
     if (req.method === 'POST') {
       let b = {}; try { b = await req.json(); } catch (e) {}
+      if (b.acao === 'subirAgora') { // botão "Subir 10% agora": todas as marcadas (1 vez por dia — o robô não repete hoje)
+        const hoje = new Date(Date.now() - 3 * 36e5).toISOString().slice(0, 10), FLAG = 'aumento_feito_' + hoje;
+        const ja = await L.get(FLAG, { type: 'json' }).catch(() => null);
+        if (ja) return json({ erro: 'Hoje já subiu (às ' + new Date(ja.em - 3 * 36e5).toISOString().slice(11, 16) + '). O próximo aumento é amanhã, depois da meia-noite.' }, 409);
+        const cfg = (await L.get('aumento_cfg', { type: 'json' }).catch(() => null)) || {};
+        if (!(cfg.ids || []).length) return json({ erro: 'Marque pelo menos uma campanha.' }, 400);
+        const meta = await metaAds(7, null, null, true);
+        if (!meta.configurado || meta.erro) return json({ erro: meta.erro || 'Meta Ads não está ligado.' }, 400);
+        await L.setJSON(FLAG, { em: Date.now(), quem: 'você' });
+        const feitas = await aplicarAumento(meta.campanhas, cfg.ids.map(String), Number(cfg.teto) > 0 ? Number(cfg.teto) : null, Number(cfg.pct) > 0 ? Number(cfg.pct) : 10, 'você (+10% agora)');
+        for (const f of feitas) await logRobo(Object.assign({}, f, { motivo: f.motivo.replace('aumento diário', 'você subiu agora') })).catch(() => {});
+        return json({ ok: true, subiu: feitas.filter((f) => f.tipo === 'subiu').length, erros: feitas.filter((f) => f.tipo === 'erro').map((f) => f.camp + ': ' + f.motivo), feitas });
+      }
       const ids = (Array.isArray(b.ids) ? b.ids : []).map(String).filter((x) => /^\d{5,30}$/.test(x)).slice(0, 100);
       const teto = Number(b.teto) > 0 ? Math.round(Number(b.teto) * 100) / 100 : null;
       await L.setJSON('aumento_cfg', { ids, teto, pct: 10, em: Date.now() });
