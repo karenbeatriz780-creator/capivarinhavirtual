@@ -818,6 +818,8 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .xp-op.on .xp-add{background:#1F9D55}
 .xp-tag{position:absolute;top:-9px;right:12px;font-size:.62rem;font-weight:800;letter-spacing:.06em;background:#FFE45C;color:#3a0a2a;padding:3px 8px;border-radius:999px}
 .gf-l{display:block;font-weight:700;font-size:.85rem;margin:12px 0 4px;color:#3b1d2c}.gf-l input,.gf-l textarea{display:block;width:100%;margin-top:4px;padding:11px;border:1.5px solid #e5d6dd;border-radius:12px;font-size:1rem;font-family:inherit;box-sizing:border-box}.gf-op{display:flex;gap:8px}.gf-op button{flex:1;padding:10px;border:1.5px solid #e5d6dd;border-radius:12px;background:#fff;font-weight:700;font-size:.85rem;cursor:pointer}.gf-op button.on{border-color:#E91E63;background:#fff0f6;color:#a0144a}
+.xp-planos .xp-pl.xp-esp{border:2.5px solid transparent;background:linear-gradient(135deg,#fff7e0,#ffe9f2) padding-box,linear-gradient(90deg,#E91E63,#F5C542,#E91E63) border-box;padding-top:1.05rem}.xp-planos .xp-pl.xp-esp.on{box-shadow:0 10px 28px rgba(233,30,99,.28)}.xp-pl.xp-esp .xp-tag{background:linear-gradient(90deg,#E91E63,#ff5c8a);color:#fff;left:12px;right:auto}.xp-pl.xp-esp .xp-pl-pr b{font-size:1.25rem;color:#C2185B}
+.xp-pl.xp-so .xp-pl-pr b{font-size:1.15rem;color:#1F9D55}
 .hx-natal{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:999px;background:linear-gradient(90deg,#b71c1c,#1b5e20);color:#fff;font-weight:800;font-size:.8rem;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .xp-planos{display:flex;flex-direction:column;gap:.6rem;margin:.6rem 0}.xp-pl{position:relative;display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;background:#fff;border:2px solid #F1D5E2;border-radius:16px;padding:.85rem .8rem;cursor:pointer;font-family:inherit;color:#2A0F1E}.xp-pl.on{border-color:var(--rose);background:#fff5f9;box-shadow:0 8px 22px rgba(227,43,109,.16)}.xp-rd{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid #d9b8c7;box-sizing:border-box}.xp-pl.on .xp-rd{border:7px solid var(--rose)}.xp-pl-tx{flex:1;min-width:0}.xp-pl-tx b{display:block;font-size:.98rem}.xp-pl-tx small{display:block;color:#7d6070;font-size:.78rem;margin-top:2px}.xp-pl-pr{text-align:right;white-space:nowrap}.xp-pl-pr s{display:block;color:#a8909b;font-size:.75rem}.xp-pl-pr b{font-size:1.15rem;color:#2A0F1E}.xp-pl .xp-tag{position:absolute;top:-10px;right:12px}.xp-pl-ex{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem}.xp-pl-ex .xp-ex{padding:.3rem .65rem;font-size:.75rem}
 .mc-cont{margin-top:.7rem;font-size:.85rem;color:#f3d9e5;text-align:center}.mc-cont b{color:#fff}.mc-letra{margin-top:1rem;text-align:left;background:rgba(255,255,255,.75);border:1px solid #f1d5e2;border-radius:16px;padding:.9rem 1rem;max-height:260px;overflow:auto}.mc-letra-t{font-weight:800;font-size:.85rem;margin-bottom:.4rem;color:#7a1040}.mc-lw{animation:mcLin .6s ease both}@keyframes mcLin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.mc-l{font-size:.92rem;line-height:1.45;color:#3b1d2c}.mc-l-sec{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#b08a9a;margin-top:.5rem}.mc-l-vazio{height:.4rem}.mc-nm{color:#b8860b;background:linear-gradient(90deg,#d4a017,#f5c542);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:900}
@@ -3687,7 +3689,10 @@ function precoTotal(W){
   if(W.bonusDe || W.dobroDe) return 0;
   return Math.round((precoTotalBase(W)+precoExtras(W))*100)/100;
 }
+var PRECO_ESPECIAL = 34.99; /* 💝 Combo Especial: 4 músicas + retrospectiva + clipe + retrato com QR — tem que bater com criar-pagamento.mjs */
+function ehEspecial(w){ return !!(w && w.especial && w.comboDaMusica && w.produto==='completo' && !w.pacote6); }
 function precoTotalBase(W){
+  if(ehEspecial(W)) return PRECO_ESPECIAL;
   if(W.clienteDe && W.produto==='musica' && !W.comboDaMusica && !W.pacote6) return PRECO_CLIENTE;
   if(W.pacote6 && W.ofertaM1 && W.ofertaM2) return PRECO_PACOTE6;
   if(W.comboDaMusica && COMBO_DA_MUSICA[W.produto]!=null){
@@ -3701,10 +3706,10 @@ var EXTRAS_PIX = {
   quadro: {preco:4.90, de:9.90, nome:'Quadro com QR Code pra imprimir'}
 };
 function extrasElegivel(w){ return !!(w && w.produto==='musica' && !w.bonusDe && !w.dobroDe && !w.comboDaMusica); }
-function extrasValidos(w){ return extrasElegivel(w) ? (w.extrasPix||[]).filter(function(k,i,a){ return EXTRAS_PIX[k] && a.indexOf(k)===i; }) : []; }
+function extrasValidos(w){ if(ehEspecial(w)) return ['clipe','quadro']; return extrasElegivel(w) ? (w.extrasPix||[]).filter(function(k,i,a){ return EXTRAS_PIX[k] && a.indexOf(k)===i; }) : []; }
 var PRECO_COMBO_EXTRAS = 7.90; /* clipe + quadro juntos — tem que bater com criar-pagamento.mjs e recuperar-pix.mjs */
 function somaExtras(l){ return l.length>=2 ? PRECO_COMBO_EXTRAS : l.reduce(function(t,k){ return t+EXTRAS_PIX[k].preco; },0); }
-function precoExtras(w){ return somaExtras(extrasValidos(w)); }
+function precoExtras(w){ return ehEspecial(w) ? 0 : somaExtras(extrasValidos(w)); }
 var PRECO_PACOTE6 = 19.99; /* 6 músicas (3 letras × 2 versões) — tem que bater com criar-pagamento.mjs */
 function numMusicaAtual(){ return W.ofertaM2 ? 3 : (W.ofertaM1 ? 2 : 1); }
 var ZAP_API='5511924826268';
@@ -6416,6 +6421,7 @@ function htmlPasso(k){
       '<div class="sum-r"><span>Música 1 ('+esc(W.ofertaM1.estilo||'')+')</span><span>2 versões</span></div>'+
       '<div class="sum-r"><span>Música 2 ('+esc(W.musicaEstilo||'')+')</span><span>2 versões</span></div>';
     if(W.comboDaMusica && W.produto!=='musica' && !W.ofertaM1 && !W.pacote6) linhas+='<div class="sum-r"><span>🎁 Mais 2 músicas (outra letra e estilo)</span><span>liberadas após o Pix</span></div>';
+    if(ehEspecial(W)) linhas+='<div class="sum-r"><span>📸 Clipe com as fotos + 🖼️ retrato com QR Code</span><span>incluídos</span></div>';
     linhas+='<div class="sum-r tot"><span>Total</span><span>R$ '+fmtPreco(precoTotal(W))+'</span></div>';
     if(quatroAtivo(W)) linhas+='<div class="of-claro">Você leva <b>4 músicas</b>: estas 2 + mais 2 que você cria logo depois de pagar. Fica tudo salvo no seu WhatsApp, em <b>Meus presentes</b>.</div>';
     if(W.ofertaM1) linhas+='<div class="of-claro">Você vai receber <b>'+(W.pacote6&&W.ofertaM2?6:4)+' músicas completas</b> pra ouvir, baixar e enviar.</div>';
@@ -7232,6 +7238,7 @@ function ofertaLivroDaMusica(){
   else location.hash='#/livro';
 }
 function escolherComboPrevia(prod){
+  if(W) W.especial=false;
   if(prod==='livro'){ ofertaLivroDaMusica(); return; }
   if(prod==='musica'){
     if(!W.comboDaMusica) return;
@@ -7379,6 +7386,9 @@ function abrirExtrasPix(seguir, base){
   var esc1={}; extrasValidos(W).forEach(function(k){ esc1[k]=true; });
   /* 17/11: 3 opções com o COMBO já marcado (a pessoa troca com 1 toque; o valor aparece grande) */
   if(!(W.extrasPix&&W.extrasPix.length) && !W._xpEscolheu){ esc1={clipe:true, quadro:true}; }
+  /* 20/11: 💝 COMBO ESPECIAL (R$ 34,99) — primeira opção e já marcada (só no checkout normal das 4 músicas) */
+  var temEsp = base==null && quatroAtivo(W);
+  if(temEsp && !W._xpEscolheu) esc1={esp:true, clipe:true, quadro:true};
   var EX=['1','2','3','4'].map(function(n){ return '/clipe-ex/'+n+'.webp'; });
   var ops=[
     {k:'clipe', tag:'MAIS ESCOLHIDO', th:'<div class="xp-th mosaico">'+EX.map(function(u){ return '<img src="'+u+'" alt="">'; }).join('')+'<span class="pl"><i></i></span></div>',
@@ -7387,8 +7397,8 @@ function abrirExtrasPix(seguir, base){
       t:'🖼️ Quadro com QR Code', d:'Arte linda com a foto de vocês pra imprimir e dar de presente. Aponta a câmera e a música toca.'}
   ];
   var box=document.createElement('div'); box.className='xp-fundo'; box.id='xpFundo';
-  function total(){ var t=(base!=null?Number(base):precoTotalBase(W)); t+=somaExtras(Object.keys(esc1).filter(function(k){ return esc1[k]; })); return Math.round(t*100)/100; }
-  function plano(){ return esc1.clipe&&esc1.quadro?'combo':esc1.clipe?'clipe':esc1.quadro?'quadro':'nada'; }
+  function total(){ if(esc1.esp) return PRECO_ESPECIAL; var t=(base!=null?Number(base):precoTotalBase(W)); t+=somaExtras(Object.keys(esc1).filter(function(k){ return esc1[k]; })); return Math.round(t*100)/100; }
+  function plano(){ return esc1.esp?'especial':esc1.clipe&&esc1.quadro?'combo':esc1.clipe?'clipe':esc1.quadro?'quadro':'nada'; }
   function desenhar(){
     var b0=(base!=null?Number(base):precoTotalBase(W)), nM=quatroAtivo(W)?'4 músicas':'Suas músicas', pl=plano();
     var P=[
@@ -7396,12 +7406,14 @@ function abrirExtrasPix(seguir, base){
       {id:'clipe', tag:'', t:'📸 Músicas + clipe', d:nM+' + clipe com as fotos de vocês', v:b0+EXTRAS_PIX.clipe.preco, de:b0+EXTRAS_PIX.clipe.de},
       {id:'nada', tag:'', t:'🎵 Só as músicas', d:nM, v:b0, de:null}
     ];
-    if(pl==='quadro') P.splice(2,0,{id:'quadro', tag:'', t:'🖼️ Músicas + quadro', d:nM+' + quadro com QR Code', v:b0+EXTRAS_PIX.quadro.preco, de:b0+EXTRAS_PIX.quadro.de});
+    if(temEsp) P.unshift({id:'especial', tag:'💝 COMBO ESPECIAL', t:'💝 Combo Especial', d:'4 músicas + Retrospectiva completa (fotos, linha do tempo, contador, jogos e carta) + clipe com as fotos + retrato com QR Code', v:PRECO_ESPECIAL, de:b0+COMBO_DA_MUSICA.completo+EXTRAS_PIX.clipe.de+EXTRAS_PIX.quadro.de});
+    if(temEsp){ P[1].tag=''; P[1].t='🎁 Músicas + clipe + retrato'; P[1].d=nM+' + clipe com as fotos + retrato com QR Code'; P[P.length-1].t='🎵 Só as 4 músicas'; P[P.length-1].d='As 2 que você ouviu + mais 2 com outra letra e outro estilo'; }
+    if(pl==='quadro') P.splice(P.length-1,0,{id:'quadro', tag:'', t:'🖼️ Músicas + quadro', d:nM+' + quadro com QR Code', v:b0+EXTRAS_PIX.quadro.preco, de:b0+EXTRAS_PIX.quadro.de});
     box.innerHTML='<div class="xp" role="dialog" aria-label="Escolha o seu pedido">'+
       '<div class="xp-top"><button type="button" class="xp-vt" id="xpVt" aria-label="Voltar">‹</button><b>Escolha o seu pedido</b></div>'+
       '<div class="xp-planos">'+P.map(function(o){ var on=o.id===pl;
-        var exs=o.id==='combo'?[['clipe','▶ Ver o clipe'],['quadro','▶ Ver o quadro']]:o.id==='clipe'?[['clipe','▶ Ver exemplo']]:o.id==='quadro'?[['quadro','▶ Ver exemplo']]:[];
-        return '<div role="button" tabindex="0" class="xp-pl'+(on?' on':'')+'" data-xppl="'+o.id+'">'+(o.tag?'<span class="xp-tag">'+o.tag+'</span>':'')+
+        var exs=o.id==='especial'?[['retro','▶ Ver exemplo']]:o.id==='combo'?[['clipe','▶ Ver o clipe'],['quadro','▶ Ver o quadro']]:o.id==='clipe'?[['clipe','▶ Ver exemplo']]:o.id==='quadro'?[['quadro','▶ Ver exemplo']]:[];
+        return '<div role="button" tabindex="0" class="xp-pl'+(on?' on':'')+(o.id==='especial'?' xp-esp':'')+(o.id==='nada'?' xp-so':'')+'" data-xppl="'+o.id+'">'+(o.tag?'<span class="xp-tag">'+o.tag+'</span>':'')+
           '<i class="xp-rd"></i><span class="xp-pl-tx"><b>'+o.t+'</b><small>'+o.d+'</small>'+
           (exs.length?'<span class="xp-pl-ex">'+exs.map(function(e){ return '<button type="button" class="xp-ex" data-xpex="'+e[0]+'">'+e[1]+'</button>'; }).join('')+'</span>':'')+'</span>'+
           '<span class="xp-pl-pr">'+(o.de?'<s>R$ '+fmtPreco(o.de)+'</s>':'')+'<b>R$ '+fmtPreco(Math.round(o.v*100)/100)+'</b></span></div>'; }).join('')+'</div>'+
@@ -7410,14 +7422,22 @@ function abrirExtrasPix(seguir, base){
     '</div>';
     el('xpVt').onclick=function(){ gaEvento('extras_voltou',{}); fechar(); };
     box.querySelectorAll('[data-xppl]').forEach(function(b){ b.onclick=function(){ var k=b.dataset.xppl; W._xpEscolheu=true;
-      esc1={clipe:k==='combo'||k==='clipe', quadro:k==='combo'||k==='quadro'}; gaEvento('extras_plano',{plano:k}); desenhar(); }; });
+      esc1={esp:k==='especial', clipe:k==='especial'||k==='combo'||k==='clipe', quadro:k==='especial'||k==='combo'||k==='quadro'}; gaEvento('extras_plano',{plano:k}); desenhar(); }; });
     el('xpGo').onclick=function(){
+      if(esc1.esp){
+        /* Combo Especial: vira 4 músicas + retrospectiva (com clipe e retrato inclusos) e completa os passos da retrospectiva antes do Pix */
+        gaEvento('extras_especial',{valor:PRECO_ESPECIAL}); _xpFotos=[]; fechar();
+        W.extrasPix=['clipe','quadro'];
+        try{ escolherComboPrevia('completo'); } finally { W.especial=true; }
+        if(_comboEntrada<0){ try{ redesenharSemPular(); }catch(e){} }
+        return;
+      }
       W.extrasPix=Object.keys(esc1).filter(function(k){ return esc1[k]; });
       if(!W.extrasPix.length){ gaEvento('extras_recusou',{}); _xpFotos=[]; fechar(); seguir(); return; }
       gaEvento('extras_aceitou',{itens:W.extrasPix.join(','), valor:precoExtras(W)});
       desenharFotos();
     };
-    box.querySelectorAll('[data-xpex]').forEach(function(b){ b.onclick=function(ev){ ev.stopPropagation(); verExemploExtra(b.dataset.xpex); }; });
+    box.querySelectorAll('[data-xpex]').forEach(function(b){ b.onclick=function(ev){ ev.stopPropagation(); if(b.dataset.xpex==='retro'){ gaEvento('extras_exemplo',{item:'retro'}); abrirExemploRetro(); } else verExemploExtra(b.dataset.xpex); }; });
   }
   /* etapa 2: fotos agora (opcional) */
   function maxFotos(){ return esc1.clipe ? 8 : 1; }
@@ -7649,11 +7669,12 @@ function finalizarDeVerdade(){
    (#/pagar/<id>) em vez de voltar pro começo. */
 function infoPixPedido(){
   var inf=infoPixPedidoBase(), ex=extrasValidos(W);
-  if(ex.length){ inf=Object.assign({},inf,{itens:inf.itens.concat(ex.map(function(k){ return '+ '+EXTRAS_PIX[k].nome; }))}); }
+  if(ex.length && !ehEspecial(W)){ inf=Object.assign({},inf,{itens:inf.itens.concat(ex.map(function(k){ return '+ '+EXTRAS_PIX[k].nome; }))}); }
   return inf;
 }
 function infoPixPedidoBase(){
   if(W && W.produto==='musica' && (W.quatro || quatroAtivo(W))) return {titulo:'4 Músicas Personalizadas', itens:['2 músicas prontas pra ouvir agora','+ 2 músicas com outra letra e outro estilo','MP3 pra baixar e mandar no WhatsApp']};
+  if(ehEspecial(W)) return {titulo:'💝 Combo Especial', itens:['Suas 4 músicas personalizadas','Retrospectiva completa pra sempre no ar','Clipe com as fotos + retrato com QR Code','Liberado assim que o Pix cair']};
   if(W && W.comboDaMusica && W.produto!=='musica' && PACOTES[W.produto]) return {titulo:'4 Músicas + '+PACOTES[W.produto].nome, itens:['Suas 4 músicas personalizadas',PACOTES[W.produto].nome+' pra sempre no ar','Liberado assim que o Pix cair']};
   if(W && W.pacote6) return {titulo:'6 Músicas Personalizadas', itens:['3 letras diferentes, 2 versões de cada','MP3 pra baixar e mandar no WhatsApp']};
   if(W && W.ofertaM1) return {titulo:'4 Músicas Personalizadas', itens:['2 letras diferentes, 2 versões de cada','MP3 pra baixar e mandar no WhatsApp']};
@@ -8010,6 +8031,9 @@ function telaSucesso(id){
       '</div>'+
       '<a class="btn btn-primary btn-block btn-lg" href="#/p/'+id+'" style="margin-top:1.6rem">Abrir o presente'+IC.arrow+'</a>'+
       '<a class="btn btn-ghost btn-block" href="#/meus" style="margin-top:.7rem">Ver meus presentes</a>'+
+      ((g.extrasPix||[]).indexOf('clipe')>=0 ? '<div class="mx-libera mx-extras" style="margin-top:1.2rem;text-align:center"><span class="mx-lb-tag">🎁 INCLUSO NO SEU COMBO</span><b>Seu clipe com fotos + retrato com QR Code</b>'+
+        '<span>Escolha as fotos e pronto: o clipe e o retrato ficam prontos na hora.</span>'+
+        '<a class="mx-btn mx-btn-ouro" href="#/montar/'+encodeURIComponent(id)+'">📸 Montar meu clipe e retrato</a></div>' : '')+
 
       (temMusicaCombo(g) ? htmlMusicasCombo(g) : '')+
       htmlKitImpressao()+

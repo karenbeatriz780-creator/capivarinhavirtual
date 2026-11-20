@@ -143,15 +143,18 @@ export default async (req) => {
     const temAddonMusica = !!presente.musicaOn && PRODUTOS_COM_ADDON_MUSICA.indexOf(presente.produto) !== -1;
     const comboDaMusica = !!presente.comboDaMusica && COMBO_DA_MUSICA[presente.produto] != null;
     const precoBase = (duracao === 'h48' && pacote.preco48 != null) ? pacote.preco48 : pacote.preco;
-    const precoProduto = pacote6 ? PRECO_PACOTE6 : comboDaMusica
+    // 💝 COMBO ESPECIAL (20/11): 4 músicas + retrospectiva + clipe + retrato com QR por R$ 34,99 (clipe e retrato inclusos)
+    const especial = comboDaMusica && presente.produto === 'completo' && !!presente.especial && !pacote6;
+    if (!especial) delete presente.especial;
+    const precoProduto = pacote6 ? PRECO_PACOTE6 : especial ? 34.99 : comboDaMusica
       ? (PACOTES.musica.preco + COMBO_DA_MUSICA[presente.produto])
       : (precoBase + (temAddonMusica ? PRECO_ADDON_MUSICA : 0));
     // extras escolhidos na hora do Pix (só pedido de música pago normal)
     const extrasOk = presente.produto === 'musica' && !comboDaMusica && !presente.bonusDe && !presente.dobroDe;
-    const extrasPix = extrasOk && Array.isArray(presente.extrasPix)
+    const extrasPix = especial ? ['clipe', 'quadro'] : extrasOk && Array.isArray(presente.extrasPix)
       ? presente.extrasPix.filter((k, i, a) => EXTRAS_PIX[k] && a.indexOf(k) === i) : [];
     presente.extrasPix = extrasPix;
-    const valorExtras = (extrasPix.length >= 2 ? 7.90 : extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0)) /* 17/11: clipe + quadro juntos R$ 7,90 */;
+    const valorExtras = especial ? 0 : (extrasPix.length >= 2 ? 7.90 : extrasPix.reduce((t, k) => t + EXTRAS_PIX[k].preco, 0)) /* 17/11: clipe + quadro juntos R$ 7,90 */;
     // 🎁 PROMO CLIENTE (17/11): quem já comprou (link de um pedido PAGO) faz nova música (2 versões) por R$ 4,99
     let clienteOk = false;
     if (presente.produto === 'musica' && presente.clienteDe && !comboDaMusica && !pacote6 && !presente.bonusDe && !presente.dobroDe) {
