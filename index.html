@@ -13241,6 +13241,14 @@ function iniciarPixExtra(g, tipo, item){
     if(res.ok && res.d && res.d.checkoutUrl){ irParaInfinitePay(res.d.checkoutUrl, res.d.id || extraId(g.id, tipo, item.id), null); return; }
     if(!res.ok || !res.d || !res.d.payload){ toast((res.d && res.d.erro) || 'Não consegui gerar o Pix agora.'); return; }
     salvarPresente(Object.assign({}, pedido, {pago:false, criadoEm:Date.now()}));
+    if(tipo==='cq'){ /* mesmo checkout da compra da música (Pix Nubank, cartão, Apple Pay e "Já paguei" no mesmo lugar) */
+      var pid=pedido.id;
+      el('app').innerHTML='<div class="wz-top"><a class="wz-back" href="#/p/'+encodeURIComponent(g.id)+'/c">'+IC.back+'</a><div class="wz-track"><div class="wz-fill" style="width:100%"></div></div><span class="wz-count">Pagamento</span></div>'+
+        '<div class="wz-wrap">'+htmlPixLimpo(res.d.payload, res.d.valor||PRECO_CQ, res.d.teste, {titulo:'Clipe + Retrato com QR Code', itens:['Depois de pagar você manda as fotos','Clipe pra baixar e postar + retrato pra imprimir']})+'</div>';
+      window.scrollTo(0,0);
+      ligarPixLimpo(res.d.payload, pid, function(){ toast('Pagamento confirmado! Agora é só mandar as fotos 📸'); location.hash='#/montar/'+encodeURIComponent(g.id); });
+      return;
+    }
     telaPixExtra(g, tipo, item, res.d.payload, res.d.teste);
   })
   .catch(function(){ toast('Sem conexão com o servidor de pagamento.'); });
