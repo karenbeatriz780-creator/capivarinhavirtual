@@ -142,7 +142,7 @@ export async function rodarRobo(simular) {
   if (!simular && !(await L().get(FLAG_AU, { type: 'json' }).catch(() => null))) {
     const au = (await L().get('aumento_cfg', { type: 'json' }).catch(() => null)) || {};
     const ids = (au.ids || []).map(String), teto = Number(au.teto) > 0 ? Number(au.teto) : null, pct = Number(au.pct) > 0 ? Number(au.pct) : 10;
-    if (ids.length) {
+    if (ids.length && au.auto === true) { // 20/11: agora você sobe campanha por campanha no painel (botão); o automático fica desligado
       await L().setJSON(FLAG_AU, { em: agora }).catch(() => {});
       feitas.push(...(await aplicarAumento(meta.campanhas, ids, teto, pct, 'robô (+' + pct + '%/dia)')));
     }

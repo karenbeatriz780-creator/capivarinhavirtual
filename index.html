@@ -9797,41 +9797,50 @@ function pnlAuCarregar(){
     .then(function(d){ _pnlAuCarr=false; _pnlAu=d||{}; if(_pnlAba==='aumento') pnlRedesenhar(); })
     .catch(function(){ _pnlAuCarr=false; _pnlAu={erro:'Sem conexão.'}; if(_pnlAba==='aumento') pnlRedesenhar(); });
 }
+function auProj(c, D, piora){
+  if(!c.orc || !c.cpa) return null;
+  var imp=D.imposto||0, ia=D.iaPorVenda||0, cpa=c.cpa*(piora||1), teto=Number(D.teto)||0, N=D.diasRestantes||1;
+  var o=c.subiuHoje?c.orc:Math.round(c.orc*110)/100; if(teto && o>teto) o=Math.max(c.orc,teto);
+  var tot=0, fim=null;
+  for(var k=0;k<N;k++){ var vend=o/cpa, luc=vend*c.ticket-o*(1+imp)-vend*ia; tot+=luc; fim={orc:o, vendas:vend, lucro:luc}; o=Math.round(o*110)/100; if(teto && o>teto) o=teto; }
+  return {total:tot, fim:fim, porVenda:c.ticket-cpa*(1+imp)-ia};
+}
 function pnlAuHtml(){
-  var topo='<div class="dsh-card"><div class="dsh-t">📈 Aumento diário de orçamento</div><div class="dsh-nota">Marque as campanhas que devem <b>subir +10% no orçamento todo dia</b>. O robô aumenta 1 vez por dia, logo depois da meia-noite, e <b>só nas que estiverem ligadas</b>. Cada aumento aparece no histórico do robô.</div></div>';
+  var topo='<div class="dsh-card"><div class="dsh-t">📈 Subir orçamento (+10% por dia)</div><div class="dsh-nota">Toque em <b>Subir 10%</b> em cada campanha que você quer escalar. Depois de subir, ela <b>fica bloqueada até amanhã</b>. Embaixo de cada uma aparece a projeção até o fim do mês, se você subir 10% todo dia.</div></div>';
   var D=_pnlAu;
   if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>';
   if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
-  var ids=D.ids||[], cs=D.campanhas||[], teto=Number(D.teto)||0;
-  function proj(v,n){ var x=v; for(var i=0;i<n;i++){ x=Math.round(x*110)/100; if(teto && x>teto){ x=teto; break; } } return x; }
-  var marc=cs.filter(function(c){ return ids.indexOf(c.id)>=0 && c.orc; }), soma=function(n){ return marc.reduce(function(t,c){ return t+proj(c.orc,n); },0); };
-  var tabela=marc.length?'<div class="dsh-card"><div class="dsh-t">🔮 Projeção (somando as '+marc.length+' marcadas)</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;text-align:center;margin-top:.5rem">'+[[0,'Hoje'],[7,'7 dias'],[15,'15 dias'],[30,'1 mês']].map(function(a){ var v=soma(a[0]);
-      return '<div style="background:#fff5f9;border-radius:12px;padding:.5rem .3rem"><small style="color:#888">'+a[1]+'</small><br><b>R$ '+fmtPreco(Math.round(v*100)/100)+'</b><br><small style="color:#888">por dia</small></div>'; }).join('')+'</div>'+
-    '<div class="dsh-nota" style="margin-top:.5rem">Gasto total no mês, se todas ficarem ligadas: <b>R$ '+fmtPreco(Math.round((function(){ var t=0; for(var d=0;d<30;d++) t+=soma(d); return t; })()*100)/100)+'</b>'+(teto?' (com teto de R$ '+fmtPreco(teto)+' por campanha)':' (sem teto)')+'. É projeção: o robô ainda desliga as que gastarem sem vender.</div></div>':'';
-  return topo+tabela+'<div class="dsh-card"><div class="mn-bar"><b>'+ids.length+' marcada(s)</b>'+(D.feitoHoje?'<small style="margin-left:auto;color:#1F8A4C">✓ aumento de hoje já feito</small>':'')+'</div>'+
-    (ids.length?'<button type="button" class="pnl-btn" id="auAgora" style="width:100%;background:#1F8A4C;color:#fff;margin:.5rem 0"'+(D.feitoHoje?' disabled':'')+'>'+(D.feitoHoje?'✓ Já subiu hoje — próximo aumento amanhã':'📈 Subir 10% agora nas '+ids.length+' marcada(s)')+'</button>':'')+
-    '<label style="display:block;font-size:.85rem;margin:.4rem 0 .6rem">Teto por campanha (opcional): R$ <input type="number" id="auTeto" min="1" step="1" style="width:90px" value="'+(D.teto||'')+'" placeholder="sem teto"> <small style="color:#888">— quando chegar nele, para de subir</small></label>'+
-    '<input type="search" id="auBusca" class="mn-busca" placeholder="Buscar pelo nome…">'+
-    '<div class="mn-lista">'+cs.map(function(c){ var on=ids.indexOf(c.id)>=0, at=c.status==='ACTIVE';
-      return '<label class="mn-it" data-aunome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-au="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+'<br><small style="color:#888">'+(c.orc?'hoje R$ '+fmtPreco(c.orc)+'/dia · em 7 dias R$ '+fmtPreco(proj(c.orc,7))+' · em 1 mês R$ '+fmtPreco(proj(c.orc,30)):'orçamento não encontrado')+'</small></span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
-    '<div class="sub" id="auSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
-}
-function pnlAuSalvar(){
-  var sv=el('auSalvo'); if(sv) sv.textContent='Salvando…';
-  fetch('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({ids:_pnlAu.ids||[],teto:(el('auTeto')||{}).value||null})}).then(function(r){ return r.json(); })
-    .then(function(d){ if(d&&d.ok){ _pnlAu.ids=d.ids; _pnlAu.teto=d.teto; var y=window.scrollY; pnlRedesenhar(); window.scrollTo(0,y); toast('Salvo ✓'); } else { var sv2=el('auSalvo'); if(sv2) sv2.textContent='⚠️ Não salvou: '+((d&&d.erro)||''); } })
-    .catch(function(){ var sv=el('auSalvo'); if(sv) sv.textContent='⚠️ Sem conexão — não salvou'; });
+  var cs=D.campanhas||[], R=function(v){ return 'R$ '+fmtPreco(Math.round(v*100)/100); };
+  var subiu=cs.filter(function(c){ return c.subiuHoje; }).length, faltam=cs.length-subiu;
+  var comP=cs.map(function(c){ return {c:c,p:auProj(c,D,1),q:auProj(c,D,1.3)}; }).filter(function(x){ return x.p; });
+  var tot=comP.reduce(function(t,x){ return t+x.p.total; },0), totQ=comP.reduce(function(t,x){ return t+x.q.total; },0), fimDia=comP.reduce(function(t,x){ return t+x.p.fim.lucro; },0), fimOrc=comP.reduce(function(t,x){ return t+x.p.fim.orc; },0);
+  var resumo='<div class="dsh-card"><div style="display:flex;gap:.5rem;text-align:center">'+
+      '<div style="flex:1;background:#eefaf3;border-radius:12px;padding:.5rem"><b style="font-size:1.3rem;color:#1F8A4C">'+subiu+'</b><br><small>subiram hoje</small></div>'+
+      '<div style="flex:1;background:#fff5f9;border-radius:12px;padding:.5rem"><b style="font-size:1.3rem;color:#E91E63">'+faltam+'</b><br><small>faltam subir</small></div></div>'+
+    (comP.length?'<div class="dsh-t" style="margin-top:.8rem">🔮 Se subir 10% todo dia até o fim do mês ('+D.diasRestantes+' dias)</div>'+
+      '<div class="dsh-nota">Orçamento somado no último dia: <b>'+R(fimOrc)+'/dia</b><br>Lucro por dia no último dia: <b>'+R(fimDia)+'</b><br>'+
+      '<span style="font-size:1.05rem">Lucro estimado até o fim do mês: <b style="color:'+(tot>=0?'#1F8A4C':'#c62828')+'">'+R(tot)+'</b></span><br>'+
+      '<small>Se o custo por venda subir 30% ao escalar (comum): '+R(totQ)+'. Conta: faturamento − anúncio (com imposto de '+Math.round((D.imposto||0)*1000)/10+'%) − IA ('+R(D.iaPorVenda||0)+' por venda). Usa o custo por venda dos últimos 5 dias.</small></div>':'')+
+    '<label style="display:block;font-size:.82rem;margin-top:.6rem">Teto por campanha (opcional): R$ <input type="number" id="auTeto" min="1" step="1" style="width:90px" value="'+(D.teto||'')+'" placeholder="sem teto"></label></div>';
+  var linhas=cs.map(function(c){ var p=auProj(c,D,1);
+    return '<div class="dsh-card" style="padding:.75rem .85rem"><div style="display:flex;gap:.5rem;align-items:center"><b style="flex:1;font-size:.9rem">'+esc(c.nome)+'</b>'+
+        (c.subiuHoje?'<span style="font-size:.75rem;font-weight:800;color:#1F8A4C;white-space:nowrap">✓ subiu hoje</span>':'<button type="button" class="pnl-btn" data-ausobe="'+esc(c.id)+'" style="background:#1F8A4C;color:#fff;white-space:nowrap"'+(c.orc?'':' disabled')+'>📈 Subir 10%</button>')+'</div>'+
+      '<div style="font-size:.8rem;color:#6d5562;margin-top:.35rem">Hoje: <b>'+(c.orc?R(c.orc)+'/dia':'orçamento não encontrado')+'</b>'+(c.orc&&!c.subiuHoje?' → '+R(c.orc*1.1):'')+' · últimos 5 dias: <b>'+c.vendas5+' vendas</b> ('+(Math.round(c.vendas5/5*10)/10).toString().replace('.',',')+'/dia)'+(c.cpa?' a <b>'+R(c.cpa)+'</b> cada':'')+' · ticket '+R(c.ticket)+'</div>'+
+      (p?'<div style="font-size:.8rem;margin-top:.35rem;padding:.45rem .55rem;border-radius:10px;background:'+(p.porVenda>=0?'#f3fbf4':'#fff1f1')+'">'+
+          (p.porVenda>=0?'💰 Lucro por venda: <b>'+R(p.porVenda)+'</b>':'⚠️ <b>Prejuízo de '+R(-p.porVenda)+' por venda</b> — subir aumenta o prejuízo')+
+          '<br>🔮 Dia '+String(D.hoje||'').slice(5).split('-').reverse().join('/').replace(/^\d+/,function(){ return String(Number((D.hoje||'').slice(8))+D.diasRestantes-1); })+': orçamento <b>'+R(p.fim.orc)+'/dia</b>, ~<b>'+Math.round(p.fim.vendas)+' vendas/dia</b>, lucro ~<b>'+R(p.fim.lucro)+'/dia</b><br>'+
+          'Lucro até o fim do mês: <b>'+R(p.total)+'</b></div>':'<div style="font-size:.78rem;color:#999;margin-top:.3rem">Sem vendas nos últimos 5 dias — sem projeção.</div>')+
+    '</div>'; }).join('');
+  return topo+resumo+(cs.length?linhas:'<div class="dsh-card"><div class="pnl-nota">Nenhuma campanha ligada agora.</div></div>');
 }
 function pnlAuLigar(){
   if(!_pnlAu||!_pnlAu.campanhas) return;
-  document.querySelectorAll('[data-au]').forEach(function(x){ x.onchange=function(){ var ids=_pnlAu.ids=_pnlAu.ids||[], id=x.dataset.au, i=ids.indexOf(id); if(x.checked){ if(i<0) ids.push(id); } else if(i>=0) ids.splice(i,1); pnlAuSalvar(); }; });
-  var t=el('auTeto'); if(t) t.onchange=pnlAuSalvar;
-  var ag=el('auAgora'); if(ag) ag.onclick=function(){ ag.disabled=true; ag.textContent='Subindo…';
-    fetch('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'subirAgora'})}).then(function(r){ return r.json(); })
-      .then(function(d){ if(d&&d.ok){ toast('📈 Subiu '+d.subiu+' campanha(s)'+(d.erros&&d.erros.length?' · '+d.erros.length+' com erro':'')); } else toast((d&&d.erro)||'Não deu certo'); _pnlAu=null; pnlRedesenhar(); pnlAuCarregar(); })
-      .catch(function(){ toast('Sem conexão.'); ag.disabled=false; }); };
-  var b=el('auBusca'); if(b) b.oninput=function(){ var q=b.value.trim().toLowerCase(); document.querySelectorAll('[data-aunome]').forEach(function(l){ l.style.display=!q||l.dataset.aunome.indexOf(q)>=0?'':'none'; }); };
+  var t=el('auTeto'); if(t) t.onchange=function(){ fetch('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({teto:t.value||null})}).then(function(r){ return r.json(); }).then(function(d){ if(d&&d.ok){ _pnlAu.teto=d.teto; toast('Teto salvo ✓'); var y=window.scrollY; pnlRedesenhar(); window.scrollTo(0,y); } }).catch(function(){ toast('Sem conexão.'); }); };
+  document.querySelectorAll('[data-ausobe]').forEach(function(b){ b.onclick=function(){ b.disabled=true; b.textContent='Subindo…';
+    fetch('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'subirUm',id:b.dataset.ausobe})}).then(function(r){ return r.json(); })
+      .then(function(d){ if(d&&d.ok){ toast(d.motivo||'Subiu ✓'); var c=(_pnlAu.campanhas||[]).filter(function(x){ return x.id===b.dataset.ausobe; })[0]; if(c){ c.subiuHoje=Date.now(); c.orc=Math.round(c.orc*110)/100; if(_pnlAu.teto && c.orc>_pnlAu.teto) c.orc=_pnlAu.teto; } var y=window.scrollY; pnlRedesenhar(); window.scrollTo(0,y); }
+        else { toast((d&&d.erro)||'Não deu certo'); b.disabled=false; b.textContent='📈 Subir 10%'; } })
+      .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent='📈 Subir 10%'; }); }; });
 }
 /* 🔻 ONDE DESISTEM: funil da música por etapa */
 var _pnlFm=null, _pnlFmP='hoje', _pnlFmCarr=false;
