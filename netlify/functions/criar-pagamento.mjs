@@ -5,7 +5,7 @@ import { criarLinkIP, ipLigada } from './_infinitepay.mjs';
 import { lerCfgPix, brcode, pularEfi, marcarEfiFalhou, podeManual, refPedido, marcarPendente } from './_pixmanual.mjs';
 import { statusOferta, registrarTentativa } from './_oferta.mjs';
 import { statusIndicacao, registrarIndicado, registrarUso } from './_indicacao.mjs';
-import { indexar, indexarDia } from './_indice.mjs';
+import { indexar, indexarDia, idsDoTel, lerIndice } from './_indice.mjs';
 
 const PACOTES = {
   completo:  { nome: 'Retrospectiva Completa', preco: 19, preco48: 9.99 },
@@ -167,8 +167,19 @@ export default async (req) => {
     const criadoEm = Date.now();
     // pedido de música normal = 4 músicas: as 2 da prévia + 2 liberadas depois do Pix
     const quatro = (presente.produto === 'musica' || comboDaMusica) && !pacote6 && !presente.ofertaM1 && !presente.ofertaDe && !clienteOk;
+    // 📊 PIXEL (20/11, regra do Gusthavo): 1 cliente = 1 compra. Quem já tem pedido PAGO no mesmo WhatsApp
+    // (ou veio de promoção de cliente) é RECOMPRA → o site não manda outro "Purchase" pro Meta.
+    let recompra = !!(clienteOk || presente.ofertaDe || presente.ofertaM1 || pacote6);
+    if (!recompra) {
+      try {
+        const tel = presente.musicaWhatsapp || presente.whatsapp;
+        const ids = tel ? (await idsDoTel(tel, await lerIndice())).p.filter((x) => x && x !== presente.id && x.indexOf(presente.id + '-x-') !== 0).slice(-25) : [];
+        const gs = await Promise.all(ids.map((x) => getStore('presentes').get(x, { type: 'json' }).catch(() => null)));
+        recompra = gs.some((g0) => g0 && g0.pago && !g0.cancelado && !g0.dobroDe && !g0.bonusDe && Number((g0.pagamento || {}).valor) > 1);
+      } catch (e) {}
+    }
     const salvo = Object.assign({}, presente, {
-      pago: false, quatro,
+      pago: false, quatro, recompra,
       criadoEm,
       pagamento: { provedor: 'efi', txid, status: 'ATIVA', valor: precoFinal, duracao, addonMusica: temAddonMusica, extras: extrasPix, valorExtras }
     });
@@ -198,7 +209,7 @@ export default async (req) => {
         const m = Object.assign({}, salvo, { pagamento: Object.assign({}, salvo.pagamento, { provedor: 'manual', txid: ref, status: 'AGUARDANDO', manualEm: Date.now(), payload }) });
         await getStore('presentes').setJSON(presente.id, m);
         await marcarPendente(presente.id);
-        return json({ payload, id: presente.id, txid: ref, teste: false, provedor: 'manual', manual: true, valor: precoFinal });
+        return json({ payload, id: presente.id, txid: ref, teste: false, provedor: 'manual', manual: true, valor: precoFinal, recompra });
       };
       const pixManual = pixManualFn;
       // 💳 INFINITEPAY (principal): link de pagamento (Pix ou cartão) — libera sozinho quando a InfinitePay confirma
@@ -208,7 +219,7 @@ export default async (req) => {
           const lk = await criarLinkIP(presente.id, precoFinal, desc, { nome: salvo.meuNome || presente.meuNome, tel: salvo.musicaWhatsapp || salvo.whatsapp || presente.musicaWhatsapp || presente.whatsapp });
           const m = Object.assign({}, salvo, { pagamento: Object.assign({}, salvo.pagamento, { provedor: 'infinitepay', txid: presente.id, status: 'AGUARDANDO', ipUrl: lk.url, ipEm: Date.now() }) });
           await getStore('presentes').setJSON(presente.id, m);
-          return json({ checkoutUrl: lk.url, id: presente.id, provedor: 'infinitepay', valor: precoFinal });
+          return json({ checkoutUrl: lk.url, id: presente.id, provedor: 'infinitepay', valor: precoFinal, recompra });
         } catch (e) { console.error('InfinitePay falhou (vai pro Pix de reserva):', e && e.message); }
       }
       if (await pularEfi()) { const r = await pixManual(null); if (r) return r; }

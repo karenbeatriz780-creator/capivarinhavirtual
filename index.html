@@ -4042,8 +4042,12 @@ function gaCompraUnica(id, g){
   if(!g || !g.pago || g.dobroDe || g.bonusDe || pg.provedor==='bonus' || !(valor>0)) return;
   var feitas=jget('cl_ga_compras',{});
   if(feitas[id]) return;
+  /* 20/11 (regra do Gusthavo): 1 cliente = 1 compra no pixel. Recompra (mesmo WhatsApp já pagou antes, promoção de cliente,
+     extras, ou este celular já mandou uma compra) NÃO manda outro "Purchase" pro Meta — conta como orgânica. */
+  var recompra = !!(g.recompra || g.clienteDe || g.ofertaDe || g.ofertaM1 || g.pacote6 || g.refPresente || /^extra/.test(String(g.produto||'')) || Object.keys(feitas).length);
   feitas[id]=1; jset('cl_ga_compras',feitas);
   if(g.produto==='musica') funilM('pagou');
+  if(recompra){ gaEvento('recompra',{transaction_id:id, value:valor, currency:'BRL', produto:g.produto}); return; }
   gaEvento('purchase',{
     transaction_id:id, value:valor, currency:'BRL',
     produto:g.produto, duracao:g.duracao
@@ -7654,7 +7658,7 @@ function finalizarDeVerdade(){
     }
     if(res.d && res.d.jaUsado){ ir('p/'+res.d.jaUsado+'/c'); return; }
     if(res.ok && res.d && res.d.checkoutUrl){
-      W.pago=false; W.criadoEm=Date.now(); salvarPresente(W);
+      W.pago=false; W.criadoEm=Date.now(); if(res.d.recompra) W.recompra=true; salvarPresente(W);
       irParaInfinitePay(res.d.checkoutUrl, W.id, enviarFotosExtras(W.id, W)); return;
     }
     if(!res.ok || !res.d || !res.d.payload){
@@ -7664,7 +7668,7 @@ function finalizarDeVerdade(){
       if(btn){ btn.disabled=false; btn.textContent='Pagar e gerar o link'; }
       return;
     }
-    W.pago=false; W.criadoEm=Date.now();
+    W.pago=false; W.criadoEm=Date.now(); if(res.d.recompra) W.recompra=true;
     salvarPresente(W);
     mostrarPix(res.d.payload, W.id, res.d.teste, precoTotal(W));
     enviarFotosExtras(W.id, W);
@@ -11170,6 +11174,9 @@ function abrirPresenteChecado(g){
   document.body.style.overflow='hidden';
   aoSair(function(){ document.body.style.overflow=''; pararAudio(); });
   if(g.produto==='convite'){ montarConvite(g); return; }
+  /* 20/11: quem pagou e NÃO voltou pro site (abriu direto pelo link do WhatsApp) também conta a compra no pixel.
+     Mesmo eventID do pedido → o Meta descarta se já tinha contado no celular do pagamento. */
+  if(rota().arg2==='c' && g.pago && Date.now()-(g.pagoEm||0) < 3*864e5 && !Store.get('cl_sou_dev')){ try{ gaCompraUnica(g.id, g); }catch(e){} }
   if(g.produto==='musica'){ montarMusicaEntrega(g); return; }
   if(temMusicaCombo(g) && rota().arg2==='c'){ document.body.style.overflow='auto'; montarMusicaEntrega(g,{cliente:true}); return; }
   montarPortao(g);
