@@ -81,6 +81,8 @@ export async function rodarRobo(simular) {
   // 🌙 MEIA-NOITE (regra de 17/11): liga SÓ as campanhas marcadas que TÊM FUTURO (última semana: 3+ vendas a até R$ 9,50 cada).
   //    As ligadas SEM futuro que já gastaram R$ 10+ na semana sem provar que vendem → desliga. Campanha nova (gastou menos de R$ 10) fica.
   // 🎓 APRENDIZAGEM (17/11): até 2 campanhas que você escolheu no painel — o robô NUNCA desliga, liga à meia-noite e só AVISA se regredir
+  const especial = new Set(((await L().get('especial_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
+  const ehEspecial = (c) => especial.has(String(c.id)) || /modo\s*especial/i.test(c.nome || '');
   const aprend = new Set(((await L().get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
   const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117b', FLAG_DESFAZ = 'desfaz_roas_20261117';
   // ↩️ 17/11 21h: desfaz o corte por ROAS 1,5 por campanha — religa (uma vez) as que o robô desligou desde 19h50 e passam na regra de R$ 9,50
@@ -120,7 +122,7 @@ export async function rodarRobo(simular) {
         const txt = f.vendas + ' venda(s) na semana' + (f.cpa != null ? ' a ' + brl(f.cpa) + ' cada' : '') + ', gasto ' + brl(f.gasto);
         if (c.status === 'ACTIVE') { // ligada sem futuro → desliga (só se já teve chance: R$ 10+ na semana)
           const ac = acoes[c.id]; if (ac && ac.tipo === 'ativar' && !/^robô/.test(ac.quem || '') && diaBR(ac.em) === hoje) continue; // você ligou hoje → respeita
-          if (f.tem || f.gasto < 10 || f.eua || /modo\s*especial/i.test(c.nome || '')) continue; // modo especial: só a regra do dia dele // EUA segue as regras próprias (média de 3 dias, R$ 30)
+          if (f.tem || f.gasto < 10 || f.eua || ehEspecial(c)) continue; // modo especial: só a regra do dia dele // EUA segue as regras próprias (média de 3 dias, R$ 30)
           try { if (!simular) { await aplicarAcao(c, 'pausar', 'robô'); acoes[c.id] = { tipo: 'pausar', quem: 'robô', em: agora }; } if (mc) mc.status = 'PAUSED';
             feitas.push({ tipo: 'pausou', camp: c.nome, id: c.id, aviso: true, motivo: (jaAgora ? '⚡ análise de agora' : '🌙 dia novo') + ': desliguei, não tem futuro (' + txt + ')' }); }
           catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui desligar à meia-noite: ' + e.message }); }
@@ -189,7 +191,7 @@ export async function rodarRobo(simular) {
     if (c.status !== 'ACTIVE' && !m) continue;
     // ⭐ MODO ESPECIAL (20/11): campanha com "modo especial" no nome — aposta de orçamento alto, monitorada de perto.
     //    Hoje: R$ 30 sem nenhuma venda → desliga. R$ 40 com só 1 venda → desliga. 2+ vendas → continua e te avisa como está indo.
-    if (/modo\s*especial/i.test(c.nome || '')) {
+    if (ehEspecial(c)) {
       const kA = 'esp_' + c.id + '_' + hoje, st = (await L().get(kA, { type: 'json' }).catch(() => null)) || { avisadas: 0, lucroAvisado: false };
       let corte = null;
       if (vH === 0 && gH >= 30) corte = 'gastou ' + brl(gH) + ' hoje sem nenhuma venda (limite R$ 30)';
