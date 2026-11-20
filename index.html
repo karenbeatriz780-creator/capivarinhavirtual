@@ -9706,6 +9706,7 @@ function pnlCampLigar(body){
   if(_pnlAba==='vigiar'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlVig) pnlVigCarregar(); pnlVigiarLigar(body); }
   if(_pnlAba==='meianoite'){ if(!_pnlMN) pnlMNCarregar(); pnlMNLigar(); }
   if(_pnlAba==='aprender'){ if(!_pnlApr) pnlAprCarregar(); pnlAprLigar(); }
+  if(_pnlAba==='especial'){ if(!_pnlEs) pnlEsCarregar(); pnlEsLigar(); }
   if(_pnlAba==='vendas5'){ if(!_pnlV5) pnlV5Carregar(); pnlV5Ligar(); }
   if(_pnlAba==='aumento'){ if(!_pnlAu) pnlAuCarregar(); pnlAuLigar(); }
   if(_pnlAba==='desistem'){ if(!_pnlFm||_pnlFm.p!==_pnlFmP) pnlFmCarregar(); pnlFmLigar(); }
@@ -9759,6 +9760,40 @@ function pnlMNHtml(){
     '<div class="mn-lista">'+cs.map(function(c){ var on=fora.indexOf(c.id)<0, at=c.status==='ACTIVE';
       return '<label class="mn-it" data-mnnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-mn="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+(c.fut?'<br><small style="color:'+(c.top||c.aprend?'#1F8A4C':'#b23')+'">'+(c.aprend?'🎓 aprendizagem (sempre ligada)':c.top?'🏆 entre as 10 melhores — vai ligar':'✖ fora das 10 — não liga')+' · '+c.fut.vendas+' venda(s) na semana'+(c.fut.cpa!=null?' a R$ '+fmtPreco(c.fut.cpa)+' cada':'')+'</small>':'')+'</span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
     '<div class="sub" id="mnSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
+}
+/* ⭐ MODO ESPECIAL: pesquisa a campanha, define o orçamento e ativa (o robô vigia: R$ 30 sem venda / R$ 40 com 1 venda → desliga) */
+var _pnlEs=null, _pnlEsCarr=false, _pnlEsQ='';
+function pnlEsCarregar(){
+  if(_pnlEsCarr) return; _pnlEsCarr=true;
+  fetch('/.netlify/functions/admin-especial',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
+    .then(function(d){ _pnlEsCarr=false; _pnlEs=d||{}; if(_pnlAba==='especial') pnlRedesenhar(); })
+    .catch(function(){ _pnlEsCarr=false; _pnlEs={erro:'Sem conexão.'}; if(_pnlAba==='especial') pnlRedesenhar(); });
+}
+function pnlEsHtml(){
+  var topo='<div class="dsh-card"><div class="dsh-t">⭐ Modo especial</div><div class="dsh-nota">Pesquise a campanha, coloque o orçamento e toque em <b>Ativar</b>. O robô liga e vigia: <b>R$ 30 sem nenhuma venda</b> ou <b>R$ 40 com só 1 venda</b> → desliga e te avisa. Com 2 vendas ou mais, segue rodando e te manda sinal de como está indo.</div></div>';
+  var D=_pnlEs;
+  if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>';
+  if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
+  var ids=D.ids||[], cs=D.campanhas||[], ativas=cs.filter(function(c){ return ids.indexOf(c.id)>=0; });
+  var q=_pnlEsQ.trim().toLowerCase(), achadas=q?cs.filter(function(c){ return String(c.nome||'').toLowerCase().indexOf(q)>=0 && ids.indexOf(c.id)<0; }).slice(0,12):[];
+  var R=function(v){ return 'R$ '+fmtPreco(v); };
+  return topo+
+    (ativas.length?'<div class="dsh-card"><div class="dsh-t">Em modo especial</div>'+ativas.map(function(c){ return '<div style="display:flex;gap:.5rem;align-items:center;padding:.5rem 0;border-bottom:1px solid #f1e6eb"><div style="flex:1"><b style="font-size:.88rem">⭐ '+esc(c.nome)+'</b><br><small style="color:#888">'+(c.status==='ACTIVE'?'🟢 ligada':'⚪ desligada')+(c.orc?' · '+R(c.orc)+'/dia':'')+'</small></div><button type="button" class="pnl-btn" data-estirar="'+esc(c.id)+'">Tirar</button></div>'; }).join('')+'</div>':'')+
+    '<div class="dsh-card"><input type="search" id="esBusca" class="mn-busca" placeholder="🔎 Digite o nome da campanha…" value="'+esc(_pnlEsQ)+'">'+
+      '<label style="display:block;font-size:.85rem;margin:.6rem 0">Orçamento do dia: R$ <input type="number" id="esOrc" min="6" step="1" value="400" style="width:100px"></label>'+
+      (q?(achadas.length?achadas.map(function(c){ return '<div style="display:flex;gap:.5rem;align-items:center;padding:.5rem 0;border-bottom:1px solid #f1e6eb"><div style="flex:1"><b style="font-size:.88rem">'+esc(c.nome)+'</b><br><small style="color:#888">'+(c.status==='ACTIVE'?'🟢 ligada':'⚪ desligada')+(c.orc?' · hoje '+R(c.orc)+'/dia':'')+'</small></div><button type="button" class="pnl-btn" data-esativar="'+esc(c.id)+'" style="background:#E91E63;color:#fff;white-space:nowrap">⭐ Ativar</button></div>'; }).join(''):'<div class="pnl-nota">Nenhuma campanha com esse nome.</div>'):'<div class="pnl-nota">Digite parte do nome pra aparecer a campanha.</div>')+
+    '</div>';
+}
+function pnlEsLigar(){
+  var b=el('esBusca'); if(b){ b.oninput=function(){ _pnlEsQ=b.value; var pos=b.selectionStart; pnlRedesenhar(); var nb=el('esBusca'); if(nb){ nb.focus(); try{ nb.setSelectionRange(pos,pos); }catch(e){} } }; }
+  function post(corpo, btn, ok){ if(btn) btn.disabled=true;
+    fetch('/.netlify/functions/admin-especial',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify(corpo)}).then(function(r){ return r.json(); })
+      .then(function(d){ if(d&&d.ok){ toast(ok); _pnlEs=null; _pnlEsQ=''; pnlRedesenhar(); pnlEsCarregar(); } else { toast((d&&d.erro)||'Não deu certo'); if(btn) btn.disabled=false; } })
+      .catch(function(){ toast('Sem conexão.'); if(btn) btn.disabled=false; }); }
+  document.querySelectorAll('[data-esativar]').forEach(function(x){ x.onclick=function(){ var orc=Number((el('esOrc')||{}).value)||0;
+    if(!confirm('Ativar o MODO ESPECIAL nessa campanha'+(orc?' com R$ '+orc+'/dia':'')+'?\n\nO robô liga agora e desliga se gastar R$ 30 sem venda ou R$ 40 com só 1 venda.')) return;
+    post({acao:'ativar',id:x.dataset.esativar,orc:orc}, x, '⭐ Modo especial ativado'); }; });
+  document.querySelectorAll('[data-estirar]').forEach(function(x){ x.onclick=function(){ post({acao:'tirar',id:x.dataset.estirar}, x, 'Tirada do modo especial'); }; });
 }
 /* ✅ VENDAS 5 DIAS: campanhas que venderam nos últimos 5 dias (ligadas e desligadas), com botão de ligar */
 var _pnlV5=null, _pnlV5Carr=false;
@@ -10522,7 +10557,7 @@ function desenharPainel(pedidos, visitas, musicas){
 
   body.innerHTML=
     '<div class="pnl-abas pnl-abas-main" id="pnlAbas">'+
-      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['desistem','🔻','Onde desistem'],['aumento','📈','Aumento'],['vendas5','✅','Vendas 5 dias'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
+      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['desistem','🔻','Onde desistem'],['aumento','📈','Aumento'],['vendas5','✅','Vendas 5 dias'],['especial','⭐','Modo especial'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
         return '<button type="button" class="pnl-aba'+(_pnlAba===a[0]?' on':'')+'" data-aba="'+a[0]+'"><i>'+a[1]+'</i><span>'+a[2]+'</span></button>'; }).join('')+
     '</div>'+
     '<div class="pnl-abas pnl-abas-mais"><small>Mais:</small>'+
@@ -10544,6 +10579,7 @@ function desenharPainel(pedidos, visitas, musicas){
     (_pnlAba==='desistem' ? pnlFmHtml() : '')+
     (_pnlAba==='aumento' ? pnlAuHtml() : '')+
     (_pnlAba==='vendas5' ? pnlV5Html() : '')+
+    (_pnlAba==='especial' ? pnlEsHtml() : '')+
     (_pnlAba==='hoje' ? pnlHojeHtml(pedidos, _pnlCache.custos||{}) : '')+
     (_pnlAba==='pagos'
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+
