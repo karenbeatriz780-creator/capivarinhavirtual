@@ -57,6 +57,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 .vid{position:fixed;inset:0;z-index:40;background:rgba(14,6,12,.82);display:flex;align-items:center;justify-content:center;padding:24px}.vid[hidden],.erro[hidden]{display:none}.vid-c{background:#fff;color:#3B1E28;border-radius:20px;padding:22px;width:100%;max-width:340px;text-align:center}.vid-c b{font-size:17px}.vid-b{height:8px;border-radius:4px;background:#F3DDE6;margin:16px 0 10px;overflow:hidden}.vid-b i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FF4F9A,#C2185B);transition:width .3s}.vid-c small{display:block;font-size:13px;color:#8E6670;line-height:1.4}.vid-c button{margin-top:14px;font-size:13px;color:#8E6670;text-decoration:underline}.vid-c a{display:block;margin-top:14px;padding:13px;border-radius:999px;background:#C2185B;color:#fff;font-weight:700;text-decoration:none}
 .erro{position:fixed;inset:0;z-index:50;background:#120a10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:30px}.erro img{height:70px}.erro span{opacity:.7;font-size:14px}
 @media (max-height:700px){.capaw{width:78%}.ded p{font-size:16px}}
+.esc{max-width:380px}.esc>small{margin:.3rem 0 .9rem}.esc button{text-decoration:none;margin-top:0}
+.esc-ops{display:flex;gap:.4rem;margin-bottom:.9rem}.esc-ops button{flex:1;padding:.6rem .3rem;border-radius:12px;border:1.5px solid #F1D5E2;background:#fff;color:#3B1E28;font-weight:800;font-size:14px}.esc-ops button.on{background:#FF4F9A;border-color:#FF4F9A;color:#fff}
+.esc-tr{position:relative;height:64px;border-radius:12px;background:#F8EEF2;overflow:hidden;touch-action:none;cursor:grab}.esc-tr.travado{cursor:default}.esc-onda{position:absolute;inset:6px 6px;display:flex;align-items:center;gap:2px}.esc-onda i{flex:1;background:#E6C2D3;border-radius:2px}
+.esc-sel{position:absolute;top:0;bottom:0;border:3px solid #FF4F9A;border-radius:12px;background:rgba(255,79,154,.18)}
+.esc-tm{display:flex;justify-content:space-between;font-size:12px;color:#8E6670;margin:.4rem 0 .9rem}.esc .esc-ouvir{width:100%;padding:.65rem;border-radius:12px;border:1.5px solid #F1D5E2;background:#fff;color:#3B1E28;font-weight:700;font-size:14px;margin-bottom:.5rem}.esc .esc-go{width:100%;padding:.85rem;border-radius:999px;border:0;background:#C2185B;color:#fff;font-weight:900;font-size:16px;margin-bottom:.2rem}#escX{margin-top:.6rem;text-decoration:underline}.esc .esc-obs{font-size:11.5px;margin-top:.7rem}
 </style></head><body>
 <div class="cl" id="cl">
  <div class="bg" id="bg"></div><div class="bg2"></div><div class="hz" id="hz"></div>
@@ -75,7 +80,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
   <button aria-label="repetir"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF4F9A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></button>
  </div>
  <div class="ded" id="dedBox"><h3>💌 Dedicatória</h3><p id="ded"></p></div>
- <div class="acoes"><button id="bx">⬇ Baixar vídeo pro Status</button><button class="s" id="env">↗ Enviar</button></div>
+ <div class="acoes"><button id="bx">⬇ Baixar o clipe (vídeo)</button><button class="s" id="env">↗ Enviar</button></div>
  <div class="marca"><img src="/clipe-ex/m.png" alt="">feito com amor na Capivarinha Love</div>
 </div>
 <div class="ent" id="ent">
@@ -95,7 +100,7 @@ var $=function(i){return document.getElementById(i)},au=$('au'),capa=$('capa'),f
 var FOTOS=[],DED='',D={},ims=[],dts=[];
 /* 🇺🇸 pedido do site em inglês (id começa com "us") → tudo em inglês */
 var EN=/^us/.test(ID);function L(pt,en){return EN?en:pt}
-if(EN){document.documentElement.lang='en';[['.top .c',null],['.ded h3','💌 Dedication'],['#bx','⬇ Download video for Stories'],['#env','↗ Share'],['.ent .k','🎁 A surprise for you'],['#entP','A song made just for you, with your photos.'],['.ent small','Tap to play ♥'],['#vidX','Cancel'],['.erro b','Clip not found'],['.erro span','Check the link you received.']].forEach(function(x){var e=document.querySelector(x[0]);if(!e)return;if(x[0]==='.top .c'){e.firstChild.textContent='Playing for you';return}e.textContent=x[1]});var mk=document.querySelector('.marca');if(mk)mk.lastChild.textContent='made with love by Capivarinha Love';}
+if(EN){document.documentElement.lang='en';[['.top .c',null],['.ded h3','💌 Dedication'],['#bx','⬇ Download the clip (video)'],['#env','↗ Share'],['.ent .k','🎁 A surprise for you'],['#entP','A song made just for you, with your photos.'],['.ent small','Tap to play ♥'],['#vidX','Cancel'],['.erro b','Clip not found'],['.erro span','Check the link you received.']].forEach(function(x){var e=document.querySelector(x[0]);if(!e)return;if(x[0]==='.top .c'){e.firstChild.textContent='Playing for you';return}e.textContent=x[1]});var mk=document.querySelector('.marca');if(mk)mk.lastChild.textContent='made with love by Capivarinha Love';}
 function txt(id,t){$(id).textContent=t}
 fetch('/.netlify/functions/clipe?id='+encodeURIComponent(ID),{cache:'no-store'}).then(function(r){return r.json()}).then(function(x){
  if(!x||!x.montado){$('erro').hidden=false;$('ent').classList.add('fora');return}
@@ -146,19 +151,51 @@ $('env').onclick=function(){var l=location.href,m=L('Uma música pra você 💝 
 $('voltar').onclick=function(){au.pause();location.href=EN?'/us/':'/'};
 /* ===== vídeo vertical de 30 s pro Status / Reels (gerado no próprio celular) ===== */
 var gerando=null;
-$('bx').onclick=function(){if(!FOTOS.length)return;if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){toast('Seu navegador não consegue gerar o vídeo. Abra no Chrome ou no Safari atualizado.');return}gerarVideo()};
+$('bx').onclick=function(){if(!FOTOS.length)return;if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){toast(L('Seu navegador não consegue gerar o vídeo. Abra no Chrome ou no Safari atualizado.','Your browser can’t make the video. Open it in Chrome or an updated Safari.'));return}escolherTrecho()};
+/* 🎬 escolhe a duração (30 s · 1 min · música completa) e o ponto de início (arrastando, tipo o Instagram) */
+function escolherTrecho(){
+ au.pause();var tot=au.duration&&isFinite(au.duration)?au.duration:180,dur=30,ini=0,prev=null;
+ var box=document.createElement('div');box.className='vid';box.id='esc';
+ box.innerHTML='<div class="vid-c esc"><b>'+L('🎬 Baixar o clipe','🎬 Download the clip')+'</b><small>'+L('Escolha o tamanho e o trecho da música','Pick the length and the part of the song')+'</small>'+
+  '<div class="esc-ops"><button data-d="30" class="on">30 s</button><button data-d="60">1 min</button><button data-d="0">'+L('Completa','Full song')+'</button></div>'+
+  '<div class="esc-tr" id="escTr"><div class="esc-onda" id="escOnda"></div><div class="esc-sel" id="escSel"></div></div>'+
+  '<div class="esc-tm"><span id="escIni">0:00</span><span id="escDica">'+L('arraste pra escolher onde começa','drag to choose where it starts')+'</span><span id="escFim">0:30</span></div>'+
+  '<button class="esc-ouvir" id="escOuvir">▶ '+L('Ouvir o trecho','Play this part')+'</button>'+
+  '<button class="esc-go" id="escGo">⬇ '+L('Gerar vídeo','Make video')+'</button><button id="escX">'+L('Cancelar','Cancel')+'</button>'+
+  '<small class="esc-obs">'+L('O vídeo é feito no seu celular, nada fica guardado no site. Deixe a tela aberta: leva o mesmo tempo do trecho.','The video is made on your phone — nothing is stored on the site. Keep the screen open: it takes as long as the clip.')+'</small></div>';
+ document.body.appendChild(box);
+ var onda=$('escOnda');for(var i=0;i<48;i++){var b=document.createElement('i');b.style.height=(25+Math.abs(Math.sin(i*1.7)*Math.cos(i*.45))*70)+'%';onda.appendChild(b)}
+ var tr=$('escTr'),sel=$('escSel');
+ function D_(){return dur===0?tot:Math.min(dur,tot)}
+ function desenha(){var d=D_();ini=Math.max(0,Math.min(ini,tot-d));sel.style.left=(ini/tot*100)+'%';sel.style.width=(d/tot*100)+'%';txt('escIni',mm(ini));txt('escFim',mm(ini+d));$('escDica').style.visibility=dur===0?'hidden':'visible';tr.classList.toggle('travado',dur===0)}
+ function parar(){if(prev){clearTimeout(prev);prev=null}au.pause();$('escOuvir').textContent='▶ '+L('Ouvir o trecho','Play this part')}
+ box.querySelectorAll('[data-d]').forEach(function(b){b.onclick=function(){box.querySelectorAll('[data-d]').forEach(function(x){x.classList.toggle('on',x===b)});dur=Number(b.dataset.d);if(dur===0)ini=0;parar();desenha()}});
+ var arr=null;function pos(e){var r=tr.getBoundingClientRect(),cx=(e.touches?e.touches[0].clientX:e.clientX);return Math.max(0,Math.min(1,(cx-r.left)/r.width))*tot}
+ function ini_(e){if(dur===0)return;arr={x:pos(e),i:ini};parar();e.preventDefault()}
+ function mov(e){if(!arr)return;ini=arr.i+(pos(e)-arr.x);desenha();e.preventDefault()}
+ function fim(){arr=null}
+ tr.addEventListener('touchstart',ini_,{passive:false});tr.addEventListener('mousedown',ini_);
+ window.addEventListener('touchmove',mov,{passive:false});window.addEventListener('mousemove',mov);window.addEventListener('touchend',fim);window.addEventListener('mouseup',fim);
+ $('escOuvir').onclick=function(){if(prev||!au.paused){parar();return}try{au.currentTime=ini}catch(e){}tocar();$('escOuvir').textContent='⏸ '+L('Parar','Stop');prev=setTimeout(parar,Math.min(D_(),15)*1000)};
+ function sair(){parar();window.removeEventListener('touchmove',mov);window.removeEventListener('mousemove',mov);window.removeEventListener('touchend',fim);window.removeEventListener('mouseup',fim);box.remove()}
+ $('escX').onclick=sair;
+ $('escGo').onclick=function(){var d=D_(),i=ini;sair();gerarVideo(d,i)};
+ desenha();
+}
 $('vidX').onclick=function(){if(gerando)gerando.cancelar();$('vid').hidden=true};
 function carregaImg(u){return new Promise(function(ok,er){var i=new Image();i.onload=function(){ok(i)};i.onerror=er;i.src=u})}
-function gerarVideo(){
- au.pause();var DUR=30,Wv=720,Hv=1280,cancel=false;
- $('vid').hidden=false;txt('vidT',L('🎬 Gerando seu vídeo…','🎬 Making your video…'));txt('vidS',L('Deixe esta tela aberta. Leva uns 30 segundos.','Keep this screen open. It takes about 30 seconds.'));$('vidB').style.width='0';
+function gerarVideo(DURq,INI){
+ au.pause();var DUR=Math.max(5,DURq||30),INI=INI||0,Wv=720,Hv=1280,cancel=false;
+ $('vid').hidden=false;txt('vidT',L('🎬 Gerando seu vídeo…','🎬 Making your video…'));txt('vidS',L('Deixe esta tela aberta. Leva uns '+(DUR<90?Math.round(DUR)+' segundos':Math.ceil(DUR/60)+' minutos')+'.','Keep this screen open. It takes about '+(DUR<90?Math.round(DUR)+' seconds':Math.ceil(DUR/60)+' minutes')+'.'));$('vidB').style.width='0';
  var c=$('vidX');c.textContent=L('Cancelar','Cancel');var vc=document.querySelector('.vid-c a');if(vc)vc.remove();
  var C=window.AudioContext||window.webkitAudioContext;var ac=new C();
  Promise.all([Promise.all(FOTOS.map(carregaImg)),fetch(au.src).then(function(r){return r.arrayBuffer()}).then(function(b){return new Promise(function(ok,er){ac.decodeAudioData(b,ok,er)})})]).then(function(r){
   if(cancel)return;var fs=r[0],ab=r[1];
   var cv=document.createElement('canvas');cv.width=Wv;cv.height=Hv;var x=cv.getContext('2d');
   var dest=ac.createMediaStreamDestination(),src=ac.createBufferSource();src.buffer=ab;var ga=ac.createGain();src.connect(ga);ga.connect(dest);
-  ga.gain.setValueAtTime(1,ac.currentTime+DUR-2);ga.gain.linearRampToValueAtTime(0,ac.currentTime+DUR);
+  DUR=Math.min(DUR,Math.max(1,(ab.duration||DUR)-INI));
+  if(INI>0){ga.gain.setValueAtTime(0,ac.currentTime);ga.gain.linearRampToValueAtTime(1,ac.currentTime+.8)}
+  ga.gain.setValueAtTime(1,ac.currentTime+Math.max(.9,DUR-2));ga.gain.linearRampToValueAtTime(0,ac.currentTime+DUR);
   var st=cv.captureStream(30);dest.stream.getAudioTracks().forEach(function(t){st.addTrack(t)});
   var tipos=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'],mime='';
   for(var i=0;i<tipos.length;i++)if(MediaRecorder.isTypeSupported(tipos[i])){mime=tipos[i];break}
@@ -180,8 +217,8 @@ function gerarVideo(){
    x.globalAlpha=.75;x.font='500 28px Inter, Arial, sans-serif';x.fillText(sub.slice(0,40),px,py+S+122);x.globalAlpha=1;
    x.fillStyle='#FF4F9A';x.font='52px Arial';x.textAlign='right';x.fillText('♥',px+S,py+S+82);x.textAlign='left';
    var by=py+S+250;for(var b=0;b<28;b++){var h=14+70*Math.abs(Math.sin(t*4+b*.7)*Math.cos(t*1.3+b*.3));x.fillStyle='#FF6FAE';rr(px+b*(S/28),by-h,S/28-5,h,3);x.fill()}
-   var pr=t/(ab.duration||DUR);x.fillStyle='rgba(255,255,255,.3)';rr(px,by+40,S,6,3);x.fill();x.fillStyle='#fff';rr(px,by+40,S*pr,6,3);x.fill();x.beginPath();x.arc(px+S*pr,by+43,10,0,7);x.fill();
-   x.globalAlpha=.7;x.font='500 22px Inter, Arial, sans-serif';x.fillText(mm(t),px,by+82);x.textAlign='right';x.fillText('-'+mm((ab.duration||DUR)-t),px+S,by+82);x.textAlign='left';x.globalAlpha=1;
+   var tt=INI+t,pr=tt/(ab.duration||DUR);x.fillStyle='rgba(255,255,255,.3)';rr(px,by+40,S,6,3);x.fill();x.fillStyle='#fff';rr(px,by+40,S*pr,6,3);x.fill();x.beginPath();x.arc(px+S*pr,by+43,10,0,7);x.fill();
+   x.globalAlpha=.7;x.font='500 22px Inter, Arial, sans-serif';x.fillText(mm(tt),px,by+82);x.textAlign='right';x.fillText('-'+mm((ab.duration||DUR)-tt),px+S,by+82);x.textAlign='left';x.globalAlpha=1;
    var cy=by+170,cx=Wv/2;x.fillStyle='#fff';x.beginPath();x.arc(cx,cy,52,0,7);x.fill();x.fillStyle='#120a10';x.fillRect(cx-17,cy-22,12,44);x.fillRect(cx+5,cy-22,12,44);
    if(DED){x.fillStyle='rgba(255,255,255,.9)';x.font='italic 26px Georgia, serif';x.textAlign='center';var linha=DED.length>60?DED.slice(0,58)+'…':DED;x.fillText(linha,Wv/2,cy+120);x.textAlign='left'}
    $('vidB').style.width=Math.min(100,t/DUR*100)+'%';raf=requestAnimationFrame(quadro)}
@@ -192,7 +229,7 @@ function gerarVideo(){
    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;a.textContent=L('⬇ Salvar vídeo','⬇ Save video');
    if(file&&navigator.canShare&&navigator.canShare({files:[file]})){a.textContent=L('📲 Salvar / Postar no Status','📲 Save / Share');a.onclick=function(e){e.preventDefault();navigator.share({files:[file],title:titulo}).catch(function(){location.href=a.href})}}
    $('vidX').textContent=L('Fechar','Close');$('vidX').before(a);gerando=null};
-  rec.start(500);src.start(0);t0=performance.now();quadro();
+  rec.start(500);src.start(0,INI,DUR+.2);t0=performance.now();quadro();
   gerando={cancelar:function(){cancel=true;try{rec.stop()}catch(e){}}};
  }).catch(function(){txt('vidT',L('Não consegui gerar o vídeo',"Couldn't make the video"));txt('vidS',L('Confira sua internet e tente de novo.','Check your connection and try again.'));$('vidX').textContent=L('Fechar','Close')});
  gerando={cancelar:function(){cancel=true}};
