@@ -120,7 +120,7 @@ export async function rodarRobo(simular) {
         const txt = f.vendas + ' venda(s) na semana' + (f.cpa != null ? ' a ' + brl(f.cpa) + ' cada' : '') + ', gasto ' + brl(f.gasto);
         if (c.status === 'ACTIVE') { // ligada sem futuro → desliga (só se já teve chance: R$ 10+ na semana)
           const ac = acoes[c.id]; if (ac && ac.tipo === 'ativar' && !/^robô/.test(ac.quem || '') && diaBR(ac.em) === hoje) continue; // você ligou hoje → respeita
-          if (f.tem || f.gasto < 10 || f.eua) continue; // EUA segue as regras próprias (média de 3 dias, R$ 30)
+          if (f.tem || f.gasto < 10 || f.eua || /modo\s*especial/i.test(c.nome || '')) continue; // modo especial: só a regra do dia dele // EUA segue as regras próprias (média de 3 dias, R$ 30)
           try { if (!simular) { await aplicarAcao(c, 'pausar', 'robô'); acoes[c.id] = { tipo: 'pausar', quem: 'robô', em: agora }; } if (mc) mc.status = 'PAUSED';
             feitas.push({ tipo: 'pausou', camp: c.nome, id: c.id, aviso: true, motivo: (jaAgora ? '⚡ análise de agora' : '🌙 dia novo') + ': desliguei, não tem futuro (' + txt + ')' }); }
           catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui desligar à meia-noite: ' + e.message }); }
@@ -187,6 +187,28 @@ export async function rodarRobo(simular) {
       acoes[c.id] = a = { tipo: 'ativar', quem: 'você (app do Meta)', em: agora }; m.fim = true; m.saiu = 'você religou'; m = null;
     } else if (m && m.ultimo === 'on' && c.status !== 'ACTIVE') { m.fim = true; m.saiu = 'você desligou'; continue; }
     if (c.status !== 'ACTIVE' && !m) continue;
+    // ⭐ MODO ESPECIAL (20/11): campanha com "modo especial" no nome — aposta de orçamento alto, monitorada de perto.
+    //    Hoje: R$ 30 sem nenhuma venda → desliga. R$ 40 com só 1 venda → desliga. 2+ vendas → continua e te avisa como está indo.
+    if (/modo\s*especial/i.test(c.nome || '')) {
+      const kA = 'esp_' + c.id + '_' + hoje, st = (await L().get(kA, { type: 'json' }).catch(() => null)) || { avisadas: 0, lucroAvisado: false };
+      let corte = null;
+      if (vH === 0 && gH >= 30) corte = 'gastou ' + brl(gH) + ' hoje sem nenhuma venda (limite R$ 30)';
+      else if (vH === 1 && gH >= 40) corte = 'gastou ' + brl(gH) + ' hoje com só 1 venda (limite R$ 40)';
+      if (corte) {
+        try { if (!simular) { await aplicarAcao(c, 'pausar', 'robô'); acoes[c.id] = { tipo: 'pausar', quem: 'robô', em: agora }; }
+          feitas.push({ tipo: 'pausou', camp: c.nome, id: c.id, aviso: true, motivo: '⭐ MODO ESPECIAL não deu certo hoje: ' + corte + '. Desliguei.' }); }
+        catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: '⭐ modo especial: não consegui desligar: ' + e.message }); }
+        continue;
+      }
+      const cpaE = vH ? gH / vH : null, marco = vH >= 1 && (vH <= 2 || vH - st.avisadas >= 5);
+      if (vH > st.avisadas && (marco || (cpaE <= 9.5 && !st.lucroAvisado))) {
+        const lucro = cpaE != null && cpaE <= 9.5;
+        feitas.push({ tipo: 'alerta', camp: c.nome, id: c.id, aviso: true, motivo: '⭐ MODO ESPECIAL: ' + vH + ' venda(s) hoje, gasto ' + brl(gH) + ' (' + brl(cpaE) + ' por venda). ' + (lucro ? '🟢 Está dando lucro, segue rodando.' : vH >= 2 ? '🟡 Passou da trava, segue aprendendo — custo ainda alto.' : '🟡 Primeira venda, segue rodando (corta se chegar em R$ 40 com só 1 venda).') });
+        st.avisadas = vH; if (lucro) st.lucroAvisado = true;
+        if (!simular) await L().setJSON(kA, st).catch(() => {});
+      }
+      continue;
+    }
     if (aprend.has(c.id)) { // 🎓 aprendizagem: não desliga; só avisa (1x por dia) se gastar R$ 50+ hoje sem venda
       if (gH >= 50 && vH === 0) { const k = 'aprend_alerta_' + c.id + '_' + hoje; if (simular || !(await L().get(k).catch(() => null))) { if (!simular) await L().set(k, '1').catch(() => {}); feitas.push({ tipo: 'alerta', camp: c.nome, id: c.id, aviso: true, motivo: '🎓 campanha de aprendizagem gastou ' + brl(gH) + ' hoje sem nenhuma venda. NÃO desliguei — veja na aba 🎓 Aprendizagem se ela está progredindo e decida.' }); } }
       continue;
