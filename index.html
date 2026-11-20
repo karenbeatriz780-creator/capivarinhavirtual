@@ -7552,7 +7552,7 @@ function mostrarProntoMt(){
   var m=_mt, link=location.origin+'/clipe.html?id='+encodeURIComponent(m.id);
   var h='';
   if(m.tem.clipe) h+='<div class="mt-ok"><b>🎬 Seu clipe está pronto!</b><span>Mande o link pra quem vai receber. Lá também dá pra baixar o vídeo pro Status.</span>'+
-    '<div class="mt-bts"><a class="mt-b1" href="'+esc(link)+'" target="_blank" rel="noopener">▶ Abrir o clipe</a><a class="mt-b2" href="https://wa.me/?text='+encodeURIComponent('Fiz uma surpresa pra você 🎵💝 '+link)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar</a></div>'+
+    '<div class="mt-bts"><a class="mt-b1" href="'+esc(link)+'&baixar=1" target="_blank" rel="noopener">⬇ Baixar o vídeo</a><a class="mt-b1" href="'+esc(link)+'" target="_blank" rel="noopener">▶ Abrir o clipe</a><a class="mt-b2" href="https://wa.me/?text='+encodeURIComponent('Fiz uma surpresa pra você 🎵💝 '+link)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar</a></div>'+
     '<button type="button" class="mt-cp" id="mtCp">Copiar link</button></div>';
   if(m.tem.quadro) h+='<div class="mt-ok"><b>🖼️ Seu quadro</b><span>Escolha a cor e baixe em alta qualidade. Imprima em A4 (papel fotográfico fica lindo).</span>'+
     '<div class="mt-temas">'+['creme','noite','rose'].map(function(t){ return '<button type="button" class="mt-tema'+(m.tema===t?' on':'')+'" data-tema="'+t+'"><i class="t-'+t+'"></i>'+({creme:'Creme',noite:'Noite',rose:'Rosé'})[t]+'</button>'; }).join('')+'</div>'+
@@ -11742,7 +11742,8 @@ function montarMusicaEntrega(g, opts){
         (cliente && g.pago && (g.extrasPix||[]).length
           ? '<div class="mx-libera mx-extras"><span class="mx-lb-tag">🎁 SEUS EXTRAS</span><b>'+((g.extrasPix.indexOf('clipe')>=0&&g.extrasPix.indexOf('quadro')>=0)?'Seu clipe e seu quadro':(g.extrasPix.indexOf('clipe')>=0?'Seu clipe com fotos':'Seu quadro com QR Code'))+'</b>'+
               '<span>Toque pra ver, montar ou ajustar. Se você já mandou as fotos, está pronto.</span>'+
-              '<a class="mx-btn mx-btn-ouro" href="#/montar/'+encodeURIComponent(g.id)+'">'+(g.extrasPix.indexOf('clipe')>=0?'📸 Abrir meu clipe':'🖼️ Abrir meu quadro')+'</a></div>'
+              '<a class="mx-btn mx-btn-ouro" href="#/montar/'+encodeURIComponent(g.id)+'">'+(g.extrasPix.indexOf('clipe')>=0?'📸 Abrir meu clipe':'🖼️ Abrir meu quadro')+'</a>'+
+              (g.extrasPix.indexOf('clipe')>=0?'<a class="mx-btn" style="margin-top:.5rem" href="/clipe.html?id='+encodeURIComponent(g.id)+'&baixar=1">⬇ Baixar o vídeo do clipe</a>':'')+'</div>'
           : '')+
         (cliente && g.pago && !g.cancelado
           ? '<div class="mx-libera mx-promo"><span class="mx-lb-tag">🎉 SÓ PARA CLIENTES</span><b>Nova música pela METADE do preço</b>'+

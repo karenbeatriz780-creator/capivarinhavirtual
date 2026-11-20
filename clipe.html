@@ -97,14 +97,17 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 <div class="erro" id="erro" hidden><img src="/clipe-ex/m.png" alt=""><b>Clipe não encontrado</b><span>Confira o link que você recebeu.</span></div>
 <script>
 var $=function(i){return document.getElementById(i)},au=$('au'),capa=$('capa'),fi=-1,TROCA=6.5,ID=new URLSearchParams(location.search).get('id')||'';
-var FOTOS=[],DED='',D={},ims=[],dts=[];
+var FOTOS=[],DED='',D={},ims=[],dts=[],BAIXAR=new URLSearchParams(location.search).get('baixar')==='1';
 /* 🇺🇸 pedido do site em inglês (id começa com "us") → tudo em inglês */
 var EN=/^us/.test(ID);function L(pt,en){return EN?en:pt}
 if(EN){document.documentElement.lang='en';[['.top .c',null],['.ded h3','💌 Dedication'],['#bx','⬇ Download the clip (video)'],['#env','↗ Share'],['.ent .k','🎁 A surprise for you'],['#entP','A song made just for you, with your photos.'],['.ent small','Tap to play ♥'],['#vidX','Cancel'],['.erro b','Clip not found'],['.erro span','Check the link you received.']].forEach(function(x){var e=document.querySelector(x[0]);if(!e)return;if(x[0]==='.top .c'){e.firstChild.textContent='Playing for you';return}e.textContent=x[1]});var mk=document.querySelector('.marca');if(mk)mk.lastChild.textContent='made with love by Capivarinha Love';}
 function txt(id,t){$(id).textContent=t}
 fetch('/.netlify/functions/clipe?id='+encodeURIComponent(ID),{cache:'no-store'}).then(function(r){return r.json()}).then(function(x){
- if(!x||!x.montado){$('erro').hidden=false;$('ent').classList.add('fora');return}
+ if(!x||!x.montado){$('erro').hidden=false;$('ent').classList.add('fora');
+  if(x&&x.ok!==false&&BAIXAR){var e=$('erro');e.querySelector('b').textContent=L('Seu clipe ainda não foi montado','Your clip is not ready yet');e.querySelector('span').innerHTML=L('Mande as fotos primeiro:','Add your photos first:')+' <a href="'+(EN?'/us/#/extras/':'/#/montar/')+encodeURIComponent(ID)+'" style="color:#FF4F9A;font-weight:700">'+L('📸 Montar meu clipe','📸 Make my clip')+'</a>'}
+  return}
  D=x.dados;FOTOS=x.fotos;DED=D.dedicatoria||'';au.src=x.audio;
+ if(BAIXAR){$('ent').classList.add('fora');var abriu=0,abre=function(){if(abriu)return;abriu=1;$('bx').click()};au.addEventListener('loadedmetadata',abre);setTimeout(abre,2500)}
  var para=D.para||L('você','you'),de=D.de||'';
  txt('topoPara',para+' ♥');txt('tit',D.titulo||(L('Música pra ','A song for ')+para));txt('art',(de?de+' · ':'')+L('com amor','with love'));
  $('entH').innerHTML=EN?(de?esc(de)+' made a <em>song</em> for '+esc(para):'A <em>song</em> made for '+esc(para)):(de?esc(de)+' fez uma <em>música</em> pra '+esc(para):'Uma <em>música</em> feita pra '+esc(para));

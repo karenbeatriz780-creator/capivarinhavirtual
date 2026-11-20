@@ -809,7 +809,7 @@ function telaGift(id){
       '<h1 class="g-h">'+(de?esc(de)+' made a <em>song</em><br>for '+esc(para||'you'):'A <em>song</em> made<br>for '+esc(para||'you'))+'</h1>'+
       '<p class="hint" style="text-align:center">Turn up the volume and press play ♥</p>'+
       vs.map(function(u,i){ return player(vs.length>1?'Version '+(i+1):'Your song',u,false); }).join('')+
-      (ex.indexOf('clipe')>=0?'<a class="btn btn-p" style="margin:6px 0 12px" href="/clipe.html?id='+encodeURIComponent(g.id)+'">🎬 Watch the video with your photos</a>':'')+
+      (ex.indexOf('clipe')>=0?'<a class="btn btn-p" style="margin:6px 0 6px" href="/clipe.html?id='+encodeURIComponent(g.id)+'">🎬 Watch the video with your photos</a><a class="btn" style="margin:0 0 12px" href="/clipe.html?id='+encodeURIComponent(g.id)+'&baixar=1">⬇ Download the video</a>':'')+
       (g.musicaLetra?'<div class="box"><div class="sub-t" style="margin-top:0">📝 Lyrics</div><pre class="lt">'+esc(g.musicaLetra)+'</pre></div>':'')+
       '<div class="box" style="text-align:center;margin-top:16px"><div class="sub-t" style="margin-top:0">💗 Want to surprise someone too?</div><p class="note" style="margin:0 0 10px">Create a personalized song with their name and your story.</p><a class="btn btn-p" href="#/r/'+esc(g.id)+'">Create a song</a></div>'+
     '</div></div><footer>Made with love by Capivarinha Love</footer>';
