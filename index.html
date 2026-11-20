@@ -838,6 +838,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
 .xp-nao{display:block;width:100%;margin-top:.55rem;background:none;border:0;font-size:.85rem;color:var(--muted);text-decoration:underline;padding:.5rem;cursor:pointer}
 .xp-fotos{margin-bottom:.9rem}
+#exRetroFundo,#exCartaFundo{z-index:120}
 .xp-exv{position:fixed;inset:0;z-index:100;background:#120a10;display:flex;flex-direction:column}
 .xp-exv iframe{flex:1;border:0;width:100%}
 .xp-exv .xp-x{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#5B2148;font-size:1.4rem;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
@@ -1110,7 +1111,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .pnl-cortesia.enviar{border:0;background:#1FAF5F;color:#fff;}
 .pnl-cortesia.enviar svg{width:18px;height:18px;fill:#fff;}
 .card2.destaque{position:relative;border:2px solid #FFB547;background:linear-gradient(180deg,#FFF6E0,#FFFFFF);box-shadow:0 6px 18px rgba(255,181,71,.25);}
-.card2.destaque.on{border-color:#E32B6D;}
+.card2.destaque.on{border-color:#E32B6D;background:var(--rose);box-shadow:0 6px 18px rgba(227,43,109,.28);}
 .c2-selo{position:absolute;top:-.6rem;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:.68rem;font-weight:900;color:#7A4A00;background:#FFD27A;padding:.15rem .55rem;border-radius:100px;}
 .card-louvor{grid-column:1/-1;order:-1;position:relative;display:flex;align-items:center;justify-content:space-between;gap:.8rem;min-height:118px;padding:1rem 1.1rem;border:0;border-radius:18px;cursor:pointer;text-align:left;color:#fff;overflow:hidden;
   background:linear-gradient(90deg,#0B0812 38%,rgba(11,8,18,.55) 62%,rgba(11,8,18,.05)),url(louvor-fundo.jpg) right 40%/58% auto no-repeat,#0B0812;box-shadow:0 8px 22px rgba(20,10,40,.28);font:inherit;}
@@ -1709,7 +1710,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 
 /* ================= APRESENTAÇÃO (O PRESENTE) ================= */
 #gift{--gbg:#120A0F;}
-.g-scope{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--gbg);
+.g-scope{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--gbg,#120A0F);
   color:#fff;z-index:100;-webkit-overflow-scrolling:touch;}
 .g-scope h1,.g-scope h2,.g-scope h3{color:#fff;}
 
@@ -3523,7 +3524,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
-<script src="/livro.js?v=37"></script>
+<script src="/livro.js?v=37" defer onload="window._lvOk=1;var c=window._lvCb||[];window._lvCb=[];c.forEach(function(f){try{f()}catch(e){}})"></script>
 <script>
 /* =========================================================
    CAPIVARINHA LOVE — aplicação completa (single file)
@@ -4553,6 +4554,7 @@ var _limpezas=[];
 function limpar(){ _limpezas.forEach(function(f){ try{f();}catch(e){} }); _limpezas=[]; }
 function aoSair(f){ _limpezas.push(f); }
 
+function comLivro(f){ if(window._lvOk || typeof window.telaLivro==='function') f(); else (window._lvCb=window._lvCb||[]).push(f); }
 function navegar(){
   funilM('entrou');
   limpar();
@@ -4580,7 +4582,11 @@ function navegar(){
   if(r.nome==='oferta' && r.arg){ telaOferta(r.arg); return; }
   if(r.nome==='live'){ try{ Store.set('cl_live', String(Date.now())); }catch(e){} ir('criar/musica'); return; }
   if(r.nome==='tela-aovivo'){ telaAoVivo(); return; }
-  if(r.nome==='livro' && typeof telaLivro==='function'){ telaLivro(r.arg, r.arg2); return; }
+  if(r.nome==='livro'){ /* 20/11: livro.js carrega sem travar a página inicial (defer) — espera ele aqui */
+    if(typeof window.telaLivro==='function'){ telaLivro(r.arg, r.arg2); return; }
+    app.innerHTML='<div style="min-height:70vh;display:flex;align-items:center;justify-content:center"><img src="'+MASCOTE+'" alt="" style="width:90px;animation:float 2.4s ease-in-out infinite"></div>';
+    comLivro(function(){ var r2=rota(); if(r2.nome==='livro' && typeof window.telaLivro==='function') telaLivro(r2.arg, r2.arg2); }); return;
+  }
   if(r.nome==='exemplo' && r.arg==='carta'){ abrirPresenteChecado(exemploCarta()); return; }
   if(r.nome==='painel-capivarinha'){ telaPainel(r.arg); return; }
   if(r.nome==='sou-eu'){ telaMarcarDev(); return; }
@@ -4868,6 +4874,10 @@ function telaHome(){
 /* página inicial nova: livros prontos (exemplos reais do painel), músicas de exemplo e meus presentes */
 function ligarHomeNova(){
   var box=el('hnLivros');
+  if(box) comLivro(function(){ if(el('hnLivros')===box) ligarHomeLivros(box); });
+  ligarHomeNova2();
+}
+function ligarHomeLivros(box){
   if(box && window.lvItensHome){
     window.lvItensHome().then(function(itens){
       if(!el('hnLivros')) return;
@@ -4879,6 +4889,8 @@ function ligarHomeNova(){
       box.querySelectorAll('[data-hnlv]').forEach(function(b){ b.onclick=function(){ var x=itens[+b.dataset.hnlv]; if(x.propria) location.hash='#/livro/criar'; else if(x.ex && window.lvAbrirExemplo) window.lvAbrirExemplo(x.ex); else location.hash='#/livro'; }; });
     }).catch(function(){ box.closest('.hn-sec').style.display='none'; });
   }
+}
+function ligarHomeNova2(){
   var tocando=null;
   function parar(){ AMOSTRAS.forEach(function(a){ var au=el('hnau-'+a.id); if(au){ au.pause(); } var b=document.querySelector('[data-hnplay="'+a.id+'"]'); if(b) b.innerHTML=IC.play; var m=el('hnmus-'+a.id); if(m) m.classList.remove('on'); }); tocando=null; }
   document.querySelectorAll('[data-hnplay]').forEach(function(b){ b.onclick=function(){
@@ -6358,7 +6370,7 @@ function htmlPasso(k){
   case 'trilha': {
     var on=W.trilhaOn!==false;
     var capaFoto=(W.fotos||[]).filter(Boolean)[0];
-    var escolhida=W.trilhaId||TRILHAS[0].id;
+    var escolhida=W.trilhaId||null; /* 20/11: antes marcava a trilha 1 junto com 'Sem música' */
     return guia("Escolhe a trilha que mais combina com o presente de vocês. Todas são gratuitas.")+
       '<div class="wz-t">Trilha sonora</div>'+
       '<div class="wz-s">Toca baixinho, em loop, do início ao fim da apresentação. Toque no play pra ouvir antes de escolher.</div>'+
@@ -7387,7 +7399,7 @@ function abrirExtrasPix(seguir, base){
   /* 17/11: 3 opções com o COMBO já marcado (a pessoa troca com 1 toque; o valor aparece grande) */
   if(!(W.extrasPix&&W.extrasPix.length) && !W._xpEscolheu){ esc1={clipe:true, quadro:true}; }
   /* 20/11: 💝 COMBO ESPECIAL (R$ 34,99) — primeira opção e já marcada (só no checkout normal das 4 músicas) */
-  var temEsp = base==null && quatroAtivo(W);
+  var temEsp = false; /* 20/11: Combo Especial R$ 34,99 tirado a pedido (retrospectiva segue nas ofertas) */
   if(temEsp && !W._xpEscolheu) esc1={esp:true, clipe:true, quadro:true};
   var EX=['1','2','3','4'].map(function(n){ return '/clipe-ex/'+n+'.webp'; });
   var ops=[

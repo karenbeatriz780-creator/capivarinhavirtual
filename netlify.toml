@@ -66,3 +66,24 @@
   for = "/*.mp3"
   [headers.values]
     Cache-Control = "public, max-age=604800"
+
+# 20/11: exemplos (vídeo da retrospectiva, capa) e scripts com ?v= ficam guardados no celular → abrem na hora da 2ª vez
+[[headers]]
+  for = "/*.mp4"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/exemplo-retrospectiva-poster.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/livro.js"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/quadro.js"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
