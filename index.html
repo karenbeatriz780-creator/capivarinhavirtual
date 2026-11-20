@@ -10992,7 +10992,7 @@ function meusMostrar(d, sess){
   var linkInd = d.indicarLink ? location.origin+d.indicarLink : '';
   var msgInd='Olha que presente lindo 😍 Uma música personalizada com o nome e a história de quem você ama 🎵\n\n4 músicas por R$ 9,99 e você ouve a prévia antes de pagar:\n'+linkInd;
   var mkt='<div class="ms-mkt">'+
-      (d.promo?'<a class="ms-of ms-of1" href="'+esc(d.promo)+'"><span class="ms-tag">PROMOÇÃO DE CLIENTE</span><b>4 músicas por R$ 9,99</b><small>2 letras · 2 estilos · 2 versões de cada</small><span class="ms-tempo">⏳ termina hoje em <b id="msTempo">--</b></span><em>Quero minhas 4 músicas →</em></a>':'')+
+      (false && d.promo?'<a class="ms-of ms-of1" href="'+esc(d.promo)+'"><span class="ms-tag">PROMOÇÃO DE CLIENTE</span><b>4 músicas por R$ 9,99</b><small>2 letras · 2 estilos · 2 versões de cada</small><span class="ms-tempo">⏳ termina hoje em <b id="msTempo">--</b></span><em>Quero minhas 4 músicas →</em></a>':'')+
       (linkInd?'<a class="ms-of ms-of2" href="https://wa.me/?text='+encodeURIComponent(msgInd)+'" target="_blank" rel="noopener"><span class="ms-tag">INDIQUE E GANHE</span><b>2 músicas de graça 🎁</b><small>Mande seu link pra um amigo. Quando ele comprar, sua música grátis aparece aqui.</small><em>Enviar meu link no WhatsApp →</em></a>':'')+
     '</div>';
   b.innerHTML='<div class="wz-t">Meus presentes</div>'+
@@ -11882,7 +11882,7 @@ function montarMusicaEntrega(g, opts){
   var cp=el('mxCopiar'); if(cp) cp.onclick=function(){ copiar(linkReceber,'Link copiado!'); };
 
   if(cliente){
-    ligarQuadroOferta(g.id,'meOferta');
+    /* 20/11: quadro '50% de desconto · 4 músicas por R$ 9,99' tirado — vale a de R$ 4,99 */
     ligarIndique(g.id,'mxIndica');
     abrirAnuncioCliente(g.id, (temLiberadas(g) && !g.dobroUsado) ? {liberadas:true} : {});
   }
@@ -11922,7 +11922,7 @@ function abrirAnuncioCliente(id, op){
       new Promise(function(r){ setTimeout(function(){ r({}); },1500); })
     ]).then(function(d){
       if(!document.querySelector(op.alvo||'.mx') || document.querySelector('.ad-fundo')) return;
-      var temOferta = true; /* a promoção 4 por R$ 9,99 é pra todo mundo */
+      var temOferta = false; /* 20/11: a promoção que vale é a nova música por R$ 4,99 (a de 4 por R$ 9,99 saiu) */
       var linkOf = op.linkOf || ((d && d.valida) ? '#/oferta/'+encodeURIComponent(id) : '#/oferta/p.'+encodeURIComponent(id));
       d={expiraEm:fimDoDia()};
       var linkInd = op.semIndica ? '' : (op.linkInd || location.origin+'/#/criar/musica/r.'+encodeURIComponent(id));
