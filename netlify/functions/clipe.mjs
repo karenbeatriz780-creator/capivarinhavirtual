@@ -15,7 +15,11 @@ async function pedido(id, exigePago) {
   if (!id || id.length > 100 || !/^[\w.-]+$/.test(id)) return null;
   const g = await getStore('presentes').get(id, { type: 'json' });
   if (!g || g.cancelado || (exigePago && !g.pago)) return null;
-  const ex = Array.isArray(g.extrasPix) ? g.extrasPix : [];
+  let ex = Array.isArray(g.extrasPix) ? g.extrasPix : [];
+  if (ex.indexOf('clipe') < 0 || ex.indexOf('quadro') < 0) { // comprou depois (oferta Clipe + Retrato R$ 7,99): pedido extra "<id>-x-cq-1"
+    const x = await getStore('presentes').get(id + '-x-cq-1', { type: 'json' }).catch(() => null);
+    if (x && x.pago) ex = ex.concat(['clipe', 'quadro']);
+  }
   if (ex.indexOf('clipe') < 0 && ex.indexOf('quadro') < 0) return null;
   return { g, clipe: ex.indexOf('clipe') >= 0, quadro: ex.indexOf('quadro') >= 0 };
 }

@@ -15,7 +15,8 @@ const PACOTES = {
   extra:         { nome: 'Lembrancinhas',  preco: 4 },
   extra_tema:    { nome: 'QR temático',    preco: 2.99 },
   extra_carta:   { nome: 'Cartinha',       preco: 3.99 },
-  extra_moldura: { nome: 'Moldura',        preco: 3.99 }
+  extra_moldura: { nome: 'Moldura',        preco: 3.99 },
+  extra_cq:      { nome: 'Clipe + Retrato com QR Code', preco: 7.99 } // 20/11: oferta pra quem já comprou a música
 };
 const PRECO_PACOTE6 = 19.99; // 6 músicas (3 letras × 2 versões) — tem que bater com o site
 // Produtos que aceitam a música personalizada como adicional pago.

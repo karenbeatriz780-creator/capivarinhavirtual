@@ -830,6 +830,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mv-34b{display:flex;align-items:center;gap:.75rem;width:100%;margin-top:.7rem;padding:.85rem .9rem;border-radius:18px;border:2px solid transparent;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(90deg,#E91E63,#f5c542) border-box;text-align:left;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(233,30,99,.12)}.mv-34-ic{flex:0 0 42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:linear-gradient(135deg,#ffe3ee,#fff3cf)}.mv-34-tx{flex:1;min-width:0}.mv-34-tx b{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:1rem;color:#2A0F1E;white-space:nowrap}.mv-34-tx small{display:block;font-size:.78rem;color:#7a5a68;margin-top:2px;line-height:1.3}.mv-34-go{flex:0 0 auto;margin-left:auto;font-size:.8rem;font-weight:900;color:#fff;background:#E91E63;border-radius:999px;padding:.45rem .7rem;white-space:nowrap}
 .card2.c2-largo{grid-column:1/-1}
 .pxc-outro{display:block;width:100%;margin:.6rem 0 .2rem;padding:.6rem .7rem;border:1px dashed #e0b8c8;border-radius:12px;background:#fff;color:#7a5a68;font-size:.8rem;text-align:left;cursor:pointer;font-family:inherit}
+.mx-cq{position:relative;margin:1rem 0;padding:1.1rem 1rem 1rem;border-radius:20px;background:linear-gradient(135deg,#fff5f9,#fff8e6);border:2px solid transparent;background-clip:padding-box;box-shadow:0 0 0 2px #f5c542,0 12px 28px rgba(233,30,99,.18);text-align:center}.mx-cq-tag{display:inline-block;font-size:.7rem;font-weight:900;letter-spacing:.04em;color:#fff;background:#E91E63;border-radius:999px;padding:.25rem .7rem;margin-bottom:.6rem}.mx-cq-t{display:block;font-size:1.08rem;color:#2A0F1E}.mx-cq-s{display:block;font-size:.84rem;color:#6d4a5b;margin:.4rem 0 .7rem;line-height:1.4}.mx-cq-ex{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap;margin-bottom:.7rem}.mx-cq-exb{border:1.5px solid #f1d5e2;background:#fff;border-radius:999px;padding:.4rem .75rem;font-size:.78rem;font-weight:700;color:#7a1040;cursor:pointer;font-family:inherit}.mx-cq-pr{display:flex;align-items:baseline;justify-content:center;gap:.45rem;margin-bottom:.6rem}.mx-cq-pr s{color:#a8909b}.mx-cq-pr b{font-size:1.6rem;color:#E91E63}.mx-cq-pr small{color:#7a5a68}
 .xp-combo{display:block;width:100%;margin:10px 0 2px;padding:11px 12px;border:2px dashed #E91E63;border-radius:14px;background:#fff0f6;color:#7a1040;font-size:.9rem;text-align:left;cursor:pointer}.xp-combo s{opacity:.6;margin-left:4px}.xp-combo.on{border-style:solid;background:#e9f8ee;border-color:#1F8A4C;color:#14532d;cursor:default}
 .xp-tot{display:flex;justify-content:space-between;align-items:baseline;margin:.2rem .2rem .6rem;font-size:.85rem;color:var(--muted)}.xp-tot b{font-family:'Fraunces';font-size:1.3rem;color:var(--plum)}
 .xp-go{display:block;width:100%;border:0;border-radius:999px;padding:1rem;font-weight:800;font-size:1.02rem;color:#fff;background:linear-gradient(90deg,#E32B6D,#B5124E);box-shadow:0 10px 26px rgba(227,43,109,.35);cursor:pointer}
@@ -11739,11 +11740,19 @@ function montarMusicaEntrega(g, opts){
         ((g.ofertaM1&&g.ofertaM1.letra) ? '<details class="mx-letra"><summary>📝 Letra '+(g.ofertaM2?'1':'da música 1')+'</summary><pre>'+esc(g.ofertaM1.letra)+'</pre></details>' : '')+
         ((g.ofertaM2&&g.ofertaM2.letra) ? '<details class="mx-letra"><summary>📝 Letra 2</summary><pre>'+esc(g.ofertaM2.letra)+'</pre></details>' : '')+
         (letra ? '<details class="mx-letra"><summary>📝 '+(g.ofertaM2?'Letra 3':g.ofertaM1?'Letra da música 2':'Ver a letra')+'</summary><pre>'+esc(letra)+'</pre></details>' : '')+
-        (cliente && g.pago && (g.extrasPix||[]).length
-          ? '<div class="mx-libera mx-extras"><span class="mx-lb-tag">🎁 SEUS EXTRAS</span><b>'+((g.extrasPix.indexOf('clipe')>=0&&g.extrasPix.indexOf('quadro')>=0)?'Seu clipe e seu quadro':(g.extrasPix.indexOf('clipe')>=0?'Seu clipe com fotos':'Seu quadro com QR Code'))+'</b>'+
+        (cliente && g.pago && !g.cancelado && (g.produto==='musica'||!g.produto) && !((g.extrasPix||[]).indexOf('clipe')>=0 && (g.extrasPix||[]).indexOf('quadro')>=0) && !extraPago(g.id,'cq','1')
+          ? '<div class="mx-cq"><span class="mx-cq-tag">🔥 PROMOÇÃO SÓ PRA QUEM JÁ COMPROU</span>'+
+              '<b class="mx-cq-t">🎬 Clipe com as fotos + 🖼️ Retrato com QR Code</b>'+
+              '<span class="mx-cq-s">O clipe da sua música com as fotos de vocês (pra postar e mandar) e um retrato lindo pra imprimir: aponta a câmera no QR e a música toca.</span>'+
+              '<div class="mx-cq-ex"><button type="button" class="mx-cq-exb" data-cqex="clipe">▶ Ver exemplo do clipe</button><button type="button" class="mx-cq-exb" data-cqex="quadro">🖼️ Ver exemplo do retrato</button></div>'+
+              '<div class="mx-cq-pr"><s>R$ '+fmtPreco(EXTRAS_PIX.clipe.de+EXTRAS_PIX.quadro.de)+'</s><b>R$ '+fmtPreco(PRECO_CQ)+'</b><small>os dois</small></div>'+
+              '<button type="button" class="mx-btn mx-btn-ouro" id="mxCq">🎁 Quero o clipe + retrato</button></div>'
+          : '')+
+        (cliente && g.pago && (exsG(g)).length
+          ? '<div class="mx-libera mx-extras"><span class="mx-lb-tag">🎁 SEUS EXTRAS</span><b>'+((exsG(g).indexOf('clipe')>=0&&exsG(g).indexOf('quadro')>=0)?'Seu clipe e seu quadro':(exsG(g).indexOf('clipe')>=0?'Seu clipe com fotos':'Seu quadro com QR Code'))+'</b>'+
               '<span>Toque pra ver, montar ou ajustar. Se você já mandou as fotos, está pronto.</span>'+
-              '<a class="mx-btn mx-btn-ouro" href="#/montar/'+encodeURIComponent(g.id)+'">'+(g.extrasPix.indexOf('clipe')>=0?'📸 Abrir meu clipe':'🖼️ Abrir meu quadro')+'</a>'+
-              (g.extrasPix.indexOf('clipe')>=0?'<a class="mx-btn" style="margin-top:.5rem" href="/clipe.html?id='+encodeURIComponent(g.id)+'&baixar=1">⬇ Baixar o vídeo do clipe</a>':'')+'</div>'
+              '<a class="mx-btn mx-btn-ouro" href="#/montar/'+encodeURIComponent(g.id)+'">'+(exsG(g).indexOf('clipe')>=0?'📸 Abrir meu clipe':'🖼️ Abrir meu quadro')+'</a>'+
+              (exsG(g).indexOf('clipe')>=0?'<a class="mx-btn" style="margin-top:.5rem" href="/clipe.html?id='+encodeURIComponent(g.id)+'&baixar=1">⬇ Baixar o vídeo do clipe</a>':'')+'</div>'
           : '')+
         (cliente && g.pago && !g.cancelado
           ? '<div class="mx-libera mx-promo"><span class="mx-lb-tag">🎉 SÓ PARA CLIENTES</span><b>Nova música pela METADE do preço</b>'+
@@ -11773,7 +11782,7 @@ function montarMusicaEntrega(g, opts){
             '<div id="meOferta"></div>'+
             '<div id="mxIndica"></div>'
           : '<div class="mx-devolva"><div class="mx-dv-ic">💝</div><b>Devolva o carinho</b>'+
-              '<span>Faça uma música personalizada pra '+(de?esc(de):'quem te enviou')+', com a história de vocês. Fica pronta em minutos.</span>'+
+              '<span>Faça uma música personalizada pra '+(de?esc(de):'quem te enviou')+', com a história de vocês, e se quiser um <b>clipe com as fotos</b> e um <b>retrato com QR Code</b>. Fica pronta em minutos.</span>'+
               '<a class="mx-btn mx-btn-rosa" href="#/criar/musica/r.'+encodeURIComponent(g.id)+'">🎵 Criar uma música pra '+(de?esc(de):'essa pessoa')+'</a>'+
               '<small>4 músicas por R$ 9,99 · prévia grátis antes de pagar</small></div>')+
         '<div class="mx-rodape"><img src="'+MASCOTE+'" alt=""> Feito com carinho no <b>Capivarinha Love</b></div>'+
@@ -11817,6 +11826,8 @@ function montarMusicaEntrega(g, opts){
   /* enviar o MP3 de verdade pelo compartilhar do celular */
   var mxL=el('mxLivro'); if(mxL) mxL.onclick=function(){ gaEvento('aceitou_upsell',{de:'musica',para:'livro',onde:'pagina_paga'}); var nm=String(g.musicaParaNome||'').split(/,|\s+e\s+/)[0].trim(); if(typeof window.lvOfertaDaMusica==='function') window.lvOfertaDaMusica({nome:nm, zap:g.musicaWhatsapp||''}); else location.hash='#/livro'; };
   var mxP=el('mxPresente'); if(mxP) mxP.onclick=function(){ abrirEnviarPresente(g); };
+  document.querySelectorAll('[data-cqex]').forEach(function(b){ b.onclick=function(){ verExemploExtra(b.dataset.cqex); }; });
+  var mxCq=el('mxCq'); if(mxCq) mxCq.onclick=function(){ gaEvento('upsell_cq',{}); iniciarPixExtra(g,'cq',{id:'1',nome:'Clipe + Retrato com QR Code'}); };
   var mxPr=el('mxPromo'); if(mxPr) mxPr.onclick=function(){ gaEvento('promo_cliente',{de:g.id}); W=null; telaWizard('musica'); W.clienteDe=g.id; if(g.meuNome) W.meuNome=g.meuNome; if(g.musicaWhatsapp) W.musicaWhatsapp=g.musicaWhatsapp; desenharPasso(); };
   var envA=el('mxEnviarAudio');
   envA.onclick=function(){
@@ -13087,7 +13098,9 @@ var MOLDURAS = [
   {id:'m4', nome:'4 fotos', fotos:4, desc:'Quatro momentos em volta do QR'}
 ];
 
-function precoDo(tipo){ return tipo==='tema' ? PRECO_TEMA : tipo==='carta' ? PRECO_CARTA : PRECO_MOLDURA; }
+function exsG(g){ var e=(g.extrasPix||[]).slice(); if(extraPago(g.id,'cq','1')){ if(e.indexOf('clipe')<0) e.push('clipe'); if(e.indexOf('quadro')<0) e.push('quadro'); } return e; }
+var PRECO_CQ=7.99; /* clipe + retrato com QR depois da compra — tem que bater com criar-pagamento.mjs */
+function precoDo(tipo){ return tipo==='cq' ? PRECO_CQ : tipo==='tema' ? PRECO_TEMA : tipo==='carta' ? PRECO_CARTA : PRECO_MOLDURA; }
 function precoBR(v){ return 'R$ ' + v.toFixed(2).replace('.', ','); }
 function listaDe(tipo){ return tipo==='tema' ? TEMAS_QR : tipo==='carta' ? CARTINHAS : MOLDURAS; }
 function itemDe(tipo, id){
@@ -13215,8 +13228,8 @@ function iniciarPixExtra(g, tipo, item){
   toast('Gerando o Pix...');
   var pedido = {
     id: extraId(g.id, tipo, item.id),
-    produto: (tipo==='tema' ? 'extra_tema' : tipo==='carta' ? 'extra_carta' : 'extra_moldura'),
-    email: g.email || '', meuNome: g.meuNome || '', refPresente: g.id,
+    produto: (tipo==='cq' ? 'extra_cq' : tipo==='tema' ? 'extra_tema' : tipo==='carta' ? 'extra_carta' : 'extra_moldura'),
+    email: g.email || '', meuNome: g.meuNome || '', refPresente: g.id, musicaWhatsapp: g.musicaWhatsapp || '',
     extraTipo: tipo, extraVariante: item.id
   };
   fetch('/.netlify/functions/criar-pagamento', {
@@ -13243,7 +13256,7 @@ function telaPixExtra(g, tipo, item, payload, teste){
     '<div class="wz-wrap">'+
       '<div class="wz-t">'+esc(item.nome)+'</div>'+
       '<div class="wz-s">'+precoBR(precoDo(tipo))+' · '+
-        (tipo==='moldura' ? 'depois de pagar você escolhe as fotos.' : 'liberado assim que o Pix cair.')+'</div>'+
+        (tipo==='moldura'||tipo==='cq' ? 'depois de pagar você escolhe as fotos.' : 'liberado assim que o Pix cair.')+'</div>'+
       (teste?'<div class="demo-note info" style="margin-bottom:1rem">'+IC.shield+'<div><b>Modo de homologação da Efí.</b> Nenhum valor real será cobrado.</div></div>':'')+
       htmlEscolhaPag(precoDo(tipo))+
       '<div class="pxc-stripe" id="pxStripe" hidden><div class="pxc-st-msg" id="pxStMsg">Abrindo o pagamento por cartão...</div></div>'+
@@ -13285,6 +13298,7 @@ function telaPixExtra(g, tipo, item, payload, teste){
           clearInterval(iv);
           salvarPresente(d.presente);
           toast('Liberado! 🎉');
+          if(tipo==='cq'){ toast('Pagamento confirmado! Agora é só mandar as fotos 📸'); location.hash='#/montar/'+encodeURIComponent(g.id); return; }
           if(tipo==='moldura') escolherFotosMoldura(g, item);
           else { telaExtras(g.id); setTimeout(function(){ baixarArte(g, tipo, item); }, 400); }
         } else if(tent>=40){
