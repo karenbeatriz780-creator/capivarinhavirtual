@@ -9772,18 +9772,24 @@ function pnlAuHtml(){
   var D=_pnlAu;
   if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>';
   if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
-  var ids=D.ids||[], cs=D.campanhas||[];
-  return topo+'<div class="dsh-card"><div class="mn-bar"><b>'+ids.length+' marcada(s)</b>'+(D.feitoHoje?'<small style="margin-left:auto;color:#1F8A4C">✓ aumento de hoje já feito</small>':'')+'</div>'+
+  var ids=D.ids||[], cs=D.campanhas||[], teto=Number(D.teto)||0;
+  function proj(v,n){ var x=v; for(var i=0;i<n;i++){ x=Math.round(x*110)/100; if(teto && x>teto){ x=teto; break; } } return x; }
+  var marc=cs.filter(function(c){ return ids.indexOf(c.id)>=0 && c.orc; }), soma=function(n){ return marc.reduce(function(t,c){ return t+proj(c.orc,n); },0); };
+  var tabela=marc.length?'<div class="dsh-card"><div class="dsh-t">🔮 Projeção (somando as '+marc.length+' marcadas)</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;text-align:center;margin-top:.5rem">'+[[0,'Hoje'],[7,'7 dias'],[15,'15 dias'],[30,'1 mês']].map(function(a){ var v=soma(a[0]);
+      return '<div style="background:#fff5f9;border-radius:12px;padding:.5rem .3rem"><small style="color:#888">'+a[1]+'</small><br><b>R$ '+fmtPreco(Math.round(v*100)/100)+'</b><br><small style="color:#888">por dia</small></div>'; }).join('')+'</div>'+
+    '<div class="dsh-nota" style="margin-top:.5rem">Gasto total no mês, se todas ficarem ligadas: <b>R$ '+fmtPreco(Math.round((function(){ var t=0; for(var d=0;d<30;d++) t+=soma(d); return t; })()*100)/100)+'</b>'+(teto?' (com teto de R$ '+fmtPreco(teto)+' por campanha)':' (sem teto)')+'. É projeção: o robô ainda desliga as que gastarem sem vender.</div></div>':'';
+  return topo+tabela+'<div class="dsh-card"><div class="mn-bar"><b>'+ids.length+' marcada(s)</b>'+(D.feitoHoje?'<small style="margin-left:auto;color:#1F8A4C">✓ aumento de hoje já feito</small>':'')+'</div>'+
     '<label style="display:block;font-size:.85rem;margin:.4rem 0 .6rem">Teto por campanha (opcional): R$ <input type="number" id="auTeto" min="1" step="1" style="width:90px" value="'+(D.teto||'')+'" placeholder="sem teto"> <small style="color:#888">— quando chegar nele, para de subir</small></label>'+
     '<input type="search" id="auBusca" class="mn-busca" placeholder="Buscar pelo nome…">'+
     '<div class="mn-lista">'+cs.map(function(c){ var on=ids.indexOf(c.id)>=0, at=c.status==='ACTIVE';
-      return '<label class="mn-it" data-aunome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-au="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+'<br><small style="color:#888">'+(c.orc?'hoje R$ '+fmtPreco(c.orc)+'/dia → amanhã R$ '+fmtPreco(Math.round(c.orc*110)/100):'orçamento não encontrado')+'</small></span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
+      return '<label class="mn-it" data-aunome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-au="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+'<br><small style="color:#888">'+(c.orc?'hoje R$ '+fmtPreco(c.orc)+'/dia · em 7 dias R$ '+fmtPreco(proj(c.orc,7))+' · em 1 mês R$ '+fmtPreco(proj(c.orc,30)):'orçamento não encontrado')+'</small></span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
     '<div class="sub" id="auSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
 }
 function pnlAuSalvar(){
   var sv=el('auSalvo'); if(sv) sv.textContent='Salvando…';
   fetch('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({ids:_pnlAu.ids||[],teto:(el('auTeto')||{}).value||null})}).then(function(r){ return r.json(); })
-    .then(function(d){ if(d&&d.ok){ _pnlAu.ids=d.ids; _pnlAu.teto=d.teto; var sv=el('auSalvo'); if(sv) sv.textContent='Salvo ✓'; var b=document.querySelector('.mn-bar b'); if(b) b.textContent=d.ids.length+' marcada(s)'; } else { var sv2=el('auSalvo'); if(sv2) sv2.textContent='⚠️ Não salvou: '+((d&&d.erro)||''); } })
+    .then(function(d){ if(d&&d.ok){ _pnlAu.ids=d.ids; _pnlAu.teto=d.teto; var y=window.scrollY; pnlRedesenhar(); window.scrollTo(0,y); toast('Salvo ✓'); } else { var sv2=el('auSalvo'); if(sv2) sv2.textContent='⚠️ Não salvou: '+((d&&d.erro)||''); } })
     .catch(function(){ var sv=el('auSalvo'); if(sv) sv.textContent='⚠️ Sem conexão — não salvou'; });
 }
 function pnlAuLigar(){
