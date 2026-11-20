@@ -9706,6 +9706,7 @@ function pnlCampLigar(body){
   if(_pnlAba==='vigiar'){ if(!_pnlCamp) pnlCampCarregar(); if(!_pnlVig) pnlVigCarregar(); pnlVigiarLigar(body); }
   if(_pnlAba==='meianoite'){ if(!_pnlMN) pnlMNCarregar(); pnlMNLigar(); }
   if(_pnlAba==='aprender'){ if(!_pnlApr) pnlAprCarregar(); pnlAprLigar(); }
+  if(_pnlAba==='aumento'){ if(!_pnlAu) pnlAuCarregar(); pnlAuLigar(); }
   if(_pnlAba==='desistem'){ if(!_pnlFm||_pnlFm.p!==_pnlFmP) pnlFmCarregar(); pnlFmLigar(); }
   if(_pnlAba==='pagos' && el('pnlRefIds')){ try{ el('pnlRefIds').value=localStorage.getItem('cl_ref_ids')||''; el('pnlRefTestes').value=localStorage.getItem('cl_ref_testes')||''; }catch(x){} }
   if(_pnlAba==='pagos' && el('pnlRefSt')){ pnlRefLer().then(function(d){ pnlRefSt(d); if(d.status==='gerando') pnlRefVigiar(); }).catch(function(){}); }
@@ -9757,6 +9758,39 @@ function pnlMNHtml(){
     '<div class="mn-lista">'+cs.map(function(c){ var on=fora.indexOf(c.id)<0, at=c.status==='ACTIVE';
       return '<label class="mn-it" data-mnnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-mn="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+(c.fut?'<br><small style="color:'+(c.top||c.aprend?'#1F8A4C':'#b23')+'">'+(c.aprend?'🎓 aprendizagem (sempre ligada)':c.top?'🏆 entre as 10 melhores — vai ligar':'✖ fora das 10 — não liga')+' · '+c.fut.vendas+' venda(s) na semana'+(c.fut.cpa!=null?' a R$ '+fmtPreco(c.fut.cpa)+' cada':'')+'</small>':'')+'</span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
     '<div class="sub" id="mnSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
+}
+/* 📈 AUMENTO DIÁRIO: campanhas que sobem +10% no orçamento todo dia */
+var _pnlAu=null, _pnlAuCarr=false;
+function pnlAuCarregar(){
+  if(_pnlAuCarr) return; _pnlAuCarr=true;
+  fetch('/.netlify/functions/admin-aumento',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
+    .then(function(d){ _pnlAuCarr=false; _pnlAu=d||{}; if(_pnlAba==='aumento') pnlRedesenhar(); })
+    .catch(function(){ _pnlAuCarr=false; _pnlAu={erro:'Sem conexão.'}; if(_pnlAba==='aumento') pnlRedesenhar(); });
+}
+function pnlAuHtml(){
+  var topo='<div class="dsh-card"><div class="dsh-t">📈 Aumento diário de orçamento</div><div class="dsh-nota">Marque as campanhas que devem <b>subir +10% no orçamento todo dia</b>. O robô aumenta 1 vez por dia, logo depois da meia-noite, e <b>só nas que estiverem ligadas</b>. Cada aumento aparece no histórico do robô.</div></div>';
+  var D=_pnlAu;
+  if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>';
+  if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
+  var ids=D.ids||[], cs=D.campanhas||[];
+  return topo+'<div class="dsh-card"><div class="mn-bar"><b>'+ids.length+' marcada(s)</b>'+(D.feitoHoje?'<small style="margin-left:auto;color:#1F8A4C">✓ aumento de hoje já feito</small>':'')+'</div>'+
+    '<label style="display:block;font-size:.85rem;margin:.4rem 0 .6rem">Teto por campanha (opcional): R$ <input type="number" id="auTeto" min="1" step="1" style="width:90px" value="'+(D.teto||'')+'" placeholder="sem teto"> <small style="color:#888">— quando chegar nele, para de subir</small></label>'+
+    '<input type="search" id="auBusca" class="mn-busca" placeholder="Buscar pelo nome…">'+
+    '<div class="mn-lista">'+cs.map(function(c){ var on=ids.indexOf(c.id)>=0, at=c.status==='ACTIVE';
+      return '<label class="mn-it" data-aunome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-au="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+'<br><small style="color:#888">'+(c.orc?'hoje R$ '+fmtPreco(c.orc)+'/dia → amanhã R$ '+fmtPreco(Math.round(c.orc*110)/100):'orçamento não encontrado')+'</small></span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
+    '<div class="sub" id="auSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
+}
+function pnlAuSalvar(){
+  var sv=el('auSalvo'); if(sv) sv.textContent='Salvando…';
+  fetch('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({ids:_pnlAu.ids||[],teto:(el('auTeto')||{}).value||null})}).then(function(r){ return r.json(); })
+    .then(function(d){ if(d&&d.ok){ _pnlAu.ids=d.ids; _pnlAu.teto=d.teto; var sv=el('auSalvo'); if(sv) sv.textContent='Salvo ✓'; var b=document.querySelector('.mn-bar b'); if(b) b.textContent=d.ids.length+' marcada(s)'; } else { var sv2=el('auSalvo'); if(sv2) sv2.textContent='⚠️ Não salvou: '+((d&&d.erro)||''); } })
+    .catch(function(){ var sv=el('auSalvo'); if(sv) sv.textContent='⚠️ Sem conexão — não salvou'; });
+}
+function pnlAuLigar(){
+  if(!_pnlAu||!_pnlAu.campanhas) return;
+  document.querySelectorAll('[data-au]').forEach(function(x){ x.onchange=function(){ var ids=_pnlAu.ids=_pnlAu.ids||[], id=x.dataset.au, i=ids.indexOf(id); if(x.checked){ if(i<0) ids.push(id); } else if(i>=0) ids.splice(i,1); pnlAuSalvar(); }; });
+  var t=el('auTeto'); if(t) t.onchange=pnlAuSalvar;
+  var b=el('auBusca'); if(b) b.oninput=function(){ var q=b.value.trim().toLowerCase(); document.querySelectorAll('[data-aunome]').forEach(function(l){ l.style.display=!q||l.dataset.aunome.indexOf(q)>=0?'':'none'; }); };
 }
 /* 🔻 ONDE DESISTEM: funil da música por etapa */
 var _pnlFm=null, _pnlFmP='hoje', _pnlFmCarr=false;
@@ -10438,7 +10472,7 @@ function desenharPainel(pedidos, visitas, musicas){
 
   body.innerHTML=
     '<div class="pnl-abas pnl-abas-main" id="pnlAbas">'+
-      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['desistem','🔻','Onde desistem'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
+      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['desistem','🔻','Onde desistem'],['aumento','📈','Aumento'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
         return '<button type="button" class="pnl-aba'+(_pnlAba===a[0]?' on':'')+'" data-aba="'+a[0]+'"><i>'+a[1]+'</i><span>'+a[2]+'</span></button>'; }).join('')+
     '</div>'+
     '<div class="pnl-abas pnl-abas-mais"><small>Mais:</small>'+
@@ -10458,6 +10492,7 @@ function desenharPainel(pedidos, visitas, musicas){
     (_pnlAba==='meianoite' ? pnlMNHtml() : '')+
     (_pnlAba==='aprender' ? pnlAprHtml() : '')+
     (_pnlAba==='desistem' ? pnlFmHtml() : '')+
+    (_pnlAba==='aumento' ? pnlAuHtml() : '')+
     (_pnlAba==='hoje' ? pnlHojeHtml(pedidos, _pnlCache.custos||{}) : '')+
     (_pnlAba==='pagos'
       ? '<div class="pnl-sec">'+lucroHtml+'</div>'+

@@ -24,7 +24,7 @@
 //   trava: R$ 15 hoje sem compra → desliga). Campanha nova (menos de 2 dias) segue a regra só de hoje.
 import { getStore } from '@netlify/blobs';
 import { metaAds, recomendar, ultimasAcoes, TICKET, avaliarSubir } from './_gastos.mjs';
-import { lerCfg, aplicarAcao, logRobo, avisar, vendasSitePorCampanha, graphConta } from './_meta.mjs';
+import { lerCfg, aplicarAcao, logRobo, avisar, vendasSitePorCampanha, graphConta, graph } from './_meta.mjs';
 import { registrarAcao } from './_gastos.mjs';
 import { diaBR, brl, imposto, cpa3dias } from './_resumo.mjs';
 import { calcHorarios } from './_horarios.mjs';
@@ -132,6 +132,42 @@ export async function rodarRobo(simular) {
         try { if (!simular) { await aplicarAcao(c, 'ativar', 'robô (meia-noite)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (meia-noite)', em: agora }; }
           feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: (jaAgora ? '⚡ análise de agora' : '🌙 dia novo') + ': liguei — 🏆 está entre as 10 melhores (' + txt + ')' }); }
         catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui ligar à meia-noite: ' + e.message }); }
+      }
+    }
+  }
+  // 📈 AUMENTO DIÁRIO (20/11, pedido do Gusthavo): as campanhas que você marcou na aba "📈 Aumento" sobem +10% no orçamento
+  //    todo dia, 1 vez (primeira rodada do dia, depois da meia-noite). Só as que estão LIGADAS. Respeita o teto, se você colocou.
+  const FLAG_AU = 'aumento_feito_' + hoje;
+  if (!simular && !(await L().get(FLAG_AU, { type: 'json' }).catch(() => null))) {
+    const au = (await L().get('aumento_cfg', { type: 'json' }).catch(() => null)) || {};
+    const ids = (au.ids || []).map(String), teto = Number(au.teto) > 0 ? Number(au.teto) : null, pct = Number(au.pct) > 0 ? Number(au.pct) : 10;
+    if (ids.length) {
+      await L().setJSON(FLAG_AU, { em: agora }).catch(() => {});
+      for (const id of ids) {
+        const c = (meta.campanhas || []).find((x) => String(x.id) === id);
+        if (!c) { feitas.push({ tipo: 'erro', camp: id, id, aviso: true, motivo: '📈 não achei essa campanha pra aumentar o orçamento' }); continue; }
+        if (c.status !== 'ACTIVE') continue;
+        if (!c.orcamentoNaCampanha && !(c.conjuntos || []).some((x) => x.orcamentoDia > 0)) { // acabou de ser ligada: busca os conjuntos direto no Meta
+          try { const r = await graph('GET', id + '/adsets', { fields: 'id,daily_budget,effective_status', limit: 50 });
+            c.conjuntos = (r.data || []).filter((x) => Number(x.daily_budget) > 0 && !/DELETED|ARCHIVED/.test(String(x.effective_status || ''))).map((x) => ({ id: x.id, orcamentoDia: Number(x.daily_budget) / 100 }));
+            c.orcamentoDia = c.conjuntos.reduce((t, x) => t + x.orcamentoDia, 0) || c.orcamentoDia; } catch (e) {}
+        }
+        const de = Number(c.orcamentoDia) || 0;
+        let para = Math.round(de * (1 + pct / 100) * 100) / 100;
+        if (teto && para > teto) para = teto;
+        if (!(de > 0) || !(para > de)) continue;
+        try {
+          if (c.orcamentoNaCampanha) await graph('POST', id, { daily_budget: String(Math.round(para * 100)) });
+          else {
+            const cs = (c.conjuntos || []).filter((x) => x.orcamentoDia > 0);
+            if (!cs.length) throw new Error('sem orçamento diário nos conjuntos');
+            const f = para / de;
+            for (const x of cs) await graph('POST', x.id, { daily_budget: String(Math.round(x.orcamentoDia * f * 100)) });
+          }
+          await registrarAcao(id, 'orcamento', { de, para, quem: 'robô (+' + pct + '%/dia)' }).catch(() => {});
+          c.orcamentoDia = para;
+          feitas.push({ tipo: 'subiu', camp: c.nome, id, aviso: true, motivo: '📈 aumento diário: orçamento ' + brl(de) + ' → ' + brl(para) + ' (+' + pct + '%)' + (teto && para === teto ? ' — chegou no teto' : '') });
+        } catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id, aviso: true, motivo: '📈 não consegui aumentar o orçamento: ' + e.message }); }
       }
     }
   }
