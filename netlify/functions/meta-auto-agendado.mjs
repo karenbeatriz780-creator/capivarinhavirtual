@@ -82,7 +82,7 @@ export async function rodarRobo(simular) {
   //    As ligadas SEM futuro que já gastaram R$ 10+ na semana sem provar que vendem → desliga. Campanha nova (gastou menos de R$ 10) fica.
   // 🎓 APRENDIZAGEM (17/11): até 2 campanhas que você escolheu no painel — o robô NUNCA desliga, liga à meia-noite e só AVISA se regredir
   const especial = new Set(((await L().get('especial_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
-  const ehEspecial = (c) => especial.has(String(c.id)) || /modo\s*especial/i.test(c.nome || '');
+  const ehEspecial = (c) => especial.has(String(c.id)) || /modo\s*especial|capivarinha\s*#?\s*007/i.test(c.nome || ''); // 20/11 23h: Gusthavo ligou a Capivarinha #007 (R$ 600/dia) e pediu pra vigiar
   const aprend = new Set(((await L().get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
   const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117b', FLAG_DESFAZ = 'desfaz_roas_20261117';
   // ↩️ 17/11 21h: desfaz o corte por ROAS 1,5 por campanha — religa (uma vez) as que o robô desligou desde 19h50 e passam na regra de R$ 9,50
