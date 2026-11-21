@@ -84,7 +84,8 @@ export async function rodarRobo(simular) {
   const especial = new Set(((await L().get('especial_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
   // 20/11 23h (Gusthavo): campanha de VALOR (orçamento R$ 300+/dia, ex.: Capivarinha #007 R$ 600, mamazona R$ 300) segue a regra do modo especial;
   //   as outras seguem a regra normal (passou do limite por venda → desliga)
-  const ehEspecial = (c) => especial.has(String(c.id)) || /modo\s*especial|capivarinha\s*#?\s*007/i.test(c.nome || '') || Number(c.orcamentoDia || 0) >= 300;
+  const lucroHoje = new Set(((await L().get('lucro_hoje_' + hoje, { type: 'json' }).catch(() => null)) || {}).ids || []); // 21/11: lucraram ontem e anteontem → hoje regra do modo especial
+  const ehEspecial = (c) => especial.has(String(c.id)) || lucroHoje.has(String(c.id)) || /modo\s*especial|capivarinha\s*#?\s*007/i.test(c.nome || '') || Number(c.orcamentoDia || 0) >= 300;
   const aprend = new Set(((await L().get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
   const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117b', FLAG_DESFAZ = 'desfaz_roas_20261117';
   // ↩️ 17/11 21h: desfaz o corte por ROAS 1,5 por campanha — religa (uma vez) as que o robô desligou desde 19h50 e passam na regra de R$ 9,50
