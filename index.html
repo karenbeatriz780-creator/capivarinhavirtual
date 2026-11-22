@@ -8215,7 +8215,7 @@ function entrarPainel(chave){
     '<button class="pnl-att" id="pnlAtt">Atualizar</button>'+
     '<button class="pnl-sair" id="pnlSair">Sair</button></div></div>'+
     '<div id="pnlBody">Carregando…</div></div>';
-  el('pnlSair').onclick=function(){ Store.del('cl_admin_key'); _pnlChave=''; toast('Senha de administrador esquecida neste aparelho.'); };
+  el('pnlSair').onclick=function(){ Store.del('cl_admin_key'); Store.del('cl_admin_senha'); _pnlChave=''; toast('Senha de administrador esquecida neste aparelho.'); };
   el('pnlAtt').onclick=function(){ atualizarPainel(); };
   el('pnlFuso').onclick=function(){
     Store.set('cl_pnl_fuso', String(pnlFuso()===-2?-3:-2));
@@ -8729,6 +8729,21 @@ function abrirTentativasLivro(id){
       }).catch(function(){});
   }
   carregar(); iv=setInterval(function(){ if(!document.getElementById('lvTentM')){ clearInterval(iv); return; } carregar(); },3000);
+}
+/* 21/11: abas do robô (Aumento, Modo especial, Vendas 5 dias, Aprendizagem) exigem a SENHA de administrador.
+   Quem abre o painel pelo link não tem a senha guardada → pede 1 vez, guarda neste aparelho e tenta de novo. */
+function pnlAdm(url, opts){
+  opts=opts||{};
+  function go(){ var o={}; for(var k in opts) o[k]=opts[k]; o.headers={}; var h=opts.headers||{}; for(var j in h) o.headers[j]=h[j];
+    o.headers['x-admin-key']=Store.get('cl_admin_senha')||_pnlChave||''; if(!o.method) o.cache='no-store'; return fetch(url,o); }
+  return go().then(function(r){
+    if(r.status!==401) return r;
+    Store.del('cl_admin_senha');
+    var k=(prompt('Digite a senha de administrador do painel (fica guardada neste celular):')||'').trim();
+    if(!k) return r;
+    Store.set('cl_admin_senha',k);
+    return go().then(function(r2){ if(r2.status===401){ Store.del('cl_admin_senha'); toast('Senha incorreta.'); } return r2; });
+  });
 }
 function pedirSenhaAdmin(){
   if(_pnlChave) return true;
@@ -9806,7 +9821,7 @@ function pnlMNHtml(){
 var _pnlEs=null, _pnlEsCarr=false, _pnlEsQ='';
 function pnlEsCarregar(){
   if(_pnlEsCarr) return; _pnlEsCarr=true;
-  fetch('/.netlify/functions/admin-especial',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
+  pnlAdm('/.netlify/functions/admin-especial',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
     .then(function(d){ _pnlEsCarr=false; _pnlEs=d||{}; if(_pnlAba==='especial') pnlRedesenhar(); })
     .catch(function(){ _pnlEsCarr=false; _pnlEs={erro:'Sem conexão.'}; if(_pnlAba==='especial') pnlRedesenhar(); });
 }
@@ -9828,7 +9843,7 @@ function pnlEsHtml(){
 function pnlEsLigar(){
   var b=el('esBusca'); if(b){ b.oninput=function(){ _pnlEsQ=b.value; var pos=b.selectionStart; pnlRedesenhar(); var nb=el('esBusca'); if(nb){ nb.focus(); try{ nb.setSelectionRange(pos,pos); }catch(e){} } }; }
   function post(corpo, btn, ok){ if(btn) btn.disabled=true;
-    fetch('/.netlify/functions/admin-especial',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify(corpo)}).then(function(r){ return r.json(); })
+    pnlAdm('/.netlify/functions/admin-especial',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify(corpo)}).then(function(r){ return r.json(); })
       .then(function(d){ if(d&&d.ok){ toast(ok); _pnlEs=null; _pnlEsQ=''; pnlRedesenhar(); pnlEsCarregar(); } else { toast((d&&d.erro)||'Não deu certo'); if(btn) btn.disabled=false; } })
       .catch(function(){ toast('Sem conexão.'); if(btn) btn.disabled=false; }); }
   document.querySelectorAll('[data-esativar]').forEach(function(x){ x.onclick=function(){ var orc=Number((el('esOrc')||{}).value)||0;
@@ -9840,7 +9855,7 @@ function pnlEsLigar(){
 var _pnlV5=null, _pnlV5Carr=false;
 function pnlV5Carregar(){
   if(_pnlV5Carr) return; _pnlV5Carr=true;
-  fetch('/.netlify/functions/admin-vendas5',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
+  pnlAdm('/.netlify/functions/admin-vendas5',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
     .then(function(d){ _pnlV5Carr=false; _pnlV5=d||{}; if(_pnlAba==='vendas5') pnlRedesenhar(); })
     .catch(function(){ _pnlV5Carr=false; _pnlV5={erro:'Sem conexão.'}; if(_pnlAba==='vendas5') pnlRedesenhar(); });
 }
@@ -9869,7 +9884,7 @@ function pnlV5Ligar(){
 var _pnlAu=null, _pnlAuCarr=false;
 function pnlAuCarregar(){
   if(_pnlAuCarr) return; _pnlAuCarr=true;
-  fetch('/.netlify/functions/admin-aumento',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
+  pnlAdm('/.netlify/functions/admin-aumento',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
     .then(function(d){ _pnlAuCarr=false; _pnlAu=d||{}; if(_pnlAba==='aumento') pnlRedesenhar(); })
     .catch(function(){ _pnlAuCarr=false; _pnlAu={erro:'Sem conexão.'}; if(_pnlAba==='aumento') pnlRedesenhar(); });
 }
@@ -9911,9 +9926,9 @@ function pnlAuHtml(){
 }
 function pnlAuLigar(){
   if(!_pnlAu||!_pnlAu.campanhas) return;
-  var t=el('auTeto'); if(t) t.onchange=function(){ fetch('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({teto:t.value||null})}).then(function(r){ return r.json(); }).then(function(d){ if(d&&d.ok){ _pnlAu.teto=d.teto; toast('Teto salvo ✓'); var y=window.scrollY; pnlRedesenhar(); window.scrollTo(0,y); } }).catch(function(){ toast('Sem conexão.'); }); };
+  var t=el('auTeto'); if(t) t.onchange=function(){ pnlAdm('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({teto:t.value||null})}).then(function(r){ return r.json(); }).then(function(d){ if(d&&d.ok){ _pnlAu.teto=d.teto; toast('Teto salvo ✓'); var y=window.scrollY; pnlRedesenhar(); window.scrollTo(0,y); } }).catch(function(){ toast('Sem conexão.'); }); };
   document.querySelectorAll('[data-ausobe]').forEach(function(b){ b.onclick=function(){ b.disabled=true; b.textContent='Subindo…';
-    fetch('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'subirUm',id:b.dataset.ausobe})}).then(function(r){ return r.json(); })
+    pnlAdm('/.netlify/functions/admin-aumento',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({acao:'subirUm',id:b.dataset.ausobe})}).then(function(r){ return r.json(); })
       .then(function(d){ if(d&&d.ok){ toast(d.motivo||'Subiu ✓'); var c=(_pnlAu.campanhas||[]).filter(function(x){ return x.id===b.dataset.ausobe; })[0]; if(c){ c.subiuHoje=Date.now(); c.orc=Math.round(c.orc*110)/100; if(_pnlAu.teto && c.orc>_pnlAu.teto) c.orc=_pnlAu.teto; } var y=window.scrollY; pnlRedesenhar(); window.scrollTo(0,y); }
         else { toast((d&&d.erro)||'Não deu certo'); b.disabled=false; b.textContent='📈 Subir 10%'; } })
       .catch(function(){ toast('Sem conexão.'); b.disabled=false; b.textContent='📈 Subir 10%'; }); }; });
@@ -9975,7 +9990,7 @@ function pnlFmLigar(){
 var _pnlApr=null, _pnlAprCarr=false;
 function pnlAprCarregar(){
   if(_pnlAprCarr) return; _pnlAprCarr=true;
-  fetch('/.netlify/functions/admin-aprendizagem',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
+  pnlAdm('/.netlify/functions/admin-aprendizagem',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
     .then(function(d){ _pnlAprCarr=false; _pnlApr=d||{}; if(_pnlAba==='aprender') pnlRedesenhar(); })
     .catch(function(){ _pnlAprCarr=false; _pnlApr={erro:'Sem conexão.'}; if(_pnlAba==='aprender') pnlRedesenhar(); });
 }
@@ -10004,7 +10019,7 @@ function pnlAprLigar(){
     var ids=_pnlApr.ids=_pnlApr.ids||[], id=x.dataset.apr, i=ids.indexOf(id);
     if(x.checked){ if(ids.length>=2){ x.checked=false; toast('Máximo de 2 campanhas de aprendizagem. Desmarque uma antes.'); return; } if(i<0) ids.push(id); } else if(i>=0) ids.splice(i,1);
     var sv=el('aprSalvo'); if(sv) sv.textContent='Salvando…';
-    fetch('/.netlify/functions/admin-aprendizagem',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({ids:ids})}).then(function(r){ return r.json(); })
+    pnlAdm('/.netlify/functions/admin-aprendizagem',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({ids:ids})}).then(function(r){ return r.json(); })
       .then(function(d){ if(d&&d.ok){ _pnlApr.ids=d.ids; pnlRedesenhar(); toast('Salvo ✓'); } else { var sv=el('aprSalvo'); if(sv) sv.textContent='⚠️ Não salvou: '+((d&&d.erro)||''); } })
       .catch(function(){ var sv=el('aprSalvo'); if(sv) sv.textContent='⚠️ Sem conexão — não salvou'; });
   }; });
