@@ -1088,6 +1088,9 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mx-share>b,.mx-ind>b,.mx-devolva>b{display:block;font-size:1rem;color:#fff;}
 .mx-share>span,.mx-ind>span,.mx-devolva>span{display:block;font-size:.8rem;color:#D8BFCB;margin:.3rem 0 .75rem;line-height:1.5;}
 .mx-share-row{display:flex;gap:.5rem;}
+.mx-timer{margin:1.1rem 0 .2rem;padding:.7rem .9rem;border-radius:14px;background:linear-gradient(90deg,#E91E63,#ff5c8a);color:#fff;font-weight:800;text-align:center;font-size:.95rem;box-shadow:0 8px 20px rgba(233,30,99,.35)}.mx-timer b{font-variant-numeric:tabular-nums;font-size:1.1rem;margin-left:.2rem}
+.mx-lvkid{background:linear-gradient(160deg,#fff8ec,#ffeef3);box-shadow:0 0 0 3px #f5c542,0 14px 34px rgba(233,30,99,.3)}.mx-lvkid .mx-cq-tag{background:linear-gradient(90deg,#D7263D,#1B7F4B)!important;color:#fff!important}.mx-lvkid-ic{font-size:2.6rem;line-height:1;margin:.5rem 0 .2rem}
+.mx-ind-dest .mx-ind{border:2px solid #1FAF5F;box-shadow:0 10px 26px rgba(31,175,95,.28);background:linear-gradient(160deg,rgba(31,175,95,.22),rgba(255,255,255,.05))}.mx-ind-dest .mx-ind-top{font-size:.8rem}.mx-ind-dest .mx-ind>b{font-size:1.25rem}
 .mx-ind{border-color:rgba(31,175,95,.4);background:linear-gradient(160deg,rgba(31,175,95,.12),rgba(255,255,255,.04));}
 .mx-ind-top{display:inline-block;font-size:.7rem;font-weight:800;color:#0E3B22;background:#6BE8AB;padding:.2rem .65rem;border-radius:100px;margin-bottom:.5rem;}
 .mx-ind-ganhou{font-size:.9rem;color:#6BE8AB;margin-bottom:.6rem;}
@@ -3524,7 +3527,7 @@ button.me-btn{font-family:inherit;font-weight:800;cursor:pointer;}
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
-<script src="/livro.js?v=37" defer onload="window._lvOk=1;var c=window._lvCb||[];window._lvCb=[];c.forEach(function(f){try{f()}catch(e){}})"></script>
+<script src="/livro.js?v=38" defer onload="window._lvOk=1;var c=window._lvCb||[];window._lvCb=[];c.forEach(function(f){try{f()}catch(e){}})"></script>
 <script>
 /* =========================================================
    CAPIVARINHA LOVE — aplicação completa (single file)
@@ -11714,6 +11717,8 @@ function abrirEnviarPresente(g){
     window.open('https://wa.me/'+n+'?text='+encodeURIComponent(txt),'_blank'); fechar();
   };
 }
+var PROMO_CLIENTE_MS=24*3600e3; /* tem que bater com criar-pagamento.mjs (promo de cliente vale 24h depois do pagamento) */
+function fmtFaltam(ms){ ms=Math.max(0,ms); var h=Math.floor(ms/3600e3), m=Math.floor(ms%3600e3/6e4), x=Math.floor(ms%6e4/1e3); return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(x<10?'0':'')+x; }
 function montarMusicaEntrega(g, opts){
   opts=opts||{};
   document.body.style.overflow='auto';
@@ -11742,6 +11747,10 @@ function montarMusicaEntrega(g, opts){
   }
   if(g.pago) faixas.forEach(function(f){ f.url=linkAudio(g.id, f.v); });
   var combo=temMusicaCombo(g), nomePres=(PACOTES[g.produto]&&PACOTES[g.produto].nome)||'presente';
+  /* 22/11 (Gusthavo): ofertas de cliente valem 24h depois do pagamento; música infantil / pra filho → livro em 1º */
+  var promoFim=(g.pagoEm||g.criadoEm||0)+PROMO_CLIENTE_MS, promoOn=cliente && g.pago && !g.cancelado && Date.now()<promoFim;
+  var kid=/^infantil/.test(g.musicaEstilo||'') || /^infantil/.test((g.ofertaM1||{}).estilo||'') || g.musicaPara==='filho' || g.musicaPara==='filha';
+  var nomeKid=String(g.musicaParaNome||'').split(/,|\s+e\s+/)[0].trim();
   if(!faixas.length){
     el('app').innerHTML='<div class="mx"><div class="mx-in"><div class="mx-vazio">Essa música ainda não foi gerada. Se você criou esse presente, volta em "Meus presentes" e gera a prévia antes de enviar o link.</div></div></div>';
     return;
@@ -11798,7 +11807,17 @@ function montarMusicaEntrega(g, opts){
         ((g.ofertaM1&&g.ofertaM1.letra) ? '<details class="mx-letra"><summary>📝 Letra '+(g.ofertaM2?'1':'da música 1')+'</summary><pre>'+esc(g.ofertaM1.letra)+'</pre></details>' : '')+
         ((g.ofertaM2&&g.ofertaM2.letra) ? '<details class="mx-letra"><summary>📝 Letra 2</summary><pre>'+esc(g.ofertaM2.letra)+'</pre></details>' : '')+
         (letra ? '<details class="mx-letra"><summary>📝 '+(g.ofertaM2?'Letra 3':g.ofertaM1?'Letra da música 2':'Ver a letra')+'</summary><pre>'+esc(letra)+'</pre></details>' : '')+
-        (cliente && g.pago && !g.cancelado && (g.produto==='musica'||!g.produto) && !((g.extrasPix||[]).indexOf('clipe')>=0 && (g.extrasPix||[]).indexOf('quadro')>=0) && !extraPago(g.id,'cq','1')
+        (promoOn ? '<div class="mx-timer">⏰ Ofertas só pra você, válidas por <b id="mxTimer">'+fmtFaltam(promoFim-Date.now())+'</b></div>' : '')+
+        (cliente && g.pago && !g.cancelado && kid
+          ? '<div class="mx-cq mx-lvkid"><span class="mx-cq-tag">🎄 ESPECIAL DE NATAL</span>'+
+              '<div class="mx-lvkid-ic">📚</div>'+
+              '<b class="mx-cq-t">Crie o livro '+(nomeKid?'de '+esc(nomeKid):'do seu filho')+'</b>'+
+              '<span class="mx-cq-s">Um livro com o <b>nome</b> e o <b>rosto</b> '+(nomeKid?'de '+esc(nomeKid):'do seu filho')+' nas ilustrações, a história do <b>Natal Mágico</b> (ou outra que você escolher) e <b>2 músicas</b> tocando no QR Code das páginas.</span>'+
+              '<div class="mx-cq-ex"><button type="button" class="mx-cq-exb" id="mxLvEx">▶ Ver exemplo do livro de Natal</button></div>'+
+              '<div class="mx-cq-pr"><b>R$ 37</b><small>livro completo</small></div>'+
+              '<button type="button" class="mx-btn mx-btn-ouro" id="mxLvKid">📚 Criar o livro '+(nomeKid?'de '+esc(nomeKid):'do meu filho')+'</button></div>'
+          : '')+
+        (promoOn && (g.produto==='musica'||!g.produto) && !((g.extrasPix||[]).indexOf('clipe')>=0 && (g.extrasPix||[]).indexOf('quadro')>=0) && !extraPago(g.id,'cq','1')
           ? '<div class="mx-cq"><span class="mx-cq-tag">🔥 PROMOÇÃO SÓ PRA QUEM JÁ COMPROU</span>'+
               '<b class="mx-cq-t">🎬 Clipe com as fotos + 🖼️ Retrato com QR Code</b>'+
               '<span class="mx-cq-s">O clipe da sua música com as fotos de vocês (pra postar e mandar) e um retrato lindo pra imprimir: aponta a câmera no QR e a música toca.</span>'+
@@ -11812,18 +11831,19 @@ function montarMusicaEntrega(g, opts){
               '<a class="mx-btn mx-btn-ouro" href="#/montar/'+encodeURIComponent(g.id)+'">'+(exsG(g).indexOf('clipe')>=0?'📸 Abrir meu clipe':'🖼️ Abrir meu quadro')+'</a>'+
               (exsG(g).indexOf('clipe')>=0?'<a class="mx-btn" style="margin-top:.5rem" href="/clipe.html?id='+encodeURIComponent(g.id)+'&baixar=1">⬇ Baixar o vídeo do clipe</a>':'')+'</div>'
           : '')+
-        (cliente && g.pago && !g.cancelado
+        (promoOn
           ? '<div class="mx-libera mx-promo"><span class="mx-lb-tag">🎉 SÓ PARA CLIENTES</span><b>Nova música pela METADE do preço</b>'+
               '<span>Faça outra música pra quem você quiser: <b>2 versões por R$ '+fmtPreco(PRECO_CLIENTE)+'</b> <s>R$ 9,99</s>. Aniversário, mãe, amigo, Natal…</span>'+
               '<button type="button" class="mx-btn mx-btn-ouro" id="mxPromo">🎁 Resgatar agora</button></div>'
           : '')+
+        (cliente ? '<div id="mxIndica" class="mx-ind-dest"></div>' : '')+
         (cliente && g.pago
           ? '<div class="mx-libera mx-gift"><span class="mx-lb-tag">🎁 SURPRESA</span><b>Envie de presente pelo WhatsApp</b>'+
               '<span>Mande a música direto pra pessoa, com o seu nome ou <b>anônimo</b>. Ela abre e ouve na hora.</span>'+
               '<button type="button" class="mx-btn mx-btn-ouro" id="mxPresente">🎁 Enviar de presente</button></div>'+
-            '<div class="mx-libera mx-lvof"><span class="mx-lb-tag">📚 NOVO</span><b>Transforme essa música num livro</b>'+
+            (kid ? '' : '<div class="mx-libera mx-lvof"><span class="mx-lb-tag">📚 NOVO</span><b>Transforme essa música num livro</b>'+
               '<span>Um livro personalizado com o nome e a foto, e a música tocando no QR Code de cada página.</span>'+
-              '<button type="button" class="mx-btn" id="mxLivro">📚 Ver o livro</button></div>'
+              '<button type="button" class="mx-btn" id="mxLivro">📚 Ver o livro</button></div>')
           : '')+
         (cliente && temLiberadas(g)
           ? (g.dobroUsado
@@ -11837,8 +11857,7 @@ function montarMusicaEntrega(g, opts){
           ? '<div class="mx-share"><b>Mande pra quem vai receber</b><span>'+(combo?'Esse link abre a '+esc(nomePres)+' com a música, sem os seus botões de cliente.':'Esse link abre a música como surpresa, sem os seus botões de cliente.')+'</span>'+
               '<div class="mx-share-row"><a class="mx-btn mx-btn-zap" href="https://wa.me/?text='+encodeURIComponent('Fiz uma surpresa pra você 🎵💝 '+linkReceber)+'" target="_blank" rel="noopener">'+IC.wpp+' Enviar a surpresa</a>'+
               '<button type="button" class="mx-btn" id="mxCopiar">'+IC.link+' Copiar link</button></div></div>'+
-            '<div id="meOferta"></div>'+
-            '<div id="mxIndica"></div>'
+            '<div id="meOferta"></div>'
           : '<div class="mx-devolva"><div class="mx-dv-ic">💝</div><b>Devolva o carinho</b>'+
               '<span>Faça uma música personalizada pra '+(de?esc(de):'quem te enviou')+', com a história de vocês, e se quiser um <b>clipe com as fotos</b> e um <b>retrato com QR Code</b>. Fica pronta em minutos.</span>'+
               '<a class="mx-btn mx-btn-rosa" href="#/criar/musica/r.'+encodeURIComponent(g.id)+'">🎵 Criar uma música pra '+(de?esc(de):'essa pessoa')+'</a>'+
@@ -11884,6 +11903,10 @@ function montarMusicaEntrega(g, opts){
   /* enviar o MP3 de verdade pelo compartilhar do celular */
   var mxL=el('mxLivro'); if(mxL) mxL.onclick=function(){ gaEvento('aceitou_upsell',{de:'musica',para:'livro',onde:'pagina_paga'}); var nm=String(g.musicaParaNome||'').split(/,|\s+e\s+/)[0].trim(); if(typeof window.lvOfertaDaMusica==='function') window.lvOfertaDaMusica({nome:nm, zap:g.musicaWhatsapp||''}); else location.hash='#/livro'; };
   var mxP=el('mxPresente'); if(mxP) mxP.onclick=function(){ abrirEnviarPresente(g); };
+  function lvKid(direto){ gaEvento('aceitou_upsell',{de:'musica',para:'livro',onde:direto?'pagina_paga_kid':'pagina_paga_kid_exemplo'}); comLivro(function(){ if(typeof window.lvOfertaDaMusica==='function') window.lvOfertaDaMusica({nome:nomeKid, zap:g.musicaWhatsapp||'', tema:'natal', direto:direto}); else location.hash='#/livro'; }); }
+  var lk1=el('mxLvKid'); if(lk1) lk1.onclick=function(){ lvKid(true); };
+  var lk2=el('mxLvEx'); if(lk2) lk2.onclick=function(){ lvKid(false); };
+  if(promoOn){ clearInterval(window._mxTm); window._mxTm=setInterval(function(){ var t=el('mxTimer'); if(!t){ clearInterval(window._mxTm); return; } var f=promoFim-Date.now(); if(f<=0){ clearInterval(window._mxTm); montarMusicaEntrega(g,opts); return; } t.textContent=fmtFaltam(f); },1000); }
   document.querySelectorAll('[data-cqex]').forEach(function(b){ b.onclick=function(){ verExemploExtra(b.dataset.cqex); }; });
   var mxCq=el('mxCq'); if(mxCq) mxCq.onclick=function(){ gaEvento('upsell_cq',{}); iniciarPixExtra(g,'cq',{id:'1',nome:'Clipe + Retrato com QR Code'}); };
   var mxPr=el('mxPromo'); if(mxPr) mxPr.onclick=function(){ gaEvento('promo_cliente',{de:g.id}); W=null; telaWizard('musica'); W.clienteDe=g.id; if(g.meuNome) W.meuNome=g.meuNome; if(g.musicaWhatsapp) W.musicaWhatsapp=g.musicaWhatsapp; desenharPasso(); };

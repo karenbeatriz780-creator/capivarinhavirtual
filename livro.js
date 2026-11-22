@@ -429,8 +429,9 @@ var _lvRotuloCriar='';
 window.lvOfertaDaMusica=function(info){
   info=info||{};
   function adicionar(){ if(info.nome && !LV.nome) LV.nome=info.nome; if(info.zap && !LV.zap) LV.zap=String(info.zap); LV.passo=0; location.hash='#/livro/criar'; toast('Agora escolha a história do livro 📖'); }
+  if(info.direto){ adicionar(); return; } /* 22/11: botão "Criar o livro" da página da música vai direto */
   lvTemas().then(function(){
-    var ex=lvExLivro(null);
+    var ex=lvExLivro(info.tema||null); /* 22/11: exemplo de Natal na oferta pra música infantil */
     if(!ex){ adicionar(); return; }
     _lvRotuloCriar='➕ Adicionar o livro · '+lvFmt(LV_PACOTES.um);
     abrirExemplo(ex, adicionar);

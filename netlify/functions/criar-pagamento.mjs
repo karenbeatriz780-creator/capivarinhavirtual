@@ -159,7 +159,8 @@ export default async (req) => {
     let clienteOk = false;
     if (presente.produto === 'musica' && presente.clienteDe && !comboDaMusica && !pacote6 && !presente.bonusDe && !presente.dobroDe) {
       const g0 = await getStore('presentes').get(String(presente.clienteDe), { type: 'json' }).catch(() => null);
-      clienteOk = !!(g0 && g0.pago && !g0.cancelado && g0.id !== presente.id);
+      // 22/11: promo de cliente vale 24h depois do pagamento (+1h de folga pra quem começou a criar no finalzinho)
+      clienteOk = !!(g0 && g0.pago && !g0.cancelado && g0.id !== presente.id && Date.now() - (g0.pagoEm || g0.criadoEm || 0) <= 25 * 3600e3);
     }
     if (!clienteOk) delete presente.clienteDe;
     const precoFinal = Math.round(((clienteOk ? PRECO_CLIENTE : precoProduto) + valorExtras) * 100) / 100;
