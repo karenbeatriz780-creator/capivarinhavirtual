@@ -249,13 +249,16 @@ export async function rodarRobo(simular) {
     const vP = vPm || vPs, boa = (vP > 0 && gP / vP <= 9.99) || futuro(c, site, agora - 864e5).tem;
     // ❌ sem chance: nos 3 dias anteriores gastou R$ 5+ e não vendeu NADA em 2 ou mais dias → corta mais cedo (R$ 5)
     let diasRuins = 0; for (const d of [ontem, diaBR(agora - 2 * 864e5), diaBR(agora - 3 * 864e5)]) { const x = (c.dias || {})[d] || {}; if ((x.gasto || 0) >= 5 && !(x.compras || 0) && !(s.porDia[d] || 0)) diasRuins++; }
-    const semChance = !boa && diasRuins >= 2, LIM_SEM = boa ? 10 : semChance ? 5 : 7;
+    const semChance = !boa && diasRuins >= 2, LIM_SEM = boa ? 20 : semChance ? 5 : 7; // 22/11: campanha boa pode gastar até R$ 20 sem compra
     let semCompra = false;
     if (cfg.autoPausar && !voceAtivou && !eua) { // REGRA DE 15/11 (Brasil)
-      if (vH === 0 && gH >= LIM_SEM) { pausar = 'hoje gastou ' + brl(gH) + ' sem nenhuma compra (' + (boa ? '⭐ campanha boa, limite R$ 10' : semChance ? 'sem chance: ' + diasRuins + ' dos últimos 3 dias sem nenhuma venda, limite R$ 5' : 'campanha nova/parada, limite R$ 7') + ')'; semCompra = true; }
+      if (vH === 0 && gH >= LIM_SEM) { pausar = 'hoje gastou ' + brl(gH) + ' sem nenhuma compra (' + (boa ? '⭐ campanha boa, limite R$ 20' : semChance ? 'sem chance: ' + diasRuins + ' dos últimos 3 dias sem nenhuma venda, limite R$ 5' : 'campanha nova/parada, limite R$ 7') + ')'; semCompra = true; }
       // 22/11 (Gusthavo): NÃO existe média — vale o custo por compra DO DIA. Passou de R$ 10 hoje → desliga; não passou → fica.
       //   Campanha ⭐ boa (vendeu bem nos dias anteriores) começa cara e termina positiva → fica ligada (só a regra do "sem compra" vale pra ela).
       else if (!boa && vDia > 0 && gH / vDia > CPA_DIA) pausar = 'hoje o custo por compra está ' + brl(gH / vDia) + ' (' + vDia + ' compra(s), gasto ' + brl(gH) + ') — passou de ' + brl(CPA_DIA) + ' no dia';
+      // 22/11 13h: ⭐ campanha boa → 1 compra: pode gastar até R$ 20; 2+ compras: custo tem que ir baixando até R$ 8 por compra (2 compras = até R$ 16)
+      else if (boa && vDia === 1 && gH > 20) pausar = '⭐ campanha boa: 1 compra e já gastou ' + brl(gH) + ' (limite R$ 20)';
+      else if (boa && vDia >= 2 && gH / vDia > 8) pausar = '⭐ campanha boa: ' + vDia + ' compras a ' + brl(gH / vDia) + ' cada (gasto ' + brl(gH) + ') — tinha que estar baixando até R$ 8 por compra';
     } else if (cfg.autoPausar && !voceAtivou && aprendeu) { // 🇺🇸 EUA: média de 3 dias
       if (v3 === 0 && g3 >= PRIM_C) pausar = 'em 3 dias gastou ' + brl(g3) + ' e não fez nenhuma compra' + (eua ? ' (EUA, limite ' + brl(PRIM_C) + ')' : '');
       else if (v3 > 0 && g3 / v3 > CPA_C) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou do máximo de ' + brl(CPA_C);
