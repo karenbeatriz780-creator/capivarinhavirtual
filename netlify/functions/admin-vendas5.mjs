@@ -6,7 +6,8 @@ import { ehEUA } from './_futuro.mjs';
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 export default async (req) => {
   const senha = (process.env.ADMIN_SENHA || '').trim();
-  if (!senha || (req.headers.get('x-admin-key') || '') !== senha) return json({ erro: 'Senha de administrador incorreta.' }, 401);
+  // 21/11: ver a aba é livre (igual ao resto do painel aberto pelo link); só os BOTÕES que mexem em dinheiro pedem a senha
+  if (req.method === 'POST' && (!senha || (req.headers.get('x-admin-key') || '') !== senha)) return json({ erro: 'Senha de administrador incorreta.' }, 401);
   try {
     const [meta, site] = await Promise.all([metaAds(7, null, null, true), vendasSitePorCampanha(10)]);
     if (!meta.configurado || meta.erro) return json({ erro: meta.erro || 'Meta Ads não está ligado.' });

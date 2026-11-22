@@ -12,7 +12,8 @@ const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, heade
 const PCT = 10;
 export default async (req) => {
   const senha = (process.env.ADMIN_SENHA || '').trim();
-  if (!senha || (req.headers.get('x-admin-key') || '') !== senha) return json({ erro: 'Senha de administrador incorreta.' }, 401);
+  // 21/11: ver a aba é livre (igual ao resto do painel aberto pelo link); só os BOTÕES que mexem em dinheiro pedem a senha
+  if (req.method === 'POST' && (!senha || (req.headers.get('x-admin-key') || '') !== senha)) return json({ erro: 'Senha de administrador incorreta.' }, 401);
   const L = getStore('gastos'), agora = Date.now(), hoje = diaBR(agora), kHoje = 'aum_dia_' + hoje;
   try {
     const cfg = (await L.get('aumento_cfg', { type: 'json' }).catch(() => null)) || {};
