@@ -88,6 +88,19 @@ export async function rodarRobo(simular) {
   const ehEspecial = (c) => especial.has(String(c.id)) || lucroHoje.has(String(c.id)) || /modo\s*especial|capivarinha\s*#?\s*007/i.test(c.nome || '') || Number(c.orcamentoDia || 0) >= 300;
   const aprend = new Set(((await L().get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
   const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117b', FLAG_DESFAZ = 'desfaz_roas_20261117';
+  // ↩️ 22/11: regra nova é por DIA (sem média de 3 dias) — religa (uma vez, hoje) as que o robô desligou HOJE e estão com custo por compra do dia até R$ 10
+  const FLAG_DIA = 'desfaz_media3_20261122';
+  if (cfg.autoPausar && !simular && hoje === '2026-11-22' && !(await L().get(FLAG_DIA, { type: 'json' }).catch(() => null))) {
+    await L().setJSON(FLAG_DIA, { em: agora }).catch(() => {});
+    for (const c of (meta.campanhas || [])) {
+      const ac = acoes[c.id];
+      if (c.status === 'ACTIVE' || !ac || ac.tipo !== 'pausar' || !/^robô$/.test(ac.quem || '') || diaBR(ac.em) !== hoje || ehEspecial(c)) continue;
+      const d0 = (c.dias || {})[hoje] || {}, v0 = Math.max(d0.compras || 0, ((site[c.id] || {}).porDia || {})[hoje] || 0);
+      if (!(v0 > 0 && (d0.gasto || 0) / v0 <= 10)) continue;
+      try { await aplicarAcao(c, 'ativar', 'robô (regra do dia)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (regra do dia)', em: agora }; c.status = 'ACTIVE';
+        feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: true, motivo: '↩️ religuei: hoje está ' + brl(d0.gasto / v0) + ' por compra (' + v0 + ' compra(s)) — a regra agora é o custo do DIA, não a média de 3 dias' }); } catch (e) {}
+    }
+  }
   // ↩️ 17/11 21h: desfaz o corte por ROAS 1,5 por campanha — religa (uma vez) as que o robô desligou desde 19h50 e passam na regra de R$ 9,50
   if (cfg.autoPausar && !simular && !(await L().get(FLAG_DESFAZ, { type: 'json' }).catch(() => null))) {
     await L().setJSON(FLAG_DESFAZ, { em: agora }).catch(() => {});
@@ -229,7 +242,7 @@ export async function rodarRobo(simular) {
     const CPA_C = eua ? 30 : CPA_BR, PRIM_C = eua ? 30 : prim, TRAVA_C = eua ? 45 : 15;
     let pausar = null;
     const lucroH = vH * tk - gH * (1 + imp);
-    const vMeta = dh.compras || 0, vCpa = vMeta || vH; // custo por compra = o do app do Meta (se o Meta ainda não contou, usa as do site)
+    const vMeta = dh.compras || 0, vCpa = vMeta || vH; const vDia = Math.max(vMeta, vH), CPA_DIA = 10; // 22/11: custo por compra do DIA (o maior número de compras entre Meta e site) // custo por compra = o do app do Meta (se o Meta ainda não contou, usa as do site)
     // ⭐ campanha BOA = vendeu nos 3 dias ANTERIORES a hoje com custo por compra até R$ 9,99
     let gP = 0, vPm = 0, vPs = 0;
     for (const d of [ontem, diaBR(agora - 2 * 864e5), diaBR(agora - 3 * 864e5)]) { const x = (c.dias || {})[d] || {}; gP += x.gasto || 0; vPm += x.compras || 0; vPs += s.porDia[d] || 0; }
@@ -240,8 +253,9 @@ export async function rodarRobo(simular) {
     let semCompra = false;
     if (cfg.autoPausar && !voceAtivou && !eua) { // REGRA DE 15/11 (Brasil)
       if (vH === 0 && gH >= LIM_SEM) { pausar = 'hoje gastou ' + brl(gH) + ' sem nenhuma compra (' + (boa ? '⭐ campanha boa, limite R$ 10' : semChance ? 'sem chance: ' + diasRuins + ' dos últimos 3 dias sem nenhuma venda, limite R$ 5' : 'campanha nova/parada, limite R$ 7') + ')'; semCompra = true; }
-      else if (aprendeu && gH >= 3 && v3 > 0 && g3 / v3 > CPA_BR) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou de ' + brl(CPA_BR) + ', está dando prejuízo';
-      else if (!aprendeu && vCpa > 0 && gH / vCpa > CPA_BR) pausar = 'hoje o custo por compra está ' + brl(gH / vCpa) + ' (' + vCpa + ' compra(s), gasto ' + brl(gH) + ') — passou de ' + brl(CPA_BR) + ', está dando prejuízo';
+      // 22/11 (Gusthavo): NÃO existe média — vale o custo por compra DO DIA. Passou de R$ 10 hoje → desliga; não passou → fica.
+      //   Campanha ⭐ boa (vendeu bem nos dias anteriores) começa cara e termina positiva → fica ligada (só a regra do "sem compra" vale pra ela).
+      else if (!boa && vDia > 0 && gH / vDia > CPA_DIA) pausar = 'hoje o custo por compra está ' + brl(gH / vDia) + ' (' + vDia + ' compra(s), gasto ' + brl(gH) + ') — passou de ' + brl(CPA_DIA) + ' no dia';
     } else if (cfg.autoPausar && !voceAtivou && aprendeu) { // 🇺🇸 EUA: média de 3 dias
       if (v3 === 0 && g3 >= PRIM_C) pausar = 'em 3 dias gastou ' + brl(g3) + ' e não fez nenhuma compra' + (eua ? ' (EUA, limite ' + brl(PRIM_C) + ')' : '');
       else if (v3 > 0 && g3 / v3 > CPA_C) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou do máximo de ' + brl(CPA_C);
