@@ -362,6 +362,39 @@ var css = `
 #lvAdm button{background:#2A1B3D!important;color:#fff!important;border:0!important;border-radius:10px;padding:.45rem .7rem!important;font:700 .8rem Inter,sans-serif;cursor:pointer}
 #lvAdm button:disabled{opacity:.5}
 @media (prefers-reduced-motion:reduce){.lv *{animation:none!important;transition:none!important}}
+/* ---------- 23/11: página nova (nome primeiro, histórias em grade, sem preço) ---------- */
+.lv-hn{position:relative;z-index:2;max-width:30rem;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px))}
+.lv-leque{display:flex;justify-content:center;align-items:flex-end;gap:.5rem;margin:1.2rem 0 1.6rem;position:relative;z-index:2}
+.lv-leque .lv-livro3d{width:28%;max-width:8.5rem}.lv-leque .lv-livro3d:nth-child(2){width:38%;max-width:11.5rem;z-index:2}
+.lv-leque .lv-livro3d:nth-child(1){transform:rotate(-9deg) translateY(14px)}.lv-leque .lv-livro3d:nth-child(3){transform:rotate(9deg) translateY(14px)}
+.lv-nomebox{margin-top:1.2rem;background:#fff;border-radius:18px;padding:.55rem .9rem .5rem;border:2.5px solid var(--lv-ouro);box-shadow:0 12px 28px rgba(0,0,0,.25)}
+.lv-nomebox label{display:block;font:700 .72rem 'Inter';color:#8B7A9C}
+.lv-nomebox input{width:100%;border:0;outline:0;font:900 1.4rem 'Inter';color:var(--lv-tinta);background:transparent;padding:.05rem 0}
+.lv-nomebox input::placeholder{color:#C9BDD6;font-weight:800}
+.lv-sexo{display:flex;gap:.5rem;justify-content:center;margin-top:.8rem}
+.lv-sexo button{font:800 .9rem 'Inter';padding:.6rem 1.1rem;border-radius:99px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;cursor:pointer}
+.lv-sexo button.on{background:#fff;color:var(--lv-tinta);border-color:#fff}
+.lv-sexo.alerta button{animation:lvTreme .4s}
+@keyframes lvTreme{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.lv-passo-t{display:flex;align-items:center;gap:.6rem;font:900 1.2rem 'Inter';margin:1.6rem 0 .8rem}
+.lv-passo-t i{font-style:normal;width:1.9rem;height:1.9rem;border-radius:50%;background:#6B3FB0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex:none}
+.lv-propria{width:100%;text-align:left;display:flex;gap:.9rem;align-items:center;background:#fff;border:2.5px dashed #FF8FBC;border-radius:22px;padding:1rem;cursor:pointer;box-shadow:0 8px 20px rgba(60,20,80,.06);font:inherit;color:inherit}
+.lv-propria .ic{width:5.2rem;flex:none;aspect-ratio:3/4;border-radius:6px 12px 12px 6px;background:repeating-linear-gradient(0deg,#fff 0 13px,#F1E6EF 13px 14px);border:2px solid #EADCE6;display:flex;align-items:center;justify-content:center;font-size:2.1rem;box-shadow:0 8px 16px rgba(0,0,0,.1)}
+.lv-propria b{display:block;font:900 1.12rem/1.15 'Inter';margin-top:.4rem}.lv-propria small{display:block;font:600 .84rem/1.35 'Inter';color:#8A7086;margin-top:.25rem}
+.lv-propria .tg{display:inline-block;font:800 .7rem 'Inter';padding:.3rem .6rem;border-radius:99px;background:#EFE6FF;color:#6B3FB0}
+.lv-propria .vai{display:inline-block;margin-top:.5rem;font:900 .88rem 'Inter';color:#6B3FB0}
+.lv-filtros{display:flex;gap:.5rem;overflow-x:auto;margin:0 -16px .9rem;padding:0 16px;scrollbar-width:none}.lv-filtros::-webkit-scrollbar{display:none}
+.lv-filtros button{flex:none;font:800 .8rem 'Inter';padding:.55rem .85rem;border-radius:99px;background:#fff;border:1.5px solid #EADCE6;color:var(--lv-tinta);cursor:pointer}
+.lv-filtros button.on{background:var(--lv-tinta);color:#fff;border-color:var(--lv-tinta)}
+.lv-grade{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem .9rem}
+.lv-gi{position:relative;cursor:pointer}.lv-gi .lv-livro3d{transition:transform .2s}.lv-gi:active .lv-livro3d{transform:scale(.97)}
+.lv-gi h4{font:800 .9rem/1.2 'Inter';margin:.6rem 0 0}
+.lv-gi .ex{display:inline-flex;align-items:center;gap:.3rem;margin-top:.45rem;font:800 .78rem 'Inter';color:#6B3FB0;background:#EFE6FF;padding:.4rem .7rem;border-radius:99px;border:0;cursor:pointer}
+.lv-gi .tg{position:absolute;z-index:5;top:-.55rem;left:.5rem;font:900 .68rem 'Inter';padding:.3rem .6rem;border-radius:99px;color:#fff;background:#E91E63;box-shadow:0 4px 10px rgba(0,0,0,.15)}
+.lv-gi .tg.roxo{background:#6B3FB0}
+.lv-mais{display:block;width:100%;margin-top:1.1rem;font:800 .92rem 'Inter';color:#6B3FB0;background:none;border:0;cursor:pointer}
+.lv-pra{display:flex;align-items:center;gap:.6rem;background:#fff;border:1.5px solid var(--lv-borda);border-radius:16px;padding:.8rem 1rem;margin:.4rem 0 1rem}
+.lv-pra b{flex:1;font:900 1.05rem 'Inter'}.lv-pra button{font:800 .8rem 'Inter';color:#6B3FB0;background:none;border:0;cursor:pointer}
 `;
 var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
 
@@ -444,6 +477,18 @@ window.lvAbrirExemplo=function(id){
 /* livro de exemplo (pago, escolhido no painel): prefere o do mesmo tema */
 function lvExLivro(tema){ var ls=_lvEx.filter(function(x){ return x.tipo==='livro' && x.paginas && x.paginas.length; }); return ls.filter(function(x){ return x.tema===tema; })[0]||ls[0]||null; }
 function lvExDoTema(id){ return _lvEx.filter(function(x){ return x.tipo==='livro' && x.tema===id; })[0]||null; }
+/* 23/11: categorias pros filtros da página (história nova sem categoria entra em Aventuras) */
+var LV_CAT={natal:['natal'],biblia:['davi-golias','amigo-jesus','arca-noe','daniel-leoes','rainha-ester','jonas-peixe','bebe-moises','bom-samaritano','criacao-mundo','paes-peixes'],
+  sonho:['bombeiro-dia','veterinario','atelie','laboratorio','bailarina'],aprender:['cores','abc','dentinhos','planeta-limpinho','ilha-sentimentos','cofrinho']};
+function lvCatDe(id){ for(var k in LV_CAT) if(LV_CAT[k].indexOf(id)>=0) return k; return 'aventura'; }
+/* capa com o NOME digitado (quando tem); sem nome, a capa de vitrine de sempre */
+function capaComNome(t,i,fs,nome,gen){
+  nome=String(nome||'').trim().split(' ')[0];
+  if(!nome || !t || t.propria) return capaTema(t,i,fs);
+  var ex=lvExDoTema(t.id), g=gen||t.vitrineGenero||(i%2?'menina':'menino');
+  nome=nome.charAt(0).toUpperCase()+nome.slice(1);
+  return htmlCapa({img:t.vitrine||(ex&&ex.capa),cores:t.cores,emoji:t.emoji,titulo:flexTxt(t.titulo,nome,g),nome:nome,fs:fs});
+}
 function capaTema(t,i,fs){
   if(t&&t.propria) return htmlCapa({img:t.vitrine,cores:t.cores,emoji:t.emoji,titulo:t.titulo||'Crie sua própria história',nome:'',fs:fs});
   var ex=lvExDoTema(t.id);
@@ -554,18 +599,22 @@ function telaLivroHome(){
   app.innerHTML='<div class="lv">'+
     '<section class="lv-hero"><div class="lv-estrelas">'+estrelas+'</div>'+
       '<div class="lv-topo"><img src="'+MASCOTE+'" alt="">Capivarinha Love</div>'+
-      '<div class="lv-palco" id="lvPalco"><div class="lv-brilho-chao"></div></div>'+
-      '<div class="lv-pontos" id="lvPontos"></div>'+
-      '<div class="lv-wrap" style="padding-bottom:0">'+
-        '<div class="lv-eb" style="text-align:center">✨ Livro Mágico</div>'+
-        '<h1 class="lv-h">Seu filho como <em>protagonista</em> da própria aventura</h1>'+
-        '<p>Um livro ilustrado feito só pra ele: o <b style="color:#fff">rostinho</b> desenhado em cada aventura e o <b style="color:#fff">nome</b> em toda a história.</p>'+
-        '<div class="lv-musicas-faixa"><span class="ic">🎵</span><div><b>+ 2 músicas com o nome dele</b><small>Tocam enquanto vocês leem juntos. Ele vai pedir de novo toda noite.</small></div></div>'+
-        '<button class="lv-btn" id="lvCriar">Criar meu livro agora ✨</button>'+
+      '<div class="lv-leque" id="lvLeque"></div>'+
+      '<div class="lv-hn">'+
+        '<div class="lv-eb" style="text-align:center">✨ Livro Mágico personalizado</div>'+
+        '<h1 class="lv-h">O livro onde <em>seu filho</em> é o herói</h1>'+
+        '<p>Com o <b style="color:#fff">nome</b> e o <b style="color:#fff">rostinho</b> dele em cada página — e <b style="color:#fff">2 músicas</b> que tocam pelo QR Code.</p>'+
+        '<div class="lv-nomebox"><label for="lvNomeH">Nome da criança</label><input id="lvNomeH" maxlength="30" autocomplete="off" placeholder="Ex.: Davi" value="'+esc(LV.nome)+'"></div>'+
+        '<div class="lv-sexo" id="lvSexo"><button type="button" data-sx="menino" class="'+(LV.genero==='menino'?'on':'')+'">👦 Menino</button><button type="button" data-sx="menina" class="'+(LV.genero==='menina'?'on':'')+'">👧 Menina</button></div>'+
+        '<button class="lv-btn" id="lvCriar" style="margin-top:1rem">✨ Criar livro agora</button>'+
         '<button class="lv-meus-topo" id="lvMeusTopo">📚 Meus livros</button>'+
-        '<button class="lv-link-ex" id="lvVerEx" hidden>👀 Folhear um livro de exemplo</button>'+
       '</div></section>'+
     '<div class="lv-wrap">'+
+      '<div id="lvEscolha"><div class="lv-passo-t"><i>1</i><span id="lvEscT">Escolha a história</span></div>'+
+        '<button type="button" class="lv-propria" id="lvPropria"><div class="ic">✍️</div><div><span class="tg">⭐ NOVIDADE</span><b>Crie a sua própria história</b><small id="lvPropS">Conte como é a criança e o que ela ama, e a gente escreve uma aventura só dela.</small><span class="vai">Começar ›</span></div></button>'+
+        '<div style="font:800 .95rem Inter;color:var(--lv-suave);margin:1.3rem 0 .7rem">ou escolha uma pronta</div>'+
+        '<div class="lv-filtros" id="lvFil">'+[['todas','Todas'],['natal','🎄 Natal'],['aventura','🚀 Aventuras'],['biblia','✝️ Bíblia'],['sonho','⭐ Quando eu crescer'],['aprender','📚 Aprender']].map(function(x,i){ return '<button type="button" data-fil="'+x[0]+'"'+(i===0?' class="on"':'')+'>'+x[1]+'</button>'; }).join('')+'</div>'+
+        '<div class="lv-grade" id="lvGrade"></div><button type="button" class="lv-mais" id="lvMaisH" hidden>ver todas as histórias ▾</button></div>'+
       '<div class="lv-sec"><div class="lv-eb">o que vem no livro</div><h2>Um presente pra guardar pra sempre</h2><div class="lv-recebe">'+
         '<div><div class="ic">📖</div><h4>História ilustrada</h4><p>O rostinho da criança desenhado em cada cena da aventura.</p></div>'+
         '<div><div class="ic">✨</div><h4>O nome em tudo</h4><p>Na capa, em cada página e na dedicatória.</p></div>'+
@@ -575,12 +624,12 @@ function telaLivroHome(){
       '</div></div>'+
       '<div class="lv-sec" id="lvSecEx" hidden><div class="lv-eb">por dentro do livro</div><h2>Veja como fica de verdade</h2><div id="lvAberto"></div></div>'+
       '<div class="lv-sec"><div class="lv-eb">como funciona</div><h2>Pronto em poucos minutos, sem complicação</h2><div class="lv-passos">'+
-        '<div class="lv-passo"><b>📚</b><div><h4>Escolha a aventura</h4><p>Fazenda, futebol, fundo do mar, espaço ou castelo encantado.</p></div></div>'+
-        '<div class="lv-passo"><b>📸</b><div><h4>Conte quem é a criança</h4><p>Nome, idade e uma foto com o rostinho bem visível.</p></div></div>'+
+        '<div class="lv-passo"><b>✍️</b><div><h4>Nome e história</h4><p>Digite o nome, escolha menino ou menina e a aventura (ou crie a sua).</p></div></div>'+
+        '<div class="lv-passo"><b>📸</b><div><h4>Idade e uma foto</h4><p>Uma foto com o rostinho bem visível. Pode colocar mais alguém junto na história.</p></div></div>'+
         '<div class="lv-passo"><b>🎵</b><div><h4>Veja a capa e ouça a música</h4><p>A capa com o rosto dela e a música com o nome ficam prontas antes de você pagar.</p></div></div>'+
         '<div class="lv-passo"><b>🔓</b><div><h4>Desbloqueie o livro completo</h4><p>Todas as ilustrações, as 2 músicas completas e o PDF pra imprimir.</p></div></div>'+
       '</div></div>'+
-      '<div class="lv-sec"><div class="lv-eb">as aventuras</div><h2>Qual aventura combina com ele?</h2><div class="lv-galeria" id="lvGal"></div></div>'+
+
       '<div class="lv-sec"><div class="lv-eb">como imprimir</div><h2>Do celular pro papel</h2><div class="lv-imp">'+
         '<div><h4>🖨️ Folhas abertas (mais fácil)</h4><p class="sub3">Cada folha A4 deitada vira uma página dupla do livro.</p>'+
           '<div class="lv-folha"><div class="a4"><i></i><i></i></div><span class="seta">→</span><div class="a4"><i></i><i></i></div></div>'+
@@ -598,49 +647,66 @@ function telaLivroHome(){
       '</div>'+
       '<button class="lv-meus-bt" id="lvMeus">📚 Meus livros</button>'+
     '</div>'+
-    '<div class="lv-rodape escondido" id="lvRod"><button class="lv-btn" id="lvCriar2">Criar meu livro agora ✨</button></div>'+
+    '<div class="lv-rodape escondido" id="lvRod"><button class="lv-btn" id="lvCriar2">✨ Criar livro agora</button></div>'+
   '</div>';
-  el('lvCriar').onclick=el('lvCriar2').onclick=function(){ location.hash='#/livro/criar'; };
+  var nomeH=el('lvNomeH'), sexo=el('lvSexo'), fil='todas', verTodas=false;
+  function nomeOk(){ return LV.nome.trim().length>=2; }
+  function pedirDados(){
+    if(!nomeOk()){ nomeH.focus(); nomeH.scrollIntoView({behavior:'smooth',block:'center'}); toast('Digite o nome da criança ✨'); return false; }
+    if(!LV.genero){ sexo.classList.remove('alerta'); void sexo.offsetWidth; sexo.classList.add('alerta'); sexo.scrollIntoView({behavior:'smooth',block:'center'}); toast('É menino ou menina?'); return false; }
+    return true;
+  }
+  function comecar(id){ if(!pedirDados()) return; LV.nome=LV.nome.trim().replace(/(^|\s)(\S)/g,function(m,a,b){ return a+b.toUpperCase(); }); LV.tema=id; LV._home=true; LV._editNome=false; LV.passo=1; try{ gaEvento('livro_escolheu',{tema:id,onde:'home'}); }catch(e){} location.hash='#/livro/criar'; }
+  nomeH.oninput=function(){ LV.nome=nomeH.value; clearTimeout(nomeH._t); nomeH._t=setTimeout(desenharGrade,250); };
+  sexo.querySelectorAll('[data-sx]').forEach(function(b){ b.onclick=function(){ LV.genero=b.dataset.sx; sexo.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on',x===b); }); desenharGrade(); }; });
+  el('lvCriar').onclick=el('lvCriar2').onclick=function(){
+    if(!pedirDados()) return;
+    try{ gaEvento('livro_nome',{genero:LV.genero}); }catch(e){}
+    el('lvEscolha').scrollIntoView({behavior:'smooth',block:'start'});
+  };
   el('lvMeus').onclick=el('lvMeusTopo').onclick=function(){ location.hash='#/livro/meus'; };
-  try{ var ob=new IntersectionObserver(function(es){ var r=el('lvRod'); if(r) r.classList.toggle('escondido', es[0].isIntersecting); }); ob.observe(el('lvCriar')); aoSair(function(){ ob.disconnect(); }); }catch(e){ el('lvRod').classList.remove('escondido'); }
-  lvTemas().then(function(ts){
-    if(!el('lvPalco')) return;
-    var palco=el('lvPalco'), gal=el('lvGal'), fs=Math.min(16, palco.clientWidth/22);
-    /* o que gira no topo: os exemplos escolhidos no painel; sem exemplo, as capas de vitrine dos temas */
-    var itens=_lvEx.length ? _lvEx.map(function(x){
-        if(x.tipo==='foto') return '<div class="lv-livro3d lv-foto-item" style="box-shadow:none"><div class="lv-foto3d"><img src="'+esc(x.capa)+'" alt="">'+(x.legenda?'<span>'+esc(x.legenda)+'</span>':'')+'</div></div>';
-        var t=lvTema(x.tema)||{};
-        return '<div class="lv-livro3d">'+htmlCapa({img:x.capa,cores:t.cores,emoji:t.emoji,titulo:x.titulo,nome:x.nome,fs:fs})+'</div>';
-      }) : ts.map(function(t,i){
-        return '<div class="lv-livro3d">'+capaTema(t,i,fs)+'</div>';
-      });
-    palco.insertAdjacentHTML('beforeend', itens.join(''));
-    gal.innerHTML=ts.map(function(t,i){
-      return '<div><div class="lv-livro3d">'+capaTema(t,i,7.4)+'</div><small>'+esc(t.emoji+' '+t.nome)+'</small>'+seloVendas(t,i)+'</div>';
+  el('lvPropria').onclick=function(){ comecar('propria'); };
+  el('lvFil').querySelectorAll('[data-fil]').forEach(function(b){ b.onclick=function(){ fil=b.dataset.fil; el('lvFil').querySelectorAll('button').forEach(function(x){ x.classList.toggle('on',x===b); }); desenharGrade(); }; });
+  el('lvMaisH').onclick=function(){ verTodas=true; desenharGrade(); };
+  /* botão fixo embaixo: só aparece quando nem o botão do topo nem a escolha das histórias estão na tela */
+  try{ var vis={}; var ob=new IntersectionObserver(function(es){ es.forEach(function(x){ vis[x.target.id]=x.isIntersecting; }); var r=el('lvRod'); if(r) r.classList.toggle('escondido', !!(vis.lvCriar||vis.lvEscolha)); }); ob.observe(el('lvCriar')); ob.observe(el('lvEscolha')); aoSair(function(){ ob.disconnect(); }); }catch(e){ el('lvRod').classList.remove('escondido'); }
+  function desenharGrade(){
+    var g=el('lvGrade'); if(!g || !_lvTemas) return;
+    var nm=LV.nome.trim().split(' ')[0]; nm=nm?nm.charAt(0).toUpperCase()+nm.slice(1):'';
+    el('lvEscT').textContent=nm?'Escolha a história de '+nm:'Escolha a história';
+    el('lvPropS').textContent='Conte como '+(nm?(LV.genero==='menina'?'é a ':'é o ')+nm:'é a criança')+' e o que '+(LV.genero==='menina'?'ela':LV.genero==='menino'?'ele':'ela')+' ama, e a gente escreve uma aventura só '+(LV.genero==='menina'?'dela':LV.genero==='menino'?'dele':'dela')+'.';
+    var ts=_lvTemas.filter(function(t){ return !t.propria; });
+    ts=ts.filter(function(t){ return t.id==='natal'; }).concat(ts.filter(function(t){ return t.id!=='natal'; }));   /* Natal primeiro */
+    var lista=ts.filter(function(t){ return fil==='todas' || lvCatDe(t.id)===fil; });
+    var lim=(fil==='todas' && !verTodas)?12:999;
+    el('lvMaisH').hidden=lista.length<=lim;
+    var mais=(_lvTemas[0]&&_lvTemas[0].vendidos>0)?_lvTemas[0].id:null;
+    g.innerHTML=lista.slice(0,lim).map(function(t){
+      var i=_lvTemas.indexOf(t), ex=lvExDoTema(t.id);
+      var tg=t.id==='natal'?'<span class="tg">🎄 Especial de Natal</span>':t.id===mais?'<span class="tg roxo">⭐ Mais pedido</span>':'';
+      return '<div class="lv-gi" data-esc="'+esc(t.id)+'">'+tg+'<div class="lv-livro3d">'+capaComNome(t,i,7.2,LV.nome,LV.genero)+'</div>'+
+        '<h4>'+esc(t.emoji+' '+t.nome)+'</h4><button type="button" class="ex" data-ver="'+esc(t.id)+'">'+(ex?'▶ Ver exemplo':'👀 Ver detalhes')+'</button></div>';
     }).join('');
-    /* livro de exemplo: botão no topo + livro aberto no meio da página */
+    g.querySelectorAll('[data-esc]').forEach(function(d){ d.onclick=function(e){ if(e.target.closest('[data-ver]')) return; comecar(d.dataset.esc); }; });
+    g.querySelectorAll('[data-ver]').forEach(function(b){ b.onclick=function(e){ e.stopPropagation(); var id=b.dataset.ver, ex=lvExDoTema(id);
+      try{ gaEvento('livro_ver_exemplo',{tema:id}); }catch(e2){}
+      if(ex) abrirExemplo(ex, function(){ comecar(id); }); else folhaTema(id, function(){ comecar(id); }); }; });
+  }
+  lvTemas().then(function(ts){
+    if(!el('lvLeque')) return;
+    var W=Math.min(480,el('lvLeque').clientWidth||360);
+    var pick=['dinossauros','natal','espaco'].map(lvTema).filter(Boolean); if(pick.length<3) pick=ts.filter(function(t){ return !t.propria; }).slice(0,3);
+    el('lvLeque').innerHTML=pick.map(function(t,k){ return '<div class="lv-livro3d">'+capaTema(t,ts.indexOf(t),(k===1?W*.38:W*.28)/22)+'</div>'; }).join('');
+    desenharGrade();
+    /* livro de exemplo aberto no meio da página (se tiver no painel) */
     var ex=lvExLivro();
     if(ex){
-      el('lvVerEx').hidden=false; el('lvVerEx').onclick=function(){ abrirExemplo(ex, function(){ location.hash='#/livro/criar'; }); };
       var i1=Math.max(0,ex.paginas.findIndex(function(u){ return u&&u!=='so'; })), tx=(ex.textos||[])[i1]||'';
       el('lvAberto').innerHTML='<div class="lv-aberto" id="lvAbertoBt" role="button" tabindex="0" aria-label="Folhear o livro de exemplo"><div><div class="tx">'+esc(tx)+'</div></div><div><img src="'+esc(ex.paginas[i1])+'" alt="Ilustração do livro de exemplo"></div><span class="play">📖 Folhear o livro de '+esc(ex.nome)+'</span></div>'+
         '<p style="text-align:center;color:var(--lv-suave);font-size:.88rem;margin:1.6rem 0 0">Um livro de verdade, feito aqui. Toque pra virar as páginas e ouvir a música.</p>';
       el('lvSecEx').hidden=false;
-      el('lvAbertoBt').onclick=function(){ abrirExemplo(ex, function(){ location.hash='#/livro/criar'; }); };
+      el('lvAbertoBt').onclick=function(){ abrirExemplo(ex, function(){ el('lvEscolha').scrollIntoView({behavior:'smooth'}); }); };
     }
-    var livros=palco.querySelectorAll('.lv-livro3d'), atual=0, pts=el('lvPontos');
-    if(!livros.length) return;
-    livros[0].classList.add('on');
-    if(livros.length<2) return;
-    pts.innerHTML=Array.prototype.map.call(livros,function(x,i){ return '<i'+(i===0?' class="on"':'')+'></i>'; }).join('');
-    var iv=setInterval(function(){
-      if(!el('lvPalco')){ clearInterval(iv); return; }
-      var a=livros[atual]; a.classList.remove('on'); a.classList.add('sai');
-      setTimeout(function(){ a.classList.remove('sai'); },700);
-      atual=(atual+1)%livros.length; livros[atual].classList.add('on');
-      var ps=pts.querySelectorAll('i'); ps.forEach(function(x,i){ x.classList.toggle('on', i===atual); });
-    },2500);
-    aoSair(function(){ clearInterval(iv); });
   }).catch(function(){});
 }
 
@@ -911,18 +977,20 @@ function desenharPasso(){
         ['Recém-nascido','1 mês','2 meses','3 meses','4 meses','5 meses','6 meses','7 meses','8 meses','9 meses','10 meses','11 meses'].map(function(t,i){
           return '<button type="button" class="lv-chip'+(LV.meses===i?' on':'')+'" data-meses="'+i+'" style="font-size:.85rem">'+t+'</button>'; }).join('')+'</div></div>';
     }
-    corpo='<div class="lv-eb">protagonista da história</div><h1 class="lv-tit">Quem é a criança?</h1>'+
-      '<p class="lv-sub">O nome aparece em toda a história e na música.</p>'+
-      '<div class="lv-campo"><label for="lvNome">Nome da criança</label><input type="text" id="lvNome" maxlength="30" autocomplete="off" placeholder="Ex.: Valentina" value="'+esc(LV.nome)+'"></div>'+
+    var jaTem=LV._home && !LV._editNome && LV.nome.trim().length>=2 && !!LV.genero, pn=esc(LV.nome.trim().split(' ')[0]);
+    corpo='<div class="lv-eb">protagonista da história</div><h1 class="lv-tit">'+(jaTem?'Quantos anos '+(LV.genero==='menina'?'a ':'o ')+pn+' tem?':'Quem é a criança?')+'</h1>'+
+      '<p class="lv-sub">'+(jaTem?'Assim as ilustrações ficam com a carinha da idade certa.':'O nome aparece em toda a história e na música.')+'</p>'+
+      (jaTem?'<div class="lv-pra"><span style="font-size:1.4rem">'+(LV.genero==='menina'?'👧':'👦')+'</span><b>'+esc(LV.nome.trim())+'</b><button type="button" id="lvEdNome">trocar</button></div>':
+      '<div class="lv-campo"><label for="lvNome">Nome da criança</label><input type="text" id="lvNome" maxlength="30" autocomplete="off" placeholder="Ex.: Valentina" value="'+esc(LV.nome)+'"></div>')+
       '<div class="lv-campo"><label>Idade</label><div class="lv-chips">'+
         '<button type="button" class="lv-chip larga'+(LV.idade===0?' on':'')+'" data-idade="0">Menos de 1 ano</button>'+
         [1,2,3,4,5,6,7,8].map(function(n){ return '<button type="button" class="lv-chip'+(LV.idade===n?' on':'')+'" data-idade="'+n+'">'+n+'</button>'; }).join('')+
         '<button type="button" class="lv-chip'+(LV.idade===9?' on':'')+'" data-idade="9">9</button>'+
         '<button type="button" class="lv-chip'+(LV.idade===10?' on':'')+'" data-idade="10">10+</button>'+
       '</div></div>'+meses+
-      '<div class="lv-campo"><label>É menino ou menina?</label><div class="lv-chips dois">'+
+      (jaTem?'':'<div class="lv-campo"><label>É menino ou menina?</label><div class="lv-chips dois">'+
         '<button type="button" class="lv-chip'+(LV.genero==='menino'?' on':'')+'" data-gen="menino">👦 Menino</button>'+
-        '<button type="button" class="lv-chip'+(LV.genero==='menina'?' on':'')+'" data-gen="menina">👧 Menina</button></div></div>';
+        '<button type="button" class="lv-chip'+(LV.genero==='menina'?' on':'')+'" data-gen="menina">👧 Menina</button></div></div>');
     pode=LV.nome.trim().length>=2 && LV.idade!==null && (LV.idade!==0 || LV.meses!==null) && !!LV.genero;
   } else if(etapa==='historia'){
     corpo=htmlPassoHistoria();
@@ -947,7 +1015,8 @@ function desenharPasso(){
     '<div class="lv-barra"><div class="tr"><i style="width:'+(((P+1)/total)*100)+'%"></i></div>'+
     '<button class="lv-voltar" id="lvVolta">← voltar</button></div>'+corpo+'</div>'+
     '<div class="lv-rodape"><button class="lv-btn rosa" id="lvProx"'+(pode?'':' disabled')+'>'+btn+'</button></div></div>';
-  el('lvVolta').onclick=function(){ if(LV.passo>0){ LV.passo--; desenharPasso(); window.scrollTo(0,0);} else location.hash='#/livro'; };
+  var edn=el('lvEdNome'); if(edn) edn.onclick=function(){ LV._editNome=true; desenharPasso(); };
+  el('lvVolta').onclick=function(){ if(LV.passo===1 && LV._home){ location.hash='#/livro'; return; } if(LV.passo>0){ LV.passo--; desenharPasso(); window.scrollTo(0,0);} else location.hash='#/livro'; };
   function atual(){ desenharPasso(); }
   app.querySelectorAll('[data-tema]').forEach(function(b){ b.onclick=function(){ folhaTema(b.dataset.tema); }; });
   app.querySelectorAll('[data-idade]').forEach(function(b){ b.onclick=function(){ LV.idade=+b.dataset.idade; if(LV.idade!==0) LV.meses=null; atual(); }; });
@@ -970,7 +1039,7 @@ function desenharPasso(){
   };
 }
 /* tocou numa aventura: mostra o que vem no livro antes de seguir */
-function folhaTema(id){
+function folhaTema(id, aoEscolher){
   var t=lvTema(id); if(!t) return;
   var i=(_lvTemas||[]).indexOf(t), gen=t.vitrineGenero||(i%2?'menina':'menino'), nome=NOMES_EX[gen][(i+1)%6];
   var ex=lvExDoTema(id), n=nIlusTema(t), np=nPagsTema(t);
@@ -993,8 +1062,8 @@ function folhaTema(id){
   aoSair(fechar);
   m.onclick=function(e){ if(e.target===m) fechar(); };
   el('lvFtX').onclick=fechar;
-  el('lvFtOk').onclick=function(){ fechar(); LV.tema=id; LV.passo=1; desenharPasso(); window.scrollTo(0,0); };
-  if(ex) el('lvFtEx').onclick=function(){ fechar(); abrirExemplo(ex, function(){ LV.tema=id; LV.passo=1; desenharPasso(); window.scrollTo(0,0); }); };
+  el('lvFtOk').onclick=function(){ fechar(); if(aoEscolher){ aoEscolher(); return; } LV.tema=id; LV.passo=1; desenharPasso(); window.scrollTo(0,0); };
+  if(ex) el('lvFtEx').onclick=function(){ fechar(); abrirExemplo(ex, aoEscolher||function(){ LV.tema=id; LV.passo=1; desenharPasso(); window.scrollTo(0,0); }); };
 }
 function lerFoto(f,max){
   return new Promise(function(ok,falha){
