@@ -231,7 +231,9 @@ export async function rodarRobo(simular) {
       if (gH >= 50 && vH === 0) { const k = 'aprend_alerta_' + c.id + '_' + hoje; if (simular || !(await L().get(k).catch(() => null))) { if (!simular) await L().set(k, '1').catch(() => {}); feitas.push({ tipo: 'alerta', camp: c.nome, id: c.id, aviso: true, motivo: '🎓 campanha de aprendizagem gastou ' + brl(gH) + ' hoje sem nenhuma venda. NÃO desliguei — veja na aba 🎓 Aprendizagem se ela está progredindo e decida.' }); } }
       continue;
     }
-    const voceAtivou = !limpezaAgora && a && a.tipo === 'ativar' && !/^robô/.test(a.quem || '') && diaBR(a.em) === hoje;
+    // 23/11: você religou pelo app do Meta (o robô tinha desligado hoje e agora ela está ATIVA) → conta como "você ligou": robô não mexe até meia-noite
+    const religouNoApp = !limpezaAgora && a && a.tipo === 'pausar' && /^robô/.test(a.quem || '') && diaBR(a.em) === hoje && c.status === 'ACTIVE';
+    const voceAtivou = religouNoApp || (!limpezaAgora && a && a.tipo === 'ativar' && !/^robô/.test(a.quem || '') && diaBR(a.em) === hoje);
     // 📊 MÉDIA DE 3 DIAS (hoje + 2 anteriores): gasto e compras do Meta (se o Meta não contou, as do site)
     let g3 = 0, v3m = 0, v3s = 0, diasDados = 0;
     for (const d of dias3) { const x = (c.dias || {})[d] || {}; g3 += x.gasto || 0; v3m += x.compras || 0; v3s += s.porDia[d] || 0; if ((x.gasto || 0) > 0) diasDados++; }
