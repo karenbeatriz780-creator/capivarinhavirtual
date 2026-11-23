@@ -89,8 +89,8 @@ export async function rodarRobo(simular) {
   const aprend = new Set(((await L().get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
   const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117b', FLAG_DESFAZ = 'desfaz_roas_20261117';
   // ↩️ 22/11: regra nova é por DIA (sem média de 3 dias) — religa (uma vez, hoje) as que o robô desligou HOJE e estão com custo por compra do dia até R$ 10
-  const FLAG_DIA = 'desfaz_media3_20261122';
-  if (cfg.autoPausar && !simular && hoje === '2026-11-22' && !(await L().get(FLAG_DIA, { type: 'json' }).catch(() => null))) {
+  const FLAG_DIA = hoje === '2026-11-23' ? 'desfaz_r8_20261123' : 'desfaz_media3_20261122'; // 23/11: desfaz também o corte de R$ 8 da campanha boa
+  if (cfg.autoPausar && !simular && (hoje === '2026-11-22' || hoje === '2026-11-23') && !(await L().get(FLAG_DIA, { type: 'json' }).catch(() => null))) {
     await L().setJSON(FLAG_DIA, { em: agora }).catch(() => {});
     for (const c of (meta.campanhas || [])) {
       const ac = acoes[c.id];
@@ -98,7 +98,7 @@ export async function rodarRobo(simular) {
       const d0 = (c.dias || {})[hoje] || {}, v0 = Math.max(d0.compras || 0, ((site[c.id] || {}).porDia || {})[hoje] || 0);
       if (!(v0 > 0 && (d0.gasto || 0) / v0 <= 10)) continue;
       try { await aplicarAcao(c, 'ativar', 'robô (regra do dia)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (regra do dia)', em: agora }; c.status = 'ACTIVE';
-        feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: true, motivo: '↩️ religuei: hoje está ' + brl(d0.gasto / v0) + ' por compra (' + v0 + ' compra(s)) — a regra agora é o custo do DIA, não a média de 3 dias' }); } catch (e) {}
+        feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: true, motivo: '↩️ religuei: hoje está ' + brl(d0.gasto / v0) + ' por compra (' + v0 + ' compra(s)) — está lucrando (até R$ 10 por compra hoje), não podia ter desligado' }); } catch (e) {}
     }
   }
   // ↩️ 17/11 21h: desfaz o corte por ROAS 1,5 por campanha — religa (uma vez) as que o robô desligou desde 19h50 e passam na regra de R$ 9,50
@@ -256,9 +256,10 @@ export async function rodarRobo(simular) {
       // 22/11 (Gusthavo): NÃO existe média — vale o custo por compra DO DIA. Passou de R$ 10 hoje → desliga; não passou → fica.
       //   Campanha ⭐ boa (vendeu bem nos dias anteriores) começa cara e termina positiva → fica ligada (só a regra do "sem compra" vale pra ela).
       else if (!boa && vDia > 0 && gH / vDia > CPA_DIA) pausar = 'hoje o custo por compra está ' + brl(gH / vDia) + ' (' + vDia + ' compra(s), gasto ' + brl(gH) + ') — passou de ' + brl(CPA_DIA) + ' no dia';
-      // 22/11 13h: ⭐ campanha boa → 1 compra: pode gastar até R$ 20; 2+ compras: custo tem que ir baixando até R$ 8 por compra (2 compras = até R$ 16)
+      // 22/11 13h: ⭐ campanha boa → 1 compra: pode gastar até R$ 20
+      // 23/11 (Gusthavo): o corte de R$ 8 derrubou campanha LUCRANDO (12z a R$ 8,08) → campanha boa com 2+ compras só sai se passar de R$ 10 por compra, igual às outras
       else if (boa && vDia === 1 && gH > 20) pausar = '⭐ campanha boa: 1 compra e já gastou ' + brl(gH) + ' (limite R$ 20)';
-      else if (boa && vDia >= 2 && gH / vDia > 8) pausar = '⭐ campanha boa: ' + vDia + ' compras a ' + brl(gH / vDia) + ' cada (gasto ' + brl(gH) + ') — tinha que estar baixando até R$ 8 por compra';
+      else if (boa && vDia >= 2 && gH / vDia > CPA_DIA) pausar = '⭐ campanha boa: ' + vDia + ' compras a ' + brl(gH / vDia) + ' cada (gasto ' + brl(gH) + ') — passou de ' + brl(CPA_DIA) + ' por compra';
     } else if (cfg.autoPausar && !voceAtivou && aprendeu) { // 🇺🇸 EUA: média de 3 dias
       if (v3 === 0 && g3 >= PRIM_C) pausar = 'em 3 dias gastou ' + brl(g3) + ' e não fez nenhuma compra' + (eua ? ' (EUA, limite ' + brl(PRIM_C) + ')' : '');
       else if (v3 > 0 && g3 / v3 > CPA_C) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou do máximo de ' + brl(CPA_C);
