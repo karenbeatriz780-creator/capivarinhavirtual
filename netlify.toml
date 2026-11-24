@@ -8,6 +8,17 @@
   # o desenho das páginas do PDF do livro usa um módulo nativo: não pode ser empacotado
   external_node_modules = ["@napi-rs/canvas"]
 
+# 🙌 Bonzinho Music (louvor personalizado) — página separada, mesmo sistema: /bonzinho
+[[redirects]]
+  from = "/bonzinho"
+  to = "/bonzinho/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/bonzinho/"
+  to = "/bonzinho/index.html"
+  status = 200
+
 # 🇺🇸 site em inglês (EUA): /us
 [[redirects]]
   from = "/us"

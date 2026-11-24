@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bonzinho Music — Louvor personalizado</title>
+<meta name="description" content="Um louvor feito só pra você: com o seu nome, o seu testemunho e a sua fé. Ouça a prévia grátis.">
+<meta property="og:title" content="Bonzinho Music — Louvor personalizado">
+<meta property="og:description" content="Um louvor com o seu nome e o seu testemunho. Ouça a prévia grátis.">
+<meta property="og:image" content="/bonzinho/icone-512.png">
+<meta name="theme-color" content="#0A0806">
+<link rel="icon" type="image/png" sizes="192x192" href="/bonzinho/icone-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/bonzinho/apple-touch-icon.png">
+<style>
+@font-face{font-family:LoraI;src:url(/fontes/lora-italic.woff) format('woff');font-style:italic;font-display:swap}
+:root{--bg:#0A0806;--bg2:#14100A;--card:#17120B;--line:rgba(245,197,66,.18);--tx:#FFFBF2;--mut:#D8CDB8;--mut2:#9C907C;--ouro:#F5C542;--ouro2:#FFDD7A;--ouro3:#B8860B;--ok:#3DDC84;--err:#FF8A7A;
+  --gd:linear-gradient(180deg,#FFE79A 0%,#F5C542 45%,#C8921A 100%)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--tx);font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
+body:before{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(-35deg,rgba(255,255,255,.018) 0 2px,transparent 2px 90px);z-index:0}
+#app{position:relative;z-index:1}
+a{color:inherit}button{font:inherit;color:inherit;cursor:pointer}
+.w{max-width:560px;margin:0 auto;padding:0 16px}
+h1,h2,h3{letter-spacing:-.02em;line-height:1.1;font-weight:900}
+em.ouro,h1 em,h2 em{font-style:normal;background:var(--gd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.top{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 16px 8px;max-width:560px;margin:0 auto}
+.top .lg{display:flex;align-items:center;gap:.5rem;text-decoration:none;font-weight:900;letter-spacing:.02em}
+.top .lg img{height:38px;width:auto;border-radius:8px}
+.top .lg span{font-size:.95rem}.top .lg span b{color:var(--ouro)}
+.top .ex{font-size:.8rem;color:var(--mut);text-decoration:none;border:1px solid var(--line);padding:.35rem .75rem;border-radius:99px}
+/* herói */
+.hero{position:relative;text-align:center;padding:6px 0 26px;overflow:hidden}
+.hero:before{content:'';position:absolute;left:50%;top:40px;width:520px;height:520px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(245,197,66,.28),rgba(245,197,66,.08) 55%,transparent 72%);pointer-events:none}
+.hero .logo{position:relative;width:min(100%,440px);margin:4px auto 0;display:block;-webkit-mask-image:radial-gradient(ellipse 70% 68% at 50% 50%,#000 62%,transparent 100%);mask-image:radial-gradient(ellipse 70% 68% at 50% 50%,#000 62%,transparent 100%);filter:drop-shadow(0 18px 40px rgba(245,197,66,.25));animation:flut 5s ease-in-out infinite}
+@keyframes flut{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.pill{display:inline-flex;gap:.4rem;align-items:center;font-size:.78rem;font-weight:800;color:var(--ouro2);background:rgba(245,197,66,.1);border:1px solid rgba(245,197,66,.4);padding:.38rem .8rem;border-radius:99px;letter-spacing:.02em}
+.hero h1{font-size:clamp(2rem,8.6vw,2.9rem);margin:14px 0 10px}
+.hero .sub{color:var(--mut);font-size:1.04rem;max-width:26rem;margin:0 auto}
+.hero .sub b{color:#fff}
+.btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;border:0;border-radius:16px;padding:17px 18px;font-weight:900;font-size:1.08rem;text-decoration:none;letter-spacing:.01em;transition:transform .15s}
+.btn:active{transform:scale(.98)}
+.btn-o{background:var(--gd);color:#241800;box-shadow:0 12px 30px rgba(245,197,66,.28),inset 0 1px 0 rgba(255,255,255,.6)}
+.btn-l{background:transparent;color:var(--tx);border:1.5px solid var(--line)}
+.btn[disabled]{opacity:.55}
+.trust{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1rem;margin-top:12px;font-size:.82rem;color:var(--mut)}
+.trust span:before{content:'✦ ';color:var(--ouro)}
+/* seções */
+.s{padding:34px 0 6px;position:relative}
+.s h2{font-size:1.65rem;text-align:center}
+.s .lead{color:var(--mut);text-align:center;margin:6px auto 18px;max-width:28rem}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cards3 div{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 10px;text-align:center;font-size:.82rem;color:var(--mut)}
+.cards3 b{display:block;font-size:1.7rem;margin-bottom:6px}.cards3 strong{display:block;color:#fff;font-size:.92rem;margin-bottom:4px}
+.player{background:linear-gradient(160deg,#1C150C,#100C07);border:1px solid var(--line);border-radius:20px;padding:14px;margin-bottom:12px}
+.player b{display:block;margin-bottom:8px}.player small{display:block;color:var(--mut2);font-size:.8rem;margin:-4px 0 8px}
+.player audio{width:100%;height:42px}
+.player .note{font-size:.78rem;color:var(--mut2);margin-top:6px}
+.estilos{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.estilos span{background:var(--card);border:1px solid var(--line);padding:.5rem .85rem;border-radius:99px;font-size:.86rem;font-weight:700}
+.versic{margin:30px auto 0;max-width:26rem;text-align:center;font:italic 400 1.2rem/1.45 LoraI,Georgia,serif;color:var(--ouro2)}
+.versic small{display:block;font:600 .78rem Inter;color:var(--mut2);margin-top:6px;letter-spacing:.06em}
+.faq details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:10px}
+.faq summary{font-weight:800;cursor:pointer;list-style:none}.faq summary::-webkit-details-marker{display:none}
+.faq summary:after{content:'+';float:right;color:var(--ouro);font-weight:900}.faq details[open] summary:after{content:'–'}
+.faq p{color:var(--mut);margin-top:8px;font-size:.93rem}
+footer{text-align:center;color:var(--mut2);font-size:.8rem;padding:30px 16px calc(30px + env(safe-area-inset-bottom))}
+footer img{height:60px;opacity:.9;margin-bottom:6px;-webkit-mask-image:radial-gradient(ellipse 70% 68% at 50% 50%,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse 70% 68% at 50% 50%,#000 60%,transparent 100%)}
+/* criação */
+.wz{padding-top:6px;padding-bottom:120px}
+.bar{height:6px;background:rgba(255,255,255,.08);border-radius:9px;overflow:hidden;margin:4px 0 20px}
+.bar i{display:block;height:100%;background:var(--gd);border-radius:9px;transition:width .4s}
+.wz h2{font-size:1.6rem;margin-bottom:6px}
+.hint{color:var(--mut);font-size:.95rem;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{display:flex;align-items:center;gap:.6rem;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 12px;font-weight:700;font-size:.93rem;line-height:1.2;min-height:62px}
+.opt .e{font-size:1.45rem;flex:none}
+.opt small{display:block;font-weight:500;color:var(--mut2);font-size:.76rem;margin-top:3px}
+.opt.on{border-color:var(--ouro);background:linear-gradient(160deg,rgba(245,197,66,.18),rgba(245,197,66,.04));box-shadow:0 0 0 3px rgba(245,197,66,.15)}
+.opt.largo{grid-column:1/-1}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sub-t{font-weight:800;margin:20px 0 10px}
+.inp{width:100%;background:#120E08;border:1.5px solid var(--line);border-radius:14px;padding:14px;color:var(--tx);font:inherit;font-size:1rem;outline:none}
+.inp:focus{border-color:var(--ouro)}
+textarea.inp{min-height:170px;resize:vertical;line-height:1.5}
+.cnt{font-size:.8rem;color:var(--mut2);margin-top:6px}.cnt.ok{color:var(--ok)}
+.err{color:var(--err);font-weight:700;margin-top:14px;min-height:1.2em}
+.navb{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(10,8,6,0),rgba(10,8,6,.96) 35%);padding:18px 0 calc(14px + env(safe-area-inset-bottom));z-index:5}
+.navb .in{max-width:560px;margin:0 auto;padding:0 16px;display:flex;gap:10px}
+.navb .back{flex:none;width:56px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);font-size:1.6rem;font-weight:700}
+.navb .btn{flex:1}
+.mk{text-align:center;padding:34px 0}
+.mk-cruz{font-size:3rem;animation:brilho 1.8s ease-in-out infinite}
+@keyframes brilho{0%,100%{filter:drop-shadow(0 0 0 rgba(245,197,66,0));transform:scale(1)}50%{filter:drop-shadow(0 0 18px rgba(245,197,66,.8));transform:scale(1.08)}}
+.mk-eq{display:flex;justify-content:center;align-items:flex-end;gap:5px;height:36px;margin:16px 0}
+.mk-eq i{width:6px;background:var(--gd);border-radius:3px;animation:eq 1s ease-in-out infinite alternate}
+@keyframes eq{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+.mk-msg{font-weight:800;transition:opacity .25s}.mk-sub{color:var(--mut2);font-size:.85rem;margin-top:4px}
+.mk-pct{font-size:2.2rem;font-weight:900;color:var(--ouro);margin-top:10px}
+.prog{height:8px;background:rgba(255,255,255,.08);border-radius:9px;overflow:hidden;margin:12px auto;max-width:320px}.prog i{display:block;height:100%;width:0;background:var(--gd);transition:width .3s}
+.mini{display:flex;justify-content:center;margin-top:10px}.mini button{background:none;border:0;color:var(--ouro);font-weight:800;font-size:.9rem;padding:8px}
+.breve{background:linear-gradient(160deg,#211909,#0F0B06);border:1.5px solid var(--ouro);border-radius:22px;padding:22px 18px;text-align:center;margin-top:8px}
+.breve .ic{font-size:2.4rem}.breve h3{font-size:1.35rem;margin:8px 0 6px}.breve p{color:var(--mut);font-size:.95rem}
+.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#FFF6DC;color:#2A1C00;font-weight:800;padding:12px 18px;border-radius:14px;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:90vw;text-align:center;font-size:.92rem}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ==========================================================================================
+   Bonzinho Music — louvor personalizado (página separada, mesmo sistema da Capivarinha).
+   Só LOUVOR e só MÚSICA. Pagamento ainda DESCONECTADO (Pix do Bonzinho entra depois).
+   ========================================================================================== */
+var LOGO='/bonzinho/logo.webp';
+var LS={get:function(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },set:function(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }};
+function el(i){ return document.getElementById(i); }
+function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function toast(t){ var d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(function(){ d.remove(); },3200); }
+function api(n,body){ return fetch('/.netlify/functions/'+n,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ d._ok=r.ok; return d; }); }); }
+
+var S={};
+function novo(){ return {para:'',nome:'',paraGen:'',de:'',proposito:'',estilo:'',voz:'',historia:'',frase:'',letra:'',taskId:'',url:'',url2:''}; }
+function salvar(){ LS.set('bz_state',JSON.stringify(S)); }
+try{ S=JSON.parse(LS.get('bz_state')||'null')||novo(); }catch(e){ S=novo(); }
+
+/* ---------- opções (só louvor) ---------- */
+var PARA=[['deus','🙌','Pra Deus','adoração e gratidão'],['igreja','⛪','Pra minha igreja','culto, ministério, grupo'],['familia','🏡','Minha família','uma casa abençoada'],
+  ['mae','🌷','Minha mãe / meu pai','homenagem com fé'],['conjuge','💍','Esposa / marido','casamento abençoado'],['filho','🧸','Meu filho(a)','uma bênção pra ele(a)'],
+  ['pastor','📖','Pastor(a) / líder','homenagem ao ministério'],['outro','✨','Outra pessoa','amigo, avó, irmão…']];
+var PROP=[['Adoração / momento com Deus','🙌'],['Gratidão a Deus','🙏'],['Testemunho de vitória','🏆'],['Louvor pra igreja / culto','⛪'],['Cura e restauração','💧'],
+  ['Família abençoada','👨‍👩‍👧'],['Aniversário abençoado','🎂'],['Casamento cristão','💒'],['Batismo','🕊️'],['Homenagem a pastor(a)','📖']];
+var ESTILOS=[['gospel','🙌','Adoração ao vivo','violão, bateria e guitarra'],['gospelvv','🎸','Voz e violão','intimista e suave'],['gospelcelebra','🎉','Louvor animado','celebração, pra cantar junto'],
+  ['gospeltrad','⛪','Hino / Assembleia','teclado, órgão e coral'],['catolica','✝️','Católica','música de missa e oração']];
+var VOZ=[['feminina','👩','Voz feminina'],['masculina','👨','Voz masculina'],['dueto','👫','Dueto']];
+function precisaNome(){ return S.para && S.para!=='deus' && S.para!=='igreja'; }
+function relacao(){ return {deus:'louvor',igreja:'louvor',familia:'familia',mae:'mae',conjuge:'esposa',filho:'filho',pastor:'outro',outro:'outro'}[S.para]||'louvor'; }
+
+/* ---------- página inicial ---------- */
+function topo(){ return '<div class="top"><a class="lg" href="#/"><img src="'+LOGO+'" alt="Bonzinho Music"><span>BONZINHO <b>MUSIC</b></span></a><a class="ex" href="#/" onclick="setTimeout(function(){var e=document.getElementById(\'exSec\');e&&e.scrollIntoView({behavior:\'smooth\'})},50)">🎧 Ouvir exemplo</a></div>'; }
+function home(){
+  el('app').innerHTML=topo()+
+  '<header class="hero"><div class="w">'+
+    '<img class="logo" src="'+LOGO+'" alt="Bonzinho Music" width="420" height="336" fetchpriority="high">'+
+    '<span class="pill">🎧 Ouça a prévia grátis antes de pagar</span>'+
+    '<h1>Um <em>louvor</em> feito<br>só pra você</h1>'+
+    '<p class="sub">Com o <b>seu nome</b>, o <b>seu testemunho</b> e a <b>sua fé</b>. Uma música de adoração de verdade, pronta em minutos.</p>'+
+    '<div style="margin-top:22px"><a class="btn btn-o" href="#/criar">🙌 Criar meu louvor</a></div>'+
+    '<div class="trust"><span>Prévia grátis</span><span>Pronto em minutos</span><span>Direto no celular</span></div>'+
+  '</div></header>'+
+  '<section class="s" id="exSec"><div class="w"><h2>Ouça um <em>exemplo</em></h2><p class="lead">Um louvor feito aqui, com a história de quem pediu. Dá o play 🎧</p>'+
+    '<div class="player"><b>🙌 Música pra Jesus</b><small>Adoração ao vivo · voz e banda</small><audio controls preload="none" src="/exemplo-louvor.mp3"></audio></div>'+
+  '</div></section>'+
+  '<section class="s"><div class="w"><h2>Como <em>funciona</em></h2><p class="lead">Três passos, tudo pelo celular.</p>'+
+    '<div class="cards3"><div><b>✍️</b><strong>Conte</strong>pra quem é e o seu testemunho</div><div><b>🎶</b><strong>A gente compõe</strong>letra e música de louvor</div><div><b>🎧</b><strong>Ouça</strong>a prévia e leve a sua música</div></div>'+
+  '</div></section>'+
+  '<section class="s"><div class="w"><h2>Escolha o <em>estilo</em></h2><p class="lead">Do louvor intimista ao hino de igreja.</p>'+
+    '<div class="estilos">'+ESTILOS.map(function(e){ return '<span>'+e[1]+' '+e[2]+'</span>'; }).join('')+'</div>'+
+    '<div class="versic">“Cantai ao Senhor um cântico novo.”<small>SALMOS 96:1</small></div>'+
+  '</div></section>'+
+  '<section class="s faq"><div class="w"><h2>Perguntas</h2><p class="lead">&nbsp;</p>'+
+    '<details><summary>Eu ouço antes de pagar?</summary><p>Sim. Você lê a letra, ajusta o que quiser e ouve a prévia do seu louvor antes de qualquer pagamento.</p></details>'+
+    '<details><summary>Pode ser pra outra pessoa?</summary><p>Pode. Faça um louvor pra sua mãe, pra sua família, pro seu pastor ou pra alguém especial, com o nome e a história dele.</p></details>'+
+    '<details><summary>Quanto tempo demora?</summary><p>A letra sai em segundos e a música costuma ficar pronta em menos de 1 minuto.</p></details>'+
+  '</div></section>'+
+  '<div class="w" style="margin-top:20px"><a class="btn btn-o" href="#/criar">🙌 Criar meu louvor</a></div>'+
+  '<footer><img src="'+LOGO+'" alt=""><br>Bonzinho Music · Louvor personalizado</footer>';
+}
+
+/* ---------- criação ---------- */
+var PASSOS=['para','nome','proposito','estilo','voz','historia','letra','musica','fim'];
+var passo=0;
+function wizard(n){
+  if(n!=null) passo=n;
+  if(PASSOS[passo]==='nome' && !precisaNome()) passo+=(n!=null && n<passo)?-1:0;
+  var k=PASSOS[passo], pct=Math.round((passo+1)/PASSOS.length*100), h='';
+  if(k==='para'){
+    h='<h2>Pra quem é esse <em>louvor</em>?</h2><p class="hint">Escolha uma opção.</p><div class="grid">'+
+      PARA.map(function(p){ return '<button class="opt'+(S.para===p[0]?' on':'')+'" data-para="'+p[0]+'"><span class="e">'+p[1]+'</span><span>'+p[2]+'<small>'+p[3]+'</small></span></button>'; }).join('')+'</div>';
+    if(S.para) h+='<div class="sub-t">E você é…</div><div class="row2"><button class="opt'+(S.de==='mulher'?' on':'')+'" data-de="mulher">👩 Mulher</button><button class="opt'+(S.de==='homem'?' on':'')+'" data-de="homem">👨 Homem</button></div>';
+  }
+  if(k==='nome'){
+    var quem={familia:'da sua família',mae:'dela ou dele',conjuge:'do seu amor',filho:'do seu filho(a)',pastor:'do pastor(a)',outro:'da pessoa'}[S.para]||'';
+    h='<h2>Qual o <em>nome</em> '+quem+'?</h2><p class="hint">Vai aparecer cantado no louvor. Mais de um nome? Separe por vírgula.</p><input class="inp" id="fNome" maxlength="120" placeholder="Ex.: Maria" value="'+esc(S.nome)+'" autocomplete="off">'+
+      (S.para!=='familia'?'<div class="sub-t">É…</div><div class="row2"><button class="opt'+(S.paraGen==='ela'?' on':'')+'" data-pgen="ela">Mulher / menina</button><button class="opt'+(S.paraGen==='ele'?' on':'')+'" data-pgen="ele">Homem / menino</button></div>':'');
+  }
+  if(k==='proposito') h='<h2>Qual o <em>propósito</em>?</h2><p class="hint">Isso guia a letra do louvor.</p><div class="grid">'+PROP.map(function(o){ return '<button class="opt'+(S.proposito===o[0]?' on':'')+'" data-pr="'+esc(o[0])+'"><span class="e">'+o[1]+'</span>'+esc(o[0])+'</button>'; }).join('')+'</div>';
+  if(k==='estilo') h='<h2>Escolha o <em>estilo</em></h2><p class="hint">&nbsp;</p><div class="grid">'+ESTILOS.map(function(g,i){ return '<button class="opt'+(i===ESTILOS.length-1?' largo':'')+(S.estilo===g[0]?' on':'')+'" data-est="'+g[0]+'"><span class="e">'+g[1]+'</span><span>'+g[2]+'<small>'+g[3]+'</small></span></button>'; }).join('')+'</div>';
+  if(k==='voz') h='<h2>Quem vai <em>cantar</em>?</h2><p class="hint">&nbsp;</p><div class="row3">'+VOZ.map(function(v){ return '<button class="opt'+(S.voz===v[0]?' on':'')+'" data-voz="'+v[0]+'" style="flex-direction:column;justify-content:center;text-align:center"><span class="e">'+v[1]+'</span>'+v[2]+'</button>'; }).join('')+'</div>';
+  if(k==='historia') h='<h2>Conte o seu <em>testemunho</em></h2><p class="hint">O que Deus fez na sua vida, pelo que você é grato, o que quer dizer a Ele'+(precisaNome()?' ou sobre essa pessoa':'')+'. Quanto mais detalhe, mais especial.</p>'+
+    '<textarea class="inp" id="fHist" maxlength="2000" placeholder="Ex.: Passei por um tempo difícil no hospital e Deus me curou. Hoje quero agradecer pela minha família e pela vitória…">'+esc(S.historia)+'</textarea><div class="cnt" id="cnt"></div>'+
+    '<div class="sub-t">Um versículo ou frase pra entrar <span style="color:var(--mut2);font-weight:500">(opcional)</span></div><input class="inp" id="fFrase" maxlength="200" placeholder="Ex.: Até aqui nos ajudou o Senhor" value="'+esc(S.frase)+'">';
+  if(k==='letra') h=htmlLetra();
+  if(k==='musica') h=htmlMusica();
+  if(k==='fim') h='<h2>Seu louvor está <em>pronto</em> 🙌</h2><p class="hint">Falta só liberar a versão completa.</p>'+
+    '<div class="breve"><div class="ic">⏳</div><h3>Pagamento em breve</h3><p>Estamos finalizando o pagamento do Bonzinho Music. Guarde esta página: a sua prévia fica salva neste celular e você libera o louvor completo assim que abrir.</p></div>'+
+    (S.url?'<div style="margin-top:16px">'+player('🙌 Ouvir a prévia de novo',S.url,true)+'</div>':'');
+  var acao='<button class="btn btn-o" id="bNext">Continuar</button>';
+  if(k==='letra') acao=(_letraBusy||!S.letra)?'':'<button class="btn btn-o" id="bAprovar">Criar meu louvor 🎶</button>';
+  if(k==='musica') acao=S.url?'<button class="btn btn-o" id="bLiberar">Quero o louvor completo ✨</button>':'';
+  if(k==='fim') acao='<button class="btn btn-l" id="bNovo">Criar outro louvor</button>';
+  el('app').innerHTML=topo()+'<div class="w wz"><div class="bar"><i style="width:'+pct+'%"></i></div>'+h+'<div class="err" id="err"></div></div>'+
+    '<div class="navb"><div class="in"><button class="back" id="bBack" aria-label="Voltar">‹</button>'+acao+'</div></div>';
+  el('bBack').onclick=function(){ if(passo===0){ location.hash='#/'; return; } var p=passo-1; if(PASSOS[p]==='nome'&&!precisaNome()) p--; wizard(p); window.scrollTo(0,0); };
+  if(el('bNext')) el('bNext').onclick=avancar;
+  ligar(k);
+}
+function erro(t){ var e=el('err'); if(e) e.textContent=t||''; }
+function ok(k){
+  if(k==='para'){ if(!S.para) return 'Escolha pra quem é o louvor.'; if(!S.de) return 'Diga se você é mulher ou homem (ajuda na letra).'; }
+  if(k==='nome'){ if(S.nome.trim().length<2) return 'Digite o nome.'; if(S.para!=='familia'&&!S.paraGen) return 'Escolha uma opção.'; }
+  if(k==='proposito'&&!S.proposito) return 'Escolha o propósito.';
+  if(k==='estilo'&&!S.estilo) return 'Escolha um estilo.';
+  if(k==='voz'&&!S.voz) return 'Escolha a voz.';
+  if(k==='historia'&&S.historia.trim().length<30) return 'Conte um pouco mais (pelo menos 30 letras).';
+  return '';
+}
+function avancar(){ var k=PASSOS[passo], m=ok(k); if(m){ erro(m); return; } salvar();
+  if(k==='historia'){ S.letra=''; S.taskId=''; S.url=''; S.url2=''; salvar(); }
+  var p=passo+1; if(PASSOS[p]==='nome'&&!precisaNome()) p++;
+  wizard(p); window.scrollTo(0,0); if(PASSOS[passo]==='letra'&&!S.letra) gerarLetra(); }
+var _autoT=null;
+function auto(){ salvar(); var k=PASSOS[passo]; clearTimeout(_autoT); _autoT=setTimeout(function(){ if(PASSOS[passo]===k && !ok(k)) avancar(); },260); }
+function ligar(k){
+  function on(sel,fn){ document.querySelectorAll(sel).forEach(function(b){ b.onclick=function(){ fn(b); }; }); }
+  on('[data-para]',function(b){ if(S.para!==b.dataset.para){ S.nome=''; S.paraGen=''; } S.para=b.dataset.para; if(S.para==='familia') S.paraGen='neutro'; salvar(); wizard(); if(S.de) auto(); });
+  on('[data-de]',function(b){ S.de=b.dataset.de; if(!S.voz) S.voz=S.de==='mulher'?'feminina':'masculina'; salvar(); wizard(); auto(); });
+  on('[data-pgen]',function(b){ S.paraGen=b.dataset.pgen; salvar(); wizard(); if(S.nome.trim().length>=2) auto(); });
+  on('[data-pr]',function(b){ S.proposito=b.dataset.pr; wizard(); auto(); });
+  on('[data-est]',function(b){ S.estilo=b.dataset.est; wizard(); auto(); });
+  on('[data-voz]',function(b){ S.voz=b.dataset.voz; wizard(); auto(); });
+  var fn=el('fNome'), fh=el('fHist'), ff=el('fFrase');
+  if(fn){ fn.oninput=function(){ S.nome=fn.value; salvar(); }; fn.onkeydown=function(e){ if(e.key==='Enter') avancar(); }; }
+  if(fh){ var c=function(){ var n=S.historia.trim().length, ce=el('cnt'); if(!ce) return; ce.textContent=n>=30?'✓ '+n+' letras':'Pelo menos 30 letras (faltam '+(30-n)+')'; ce.className='cnt'+(n>=30?' ok':''); }; fh.oninput=function(){ S.historia=fh.value; salvar(); c(); }; c(); }
+  if(ff) ff.oninput=function(){ S.frase=ff.value; salvar(); };
+  if(k==='letra') ligarLetra();
+  if(k==='musica') ligarMusica();
+  if(k==='fim'){ limitar(); el('bNovo').onclick=function(){ S=novo(); salvar(); wizard(0); window.scrollTo(0,0); }; }
+}
+function dados(){
+  var nomes=precisaNome()?S.nome.trim():'';
+  return {idioma:'pt', origem:'bonzinho', estilo:S.estilo, estiloOutro:'', texto:S.historia.trim(), clima:S.estilo==='gospelcelebra'?'alegre':'emocionante',
+    relacao:relacao(), ocasiao:S.proposito, nomesLetra:nomes, frase:S.frase.trim(), voz:S.voz, de:S.de,
+    paraGen:S.para==='deus'||S.para==='igreja'?'neutro':S.paraGen, paraOutro:S.para==='pastor'?(S.paraGen==='ela'?'minha pastora':'meu pastor'):S.para==='outro'?'uma pessoa especial':''};
+}
+
+/* ---------- letra ---------- */
+var _letraBusy=false;
+var MSG_LET=['Lendo o seu testemunho…','Buscando as palavras certas…','Escrevendo o refrão…','Colocando a sua fé na letra…','Dando os últimos retoques…'];
+function htmlLetra(){
+  if(_letraBusy||!S.letra) return '<h2>Escrevendo a <em>letra</em> ✍️</h2><div class="mk"><div class="mk-cruz">✝️</div><div class="mk-eq">'+[10,24,16,32,20,28,14,30,18,26,12].map(function(h,i){ return '<i style="height:'+h+'px;animation-delay:'+(i*.09)+'s"></i>'; }).join('')+'</div><div class="mk-msg" id="mkMsg">Lendo o seu testemunho…</div><div class="mk-sub">Só alguns segundos</div></div>';
+  return '<h2>A sua <em>letra</em> ✍️</h2><p class="hint">Leia e mude o que quiser. Quando estiver bom, toque em <b>Criar meu louvor</b>.</p>'+
+    '<textarea class="inp" id="fLetra" style="min-height:320px">'+esc(S.letra)+'</textarea>'+
+    '<div class="mini"><button id="bNova">↻ Escrever outra versão</button></div>'+
+    '<div class="sub-t">Quer uma mudança pequena?</div><input class="inp" id="fAjuste" maxlength="300" placeholder="Ex.: deixe o refrão mais forte, cite o Salmo 23">'+
+    '<div class="mini"><button id="bAjuste">Aplicar mudança</button></div>';
+}
+function ligarLetra(){
+  var t=el('fLetra'); if(t) t.oninput=function(){ S.letra=t.value; salvar(); };
+  if(el('bNova')) el('bNova').onclick=function(){ gerarLetra(); };
+  if(el('bAjuste')) el('bAjuste').onclick=function(){ var a=(el('fAjuste').value||'').trim(); if(a.length<3){ toast('Diga o que mudar.'); return; } gerarLetra({letraAtual:S.letra, instrucao:a}); };
+  if(el('bAprovar')) el('bAprovar').onclick=function(){ if((S.letra||'').trim().length<80){ toast('A letra está muito curta.'); return; } S.taskId=''; S.url=''; S.url2=''; salvar(); wizard(PASSOS.indexOf('musica')); window.scrollTo(0,0); gerarMusica(); };
+}
+function gerarLetra(ajuste){
+  _letraBusy=true; if(PASSOS[passo]==='letra'){ wizard(); girarMsgs(MSG_LET,1800); }
+  var body=Object.assign(dados(), ajuste||{}, {id:'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,9)});
+  var fim=function(l){ _letraBusy=false; if(l){ S.letra=l; salvar(); } else toast('Não deu pra escrever a letra agora. Tente de novo.'); if(PASSOS[passo]==='letra') wizard(); };
+  api('letra-rapida',body).then(function(d){
+    if(d&&d.letra) return fim(d.letra);
+    var id2='l'+Date.now().toString(36)+Math.random().toString(36).slice(2,9), t0=Date.now();
+    fetch('/.netlify/functions/gerar-letra-background',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},body,{id:id2}))}).catch(function(){});
+    (function ver(){ if(Date.now()-t0>120000) return fim(null);
+      fetch('/.netlify/functions/gerar-letra-status?id='+id2,{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(s){ if(s&&s.pronto&&s.letra) return fim(s.letra); if(s&&s.pronto&&s.erro) return fim(null); setTimeout(ver,2000); }).catch(function(){ setTimeout(ver,2500); });
+    })();
+  }).catch(function(){ fim(null); });
+}
+
+/* ---------- música ---------- */
+var _musBusy=false, _progT=null, _msgT=null;
+var MSG_MUS=['Compondo a melodia…','Afinando o violão…','Gravando a voz…','Cantando o seu louvor…','Mixando os instrumentos…','Últimos retoques…'];
+function htmlMusica(){
+  if(!S.url) return '<h2>Criando o seu <em>louvor</em> 🎶</h2><div class="mk"><div class="mk-cruz">🙌</div><div class="mk-pct" id="pgPct">0%</div><div class="prog"><i id="pg"></i></div><div class="mk-msg" id="mkMsg">Compondo a melodia…</div><div class="mk-sub">Costuma ficar pronto em menos de 1 minuto. Deixe esta página aberta.</div></div>';
+  return '<h2>Ouça o seu <em>louvor</em> 🎧</h2><p class="hint">Essa é a sua prévia grátis. Gostou? Toque em <b>Quero o louvor completo</b>.</p>'+
+    player('Versão 1',S.url,true)+(S.url2?player('Versão 2',S.url2,true):'')+
+    '<div class="mini"><button id="bRefazer">↻ Fazer outra versão</button></div>';
+}
+function player(t,u,lim){ return '<div class="player"><b>'+t+'</b><audio controls preload="none" '+(lim?'data-lim="1" ':'')+'src="'+esc(u)+'"></audio>'+(lim?'<div class="note">Prévia · primeiros 60 segundos</div>':'')+'</div>'; }
+function limitar(){ var a=[].slice.call(document.querySelectorAll('audio')); a.forEach(function(x){ x.addEventListener('play',function(){ a.forEach(function(o){ if(o!==x) o.pause(); }); }); if(x.dataset.lim) x.addEventListener('timeupdate',function(){ if(x.currentTime>=60){ x.pause(); x.currentTime=0; toast('Libere o louvor completo pra ouvir tudo 🙌'); } }); }); }
+function ligarMusica(){
+  limitar();
+  if(el('bLiberar')) el('bLiberar').onclick=function(){ wizard(PASSOS.indexOf('fim')); window.scrollTo(0,0); };
+  if(el('bRefazer')) el('bRefazer').onclick=function(){ S.taskId=''; S.url=''; S.url2=''; salvar(); wizard(); gerarMusica(); };
+  if(!S.url && S.taskId && !_musBusy) acompanhar(S.taskId);
+  if(!S.url) progresso();
+}
+function girarMsgs(lista,ms){ clearInterval(_msgT); var i=0; _msgT=setInterval(function(){ var m=el('mkMsg'); if(!m){ clearInterval(_msgT); return; } i=(i+1)%lista.length; m.style.opacity=0; setTimeout(function(){ m.textContent=lista[i]; m.style.opacity=1; },250); },ms); }
+function progresso(){ clearInterval(_progT); var t0=Date.now(); girarMsgs(MSG_MUS,6000); _progT=setInterval(function(){ var p=el('pg'), c=el('pgPct'); if(!p){ clearInterval(_progT); return; } var t=(Date.now()-t0)/1000, x=Math.min(97,97*(1-Math.exp(-t/20))); p.style.width=x+'%'; if(c) c.textContent=Math.floor(x)+'%'; },300); }
+function gerarMusica(){
+  if(_musBusy) return; _musBusy=true;
+  api('gerar-musica',Object.assign(dados(),{letraAprovada:S.letra})).then(function(d){
+    if(!d||!d.taskId){ _musBusy=false; toast((d&&d.erro)||'Não deu pra começar a música. Tente de novo.'); wizard(PASSOS.indexOf('letra')); return; }
+    S.taskId=d.taskId; salvar(); acompanhar(d.taskId);
+  }).catch(function(){ _musBusy=false; toast('Problema de conexão. Tente de novo.'); wizard(PASSOS.indexOf('letra')); });
+}
+function acompanhar(tid){
+  _musBusy=true; var n=0;
+  (function ver(){
+    if(S.taskId!==tid) return;
+    fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(tid),{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+      if(d&&d.pronto&&d.url){ _musBusy=false; S.url=d.url; S.url2=d.url2||''; salvar(); if(PASSOS[passo]==='musica') wizard(); return; }
+      if(d&&d.falhou){ _musBusy=false; S.taskId=''; salvar(); toast('Algo deu errado na música. Tente de novo.'); if(PASSOS[passo]==='musica') wizard(PASSOS.indexOf('letra')); return; }
+      if(++n>200){ _musBusy=false; toast('Está demorando mais que o normal. Tente de novo.'); return; }
+      setTimeout(ver,3000);
+    }).catch(function(){ setTimeout(ver,4000); });
+  })();
+}
+
+/* ---------- rotas ---------- */
+function rota(){ var h=location.hash||'#/'; if(h.indexOf('#/criar')===0){ wizard(); } else home(); window.scrollTo(0,0); }
+window.addEventListener('hashchange',rota); rota();
+</script>
+</body>
+</html>
