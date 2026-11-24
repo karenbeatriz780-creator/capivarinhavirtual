@@ -4587,7 +4587,7 @@ function navegar(){
   if(r.nome==='liberadas' && r.arg){ telaLiberadas(r.arg); return; }
   if(r.nome==='meus'){ telaMeus(); return; }
   if(r.nome==='avaliar' && r.arg){ telaAvaliar(r.arg); return; }
-  if(r.nome==='ouvir' && r.arg){ telaOuvir(r.arg); return; }
+  if(r.nome==='ouvir' && r.arg){ if(W && !W.pago && W.musicaPreviewId && r.arg==='t.'+W.musicaPreviewId){ wStep=Math.max(0,passos().indexOf('musicaFinal')); telaWizard(W.produto||'musica'); return; } telaOuvir(r.arg); return; }
   if(r.nome==='oferta' && r.arg){ telaOferta(r.arg); return; }
   if(r.nome==='live'){ try{ Store.set('cl_live', String(Date.now())); }catch(e){} ir('criar/musica'); return; }
   if(r.nome==='tela-aovivo'){ telaAoVivo(); return; }
@@ -5770,6 +5770,11 @@ function desenharPasso(opts){
   var ps=passos();
   if(wStep>=ps.length) wStep=ps.length-1;
   var k=ps[wStep];
+  /* 24/11: na etapa da música pronta o endereço vira o link fixo dela (#/ouvir/t.<id>) — copiou/compartilhou/atualizou, cai na música com o pagar, não no começo */
+  try{
+    if(k==='musicaFinal' && W && W.musicaPreviewId && !W.pago){ if(location.hash!=='#/ouvir/t.'+W.musicaPreviewId) history.replaceState(null,'','#/ouvir/t.'+W.musicaPreviewId); }
+    else if(/^#\/ouvir\//.test(location.hash)) history.replaceState(null,'','#/criar/'+(W&&W.produto||'musica'));
+  }catch(e){}
   el('wzCount').textContent = ps.length>1 ? ((wStep+1)+'/'+ps.length) : '';
   el('wzFill').style.width=((wStep+1)/ps.length*100)+'%';
   el('wzBody').innerHTML=htmlPasso(k);
