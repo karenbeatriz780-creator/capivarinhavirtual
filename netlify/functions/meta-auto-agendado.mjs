@@ -89,12 +89,13 @@ export async function rodarRobo(simular) {
   const aprend = new Set(((await L().get('aprendizagem_cfg', { type: 'json' }).catch(() => null)) || {}).ids || []);
   const flagMN = 'meianoite_feito_' + hoje, FLAG_JA = 'futuro_agora_20261117b', FLAG_DESFAZ = 'desfaz_roas_20261117';
   // ↩️ 22/11: regra nova é por DIA (sem média de 3 dias) — religa (uma vez, hoje) as que o robô desligou HOJE e estão com custo por compra do dia até R$ 10
-  const FLAG_DIA = hoje === '2026-11-23' ? 'desfaz_r8_20261123' : 'desfaz_media3_20261122'; // 23/11: desfaz também o corte de R$ 8 da campanha boa
-  if (cfg.autoPausar && !simular && (hoje === '2026-11-22' || hoje === '2026-11-23') && !(await L().get(FLAG_DIA, { type: 'json' }).catch(() => null))) {
+  // 24/11: uma vez POR DIA, religa o que o robô desligou hoje com custo por compra do dia até R$ 10 (não podia ter desligado)
+  const FLAG_DIA = 'desfaz_lucro_' + hoje;
+  if (cfg.autoPausar && !simular && !(await L().get(FLAG_DIA, { type: 'json' }).catch(() => null))) {
     await L().setJSON(FLAG_DIA, { em: agora }).catch(() => {});
     for (const c of (meta.campanhas || [])) {
       const ac = acoes[c.id];
-      if (c.status === 'ACTIVE' || !ac || ac.tipo !== 'pausar' || !/^robô$/.test(ac.quem || '') || diaBR(ac.em) !== hoje || ehEspecial(c)) continue;
+      if (c.status === 'ACTIVE' || !ac || ac.tipo !== 'pausar' || !/^robô$/.test(ac.quem || '') || diaBR(ac.em) !== hoje || ehEspecial(c) || (vigias[c.id] && vigias[c.id].ligado)) continue;
       const d0 = (c.dias || {})[hoje] || {}, v0 = Math.max(d0.compras || 0, ((site[c.id] || {}).porDia || {})[hoje] || 0);
       if (!(v0 > 0 && (d0.gasto || 0) / v0 <= 10)) continue;
       try { await aplicarAcao(c, 'ativar', 'robô (regra do dia)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (regra do dia)', em: agora }; c.status = 'ACTIVE';
@@ -138,6 +139,9 @@ export async function rodarRobo(simular) {
         const txt = f.vendas + ' venda(s) na semana' + (f.cpa != null ? ' a ' + brl(f.cpa) + ' cada' : '') + ', gasto ' + brl(f.gasto);
         if (c.status === 'ACTIVE') { // ligada sem futuro → desliga (só se já teve chance: R$ 10+ na semana)
           const ac = acoes[c.id]; if (ac && ac.tipo === 'ativar' && !/^robô/.test(ac.quem || '') && diaBR(ac.em) === hoje) continue; // você ligou hoje → respeita
+          // 24/11: você religou nas últimas 24h (pelo painel ou pelo app do Meta, depois do robô desligar) → a meia-noite também não desliga
+          const ac0 = acoes[c.id], ha24 = ac0 && agora - (ac0.em || 0) < 864e5;
+          if (ha24 && ((ac0.tipo === 'pausar' && /^robô/.test(ac0.quem || '') && c.status === 'ACTIVE') || (ac0.tipo === 'ativar' && !/^robô/.test(ac0.quem || '')))) continue;
           if (f.tem || f.gasto < 10 || f.eua || ehEspecial(c)) continue; // modo especial: só a regra do dia dele // EUA segue as regras próprias (média de 3 dias, R$ 30)
           try { if (!simular) { await aplicarAcao(c, 'pausar', 'robô'); acoes[c.id] = { tipo: 'pausar', quem: 'robô', em: agora }; } if (mc) mc.status = 'PAUSED';
             feitas.push({ tipo: 'pausou', camp: c.nome, id: c.id, aviso: true, motivo: (jaAgora ? '⚡ análise de agora' : '🌙 dia novo') + ': desliguei, não tem futuro (' + txt + ')' }); }
