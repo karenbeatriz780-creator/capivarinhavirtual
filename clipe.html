@@ -189,13 +189,17 @@ $('vidX').onclick=function(){if(gerando)gerando.cancelar();$('vid').hidden=true}
 function carregaImg(u){return new Promise(function(ok,er){var i=new Image();i.onload=function(){ok(i)};i.onerror=er;i.src=u})}
 function gerarVideo(DURq,INI){
  au.pause();var DUR=Math.max(5,DURq||30),INI=INI||0,Wv=720,Hv=1280,cancel=false;
+ var pc=!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)&&!(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
+ var caiu=null;try{caiu=localStorage.getItem('clipe_gerando')}catch(e){}
  $('vid').hidden=false;txt('vidT',L('🎬 Gerando seu vídeo…','🎬 Making your video…'));txt('vidS',L('Deixe esta tela aberta. Leva uns '+(DUR<90?Math.round(DUR)+' segundos':Math.ceil(DUR/60)+' minutos')+'.','Keep this screen open. It takes about '+(DUR<90?Math.round(DUR)+' seconds':Math.ceil(DUR/60)+' minutes')+'.'));$('vidB').style.width='0';
  var c=$('vidX');c.textContent=L('Cancelar','Cancel');var vc=document.querySelector('.vid-c a');if(vc)vc.remove();
  var C=window.AudioContext||window.webkitAudioContext;var ac=new C();
- Promise.all([Promise.all(FOTOS.map(carregaImg)),fetch(au.src).then(function(r){return r.arrayBuffer()}).then(function(b){return new Promise(function(ok,er){ac.decodeAudioData(b,ok,er)})})]).then(function(r){
+ try{ac.resume&&ac.resume()}catch(e){}
+ var MAXF=pc?900:720;function reduz(img,m){var k=Math.min(1,m/Math.max(img.width||1,img.height||1)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*k));c.height=Math.max(1,Math.round(img.height*k));c.getContext('2d').drawImage(img,0,0,c.width,c.height);img.src='';return c}
+ function fotosUmaPorVez(){var out=[];return FOTOS.reduce(function(p,u){return p.then(function(){return carregaImg(u).then(function(im){out.push(reduz(im,MAXF))})})},Promise.resolve()).then(function(){return out})}
+ Promise.all([fotosUmaPorVez(),fetch(au.src).then(function(r){return r.arrayBuffer()}).then(function(b){return new Promise(function(ok,er){ac.decodeAudioData(b,ok,er)})})]).then(function(r){
   if(cancel)return;var ab=r[1];
-  function reduz(img,m){var k=Math.min(1,m/Math.max(img.width||1,img.height||1)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*k));c.height=Math.max(1,Math.round(img.height*k));c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c}
-  var fs=r[0].map(function(im){return reduz(im,900)});
+  var fs=r[0];
   var fundos=fs.map(function(im){var p=document.createElement('canvas');p.width=45;p.height=80;var q=p.getContext('2d'),k=Math.max(45/im.width,80/im.height)*1.1;q.drawImage(im,(45-im.width*k)/2,(80-im.height*k)/2,im.width*k,im.height*k);
    var c=document.createElement('canvas');c.width=Wv/2;c.height=Hv/2;var y=c.getContext('2d');y.imageSmoothingEnabled=true;y.imageSmoothingQuality='high';y.drawImage(p,0,0,c.width,c.height);y.fillStyle='rgba(18,10,16,.6)';y.fillRect(0,0,c.width,c.height);return c});
   var cv=document.createElement('canvas');cv.width=Wv;cv.height=Hv;var x=cv.getContext('2d');
@@ -203,11 +207,12 @@ function gerarVideo(DURq,INI){
   DUR=Math.min(DUR,Math.max(1,(ab.duration||DUR)-INI));
   if(INI>0){ga.gain.setValueAtTime(0,ac.currentTime);ga.gain.linearRampToValueAtTime(1,ac.currentTime+.8)}
   ga.gain.setValueAtTime(1,ac.currentTime+Math.max(.9,DUR-2));ga.gain.linearRampToValueAtTime(0,ac.currentTime+DUR);
-  var st=cv.captureStream(30);dest.stream.getAudioTracks().forEach(function(t){st.addTrack(t)});
-  var pc=!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)&&!(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
-  var tipos=pc?['video/webm;codecs=vp8,opus','video/webm','video/mp4']:['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp8,opus','video/webm'],mime='';
+  var st=cv.captureStream(pc?30:24);dest.stream.getAudioTracks().forEach(function(t){st.addTrack(t)});
+  var webmPrimeiro=pc||caiu==='mp4';
+  var tipos=webmPrimeiro?['video/webm;codecs=vp8,opus','video/webm','video/mp4']:['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp8,opus','video/webm'],mime='';
   for(var i=0;i<tipos.length;i++)if(MediaRecorder.isTypeSupported(tipos[i])){mime=tipos[i];break}
-  var rec=new MediaRecorder(st,mime?{mimeType:mime,videoBitsPerSecond:2.5e6}:undefined),pedacos=[];
+  var rec;try{rec=new MediaRecorder(st,mime?{mimeType:mime,videoBitsPerSecond:pc?2.5e6:1.8e6}:undefined)}catch(e){mime='';rec=new MediaRecorder(st)}
+  var pedacos=[],fmt=(mime||'').indexOf('mp4')>=0?'mp4':'webm';try{localStorage.setItem('clipe_gerando',fmt)}catch(e){}
   rec.ondataavailable=function(e){if(e.data&&e.data.size)pedacos.push(e.data)};
   var t0=0,raf=0,titulo=D.titulo||(L('Música pra ','A song for ')+(D.para||L('você','you'))),sub=(D.de?D.de+' · ':'')+L('com amor','with love');
   function cover(img,dx,dy,dw,dh,z,ox,oy){var s=Math.max(dw/img.width,dh/img.height)*z,iw=img.width*s,ih=img.height*s;x.drawImage(img,dx+(dw-iw)/2+ox,dy+(dh-ih)/2+oy,iw,ih)}
@@ -229,14 +234,15 @@ function gerarVideo(DURq,INI){
    var cy=by+170,cx=Wv/2;x.fillStyle='#fff';x.beginPath();x.arc(cx,cy,52,0,7);x.fill();x.fillStyle='#120a10';x.fillRect(cx-17,cy-22,12,44);x.fillRect(cx+5,cy-22,12,44);
    if(DED){x.fillStyle='rgba(255,255,255,.9)';x.font='italic 26px Georgia, serif';x.textAlign='center';var linha=DED.length>60?DED.slice(0,58)+'…':DED;x.fillText(linha,Wv/2,cy+120);x.textAlign='left'}
    $('vidB').style.width=Math.min(100,t/DUR*100)+'%';raf=requestAnimationFrame(quadro)}
-  rec.onstop=function(){cancelAnimationFrame(raf);try{src.stop()}catch(e){}try{ac.close()}catch(e){}
-   if(cancel)return;var tp=(mime||'video/webm').split(';')[0],ext=tp.indexOf('mp4')>=0?'mp4':'webm',blob=new Blob(pedacos,{type:tp});
+  rec.onstop=function(){cancelAnimationFrame(raf);try{localStorage.removeItem('clipe_gerando')}catch(e){}try{src.stop()}catch(e){}try{ac.close()}catch(e){}
+   if(cancel)return;var tp=((rec&&rec.mimeType)||mime||'video/webm').split(';')[0],ext=tp.indexOf('mp4')>=0?'mp4':'webm',blob=new Blob(pedacos,{type:tp});
    var nome=L('musica-','song-')+(D.para||'presente').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.'+ext,file=null;try{file=new File([blob],nome,{type:tp})}catch(e){}
    txt('vidT',L('✅ Seu vídeo está pronto!','✅ Your video is ready!'));txt('vidS',ext==='mp4'?L('Toque abaixo para salvar ou postar no Status.','Tap below to save or post it.'):L('Toque abaixo para salvar. Se o WhatsApp não aceitar, abra este link no Chrome atualizado.','Tap below to save it.'));
    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;a.textContent=L('⬇ Salvar vídeo','⬇ Save video');
    if(file&&navigator.canShare&&navigator.canShare({files:[file]})){a.textContent=L('📲 Salvar / Postar no Status','📲 Save / Share');a.onclick=function(e){e.preventDefault();navigator.share({files:[file],title:titulo}).catch(function(){location.href=a.href})}}
    $('vidX').textContent=L('Fechar','Close');$('vidX').before(a);gerando=null};
-  rec.start(500);src.start(0,INI,DUR+.2);t0=performance.now();quadro();
+  rec.onerror=function(){try{localStorage.setItem('clipe_gerando',fmt)}catch(e){}};
+  rec.start(1000);src.start(0,INI,DUR+.2);t0=performance.now();quadro();
   gerando={cancelar:function(){cancel=true;try{rec.stop()}catch(e){}}};
  }).catch(function(){txt('vidT',L('Não consegui gerar o vídeo',"Couldn't make the video"));txt('vidS',L('Confira sua internet e tente de novo.','Check your connection and try again.'));$('vidX').textContent=L('Fechar','Close')});
  gerando={cancelar:function(){cancel=true}};
