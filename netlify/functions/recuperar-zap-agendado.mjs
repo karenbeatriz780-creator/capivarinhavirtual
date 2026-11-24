@@ -6,7 +6,7 @@ import { enviarTexto, conversaAberta, registrar, SITE } from './_zap.mjs';
 // Quem recebeu a prévia no WhatsApp e não pagou recebe até 3 mensagens:
 //   30 min · 1 h · 2 h depois da prévia. Para assim que pagar.
 // Só pra quem conversou com o número nas últimas 24 h (grátis, sem modelo pago).
-export const config = { schedule: '*/10 * * * *' };
+export const config = { schedule: '*/15 * * * *' };
 
 const ETAPAS = [30 * 60 * 1000, 60 * 60 * 1000, 120 * 60 * 1000];
 const DESISTE = 22 * 3600 * 1000; // a janela grátis fecha em 24 h

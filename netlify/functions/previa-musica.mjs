@@ -191,7 +191,7 @@ export default async (req) => {
     const headers = {
       'Content-Type': 'audio/mpeg',
       'Accept-Ranges': 'bytes',
-      'Cache-Control': 'private, max-age=600',
+      'Cache-Control': 'private, max-age=604800',
       'Content-Disposition': 'inline; filename="previa.mp3"'
     };
     const range = req.headers.get('range');

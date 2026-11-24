@@ -4,7 +4,7 @@ import { getStore } from '@netlify/blobs';
 import { graph, aplicarAcao, logRobo, avisar, vendasSitePorCampanha } from './_meta.mjs';
 import { diaBR, brl } from './_resumo.mjs';
 
-export const config = { schedule: '*/5 * * * *' };
+export const config = { schedule: '*/10 * * * *' };
 const COMPRA = ['purchase', 'offsite_conversion.fb_pixel_purchase', 'omni_purchase'];
 const JANELA = 40 * 60000;
 

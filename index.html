@@ -5610,7 +5610,7 @@ function pedirLetraSegundoPlano(dados){
         .then(function(d){
           if(d && d.pronto && d.letra) return fim({ok:true, d:{letra:d.letra}});
           if(d && d.pronto && d.erro) return fim({ok:false, d:{erro:d.erro}});
-          timer=setTimeout(ver,1500);
+          timer=setTimeout(ver,2500);
         })
         .catch(function(){ timer=setTimeout(ver,2500); });
     }
@@ -5703,7 +5703,7 @@ function dispararGeracao(gerarBtn){
           /* botão do WhatsApp DENTRO do cartão "Produzindo", logo abaixo da porcentagem (antes ficava escondido embaixo) */
           if(_mz) _mz.innerHTML=_hz; else if(_rz) _rz.insertAdjacentHTML('afterbegin',_hz);
         }
-        var tentativas=0, MAX_TENTATIVAS=200; // ~200 x 3s = 10 minutos
+        var tentativas=0, MAX_TENTATIVAS=150; // ~150 x 4s = 10 minutos
         (function checar(){
           fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(res.d.taskId))
             .then(function(r2){ return r2.json().then(function(d2){ return {ok:r2.ok, d:d2}; }); })
@@ -5737,7 +5737,7 @@ function dispararGeracao(gerarBtn){
                 mostrarAjustesMusica(true);
                 return;
               }
-              setTimeout(checar,3000);
+              setTimeout(checar,4000);
             })
             .catch(function(){
               tentativas++;
@@ -5749,7 +5749,7 @@ function dispararGeracao(gerarBtn){
                 toast('Sem conexão com o servidor de música agora.');
                 return;
               }
-              setTimeout(checar,3000);
+              setTimeout(checar,4000);
             });
         })();
       })

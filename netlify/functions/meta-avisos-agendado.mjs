@@ -11,7 +11,7 @@ import { lerCfg, aplicarAcao, logRobo, avisar } from './_meta.mjs';
 import { resumoDia, textoResumo, saldoKieBRL, diaBR, horaBR, brl, rankingCampanhas } from './_resumo.mjs';
 import { iaFetch, TEXTO_KIE, RESERVA_OR, TEXTO_TOP } from './_ia.mjs';
 
-export const config = { schedule: '*/10 * * * *' };
+export const config = { schedule: '*/15 * * * *' };
 const L = () => getStore({ name: 'gastos', consistency: 'strong' });
 const uma = async (k) => { if (await L().get(k).catch(() => null)) return false; await L().set(k, '1').catch(() => {}); return true; }; // só uma vez
 const RODAPE = '\n\n_Responda "ok" pra os avisos continuarem chegando._';

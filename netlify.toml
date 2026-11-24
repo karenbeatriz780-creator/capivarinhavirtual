@@ -76,7 +76,7 @@
 [[headers]]
   for = "/*.mp3"
   [headers.values]
-    Cache-Control = "public, max-age=604800"
+    Cache-Control = "public, max-age=2592000"
 
 # 20/11: exemplos (vídeo da retrospectiva, capa) e scripts com ?v= ficam guardados no celular → abrem na hora da 2ª vez
 [[headers]]
@@ -98,3 +98,29 @@
   for = "/quadro.js"
   [headers.values]
     Cache-Control = "public, max-age=86400"
+
+# 24/11 economia: imagens, ícones e a página do Bonzinho ficam guardados no celular do cliente
+[[headers]]
+  for = "/*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/favicon.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/bonzinho/*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
