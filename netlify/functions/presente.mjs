@@ -8,6 +8,7 @@ import { indexarDia } from './_indice.mjs';
 import { conferirPagamentoEfi, aplicarPagamento } from './_efi.mjs';
 import { liberarManual } from './_comprovante.mjs';
 import { ESPERA_JA_PAGUEI } from './_pixmanual.mjs';
+import { venceEm, ehParaSempre } from './_vence.mjs';
 
 const ultimaConsulta = new Map(); // evita consultar a Efí a cada segundo pro mesmo pedido
 const SETE_DIAS = 7 * 24 * 3600 * 1000;
@@ -49,5 +50,7 @@ export default async (req) => {
 
   if (!presente.pago) return json({ encontrado: true, pago: false });
 
+  // ⏳ prazo de 15 dias da música (24/11) — o site mostra o aviso e o "para sempre por R$ 5"
+  if (!/-x-/.test(id)) { try { presente.venceEm = venceEm(presente); if (await ehParaSempre(presente)) presente.paraSempre = true; } catch (e) {} }
   return json({ encontrado: true, pago: true, presente: presente });
 };

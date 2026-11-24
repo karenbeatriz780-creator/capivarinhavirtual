@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { pegarAudio, responderAudio } from './_audio.mjs';
+import { musicaExpirou } from './_vence.mjs';
 
 // Toca a música de um pedido PAGO pelo nosso domínio (link permanente).
 //   /.netlify/functions/audio?id=<pedido>&v=1..6
@@ -15,6 +16,7 @@ export default async (req) => {
       // não pago: manda pra prévia de 70s
       return new Response(null, { status: 302, headers: { Location: '/.netlify/functions/previa-musica?id=' + encodeURIComponent(id) + '&v=' + v, 'Cache-Control': 'no-store' } });
     }
+    if (await musicaExpirou(g)) return new Response('Essa música ficou disponível por 15 dias e expirou. Pra recuperar e deixar pra sempre (R$ 5), abra o link do seu pedido.', { status: 410, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
     const buf = await pegarAudio(g, v);
     if (!buf) return new Response('Não consegui carregar essa música agora.', { status: 502, headers: { 'Cache-Control': 'no-store' } });
     return responderAudio(req, buf, { 'Content-Disposition': 'inline; filename="musica.mp3"' });

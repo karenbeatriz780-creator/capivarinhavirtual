@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { pegarAudio, corpo } from './_audio.mjs';
+import { musicaExpirou } from './_vence.mjs';
 
 // Download de verdade da música (só pra pedido PAGO).
 // O link do MP3 é de outro site, então o celular só "toca" em vez de baixar.
@@ -26,6 +27,7 @@ export default async (req) => {
     if (!g) return erro('Pedido não encontrado.', 404);
     if (!g.pago || g.cancelado) return erro('Esse download libera depois do pagamento.', 403);
     if (g.expiraEm && Date.now() > g.expiraEm) return erro('Esse link expirou.', 403);
+    if (await musicaExpirou(g)) return erro('Essa música ficou disponível por 15 dias e expirou. Pra recuperar e deixar pra sempre (R$ 5), abra o link do seu pedido.', 410);
 
     const m1 = g.ofertaM1 || {}, m2 = g.ofertaM2 || {};
     // cópia permanente (não depende do link do serviço de música continuar no ar)

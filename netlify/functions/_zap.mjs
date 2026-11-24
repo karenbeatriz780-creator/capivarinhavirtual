@@ -258,7 +258,7 @@ export async function entregarPedidoPagoZap(g) {
   const aberta = await conversaAberta(num);
   if (aberta) {
     await enviarTexto(aberta, '🎉 *Pagamento confirmado!*' + (nome ? ' Obrigado, ' + nome + '!' : '') + ' 💗\n\n' +
-      'Suas músicas já estão liberadas, sem corte.' + (g.quatro && !g.ofertaM1 ? ' E as *outras 2 músicas* do seu pacote você cria no mesmo link:' : ' Ficam salvas aqui:') + '\n' + linkPedido(g) + '\n\n' + textoIndica(g));
+      'Suas músicas já estão liberadas, sem corte.' + (g.quatro && !g.ofertaM1 ? ' E as *outras 2 músicas* do seu pacote você cria no mesmo link:' : ' Ficam salvas aqui:') + '\n' + linkPedido(g) + '\n\n⚠️ *Baixe suas músicas no celular!* Elas ficam disponíveis no link por *15 dias*. Depois disso, somem do site.\n\n' + textoIndica(g));
     await registrar('pago_enviado', { para: aberta, pedido: g.id, nome: g.musicaParaNome || nome, via: 'grátis' });
   } else {
     await loja.setJSON('pagoaud_' + chaveNum(num), { id: g.id, em: agora });
