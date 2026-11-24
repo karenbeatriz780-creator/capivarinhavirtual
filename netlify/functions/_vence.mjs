@@ -9,8 +9,12 @@ export const idSempre = (id) => id + '-x-sempre-1';
 export async function ehParaSempre(g) {
   if (!g) return false;
   if (g.paraSempre) return true;
+  // clipe + retrato (na hora do Pix ou no combo especial) também deixa pra sempre (24/11)
+  const ex = g.extrasPix || [];
+  if (g.especial || (ex.indexOf('clipe') >= 0 && ex.indexOf('quadro') >= 0)) return true;
   const pres = getStore('presentes');
-  const x = await pres.get(idSempre(g.id), { type: 'json' }).catch(() => null);
+  let x = await pres.get(idSempre(g.id), { type: 'json' }).catch(() => null);
+  if (!x || !x.pago || x.cancelado) x = await pres.get(g.id + '-x-cq-1', { type: 'json' }).catch(() => null); // oferta R$ 7,99 inclui o "para sempre"
   if (!x || !x.pago || x.cancelado) return false;
   g.paraSempre = true;
   try { const a = await pres.get(g.id, { type: 'json' }); if (a && !a.paraSempre) { a.paraSempre = true; await pres.setJSON(g.id, a); } } catch (e) {}

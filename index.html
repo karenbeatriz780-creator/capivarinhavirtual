@@ -1088,6 +1088,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .mx-share>b,.mx-ind>b,.mx-devolva>b{display:block;font-size:1rem;color:#fff;}
 .mx-share>span,.mx-ind>span,.mx-devolva>span{display:block;font-size:.8rem;color:#D8BFCB;margin:.3rem 0 .75rem;line-height:1.5;}
 .mx-share-row{display:flex;gap:.5rem;}
+.sp-fundo{position:fixed;inset:0;z-index:200;background:rgba(20,4,12,.72);display:flex;align-items:center;justify-content:center;padding:1rem}.sp-box{position:relative;width:100%;max-width:380px;background:linear-gradient(160deg,#FFF6E0,#FFE4EC);color:#3A0A1E;border-radius:22px;padding:1.4rem 1.15rem 1.1rem;text-align:center;box-shadow:0 0 0 3px #E9B94F,0 20px 50px rgba(0,0,0,.45)}.sp-x{position:absolute;top:.4rem;right:.6rem;border:0;background:none;font-size:1.6rem;color:#7a3a52;cursor:pointer}.sp-tag{display:inline-block;background:#C2185B;color:#fff;font:800 .7rem Inter,sans-serif;letter-spacing:.05em;padding:.3rem .7rem;border-radius:100px;margin-bottom:.6rem}.sp-t{display:block;font:900 1.08rem Inter,sans-serif;line-height:1.3;margin-bottom:.6rem}.sp-l{list-style:none;padding:0;margin:0 0 .8rem;text-align:left;font-size:.92rem;line-height:1.5}.sp-l li{padding:.3rem .2rem;border-bottom:1px dashed rgba(58,10,30,.15)}.sp-pr{display:flex;align-items:baseline;justify-content:center;gap:.5rem;margin-bottom:.8rem}.sp-pr s{font-size:.8rem;color:#8a5a6a}.sp-pr b{font:900 1.7rem Inter,sans-serif;color:#C2185B}.sp-pr small{font-size:.78rem}.sp-b{width:100%;font-size:.9rem}.sp-so{margin-top:.7rem;border:0;background:none;color:#6a3a4e;text-decoration:underline;font:600 .85rem Inter,sans-serif;cursor:pointer}
 .mx-vence{margin:1rem 0 .4rem;padding:1rem 1rem .95rem;border-radius:18px;background:linear-gradient(160deg,#FFF4D6,#FFE1E9);color:#3A0A1E;text-align:center;box-shadow:0 0 0 3px #E9B94F,0 14px 30px rgba(233,30,99,.3)}.mx-vence>b{display:block;font:900 1.12rem Inter,sans-serif;color:#C2185B;margin-bottom:.35rem}.mx-vence>span{display:block;font-size:.9rem;line-height:1.45;margin-bottom:.8rem}.mx-vence .mx-btn:not(.mx-btn-ouro){background:#3A0A1E;color:#fff;border:0}.mx-vence-fim{margin-top:4rem}.mx-vence-fim .mx-btn{width:100%}
 .mx-timer{margin:1.1rem 0 .2rem;padding:.7rem .9rem;border-radius:14px;background:linear-gradient(90deg,#E91E63,#ff5c8a);color:#fff;font-weight:800;text-align:center;font-size:.95rem;box-shadow:0 8px 20px rgba(233,30,99,.35)}.mx-timer b{font-variant-numeric:tabular-nums;font-size:1.1rem;margin-left:.2rem}
 .mx-lvkid{background:linear-gradient(160deg,#fff8ec,#ffeef3);box-shadow:0 0 0 3px #f5c542,0 14px 34px rgba(233,30,99,.3)}.mx-lvkid .mx-cq-tag{background:linear-gradient(90deg,#D7263D,#1B7F4B)!important;color:#fff!important}.mx-lvkid-ic{font-size:2.6rem;line-height:1;margin:.5rem 0 .2rem}
@@ -11720,6 +11721,23 @@ function abrirEnviarPresente(g){
 }
 var PROMO_CLIENTE_MS=24*3600e3; /* tem que bater com criar-pagamento.mjs (promo de cliente vale 24h depois do pagamento) */
 function fmtFaltam(ms){ ms=Math.max(0,ms); var h=Math.floor(ms/3600e3), m=Math.floor(ms%3600e3/6e4), x=Math.floor(ms%6e4/1e3); return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(x<10?'0':'')+x; }
+/* 24/11 (Gusthavo): quem toca em "para sempre R$ 5" vê que por R$ 7,99 leva clipe + retrato + para sempre */
+function escolherParaSempre(g){
+  gaEvento('para_sempre_toque',{});
+  var bx=document.createElement('div'); bx.className='sp-fundo';
+  bx.innerHTML='<div class="sp-box"><button type="button" class="sp-x" aria-label="Fechar">×</button>'+
+    '<span class="sp-tag">💡 VALE MAIS A PENA</span>'+
+    '<b class="sp-t">Por só <u>R$ 2,99 a mais</u> você leva tudo isso:</b>'+
+    '<ul class="sp-l"><li>🎬 <b>Clipe</b> da música com as fotos de vocês</li><li>🖼️ <b>Retrato</b> pra imprimir com QR Code que toca a música</li><li>♾️ <b>Músicas salvas para sempre</b> no site</li></ul>'+
+    '<div class="sp-pr"><b>R$ 7,99</b><small>tudo junto</small></div>'+
+    '<button type="button" class="mx-btn mx-btn-ouro sp-b" id="spCq">🎁 Quero clipe + retrato + para sempre · R$ 7,99</button>'+
+    '<button type="button" class="sp-so" id="spSo">Só deixar para sempre · R$ 5</button></div>';
+  document.body.appendChild(bx);
+  function fechar(){ bx.remove(); }
+  bx.querySelector('.sp-x').onclick=fechar; bx.onclick=function(e){ if(e.target===bx) fechar(); };
+  el('spCq').onclick=function(){ fechar(); gaEvento('upsell_cq',{de:'para_sempre'}); iniciarPixExtra(g,'cq',{id:'1',nome:'Clipe + Retrato com QR Code'}); };
+  el('spSo').onclick=function(){ fechar(); gaEvento('para_sempre',{}); iniciarPixExtra(g,'sempre',{id:'1',nome:'Música para sempre'}); };
+}
 function fmtDiasVence(ms){ if(ms<=0) return '0 dias'; var d=Math.floor(ms/864e5); if(d>=1) return d+(d===1?' dia':' dias'); var h=Math.max(1,Math.floor(ms/36e5)); return h+(h===1?' hora':' horas'); }
 function montarMusicaEntrega(g, opts){
   opts=opts||{};
@@ -11755,14 +11773,14 @@ function montarMusicaEntrega(g, opts){
   var nomeKid=String(g.musicaParaNome||'').split(/,|\s+e\s+/)[0].trim();
   /* ⏳ 24/11 (Gusthavo): música paga fica 15 dias no site; "para sempre" por R$ 5 */
   var vence = g.pago ? (g.venceEm || (Math.max(g.pagoEm||g.criadoEm||0, Date.parse('2026-11-24T14:00:00Z'))+15*864e5)) : 0;
-  var sempre = !!g.paraSempre, avisoVence = cliente && g.pago && !g.cancelado && !sempre && faixas.length;
+  var sempre = !!g.paraSempre || extraPago(g.id,'cq','1') || !!g.especial || ((g.extrasPix||[]).indexOf('clipe')>=0 && (g.extrasPix||[]).indexOf('quadro')>=0), avisoVence = cliente && g.pago && !g.cancelado && !sempre && faixas.length;
   if(faixas.length && g.pago && !g.cancelado && !sempre && Date.now()>vence){
     el('app').innerHTML='<div class="mx"><div class="mx-bg mx-bg-sem"></div><div class="mx-in"><div class="mx-vence mx-vence-fim">'+
       '<b>⏳ '+(cliente?'Suas músicas expiraram':'Essa música não está mais disponível')+'</b>'+
       '<span>'+(cliente?'Elas ficaram disponíveis aqui por 15 dias. Recupere agora e deixe para sempre no site.':'Ela ficou disponível aqui por 15 dias.')+'</span>'+
       (cliente?'<button type="button" class="mx-btn mx-btn-ouro" id="mxSempre">♾️ Recuperar e deixar para sempre · R$ 5</button>':'')+
     '</div></div></div>';
-    var ms0=el('mxSempre'); if(ms0) ms0.onclick=function(){ gaEvento('para_sempre',{}); iniciarPixExtra(g,'sempre',{id:'1',nome:'Música para sempre'}); };
+    var ms0=el('mxSempre'); if(ms0) ms0.onclick=function(){ escolherParaSempre(g); };
     return;
   }
   if(!faixas.length){
@@ -11839,7 +11857,7 @@ function montarMusicaEntrega(g, opts){
           : '')+
         (promoOn && (g.produto==='musica'||!g.produto) && !((g.extrasPix||[]).indexOf('clipe')>=0 && (g.extrasPix||[]).indexOf('quadro')>=0) && !extraPago(g.id,'cq','1')
           ? '<div class="mx-cq"><span class="mx-cq-tag">🔥 PROMOÇÃO SÓ PRA QUEM JÁ COMPROU</span>'+
-              '<b class="mx-cq-t">🎬 Clipe com as fotos + 🖼️ Retrato com QR Code</b>'+
+              '<b class="mx-cq-t">🎬 Clipe com as fotos + 🖼️ Retrato com QR Code + ♾️ músicas para sempre</b>'+
               '<span class="mx-cq-s">O clipe da sua música com as fotos de vocês (pra postar e mandar) e um retrato lindo pra imprimir: aponta a câmera no QR e a música toca.</span>'+
               '<div class="mx-cq-ex"><button type="button" class="mx-cq-exb" data-cqex="clipe">▶ Ver exemplo do clipe</button><button type="button" class="mx-cq-exb" data-cqex="quadro">🖼️ Ver exemplo do retrato</button></div>'+
               '<div class="mx-cq-pr"><s>R$ '+fmtPreco(EXTRAS_PIX.clipe.de+EXTRAS_PIX.quadro.de)+'</s><b>R$ '+fmtPreco(PRECO_CQ)+'</b><small>os dois</small></div>'+
@@ -11928,7 +11946,7 @@ function montarMusicaEntrega(g, opts){
   var lk2=el('mxLvEx'); if(lk2) lk2.onclick=function(){ lvKid(false); };
   if(promoOn){ clearInterval(window._mxTm); window._mxTm=setInterval(function(){ var t=el('mxTimer'); if(!t){ clearInterval(window._mxTm); return; } var f=promoFim-Date.now(); if(f<=0){ clearInterval(window._mxTm); montarMusicaEntrega(g,opts); return; } t.textContent=fmtFaltam(f); },1000); }
   document.querySelectorAll('[data-cqex]').forEach(function(b){ b.onclick=function(){ verExemploExtra(b.dataset.cqex); }; });
-  var mxSp=el('mxSempre'); if(mxSp) mxSp.onclick=function(){ gaEvento('para_sempre',{}); iniciarPixExtra(g,'sempre',{id:'1',nome:'Música para sempre'}); };
+  var mxSp=el('mxSempre'); if(mxSp) mxSp.onclick=function(){ escolherParaSempre(g); };
   var mxCq=el('mxCq'); if(mxCq) mxCq.onclick=function(){ gaEvento('upsell_cq',{}); iniciarPixExtra(g,'cq',{id:'1',nome:'Clipe + Retrato com QR Code'}); };
   var mxPr=el('mxPromo'); if(mxPr) mxPr.onclick=function(){ gaEvento('promo_cliente',{de:g.id}); W=null; telaWizard('musica'); W.clienteDe=g.id; if(g.meuNome) W.meuNome=g.meuNome; if(g.musicaWhatsapp) W.musicaWhatsapp=g.musicaWhatsapp; desenharPasso(); };
   var envA=el('mxEnviarAudio');
@@ -13347,7 +13365,7 @@ function iniciarPixExtra(g, tipo, item){
     if(tipo==='cq'){ /* mesmo checkout da compra da música (Pix Nubank, cartão, Apple Pay e "Já paguei" no mesmo lugar) */
       var pid=pedido.id;
       el('app').innerHTML='<div class="wz-top"><a class="wz-back" href="#/p/'+encodeURIComponent(g.id)+'/c">'+IC.back+'</a><div class="wz-track"><div class="wz-fill" style="width:100%"></div></div><span class="wz-count">Pagamento</span></div>'+
-        '<div class="wz-wrap">'+htmlPixLimpo(res.d.payload, res.d.valor||PRECO_CQ, res.d.teste, {titulo:'Clipe + Retrato com QR Code', itens:['Depois de pagar você manda as fotos','Clipe pra baixar e postar + retrato pra imprimir']})+'</div>';
+        '<div class="wz-wrap">'+htmlPixLimpo(res.d.payload, res.d.valor||PRECO_CQ, res.d.teste, {titulo:'Clipe + Retrato com QR Code', itens:['Depois de pagar você manda as fotos','Clipe pra baixar e postar + retrato pra imprimir','♾️ Suas músicas ficam salvas para sempre']})+'</div>';
       window.scrollTo(0,0);
       ligarPixLimpo(res.d.payload, pid, function(){ toast('Pagamento confirmado! Agora é só mandar as fotos 📸'); location.hash='#/montar/'+encodeURIComponent(g.id); });
       return;
