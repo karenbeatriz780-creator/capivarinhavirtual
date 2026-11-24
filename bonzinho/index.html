@@ -38,19 +38,29 @@ a{color:inherit}button{font:inherit;color:inherit;cursor:pointer}
 .lg img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--line2);box-shadow:0 0 0 3px rgba(226,190,110,.08),0 6px 18px rgba(0,0,0,.5)}
 .lg span{font:800 .78rem InterL,Inter,sans-serif;letter-spacing:.24em}.lg span b{background:var(--gdt);-webkit-background-clip:text;background-clip:text;color:transparent}
 .top .ex{font:700 .72rem InterL,Inter,sans-serif;letter-spacing:.08em;color:var(--ouro2);text-decoration:none;border:1px solid var(--line2);padding:.45rem .85rem;border-radius:99px;background:rgba(7,6,5,.45);backdrop-filter:blur(8px)}
-/* herói com foto */
-.hero{position:relative;min-height:min(100svh,880px);display:flex;align-items:flex-end;overflow:hidden}
-.hero .ft{position:absolute;left:50%;transform:translateX(-50%);width:min(100%,560px);top:calc(min(100vw,560px)*-.34);height:calc(min(100vw,560px)*1.79);background:url(/bonzinho/hero.webp) center top/100% 100% no-repeat}
-.hero{background:#070605}
-.hero .ft:after{content:'';position:absolute;inset:0;background:radial-gradient(60% 38% at 50% 8%,rgba(246,220,156,.28),transparent 70%),linear-gradient(180deg,rgba(7,6,5,.5) 0%,rgba(7,6,5,0) 24%,rgba(7,6,5,0) 58%,rgba(7,6,5,.8) 72%,#070605 84%),linear-gradient(90deg,#070605 0%,transparent 8%,transparent 92%,#070605 100%)}
-.hero .ft:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(226,190,110,.18),rgba(169,124,47,.08));mix-blend-mode:color;z-index:1}
-.raios{position:absolute;left:50%;top:-10%;width:140%;height:70%;transform:translateX(-50%);background:conic-gradient(from 180deg at 50% 0%,transparent 160deg,rgba(246,220,156,.10) 172deg,transparent 178deg,rgba(246,220,156,.08) 186deg,transparent 194deg,rgba(246,220,156,.06) 200deg,transparent 210deg);animation:raio 9s ease-in-out infinite alternate;pointer-events:none}
+/* herói com foto: foto em cima (rosto sempre livre), texto embaixo só sobre a parte escura */
+.hero{position:relative;overflow:hidden;background:#070605;padding-top:calc(58px + env(safe-area-inset-top))}
+.fwrap{position:relative;width:min(100%,520px);margin:0 auto;aspect-ratio:1438/1760;background:url(/bonzinho/hero.webp) center 24%/100% auto no-repeat}
+.fwrap:after{content:'';position:absolute;inset:0;background:radial-gradient(55% 30% at 50% 6%,rgba(246,220,156,.22),transparent 70%),linear-gradient(180deg,#070605 0%,rgba(7,6,5,0) 12%,rgba(7,6,5,0) 70%,rgba(7,6,5,.75) 86%,#070605 100%),linear-gradient(90deg,#070605 0%,rgba(7,6,5,0) 10%,rgba(7,6,5,0) 90%,#070605 100%)}
+.fwrap:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(226,190,110,.16),rgba(169,124,47,.06));mix-blend-mode:color;z-index:1}
+.raios{position:absolute;left:50%;top:0;width:140%;max-width:900px;height:60%;transform:translateX(-50%);background:conic-gradient(from 180deg at 50% 0%,transparent 160deg,rgba(246,220,156,.10) 172deg,transparent 178deg,rgba(246,220,156,.08) 186deg,transparent 194deg,rgba(246,220,156,.06) 200deg,transparent 210deg);animation:raio 9s ease-in-out infinite alternate;pointer-events:none;z-index:1}
 @keyframes raio{from{opacity:.6;transform:translateX(-50%) rotate(-2deg)}to{opacity:1;transform:translateX(-50%) rotate(2deg)}}
-.hero .w{position:relative;z-index:2;padding-bottom:26px;text-align:center}
-.hero h1{font-family:Lora,Georgia,serif;font-weight:700;font-size:clamp(2.35rem,10vw,3.3rem);line-height:1.02;letter-spacing:-.02em;margin:14px 0 12px;text-shadow:0 4px 30px rgba(0,0,0,.6)}
-.hero h1 .it{display:block;font-size:1.08em}
-.hero .sub{color:var(--mut);font-size:1.02rem;max-width:25rem;margin:0 auto}
-.hero .sub b{color:var(--tx);font-weight:700}
+.hero .w{position:relative;z-index:2;margin-top:calc(min(100vw,520px)*-.2);padding-bottom:30px;text-align:center}
+.hero h1{font-family:Lora,Georgia,serif;font-weight:700;font-size:clamp(2.3rem,9.6vw,3.2rem);line-height:1.04;letter-spacing:-.02em;margin:12px 0 14px;text-shadow:0 2px 0 rgba(0,0,0,.35),0 8px 30px rgba(0,0,0,.8)}
+.hero h1 .it{display:block;font-size:1.06em;padding-bottom:.05em}
+.hero .sub{color:#E9E0CC;font-size:1.06rem;line-height:1.6;max-width:24rem;margin:0 auto;text-shadow:0 2px 14px rgba(0,0,0,.9)}
+.hero .sub b{color:#fff;font-weight:700}
+@media(min-width:900px){
+ .top{max-width:1120px}
+ .hero{display:grid;grid-template-columns:minmax(0,460px) minmax(0,520px);justify-content:center;align-items:center;gap:56px;padding:calc(76px + env(safe-area-inset-top)) 24px 40px;min-height:min(100vh,860px)}
+ .fwrap{width:100%;max-height:calc(100vh - 120px);aspect-ratio:1438/1900;background-position:center 20%}
+ .hero .w{margin:0;padding:0;text-align:left;max-width:none}
+ .hero .eb:before{display:none}.hero .eb:after{display:none}
+ .hero h1{font-size:3.6rem}.hero .sub{margin:0;max-width:30rem;font-size:1.12rem}
+ .raios{left:30%}
+}
+.top{white-space:nowrap}
+@media(max-width:370px){.lg span{font-size:.68rem;letter-spacing:.16em}.top .ex{font-size:.64rem;padding:.4rem .6rem}}
 .oferta{margin-top:22px;border-radius:24px;padding:18px;background:linear-gradient(160deg,rgba(40,31,16,.82),rgba(14,11,7,.9));border:1px solid var(--line2);box-shadow:0 30px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,240,200,.08);backdrop-filter:blur(10px);text-align:left}
 .oferta-r{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
 .oferta-r b{display:block;font-family:Lora,Georgia,serif;font-size:1.22rem;font-weight:700}
@@ -183,7 +193,7 @@ function relacao(){ return {deus:'louvor',igreja:'louvor',familia:'familia',mae:
 function topo(fixo){ return '<div class="top'+(fixo?' fixo':'')+'"><a class="lg" href="#/"><img src="/bonzinho/logo-mini.webp" alt="Bonzinho Music"><span>BONZINHO <b>MUSIC</b></span></a><a class="ex" href="#exSec" onclick="var e=document.getElementById(\'exSec\');if(e){e.scrollIntoView({behavior:\'smooth\'});return false}">OUVIR EXEMPLO</a></div>'; }
 function home(){
   el('app').innerHTML=topo()+
-  '<header class="hero"><div class="ft"></div><div class="raios"></div><div class="w">'+
+  '<header class="hero"><div class="raios"></div><div class="fwrap" role="img" aria-label="Homem adorando a Deus de braços erguidos"></div><div class="w">'+
     '<span class="eb">Louvor personalizado</span>'+
     '<h1>Seu testemunho<span class="it ouro">vira louvor</span></h1>'+
     '<p class="sub">Uma música de adoração com <b>o seu nome</b>, <b>a sua história</b> e <b>a sua fé</b>. Pra você, ou pra dedicar a quem você ama.</p>'+
