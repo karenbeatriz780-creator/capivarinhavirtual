@@ -1,11 +1,12 @@
 import { getStore } from '@netlify/blobs';
 import { lerCfgPix, salvarCfgPix, PIX_MANUAL } from './_pixmanual.mjs';
 import { liberarManual } from './_comprovante.mjs';
+import { entregarPedidoPagoZap } from './_zap.mjs';
 // Painel → 🧾 Pix manual: comprovantes enviados, liberar/recusar, modo do Pix e liberação automática. (senha de administrador)
 // GET               → { cfg, itens }      GET ?img=<chave> → a imagem do comprovante
 // POST {acao:'liberar'|'recusar', id}  ·  {acao:'cfg', modo, autoLiberar}
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
-export default async (req) => {
+export default async (req, context) => {
   const senha = (process.env.ADMIN_SENHA || '').trim();
   if (!senha || (req.headers.get('x-admin-key') || '') !== senha) return json({ erro: 'Senha incorreta.' }, 401);
   const loja = getStore('comprovantes'), u = new URL(req.url);
@@ -34,7 +35,11 @@ export default async (req) => {
   const id = String(b.id || '');
   if (!/^[A-Za-z0-9_-]{4,80}$/.test(id)) return json({ erro: 'Pedido inválido.' }, 400);
   const k = 'c_' + id, reg = (await loja.get(k, { type: 'json' }).catch(() => null)) || { id, envios: [] };
-  if (b.acao === 'liberar') { await liberarManual(id, 'comprovante-painel'); reg.status = 'liberado'; reg.porVoce = true; }
+  if (b.acao === 'liberar') {
+    const g = await liberarManual(id, 'comprovante-painel'); reg.status = 'liberado'; reg.porVoce = true;
+    // 24/11: liberou → manda no WhatsApp NA HORA (o agendador fica só de reserva)
+    if (g && g.pago) { const t = entregarPedidoPagoZap(g).catch((e) => console.error('admin-pix zap:', e && e.message)); if (context && context.waitUntil) context.waitUntil(t); else await t; }
+  }
   else if (b.acao === 'recusar') reg.status = 'recusado';
   else return json({ erro: 'Ação inválida.' }, 400);
   reg.atualizadoEm = Date.now(); await loja.setJSON(k, reg);

@@ -9,7 +9,7 @@ import { tentarComprovantesDeNovo } from './_comprovante.mjs';
 // - Quem NÃO conversou → 1 mensagem de UTILIDADE (modelo aprovado, ~R$ 0,08) com o link e o botão
 //   "Receber os áudios aqui". Se tocar/responder em até 7 dias, recebe os áudios grátis (whatsapp-webhook).
 // - Quem não pagou: nada (só quem conversou recebe lembrete, de graça).
-export const config = { schedule: '*/3 * * * *' };
+export const config = { schedule: '*/5 * * * *' }; // 24/11: reserva — o WhatsApp sai NA HORA no "Já paguei", comprovante e painel
 
 const JANELA = 6 * 3600 * 1000; // só pedidos pagos nas últimas 6 h (não dispara pra pedidos antigos)
 

@@ -4,7 +4,7 @@ import { entregarPreviaLivro, avancarLivro, motorRodando } from './_livros.mjs';
 
 // A CADA MINUTO: confere as músicas que estão sendo criadas e, quando ficam
 // prontas, manda no WhatsApp do cliente (mesmo que ele tenha fechado o site).
-export const config = { schedule: '*/2 * * * *' }; // a cada 2 min (reserva: o aviso rápido vem do avisar-musica-background)
+export const config = { schedule: '*/10 * * * *' }; // 24/11: só reserva (prévia de música não vai mais pelo WhatsApp) // a cada 2 min (reserva: o aviso rápido vem do avisar-musica-background)
 
 const LIMITE = 3 * 3600 * 1000; // depois de 3 h desiste
 

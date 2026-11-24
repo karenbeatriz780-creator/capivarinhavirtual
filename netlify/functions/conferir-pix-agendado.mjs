@@ -7,7 +7,8 @@ import { obterToken, listarPixRecebidos, aplicarPagamento } from './_efi.mjs';
 // ligado a cada um (pelo txid da cobrança). Assim, mesmo se o aviso automático
 // da Efí (webhook) falhar, ninguém fica pago e sem a música.
 // Pix que caiu e não tem pedido ligado fica guardado pro painel mostrar.
-export const config = { schedule: '*/5 * * * *' };
+// 24/11: DESLIGADO — a Efí não está sendo usada (o Pix vai direto pro Nubank). Pra religar, volte a linha abaixo.
+// export const config = { schedule: '*/5 * * * *' };
 
 export default async () => {
   const t0 = Date.now();

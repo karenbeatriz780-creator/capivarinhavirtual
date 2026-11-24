@@ -1,7 +1,9 @@
+import { getStore } from '@netlify/blobs';
 import { analisarComprovante } from './_comprovante.mjs';
+import { entregarPedidoPagoZap } from './_zap.mjs';
 // 🧾 o cliente manda o print do comprovante do Pix manual (site). POST {id, imagem: "data:image/jpeg;base64,..."}
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
-export default async (req) => {
+export default async (req, context) => {
   if (req.method !== 'POST') return json({ erro: 'Use POST.' }, 405);
   let b = {}; try { b = await req.json(); } catch (e) { return json({ erro: 'Envio inválido.' }, 400); }
   const id = String(b.id || '').trim(), m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(String(b.imagem || ''));
@@ -11,6 +13,11 @@ export default async (req) => {
   if (buf.length > 4.5 * 1024 * 1024) return json({ erro: 'Imagem muito grande. Mande um print da tela.' }, 400);
   try {
     const r = await analisarComprovante(id, buf, m[1], 'site');
+    // 24/11: comprovante aprovado → manda no WhatsApp NA HORA (o agendador fica só de reserva)
+    if (r && r.status === 'liberado') {
+      const t = getStore('presentes').get(id, { type: 'json' }).then((g) => g && g.pago ? entregarPedidoPagoZap(g) : null).catch((e) => console.error('comprovante zap:', e && e.message));
+      if (context && context.waitUntil) context.waitUntil(t); else await t;
+    }
     return json({ ok: r.status !== 'erro', status: r.status, motivos: r.motivos || [], jaPago: !!r.jaPago });
   } catch (e) {
     console.error('enviar-comprovante:', e && e.stack || e);
