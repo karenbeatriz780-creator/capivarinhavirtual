@@ -12,97 +12,137 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/bonzinho/icone-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/bonzinho/apple-touch-icon.png">
 <style>
+@font-face{font-family:Lora;src:url(/fontes/lora.woff) format('woff');font-weight:400 700;font-display:swap}
 @font-face{font-family:LoraI;src:url(/fontes/lora-italic.woff) format('woff');font-style:italic;font-display:swap}
-:root{--bg:#0A0806;--bg2:#14100A;--card:#17120B;--line:rgba(245,197,66,.18);--tx:#FFFBF2;--mut:#D8CDB8;--mut2:#9C907C;--ouro:#F5C542;--ouro2:#FFDD7A;--ouro3:#B8860B;--ok:#3DDC84;--err:#FF8A7A;
-  --gd:linear-gradient(180deg,#FFE79A 0%,#F5C542 45%,#C8921A 100%)}
+@font-face{font-family:InterL;src:url(/fontes/inter-500.woff) format('woff');font-weight:500;font-display:swap}
+@font-face{font-family:InterL;src:url(/fontes/inter-700.woff) format('woff');font-weight:700 900;font-display:swap}
+:root{--bg:#070605;--bg2:#100D09;--card:rgba(255,248,230,.035);--line:rgba(226,190,110,.22);--line2:rgba(226,190,110,.45);--tx:#F7F1E3;--mut:#CFC4AC;--mut2:#8F8573;
+  --ouro:#E2BE6E;--ouro2:#F6DC9C;--ouro3:#A97C2F;--ok:#7BD88F;--err:#FF9A8A;
+  --gd:linear-gradient(135deg,#F9E3A6 0%,#E2BE6E 38%,#B88A35 70%,#F3D58C 100%);--gdt:linear-gradient(180deg,#FBE9B4 0%,#E2BE6E 55%,#B8873A 100%)}
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--tx);font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
-body:before{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(-35deg,rgba(255,255,255,.018) 0 2px,transparent 2px 90px);z-index:0}
+body{background:var(--bg);color:var(--tx);font-family:Inter,InterL,system-ui,-apple-system,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
+body:after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E")}
 #app{position:relative;z-index:1}
 a{color:inherit}button{font:inherit;color:inherit;cursor:pointer}
-.w{max-width:560px;margin:0 auto;padding:0 16px}
-h1,h2,h3{letter-spacing:-.02em;line-height:1.1;font-weight:900}
-em.ouro,h1 em,h2 em{font-style:normal;background:var(--gd);-webkit-background-clip:text;background-clip:text;color:transparent}
-.top{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 16px 8px;max-width:560px;margin:0 auto}
-.top .lg{display:flex;align-items:center;gap:.5rem;text-decoration:none;font-weight:900;letter-spacing:.02em}
-.top .lg img{height:38px;width:auto;border-radius:8px}
-.top .lg span{font-size:.95rem}.top .lg span b{color:var(--ouro)}
-.top .ex{font-size:.8rem;color:var(--mut);text-decoration:none;border:1px solid var(--line);padding:.35rem .75rem;border-radius:99px}
-/* herói */
-.hero{position:relative;text-align:center;padding:6px 0 26px;overflow:hidden}
-.hero:before{content:'';position:absolute;left:50%;top:40px;width:520px;height:520px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(245,197,66,.28),rgba(245,197,66,.08) 55%,transparent 72%);pointer-events:none}
-.hero .logo{position:relative;width:min(100%,440px);margin:4px auto 0;display:block;-webkit-mask-image:radial-gradient(ellipse 70% 68% at 50% 50%,#000 62%,transparent 100%);mask-image:radial-gradient(ellipse 70% 68% at 50% 50%,#000 62%,transparent 100%);filter:drop-shadow(0 18px 40px rgba(245,197,66,.25));animation:flut 5s ease-in-out infinite}
-@keyframes flut{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.pill{display:inline-flex;gap:.4rem;align-items:center;font-size:.78rem;font-weight:800;color:var(--ouro2);background:rgba(245,197,66,.1);border:1px solid rgba(245,197,66,.4);padding:.38rem .8rem;border-radius:99px;letter-spacing:.02em}
-.hero h1{font-size:clamp(2rem,8.6vw,2.9rem);margin:14px 0 10px}
-.hero .sub{color:var(--mut);font-size:1.04rem;max-width:26rem;margin:0 auto}
-.hero .sub b{color:#fff}
-.btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;border:0;border-radius:16px;padding:17px 18px;font-weight:900;font-size:1.08rem;text-decoration:none;letter-spacing:.01em;transition:transform .15s}
+.w{max-width:560px;margin:0 auto;padding:0 18px}
+.serif{font-family:Lora,Georgia,serif}
+.it{font-family:LoraI,Georgia,serif;font-style:italic;font-weight:400}
+.ouro{background:var(--gdt);-webkit-background-clip:text;background-clip:text;color:transparent}
+.eb{display:inline-block;font:700 .7rem InterL,Inter,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:var(--ouro)}
+.eb:before,.eb:after{content:'';display:inline-block;width:22px;height:1px;background:var(--line2);vertical-align:middle;margin:0 10px}
+/* topo */
+.top{position:absolute;left:0;right:0;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) 18px 10px;max-width:560px;margin:0 auto}
+.top.fixo{position:relative}
+.lg{display:flex;align-items:center;gap:10px;text-decoration:none}
+.lg img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--line2);box-shadow:0 0 0 3px rgba(226,190,110,.08),0 6px 18px rgba(0,0,0,.5)}
+.lg span{font:800 .78rem InterL,Inter,sans-serif;letter-spacing:.24em}.lg span b{background:var(--gdt);-webkit-background-clip:text;background-clip:text;color:transparent}
+.top .ex{font:700 .72rem InterL,Inter,sans-serif;letter-spacing:.08em;color:var(--ouro2);text-decoration:none;border:1px solid var(--line2);padding:.45rem .85rem;border-radius:99px;background:rgba(7,6,5,.45);backdrop-filter:blur(8px)}
+/* herói com foto */
+.hero{position:relative;min-height:min(100svh,880px);display:flex;align-items:flex-end;overflow:hidden}
+.hero .ft{position:absolute;left:50%;transform:translateX(-50%);width:min(100%,560px);top:calc(min(100vw,560px)*-.34);height:calc(min(100vw,560px)*1.79);background:url(/bonzinho/hero-480.webp) center top/100% 100% no-repeat}
+.hero{background:#070605}
+@media(min-width:480px){.hero .ft{background-image:url(/bonzinho/hero.webp)}}
+.hero .ft:after{content:'';position:absolute;inset:0;background:radial-gradient(60% 38% at 50% 8%,rgba(246,220,156,.28),transparent 70%),linear-gradient(180deg,rgba(7,6,5,.5) 0%,rgba(7,6,5,0) 24%,rgba(7,6,5,0) 58%,rgba(7,6,5,.8) 72%,#070605 84%),linear-gradient(90deg,#070605 0%,transparent 8%,transparent 92%,#070605 100%)}
+.hero .ft:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(226,190,110,.18),rgba(169,124,47,.08));mix-blend-mode:color;z-index:1}
+.raios{position:absolute;left:50%;top:-10%;width:140%;height:70%;transform:translateX(-50%);background:conic-gradient(from 180deg at 50% 0%,transparent 160deg,rgba(246,220,156,.10) 172deg,transparent 178deg,rgba(246,220,156,.08) 186deg,transparent 194deg,rgba(246,220,156,.06) 200deg,transparent 210deg);animation:raio 9s ease-in-out infinite alternate;pointer-events:none}
+@keyframes raio{from{opacity:.6;transform:translateX(-50%) rotate(-2deg)}to{opacity:1;transform:translateX(-50%) rotate(2deg)}}
+.hero .w{position:relative;z-index:2;padding-bottom:26px;text-align:center}
+.hero h1{font-family:Lora,Georgia,serif;font-weight:700;font-size:clamp(2.35rem,10vw,3.3rem);line-height:1.02;letter-spacing:-.02em;margin:14px 0 12px;text-shadow:0 4px 30px rgba(0,0,0,.6)}
+.hero h1 .it{display:block;font-size:1.08em}
+.hero .sub{color:var(--mut);font-size:1.02rem;max-width:25rem;margin:0 auto}
+.hero .sub b{color:var(--tx);font-weight:700}
+.oferta{margin-top:22px;border-radius:24px;padding:18px;background:linear-gradient(160deg,rgba(40,31,16,.82),rgba(14,11,7,.9));border:1px solid var(--line2);box-shadow:0 30px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,240,200,.08);backdrop-filter:blur(10px);text-align:left}
+.oferta-r{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.oferta-r b{display:block;font-family:Lora,Georgia,serif;font-size:1.22rem;font-weight:700}
+.oferta-r small{display:block;color:var(--mut);font-size:.84rem;margin-top:2px}
+.gratis{flex:none;text-align:center;font:900 .7rem/1.15 InterL,Inter,sans-serif;letter-spacing:.14em;color:#1B1203;background:var(--gd);padding:.55rem .7rem;border-radius:12px;box-shadow:0 6px 18px rgba(226,190,110,.3)}
+.btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;border:0;border-radius:16px;padding:17px 18px;font-weight:800;font-size:1.04rem;letter-spacing:.02em;text-decoration:none;transition:transform .15s}
 .btn:active{transform:scale(.98)}
-.btn-o{background:var(--gd);color:#241800;box-shadow:0 12px 30px rgba(245,197,66,.28),inset 0 1px 0 rgba(255,255,255,.6)}
-.btn-l{background:transparent;color:var(--tx);border:1.5px solid var(--line)}
-.btn[disabled]{opacity:.55}
-.trust{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1rem;margin-top:12px;font-size:.82rem;color:var(--mut)}
-.trust span:before{content:'✦ ';color:var(--ouro)}
+.btn-o{background:var(--gd);background-size:200% 100%;color:#1B1203;box-shadow:0 14px 34px rgba(226,190,110,.28),inset 0 1px 0 rgba(255,255,255,.55)}
+.btn-o:after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:brilhoB 3.6s ease-in-out infinite}
+@keyframes brilhoB{0%,60%{left:-60%}100%{left:130%}}
+.btn-l{background:transparent;color:var(--tx);border:1px solid var(--line2)}
+.btn[disabled]{opacity:.5}
+.trust{display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem 1.1rem;margin-top:14px;font:600 .78rem InterL,Inter,sans-serif;color:var(--mut);letter-spacing:.02em}
+.trust span:before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--ouro);margin-right:7px;vertical-align:middle;box-shadow:0 0 8px var(--ouro)}
 /* seções */
-.s{padding:34px 0 6px;position:relative}
-.s h2{font-size:1.65rem;text-align:center}
-.s .lead{color:var(--mut);text-align:center;margin:6px auto 18px;max-width:28rem}
-.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.cards3 div{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 10px;text-align:center;font-size:.82rem;color:var(--mut)}
-.cards3 b{display:block;font-size:1.7rem;margin-bottom:6px}.cards3 strong{display:block;color:#fff;font-size:.92rem;margin-bottom:4px}
-.player{background:linear-gradient(160deg,#1C150C,#100C07);border:1px solid var(--line);border-radius:20px;padding:14px;margin-bottom:12px}
-.player b{display:block;margin-bottom:8px}.player small{display:block;color:var(--mut2);font-size:.8rem;margin:-4px 0 8px}
-.player audio{width:100%;height:42px}
-.player .note{font-size:.78rem;color:var(--mut2);margin-top:6px}
-.estilos{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
-.estilos span{background:var(--card);border:1px solid var(--line);padding:.5rem .85rem;border-radius:99px;font-size:.86rem;font-weight:700}
-.versic{margin:30px auto 0;max-width:26rem;text-align:center;font:italic 400 1.2rem/1.45 LoraI,Georgia,serif;color:var(--ouro2)}
-.versic small{display:block;font:600 .78rem Inter;color:var(--mut2);margin-top:6px;letter-spacing:.06em}
-.faq details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:10px}
-.faq summary{font-weight:800;cursor:pointer;list-style:none}.faq summary::-webkit-details-marker{display:none}
-.faq summary:after{content:'+';float:right;color:var(--ouro);font-weight:900}.faq details[open] summary:after{content:'–'}
+.s{padding:46px 0 8px;position:relative}
+.s .cab{text-align:center;margin-bottom:22px}
+.s h2{font-family:Lora,Georgia,serif;font-weight:700;font-size:1.85rem;line-height:1.12;margin-top:10px}
+.s .lead{color:var(--mut);margin:8px auto 0;max-width:27rem;font-size:.97rem}
+.div{height:1px;background:linear-gradient(90deg,transparent,var(--line2),transparent);margin:40px auto 0;max-width:420px}
+.ded{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ded a{display:flex;flex-direction:column;gap:10px;text-decoration:none;padding:16px;border-radius:20px;background:var(--card);border:1px solid var(--line);transition:border-color .2s}
+.ded a:hover{border-color:var(--line2)}
+.ded a.lg2{grid-column:1/-1;flex-direction:row;align-items:center;background:linear-gradient(160deg,rgba(226,190,110,.14),rgba(226,190,110,.03));border-color:var(--line2)}
+.ded svg{width:26px;height:26px;stroke:var(--ouro);fill:none;stroke-width:1.5;flex:none}
+.ded b{display:block;font-family:Lora,Georgia,serif;font-size:1.08rem;font-weight:700}
+.ded small{display:block;color:var(--mut2);font-size:.82rem;margin-top:2px}
+.ded .seta{margin-left:auto;color:var(--ouro);font-size:1.3rem}
+.player{background:linear-gradient(160deg,rgba(40,31,16,.6),rgba(14,11,7,.8));border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:12px}
+.player b{display:block;font-family:Lora,Georgia,serif;font-size:1.1rem;margin-bottom:2px}.player small{display:block;color:var(--mut2);font-size:.8rem;margin-bottom:10px}
+.player audio{width:100%;height:42px;filter:sepia(.35) saturate(1.2)}
+.player .note{font-size:.76rem;color:var(--mut2);margin-top:6px}
+.est{display:flex;flex-direction:column;gap:10px}
+.est div{display:flex;align-items:baseline;gap:14px;padding:16px 18px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
+.est i{font:italic 400 1.5rem/1 LoraI,Georgia,serif;flex:none;width:2.2rem}
+.est b{display:block;font-family:Lora,Georgia,serif;font-size:1.08rem;font-weight:700}.est small{display:block;color:var(--mut2);font-size:.84rem}
+.passos{display:flex;flex-direction:column;gap:0}
+.passos div{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.passos div:last-child{border:0}
+.passos i{font:italic 400 2rem/1 LoraI,Georgia,serif;width:2.4rem;flex:none}
+.passos b{display:block;font-family:Lora,Georgia,serif;font-size:1.1rem}.passos small{color:var(--mut);font-size:.9rem}
+.versic{margin:46px auto 0;max-width:25rem;text-align:center;font:italic 400 1.35rem/1.45 LoraI,Georgia,serif;color:var(--ouro2)}
+.versic small{display:block;font:700 .7rem InterL,Inter,sans-serif;color:var(--mut2);margin-top:10px;letter-spacing:.28em}
+.faq details{border-bottom:1px solid var(--line);padding:16px 2px}
+.faq summary{font-family:Lora,Georgia,serif;font-weight:700;font-size:1.05rem;cursor:pointer;list-style:none}.faq summary::-webkit-details-marker{display:none}
+.faq summary:after{content:'+';float:right;color:var(--ouro);font-family:Inter,sans-serif}.faq details[open] summary:after{content:'–'}
 .faq p{color:var(--mut);margin-top:8px;font-size:.93rem}
-footer{text-align:center;color:var(--mut2);font-size:.8rem;padding:30px 16px calc(30px + env(safe-area-inset-bottom))}
-footer img{height:60px;opacity:.9;margin-bottom:6px;-webkit-mask-image:radial-gradient(ellipse 70% 68% at 50% 50%,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse 70% 68% at 50% 50%,#000 60%,transparent 100%)}
+footer{text-align:center;color:var(--mut2);font-size:.76rem;letter-spacing:.06em;padding:34px 16px calc(34px + env(safe-area-inset-bottom))}
+footer img{width:110px;opacity:.9;margin-bottom:8px}
 /* criação */
-.wz{padding-top:6px;padding-bottom:120px}
-.bar{height:6px;background:rgba(255,255,255,.08);border-radius:9px;overflow:hidden;margin:4px 0 20px}
-.bar i{display:block;height:100%;background:var(--gd);border-radius:9px;transition:width .4s}
-.wz h2{font-size:1.6rem;margin-bottom:6px}
-.hint{color:var(--mut);font-size:.95rem;margin-bottom:16px}
+.wz{padding-top:4px;padding-bottom:130px}
+.bar{height:3px;background:rgba(255,255,255,.07);border-radius:9px;overflow:hidden;margin:6px 0 24px}
+.bar i{display:block;height:100%;background:var(--gd);border-radius:9px;transition:width .4s;box-shadow:0 0 12px rgba(226,190,110,.6)}
+.wz .eb{margin-bottom:8px}
+.wz h2{font-family:Lora,Georgia,serif;font-weight:700;font-size:1.75rem;line-height:1.12;margin-bottom:8px}
+.hint{color:var(--mut);font-size:.95rem;margin-bottom:18px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.opt{display:flex;align-items:center;gap:.6rem;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 12px;font-weight:700;font-size:.93rem;line-height:1.2;min-height:62px}
-.opt .e{font-size:1.45rem;flex:none}
-.opt small{display:block;font-weight:500;color:var(--mut2);font-size:.76rem;margin-top:3px}
-.opt.on{border-color:var(--ouro);background:linear-gradient(160deg,rgba(245,197,66,.18),rgba(245,197,66,.04));box-shadow:0 0 0 3px rgba(245,197,66,.15)}
-.opt.largo{grid-column:1/-1}
-.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.sub-t{font-weight:800;margin:20px 0 10px}
-.inp{width:100%;background:#120E08;border:1.5px solid var(--line);border-radius:14px;padding:14px;color:var(--tx);font:inherit;font-size:1rem;outline:none}
-.inp:focus{border-color:var(--ouro)}
-textarea.inp{min-height:170px;resize:vertical;line-height:1.5}
+.lista{display:flex;flex-direction:column;gap:10px}
+.opt{position:relative;display:flex;align-items:center;gap:12px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px 16px;font-weight:700;font-size:.95rem;line-height:1.25;min-height:60px;transition:border-color .2s,background .2s}
+.opt small{display:block;font-weight:500;color:var(--mut2);font-size:.8rem;margin-top:3px}
+.opt .tt{font-family:Lora,Georgia,serif;font-size:1.06rem}
+.opt:after{content:'';margin-left:auto;flex:none;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line2)}
+.opt.on{border-color:var(--ouro);background:linear-gradient(160deg,rgba(226,190,110,.16),rgba(226,190,110,.03));box-shadow:0 0 0 1px var(--ouro) inset,0 10px 26px rgba(0,0,0,.35)}
+.opt.on:after{background:var(--gd);border-color:transparent;box-shadow:0 0 0 3px rgba(226,190,110,.2)}
+.opt .n{font:italic 400 1.3rem/1 LoraI,Georgia,serif;flex:none;width:1.8rem}
+.grid .opt{padding-right:12px}
+.sub-t{font:700 .7rem InterL,Inter,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--ouro);margin:24px 0 10px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.row3 .opt{flex-direction:column;justify-content:center;text-align:center;gap:8px;padding:16px 8px}.row3 .opt:after{margin:0}
+.inp{width:100%;background:rgba(255,248,230,.03);border:1px solid var(--line2);border-radius:16px;padding:15px 16px;color:var(--tx);font:inherit;font-size:1.02rem;outline:none}
+.inp:focus{border-color:var(--ouro);box-shadow:0 0 0 3px rgba(226,190,110,.15)}
+textarea.inp{min-height:180px;resize:vertical;line-height:1.55}
 .cnt{font-size:.8rem;color:var(--mut2);margin-top:6px}.cnt.ok{color:var(--ok)}
 .err{color:var(--err);font-weight:700;margin-top:14px;min-height:1.2em}
-.navb{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(10,8,6,0),rgba(10,8,6,.96) 35%);padding:18px 0 calc(14px + env(safe-area-inset-bottom));z-index:5}
-.navb .in{max-width:560px;margin:0 auto;padding:0 16px;display:flex;gap:10px}
-.navb .back{flex:none;width:56px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);font-size:1.6rem;font-weight:700}
+.navb{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(7,6,5,0),rgba(7,6,5,.97) 38%);padding:20px 0 calc(14px + env(safe-area-inset-bottom));z-index:5}
+.navb .in{max-width:560px;margin:0 auto;padding:0 18px;display:flex;gap:10px}
+.navb .back{flex:none;width:56px;border-radius:16px;background:var(--card);border:1px solid var(--line2);font-size:1.5rem;color:var(--ouro)}
 .navb .btn{flex:1}
-.mk{text-align:center;padding:34px 0}
-.mk-cruz{font-size:3rem;animation:brilho 1.8s ease-in-out infinite}
-@keyframes brilho{0%,100%{filter:drop-shadow(0 0 0 rgba(245,197,66,0));transform:scale(1)}50%{filter:drop-shadow(0 0 18px rgba(245,197,66,.8));transform:scale(1.08)}}
-.mk-eq{display:flex;justify-content:center;align-items:flex-end;gap:5px;height:36px;margin:16px 0}
-.mk-eq i{width:6px;background:var(--gd);border-radius:3px;animation:eq 1s ease-in-out infinite alternate}
+.mk{text-align:center;padding:40px 0}
+.mk-luz{width:86px;height:86px;margin:0 auto;border-radius:50%;background:radial-gradient(circle,rgba(246,220,156,.95),rgba(226,190,110,.35) 45%,transparent 70%);animation:pulsa 2s ease-in-out infinite}
+@keyframes pulsa{0%,100%{transform:scale(.85);opacity:.7}50%{transform:scale(1.1);opacity:1}}
+.mk-eq{display:flex;justify-content:center;align-items:flex-end;gap:5px;height:36px;margin:18px 0}
+.mk-eq i{width:4px;background:var(--gd);border-radius:3px;animation:eq 1s ease-in-out infinite alternate}
 @keyframes eq{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
-.mk-msg{font-weight:800;transition:opacity .25s}.mk-sub{color:var(--mut2);font-size:.85rem;margin-top:4px}
-.mk-pct{font-size:2.2rem;font-weight:900;color:var(--ouro);margin-top:10px}
-.prog{height:8px;background:rgba(255,255,255,.08);border-radius:9px;overflow:hidden;margin:12px auto;max-width:320px}.prog i{display:block;height:100%;width:0;background:var(--gd);transition:width .3s}
-.mini{display:flex;justify-content:center;margin-top:10px}.mini button{background:none;border:0;color:var(--ouro);font-weight:800;font-size:.9rem;padding:8px}
-.breve{background:linear-gradient(160deg,#211909,#0F0B06);border:1.5px solid var(--ouro);border-radius:22px;padding:22px 18px;text-align:center;margin-top:8px}
-.breve .ic{font-size:2.4rem}.breve h3{font-size:1.35rem;margin:8px 0 6px}.breve p{color:var(--mut);font-size:.95rem}
-.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#FFF6DC;color:#2A1C00;font-weight:800;padding:12px 18px;border-radius:14px;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:90vw;text-align:center;font-size:.92rem}
+.mk-msg{font-family:Lora,Georgia,serif;font-weight:700;font-size:1.08rem;transition:opacity .25s}.mk-sub{color:var(--mut2);font-size:.85rem;margin-top:4px}
+.mk-pct{font:italic 400 2.6rem LoraI,Georgia,serif;margin-top:14px}
+.prog{height:3px;background:rgba(255,255,255,.08);border-radius:9px;overflow:hidden;margin:14px auto;max-width:300px}.prog i{display:block;height:100%;width:0;background:var(--gd);transition:width .3s}
+.mini{display:flex;justify-content:center;margin-top:10px}.mini button{background:none;border:0;color:var(--ouro);font-weight:700;font-size:.9rem;padding:8px;letter-spacing:.02em}
+.breve{background:linear-gradient(160deg,rgba(40,31,16,.8),rgba(14,11,7,.9));border:1px solid var(--ouro);border-radius:24px;padding:26px 20px;text-align:center;margin-top:8px}
+.breve h3{font-family:Lora,Georgia,serif;font-size:1.4rem;margin:12px 0 8px}.breve p{color:var(--mut);font-size:.95rem}
+.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#F6E7C0;color:#1B1203;font-weight:800;padding:12px 18px;border-radius:14px;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:90vw;text-align:center;font-size:.92rem}
 </style>
 </head>
 <body>
@@ -125,46 +165,59 @@ function salvar(){ LS.set('bz_state',JSON.stringify(S)); }
 try{ S=JSON.parse(LS.get('bz_state')||'null')||novo(); }catch(e){ S=novo(); }
 
 /* ---------- opções (só louvor) ---------- */
-var PARA=[['deus','🙌','Pra Deus','adoração e gratidão'],['igreja','⛪','Pra minha igreja','culto, ministério, grupo'],['familia','🏡','Minha família','uma casa abençoada'],
-  ['mae','🌷','Minha mãe / meu pai','homenagem com fé'],['conjuge','💍','Esposa / marido','casamento abençoado'],['filho','🧸','Meu filho(a)','uma bênção pra ele(a)'],
-  ['pastor','📖','Pastor(a) / líder','homenagem ao ministério'],['outro','✨','Outra pessoa','amigo, avó, irmão…']];
-var PROP=[['Adoração / momento com Deus','🙌'],['Gratidão a Deus','🙏'],['Testemunho de vitória','🏆'],['Louvor pra igreja / culto','⛪'],['Cura e restauração','💧'],
-  ['Família abençoada','👨‍👩‍👧'],['Aniversário abençoado','🎂'],['Casamento cristão','💒'],['Batismo','🕊️'],['Homenagem a pastor(a)','📖']];
-var ESTILOS=[['gospel','🙌','Adoração ao vivo','violão, bateria e guitarra'],['gospelvv','🎸','Voz e violão','intimista e suave'],['gospelcelebra','🎉','Louvor animado','celebração, pra cantar junto'],
-  ['gospeltrad','⛪','Hino / Assembleia','teclado, órgão e coral'],['catolica','✝️','Católica','música de missa e oração']];
-var VOZ=[['feminina','👩','Voz feminina'],['masculina','👨','Voz masculina'],['dueto','👫','Dueto']];
+var PARA=[['deus','Pra Deus','adoração e gratidão'],['igreja','Pra minha igreja','culto, ministério, grupo'],['familia','Minha família','uma casa abençoada'],
+  ['mae','Minha mãe ou meu pai','homenagem com fé'],['conjuge','Esposa ou marido','casamento abençoado'],['filho','Meu filho ou filha','uma bênção pra vida dele'],
+  ['pastor','Pastor(a) ou líder','honra ao ministério'],['outro','Outra pessoa','amigo, avó, irmão…']];
+var PROP=['Adoração / momento com Deus','Gratidão a Deus','Testemunho de vitória','Louvor pra igreja / culto','Cura e restauração','Família abençoada','Aniversário abençoado','Casamento cristão','Batismo','Homenagem a pastor(a)'];
+var ESTILOS=[['gospel','Adoração ao vivo','violão, bateria e guitarra — clima de culto'],['gospelvv','Voz e violão','intimista, suave, pra chorar na presença'],['gospelcelebra','Louvor de celebração','animado, pra cantar junto'],
+  ['gospeltrad','Hino tradicional','teclado, órgão e coral de igreja'],['catolica','Católica','música de missa e oração']];
+var VOZ=[['feminina','Feminina'],['masculina','Masculina'],['dueto','Dueto']];
+var ROM=['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+var IC={maos:'<path d="M7 11V5.5a1.5 1.5 0 013 0V10M10 9V4a1.5 1.5 0 013 0v6M13 9.5V5a1.5 1.5 0 013 0v7.5c0 4-2.5 7.5-6.5 7.5S5 17 4.2 14.4L3 11a1.4 1.4 0 012.5-1.2L7 12"/>',
+  casa:'<path d="M3 11l9-7 9 7M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',flor:'<circle cx="12" cy="9" r="3"/><path d="M12 12v9M12 6a3 3 0 113-3M12 6a3 3 0 10-3-3M9 9a3 3 0 11-3 3M15 9a3 3 0 103 3"/>',
+  livro:'<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 5v16M12 7v6M9.5 9.5h5"/>',cor:'<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>'};
+function ic(k){ return '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">'+IC[k]+'</svg>'; }
 function precisaNome(){ return S.para && S.para!=='deus' && S.para!=='igreja'; }
 function relacao(){ return {deus:'louvor',igreja:'louvor',familia:'familia',mae:'mae',conjuge:'esposa',filho:'filho',pastor:'outro',outro:'outro'}[S.para]||'louvor'; }
 
 /* ---------- página inicial ---------- */
-function topo(){ return '<div class="top"><a class="lg" href="#/"><img src="'+LOGO+'" alt="Bonzinho Music"><span>BONZINHO <b>MUSIC</b></span></a><a class="ex" href="#/" onclick="setTimeout(function(){var e=document.getElementById(\'exSec\');e&&e.scrollIntoView({behavior:\'smooth\'})},50)">🎧 Ouvir exemplo</a></div>'; }
+function topo(fixo){ return '<div class="top'+(fixo?' fixo':'')+'"><a class="lg" href="#/"><img src="/bonzinho/logo-mini.webp" alt="Bonzinho Music"><span>BONZINHO <b>MUSIC</b></span></a><a class="ex" href="#exSec" onclick="var e=document.getElementById(\'exSec\');if(e){e.scrollIntoView({behavior:\'smooth\'});return false}">OUVIR EXEMPLO</a></div>'; }
 function home(){
   el('app').innerHTML=topo()+
-  '<header class="hero"><div class="w">'+
-    '<img class="logo" src="'+LOGO+'" alt="Bonzinho Music" width="420" height="336" fetchpriority="high">'+
-    '<span class="pill">🎧 Ouça a prévia grátis antes de pagar</span>'+
-    '<h1>Um <em>louvor</em> feito<br>só pra você</h1>'+
-    '<p class="sub">Com o <b>seu nome</b>, o <b>seu testemunho</b> e a <b>sua fé</b>. Uma música de adoração de verdade, pronta em minutos.</p>'+
-    '<div style="margin-top:22px"><a class="btn btn-o" href="#/criar">🙌 Criar meu louvor</a></div>'+
-    '<div class="trust"><span>Prévia grátis</span><span>Pronto em minutos</span><span>Direto no celular</span></div>'+
+  '<header class="hero"><div class="ft"></div><div class="raios"></div><div class="w">'+
+    '<span class="eb">Louvor personalizado</span>'+
+    '<h1>Seu testemunho<span class="it ouro">vira louvor</span></h1>'+
+    '<p class="sub">Uma música de adoração com <b>o seu nome</b>, <b>a sua história</b> e <b>a sua fé</b>. Pra você, ou pra dedicar a quem você ama.</p>'+
+    '<div class="oferta"><div class="oferta-r"><div><b>Louvor personalizado</b><small>letra e música feitas só pra você</small></div><div class="gratis">PRÉVIA<br>GRÁTIS</div></div>'+
+      '<a class="btn btn-o" href="#/criar">Criar meu louvor</a>'+
+      '<div class="trust"><span>Ouça antes de pagar</span><span>Pronto em minutos</span></div></div>'+
   '</div></header>'+
-  '<section class="s" id="exSec"><div class="w"><h2>Ouça um <em>exemplo</em></h2><p class="lead">Um louvor feito aqui, com a história de quem pediu. Dá o play 🎧</p>'+
-    '<div class="player"><b>🙌 Música pra Jesus</b><small>Adoração ao vivo · voz e banda</small><audio controls preload="none" src="/exemplo-louvor.mp3"></audio></div>'+
+  '<section class="s"><div class="w"><div class="cab"><span class="eb">Dedique</span><h2>Um louvor pra <span class="it ouro">quem você ama</span></h2><p class="lead">Com o nome e a história da pessoa, cantado como oração.</p></div>'+
+    '<div class="ded">'+
+      '<a class="lg2" href="#/criar" data-dd="deus">'+ic('maos')+'<div><b>Pra Deus</b><small>adoração, gratidão e testemunho</small></div><span class="seta">›</span></a>'+
+      '<a href="#/criar" data-dd="mae">'+ic('flor')+'<div><b>Pra sua mãe</b><small>ou pro seu pai</small></div></a>'+
+      '<a href="#/criar" data-dd="familia">'+ic('casa')+'<div><b>Pra família</b><small>um lar abençoado</small></div></a>'+
+      '<a href="#/criar" data-dd="pastor">'+ic('livro')+'<div><b>Pro pastor</b><small>honra ao ministério</small></div></a>'+
+      '<a href="#/criar" data-dd="conjuge">'+ic('cor')+'<div><b>Pro seu amor</b><small>casamento abençoado</small></div></a>'+
+    '</div></div></section>'+
+  '<section class="s" id="exSec"><div class="w"><div class="cab"><span class="eb">Ouça</span><h2>Feito <span class="it ouro">aqui</span></h2><p class="lead">Um louvor criado com a história de quem pediu.</p></div>'+
+    '<div class="player"><b>Música pra Jesus</b><small>Adoração ao vivo · voz e banda</small><audio controls preload="none" src="/exemplo-louvor.mp3"></audio></div>'+
   '</div></section>'+
-  '<section class="s"><div class="w"><h2>Como <em>funciona</em></h2><p class="lead">Três passos, tudo pelo celular.</p>'+
-    '<div class="cards3"><div><b>✍️</b><strong>Conte</strong>pra quem é e o seu testemunho</div><div><b>🎶</b><strong>A gente compõe</strong>letra e música de louvor</div><div><b>🎧</b><strong>Ouça</strong>a prévia e leve a sua música</div></div>'+
+  '<section class="s"><div class="w"><div class="cab"><span class="eb">Estilos</span><h2>Do <span class="it ouro">secreto</span> ao culto</h2></div>'+
+    '<div class="est">'+ESTILOS.map(function(e,i){ return '<div><i class="ouro">'+ROM[i]+'</i><span><b>'+e[1]+'</b><small>'+e[2]+'</small></span></div>'; }).join('')+'</div>'+
   '</div></section>'+
-  '<section class="s"><div class="w"><h2>Escolha o <em>estilo</em></h2><p class="lead">Do louvor intimista ao hino de igreja.</p>'+
-    '<div class="estilos">'+ESTILOS.map(function(e){ return '<span>'+e[1]+' '+e[2]+'</span>'; }).join('')+'</div>'+
-    '<div class="versic">“Cantai ao Senhor um cântico novo.”<small>SALMOS 96:1</small></div>'+
+  '<section class="s"><div class="w"><div class="cab"><span class="eb">Como funciona</span><h2>Três passos, <span class="it ouro">no celular</span></h2></div>'+
+    '<div class="passos"><div><i class="ouro">1</i><span><b>Conte</b><small>pra quem é o louvor e o seu testemunho.</small></span></div><div><i class="ouro">2</i><span><b>A gente compõe</b><small>letra e música de adoração, em minutos.</small></span></div><div><i class="ouro">3</i><span><b>Ouça e leve</b><small>escute a prévia grátis antes de pagar.</small></span></div></div>'+
+    '<div class="versic">“Cantai ao Senhor um cântico novo.”<small>SALMOS 96 : 1</small></div>'+
   '</div></section>'+
-  '<section class="s faq"><div class="w"><h2>Perguntas</h2><p class="lead">&nbsp;</p>'+
+  '<section class="s faq"><div class="w"><div class="cab"><span class="eb">Dúvidas</span><h2>Perguntas</h2></div>'+
     '<details><summary>Eu ouço antes de pagar?</summary><p>Sim. Você lê a letra, ajusta o que quiser e ouve a prévia do seu louvor antes de qualquer pagamento.</p></details>'+
-    '<details><summary>Pode ser pra outra pessoa?</summary><p>Pode. Faça um louvor pra sua mãe, pra sua família, pro seu pastor ou pra alguém especial, com o nome e a história dele.</p></details>'+
+    '<details><summary>Posso dedicar pra outra pessoa?</summary><p>Pode. Faça um louvor pra sua mãe, pra sua família, pro seu pastor ou pra alguém especial, com o nome e a história dele.</p></details>'+
     '<details><summary>Quanto tempo demora?</summary><p>A letra sai em segundos e a música costuma ficar pronta em menos de 1 minuto.</p></details>'+
   '</div></section>'+
-  '<div class="w" style="margin-top:20px"><a class="btn btn-o" href="#/criar">🙌 Criar meu louvor</a></div>'+
-  '<footer><img src="'+LOGO+'" alt=""><br>Bonzinho Music · Louvor personalizado</footer>';
+  '<div class="w" style="margin-top:28px"><a class="btn btn-o" href="#/criar">Criar meu louvor</a></div>'+
+  '<footer><img src="/bonzinho/logo.webp" alt=""><br>BONZINHO MUSIC · LOUVOR PERSONALIZADO</footer>';
+  document.querySelectorAll('[data-dd]').forEach(function(a){ a.onclick=function(){ if(S.para!==a.dataset.dd){ S.nome=''; S.paraGen=''; } S.para=a.dataset.dd; if(S.para==='familia') S.paraGen='neutro'; salvar(); }; });
 }
 
 /* ---------- criação ---------- */
@@ -175,31 +228,31 @@ function wizard(n){
   if(PASSOS[passo]==='nome' && !precisaNome()) passo+=(n!=null && n<passo)?-1:0;
   var k=PASSOS[passo], pct=Math.round((passo+1)/PASSOS.length*100), h='';
   if(k==='para'){
-    h='<h2>Pra quem é esse <em>louvor</em>?</h2><p class="hint">Escolha uma opção.</p><div class="grid">'+
-      PARA.map(function(p){ return '<button class="opt'+(S.para===p[0]?' on':'')+'" data-para="'+p[0]+'"><span class="e">'+p[1]+'</span><span>'+p[2]+'<small>'+p[3]+'</small></span></button>'; }).join('')+'</div>';
-    if(S.para) h+='<div class="sub-t">E você é…</div><div class="row2"><button class="opt'+(S.de==='mulher'?' on':'')+'" data-de="mulher">👩 Mulher</button><button class="opt'+(S.de==='homem'?' on':'')+'" data-de="homem">👨 Homem</button></div>';
+    h='<span class="eb">Passo 1</span><h2>Pra quem é esse <span class="it ouro">louvor</span>?</h2><p class="hint">Pra você cantar a Deus, ou pra dedicar a alguém.</p><div class="grid">'+
+      PARA.map(function(p){ return '<button class="opt'+(S.para===p[0]?' on':'')+'" data-para="'+p[0]+'"><span><span class="tt">'+p[1]+'</span><small>'+p[2]+'</small></span></button>'; }).join('')+'</div>';
+    if(S.para) h+='<div class="sub-t">E você é</div><div class="row2"><button class="opt'+(S.de==='mulher'?' on':'')+'" data-de="mulher"><span class="tt">Mulher</span></button><button class="opt'+(S.de==='homem'?' on':'')+'" data-de="homem"><span class="tt">Homem</span></button></div>';
   }
   if(k==='nome'){
     var quem={familia:'da sua família',mae:'dela ou dele',conjuge:'do seu amor',filho:'do seu filho(a)',pastor:'do pastor(a)',outro:'da pessoa'}[S.para]||'';
-    h='<h2>Qual o <em>nome</em> '+quem+'?</h2><p class="hint">Vai aparecer cantado no louvor. Mais de um nome? Separe por vírgula.</p><input class="inp" id="fNome" maxlength="120" placeholder="Ex.: Maria" value="'+esc(S.nome)+'" autocomplete="off">'+
-      (S.para!=='familia'?'<div class="sub-t">É…</div><div class="row2"><button class="opt'+(S.paraGen==='ela'?' on':'')+'" data-pgen="ela">Mulher / menina</button><button class="opt'+(S.paraGen==='ele'?' on':'')+'" data-pgen="ele">Homem / menino</button></div>':'');
+    h='<span class="eb">Dedicatória</span><h2>Qual o <span class="it ouro">nome</span> '+quem+'?</h2><p class="hint">Vai aparecer cantado no louvor. Mais de um nome? Separe por vírgula.</p><input class="inp" id="fNome" maxlength="120" placeholder="Ex.: Maria" value="'+esc(S.nome)+'" autocomplete="off">'+
+      (S.para!=='familia'?'<div class="sub-t">É</div><div class="row2"><button class="opt'+(S.paraGen==='ela'?' on':'')+'" data-pgen="ela"><span class="tt">Mulher</span></button><button class="opt'+(S.paraGen==='ele'?' on':'')+'" data-pgen="ele"><span class="tt">Homem</span></button></div>':'');
   }
-  if(k==='proposito') h='<h2>Qual o <em>propósito</em>?</h2><p class="hint">Isso guia a letra do louvor.</p><div class="grid">'+PROP.map(function(o){ return '<button class="opt'+(S.proposito===o[0]?' on':'')+'" data-pr="'+esc(o[0])+'"><span class="e">'+o[1]+'</span>'+esc(o[0])+'</button>'; }).join('')+'</div>';
-  if(k==='estilo') h='<h2>Escolha o <em>estilo</em></h2><p class="hint">&nbsp;</p><div class="grid">'+ESTILOS.map(function(g,i){ return '<button class="opt'+(i===ESTILOS.length-1?' largo':'')+(S.estilo===g[0]?' on':'')+'" data-est="'+g[0]+'"><span class="e">'+g[1]+'</span><span>'+g[2]+'<small>'+g[3]+'</small></span></button>'; }).join('')+'</div>';
-  if(k==='voz') h='<h2>Quem vai <em>cantar</em>?</h2><p class="hint">&nbsp;</p><div class="row3">'+VOZ.map(function(v){ return '<button class="opt'+(S.voz===v[0]?' on':'')+'" data-voz="'+v[0]+'" style="flex-direction:column;justify-content:center;text-align:center"><span class="e">'+v[1]+'</span>'+v[2]+'</button>'; }).join('')+'</div>';
-  if(k==='historia') h='<h2>Conte o seu <em>testemunho</em></h2><p class="hint">O que Deus fez na sua vida, pelo que você é grato, o que quer dizer a Ele'+(precisaNome()?' ou sobre essa pessoa':'')+'. Quanto mais detalhe, mais especial.</p>'+
+  if(k==='proposito') h='<span class="eb">Propósito</span><h2>O que esse louvor vai <span class="it ouro">declarar</span>?</h2><p class="hint">Isso guia a letra.</p><div class="grid">'+PROP.map(function(o){ return '<button class="opt'+(S.proposito===o?' on':'')+'" data-pr="'+esc(o)+'"><span class="tt" style="font-size:.98rem">'+esc(o)+'</span></button>'; }).join('')+'</div>';
+  if(k==='estilo') h='<span class="eb">Estilo</span><h2>Como ele vai <span class="it ouro">soar</span>?</h2><p class="hint">&nbsp;</p><div class="lista">'+ESTILOS.map(function(g,i){ return '<button class="opt'+(S.estilo===g[0]?' on':'')+'" data-est="'+g[0]+'"><i class="n ouro">'+ROM[i]+'</i><span><span class="tt">'+g[1]+'</span><small>'+g[2]+'</small></span></button>'; }).join('')+'</div>';
+  if(k==='voz') h='<span class="eb">Voz</span><h2>Quem vai <span class="it ouro">cantar</span>?</h2><p class="hint">&nbsp;</p><div class="row3">'+VOZ.map(function(v){ return '<button class="opt'+(S.voz===v[0]?' on':'')+'" data-voz="'+v[0]+'"><span class="tt">'+v[1]+'</span></button>'; }).join('')+'</div>';
+  if(k==='historia') h='<span class="eb">Testemunho</span><h2>Conte o seu <span class="it ouro">testemunho</span></h2><p class="hint">O que Deus fez na sua vida, pelo que você é grato, o que quer dizer a Ele'+(precisaNome()?' ou sobre essa pessoa':'')+'. Quanto mais detalhe, mais especial.</p>'+
     '<textarea class="inp" id="fHist" maxlength="2000" placeholder="Ex.: Passei por um tempo difícil no hospital e Deus me curou. Hoje quero agradecer pela minha família e pela vitória…">'+esc(S.historia)+'</textarea><div class="cnt" id="cnt"></div>'+
-    '<div class="sub-t">Um versículo ou frase pra entrar <span style="color:var(--mut2);font-weight:500">(opcional)</span></div><input class="inp" id="fFrase" maxlength="200" placeholder="Ex.: Até aqui nos ajudou o Senhor" value="'+esc(S.frase)+'">';
+    '<div class="sub-t">Versículo ou frase · opcional</div><input class="inp" id="fFrase" maxlength="200" placeholder="Ex.: Até aqui nos ajudou o Senhor" value="'+esc(S.frase)+'">';
   if(k==='letra') h=htmlLetra();
   if(k==='musica') h=htmlMusica();
-  if(k==='fim') h='<h2>Seu louvor está <em>pronto</em> 🙌</h2><p class="hint">Falta só liberar a versão completa.</p>'+
-    '<div class="breve"><div class="ic">⏳</div><h3>Pagamento em breve</h3><p>Estamos finalizando o pagamento do Bonzinho Music. Guarde esta página: a sua prévia fica salva neste celular e você libera o louvor completo assim que abrir.</p></div>'+
-    (S.url?'<div style="margin-top:16px">'+player('🙌 Ouvir a prévia de novo',S.url,true)+'</div>':'');
+  if(k==='fim') h='<span class="eb">Quase lá</span><h2>Seu louvor está <span class="it ouro">pronto</span></h2><p class="hint">Falta só liberar a versão completa.</p>'+
+    '<div class="breve"><div class="mk-luz" style="width:56px;height:56px"></div><h3>Pagamento em breve</h3><p>Estamos finalizando o pagamento do Bonzinho Music. Guarde esta página: a sua prévia fica salva neste celular e você libera o louvor completo assim que abrir.</p></div>'+
+    (S.url?'<div style="margin-top:16px">'+player('Ouvir a prévia de novo',S.url,true)+'</div>':'');
   var acao='<button class="btn btn-o" id="bNext">Continuar</button>';
-  if(k==='letra') acao=(_letraBusy||!S.letra)?'':'<button class="btn btn-o" id="bAprovar">Criar meu louvor 🎶</button>';
-  if(k==='musica') acao=S.url?'<button class="btn btn-o" id="bLiberar">Quero o louvor completo ✨</button>':'';
+  if(k==='letra') acao=(_letraBusy||!S.letra)?'':'<button class="btn btn-o" id="bAprovar">Criar meu louvor</button>';
+  if(k==='musica') acao=S.url?'<button class="btn btn-o" id="bLiberar">Quero o louvor completo</button>':'';
   if(k==='fim') acao='<button class="btn btn-l" id="bNovo">Criar outro louvor</button>';
-  el('app').innerHTML=topo()+'<div class="w wz"><div class="bar"><i style="width:'+pct+'%"></i></div>'+h+'<div class="err" id="err"></div></div>'+
+  el('app').innerHTML=topo(true)+'<div class="w wz"><div class="bar"><i style="width:'+pct+'%"></i></div>'+h+'<div class="err" id="err"></div></div>'+
     '<div class="navb"><div class="in"><button class="back" id="bBack" aria-label="Voltar">‹</button>'+acao+'</div></div>';
   el('bBack').onclick=function(){ if(passo===0){ location.hash='#/'; return; } var p=passo-1; if(PASSOS[p]==='nome'&&!precisaNome()) p--; wizard(p); window.scrollTo(0,0); };
   if(el('bNext')) el('bNext').onclick=avancar;
@@ -248,8 +301,8 @@ function dados(){
 var _letraBusy=false;
 var MSG_LET=['Lendo o seu testemunho…','Buscando as palavras certas…','Escrevendo o refrão…','Colocando a sua fé na letra…','Dando os últimos retoques…'];
 function htmlLetra(){
-  if(_letraBusy||!S.letra) return '<h2>Escrevendo a <em>letra</em> ✍️</h2><div class="mk"><div class="mk-cruz">✝️</div><div class="mk-eq">'+[10,24,16,32,20,28,14,30,18,26,12].map(function(h,i){ return '<i style="height:'+h+'px;animation-delay:'+(i*.09)+'s"></i>'; }).join('')+'</div><div class="mk-msg" id="mkMsg">Lendo o seu testemunho…</div><div class="mk-sub">Só alguns segundos</div></div>';
-  return '<h2>A sua <em>letra</em> ✍️</h2><p class="hint">Leia e mude o que quiser. Quando estiver bom, toque em <b>Criar meu louvor</b>.</p>'+
+  if(_letraBusy||!S.letra) return '<span class="eb">Composição</span><h2>Escrevendo a <span class="it ouro">letra</span></h2><div class="mk"><div class="mk-luz"></div><div class="mk-eq">'+[10,24,16,32,20,28,14,30,18,26,12].map(function(h,i){ return '<i style="height:'+h+'px;animation-delay:'+(i*.09)+'s"></i>'; }).join('')+'</div><div class="mk-msg" id="mkMsg">Lendo o seu testemunho…</div><div class="mk-sub">Só alguns segundos</div></div>';
+  return '<span class="eb">Letra</span><h2>A sua <span class="it ouro">letra</span></h2><p class="hint">Leia e mude o que quiser. Quando estiver bom, toque em <b>Criar meu louvor</b>.</p>'+
     '<textarea class="inp" id="fLetra" style="min-height:320px">'+esc(S.letra)+'</textarea>'+
     '<div class="mini"><button id="bNova">↻ Escrever outra versão</button></div>'+
     '<div class="sub-t">Quer uma mudança pequena?</div><input class="inp" id="fAjuste" maxlength="300" placeholder="Ex.: deixe o refrão mais forte, cite o Salmo 23">'+
@@ -279,13 +332,13 @@ function gerarLetra(ajuste){
 var _musBusy=false, _progT=null, _msgT=null;
 var MSG_MUS=['Compondo a melodia…','Afinando o violão…','Gravando a voz…','Cantando o seu louvor…','Mixando os instrumentos…','Últimos retoques…'];
 function htmlMusica(){
-  if(!S.url) return '<h2>Criando o seu <em>louvor</em> 🎶</h2><div class="mk"><div class="mk-cruz">🙌</div><div class="mk-pct" id="pgPct">0%</div><div class="prog"><i id="pg"></i></div><div class="mk-msg" id="mkMsg">Compondo a melodia…</div><div class="mk-sub">Costuma ficar pronto em menos de 1 minuto. Deixe esta página aberta.</div></div>';
-  return '<h2>Ouça o seu <em>louvor</em> 🎧</h2><p class="hint">Essa é a sua prévia grátis. Gostou? Toque em <b>Quero o louvor completo</b>.</p>'+
+  if(!S.url) return '<span class="eb">Gravação</span><h2>Criando o seu <span class="it ouro">louvor</span></h2><div class="mk"><div class="mk-luz"></div><div class="mk-pct ouro" id="pgPct">0%</div><div class="prog"><i id="pg"></i></div><div class="mk-msg" id="mkMsg">Compondo a melodia…</div><div class="mk-sub">Costuma ficar pronto em menos de 1 minuto. Deixe esta página aberta.</div></div>';
+  return '<span class="eb">Prévia</span><h2>Ouça o seu <span class="it ouro">louvor</span></h2><p class="hint">Essa é a sua prévia grátis. Gostou? Toque em <b>Quero o louvor completo</b>.</p>'+
     player('Versão 1',S.url,true)+(S.url2?player('Versão 2',S.url2,true):'')+
     '<div class="mini"><button id="bRefazer">↻ Fazer outra versão</button></div>';
 }
 function player(t,u,lim){ return '<div class="player"><b>'+t+'</b><audio controls preload="none" '+(lim?'data-lim="1" ':'')+'src="'+esc(u)+'"></audio>'+(lim?'<div class="note">Prévia · primeiros 60 segundos</div>':'')+'</div>'; }
-function limitar(){ var a=[].slice.call(document.querySelectorAll('audio')); a.forEach(function(x){ x.addEventListener('play',function(){ a.forEach(function(o){ if(o!==x) o.pause(); }); }); if(x.dataset.lim) x.addEventListener('timeupdate',function(){ if(x.currentTime>=60){ x.pause(); x.currentTime=0; toast('Libere o louvor completo pra ouvir tudo 🙌'); } }); }); }
+function limitar(){ var a=[].slice.call(document.querySelectorAll('audio')); a.forEach(function(x){ x.addEventListener('play',function(){ a.forEach(function(o){ if(o!==x) o.pause(); }); }); if(x.dataset.lim) x.addEventListener('timeupdate',function(){ if(x.currentTime>=60){ x.pause(); x.currentTime=0; toast('Libere o louvor completo pra ouvir tudo'); } }); }); }
 function ligarMusica(){
   limitar();
   if(el('bLiberar')) el('bLiberar').onclick=function(){ wizard(PASSOS.indexOf('fim')); window.scrollTo(0,0); };
