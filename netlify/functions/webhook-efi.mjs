@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { indexarDia } from './_indice.mjs';
+import { entregarPedidoPagoZap } from './_zap.mjs';
 
 const HORAS_48 = 48;
 
@@ -10,7 +11,7 @@ function seguroIgual(a, b) {
   return aa.length === bb.length && crypto.timingSafeEqual(aa, bb);
 }
 
-export default async (req) => {
+export default async (req, context) => {
   if (req.method !== 'POST') return new Response('ok', { status: 200 });
 
   const secret = (process.env.EFI_WEBHOOK_SECRET || '').trim();
@@ -54,6 +55,8 @@ export default async (req) => {
       });
       await giftStore.setJSON(mapa.giftId, presente);
       try { await indexarDia('pg', presente.id, presente.pagoEm); } catch (e) {}
+      // 26/11: pagou → manda no WhatsApp NA HORA
+      try { const t = entregarPedidoPagoZap(presente).catch((e) => console.error('efi zap:', e && e.message)); if (context && context.waitUntil) context.waitUntil(t); else await t; } catch (e) {}
     } catch (e) {
       console.error('Erro ao processar Pix Efí', txid, e && e.stack || e);
       // Responde 2xx para eventos já processados/irrelevantes; falhas pontuais ficam registradas no log.

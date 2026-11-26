@@ -96,14 +96,14 @@ export async function entregarMusica(taskId, numeroPedido) {
       'Guarde esta conversa: o link fica salvo aqui pra você voltar quando quiser. 💗');
     // só o link (sem áudio no WhatsApp, pra pessoa ouvir no site e comprar)
     // botão de confirmar pagamento (Pix manual): só depois de tocar a música completa vai pro WhatsApp
-    if (ok) { try { await enviarBotoes(para, 'Já fez o Pix pelo link? Toque abaixo pra confirmar e receber suas músicas *completas* aqui. 💗', [['pg:perg:' + taskId, '✅ Já paguei']]); } catch (e) {} }
+    if (ok && false) { try { await enviarBotoes(para, 'Já fez o Pix pelo link? Toque abaixo pra confirmar e receber suas músicas *completas* aqui. 💗', [['pg:perg:' + taskId, '✅ Já paguei']]); } catch (e) {} }
   } else {
     return 'semjanela'; // só manda pra quem abriu conversa (sem modelo pago)
   }
   if (!ok) return 'erro';
   await loja.setJSON('env_' + taskId, { para, em: Date.now() }).catch(() => {});
   // recuperação: se não pagar em 1 h, o robô manda a oferta (recuperar-zap-agendado)
-  await loja.setJSON('rec_' + taskId, { taskId, numero: para, em: Date.now() }).catch(() => {});
+  // 26/11: sem mensagem de recuperação (só 1 mensagem por prévia)
   await registrar('enviou', { para, taskId, nome, via });
   await loja.delete('bot_' + chaveNum(para)).catch(() => {}); // conversa do robô terminou
   await loja.setJSON('bv_' + String(para).replace(/\D/g, ''), { em: Date.now() }).catch(() => {});

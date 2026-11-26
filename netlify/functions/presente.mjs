@@ -6,6 +6,7 @@
 import { getStore } from '@netlify/blobs';
 import { indexarDia } from './_indice.mjs';
 import { conferirPagamentoEfi, aplicarPagamento } from './_efi.mjs';
+import { entregarPedidoPagoZap } from './_zap.mjs';
 import { liberarManual } from './_comprovante.mjs';
 import { ESPERA_JA_PAGUEI } from './_pixmanual.mjs';
 import { venceEm, ehParaSempre } from './_vence.mjs';
@@ -20,7 +21,7 @@ function json(obj, status) {
   });
 }
 
-export default async (req) => {
+export default async (req, context) => {
   const url = new URL(req.url);
   const id = url.searchParams.get('id');
   if (!id) return json({ erro: 'id ausente' }, 400);
@@ -41,6 +42,8 @@ export default async (req) => {
           aplicarPagamento(presente, info, 'consulta-presente');
           await store.setJSON(id, presente);
       try { await indexarDia('pg', presente.id, presente.pagoEm); } catch (e) {}
+          // 26/11: Efí confirmou → WhatsApp NA HORA
+          try { const t = entregarPedidoPagoZap(presente).catch(() => {}); if (context && context.waitUntil) context.waitUntil(t); else await t; } catch (e) {}
         }
       } catch (e) {
         console.error('presente: falha ao conferir Pix na Efí', id, e && e.message);

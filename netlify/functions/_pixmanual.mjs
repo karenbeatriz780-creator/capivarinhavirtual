@@ -44,7 +44,16 @@ export async function lerCfgPix() {
 export async function salvarCfgPix(m) { const c = Object.assign({}, await lerCfgPix(), m); await cfgLoja().setJSON('cfg_pixmanual', c); cache = null; return lerCfgPix(); }
 // Efí recusou há pouco? (não fica batendo nela a cada pedido: pula por 10 min)
 // 16/11 (regra do Gusthavo): TODOS os pagamentos no Pix do Nubank (+ cartão pelo Stripe) — a Efí não é mais usada pra gerar Pix
-export async function pularEfi() { return true; }
+// 26/11 (Gusthavo): VOLTOU a Efí — Pix automático (o banco avisa e libera sozinho). Se a Efí falhar → Pix do Nubank por 10 min.
+export async function pularEfi() {
+  try {
+    const c = await lerCfgPix();
+    if (c.modo === 'manual') return true;
+    if (c.modo === 'efi') return false;
+    const f = (await cfgLoja().get('cfg_pixmanual', { type: 'json' }).catch(() => null)) || {};
+    return !!(f.efiFalhouEm && Date.now() - f.efiFalhouEm < 10 * 60e3);
+  } catch (e) { return false; }
+}
 export async function marcarEfiFalhou(erro) { try { await salvarCfgPix({ efiFalhouEm: Date.now(), efiErro: String(erro || '').slice(0, 200) }); } catch (e) {} }
 export async function podeManual() { return true; }
 

@@ -3720,7 +3720,7 @@ var PRECO_PACOTE6 = 19.99; /* 6 músicas (3 letras × 2 versões) — tem que ba
 function numMusicaAtual(){ return W.ofertaM2 ? 3 : (W.ofertaM1 ? 2 : 1); }
 var ZAP_API='5511924826268';
 function htmlBotaoZap(tid, esperando){
-  return ''; /* prévia pelo WhatsApp desligada (a Meta cobra cada mensagem) — a prévia fica só aqui no site */
+  /* 26/11: prévia pelo WhatsApp de volta (1 mensagem só, com o link) */
   tid = tid || (W && W.musicaPreviewId);
   if(!W || !tid || W.bonusDe || W.dobroDe) return '';
   var txt='Oi! Quero receber minha música 🎵 (código t.'+tid+')';
@@ -3848,7 +3848,6 @@ function htmlMusicaDemorou(taskId){
   '</div>';
 }
 function htmlBotaoWhatsMusica(taskId){
-  return ''; /* prévia pelo WhatsApp desligada */
   if(!taskId) return '';
   var msg='Olá! Quero receber a prévia da minha música. ID do pedido: '+taskId;
   var link='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent(msg);

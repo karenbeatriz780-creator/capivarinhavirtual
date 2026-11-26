@@ -99,7 +99,7 @@ export async function processar(corpo) {
                 await loja.setJSON('pend_' + tid, { taskId: tid, numero: String(msg.from), em: Date.now() });
                 // vigia rápido: confere a cada 12 s e manda a prévia assim que ficar pronta
                 await fetch(baseU + '/.netlify/functions/avisar-musica-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId: tid, rapido: true }) }).catch(() => {});
-                await enviarTexto(msg.from, '✅ Recebi! Sua música está sendo criada agora 🎶\n\nPode ficar tranquilo(a): assim que ficar pronta eu te mando aqui mesmo, em instantes. 💗');
+                if (false) await enviarTexto(msg.from, '✅ Recebi! Sua música está sendo criada agora 🎶\n\nPode ficar tranquilo(a): assim que ficar pronta eu te mando aqui mesmo, em instantes. 💗');
               } else if (r === 'naoachei') {
                 await enviarTexto(msg.from, 'Não achei essa música 😕\nCrie a sua aqui: ' + SITE + '/#/criar/musica');
               } else if (r === 'ja') {

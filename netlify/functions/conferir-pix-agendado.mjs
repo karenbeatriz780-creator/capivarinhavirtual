@@ -1,14 +1,14 @@
 import { getStore } from '@netlify/blobs';
 import { indexarDia } from './_indice.mjs';
 import { obterToken, listarPixRecebidos, aplicarPagamento } from './_efi.mjs';
+import { entregarPedidoPagoZap } from './_zap.mjs';
 
 // CONFERE O BANCO SOZINHO, A CADA 5 MINUTOS.
 // Pega todos os Pix que caíram na conta nas últimas 48 h e libera o pedido
 // ligado a cada um (pelo txid da cobrança). Assim, mesmo se o aviso automático
 // da Efí (webhook) falhar, ninguém fica pago e sem a música.
 // Pix que caiu e não tem pedido ligado fica guardado pro painel mostrar.
-// 24/11: DESLIGADO — a Efí não está sendo usada (o Pix vai direto pro Nubank). Pra religar, volte a linha abaixo.
-// export const config = { schedule: '*/5 * * * *' };
+export const config = { schedule: '*/10 * * * *' }; // 26/11: Efí religada — reserva caso o aviso do banco falhe
 
 export default async () => {
   const t0 = Date.now();
@@ -33,6 +33,7 @@ export default async () => {
         const h = p.horario && Date.parse(p.horario); if (h) { g.pagoEm = h; g.pagamento.pagoEm = h; }
         await presentes.setJSON(g.id, g);
       try { await indexarDia('pg', g.id, g.pagoEm); } catch (e) {}
+        try { await entregarPedidoPagoZap(g); } catch (e) {}
         liberados++;
         console.log('liberado automático:', g.id, p.valor);
       } catch (e) { console.error('conferir-pix: ', p.txid, e && e.message); }
