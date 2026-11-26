@@ -160,8 +160,8 @@ export default async (req) => {
       await indexar(at.musicaWhatsapp, 'p', g.id); await indexarDia('p', g.id);
       return json({ payload, id: g.id, teste: false, valor, manual: true, provedor: 'manual' });
     };
-    // 💳 INFINITEPAY (principal)
-    if (await ipLigada()) {
+    // 💳 INFINITEPAY: só se a Efí estiver fora (26/11: Efí é a principal)
+    if ((await pularEfi()) && await ipLigada()) {
       try {
         const lk = await criarLinkIP(g.id, valor, (oferta4 ? '4 Músicas Personalizadas' : 'Música Personalizada') + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('') + ' - Capivarinha Love', { nome: g.meuNome, tel: g.musicaWhatsapp || g.whatsapp });
         const agora = Date.now();

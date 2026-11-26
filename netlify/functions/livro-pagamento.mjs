@@ -3,8 +3,8 @@
 // POST { id, t }  →  { payload, id, valor, expiraEm }
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
-import { modoTeste } from './_efi.mjs';
-import { lerCfgPix, brcode, refPedido, marcarPendente } from './_pixmanual.mjs';
+import { modoTeste, cobrancaEfi } from './_efi.mjs';
+import { lerCfgPix, brcode, refPedido, marcarPendente, pularEfi, marcarEfiFalhou } from './_pixmanual.mjs';
 import { indexar, indexarDia } from './_indice.mjs';
 import { json, acharTema, lerTemas, PACOTES_LIVRO } from './_livros.mjs';
 
@@ -36,9 +36,22 @@ export default async (req) => {
     // mesmo pacote e o Pix já foi gerado? devolve o mesmo
     const pg = g.pagamento || {};
     const mesmo = (pg.pacote || 'um') === tipo && (pg.tema2 || null) === tema2;
-    if (mesmo && pg.provedor === 'manual' && pg.payload) return json({ payload: pg.payload, id, valor: pg.valor, manual: true, provedor: 'manual', teste: false });
+    if (mesmo && pg.provedor === 'manual' && pg.payload && Date.now() - (pg.manualEm || 0) < 10 * 60e3) return json({ payload: pg.payload, id, valor: pg.valor, manual: true, provedor: 'manual', teste: false });
+    if (mesmo && pg.provedor === 'efi' && pg.payload && Date.now() - (pg.criadoEm || 0) < 100 * 60e3) return json({ payload: pg.payload, id, valor: pg.valor, provedor: 'efi', teste: false });
 
     const valor = PACOTES_LIVRO[tipo].valor;
+    // 26/11 (Gusthavo): EFÍ É A PRINCIPAL — libera sozinho quando o banco confirma. Se falhar → Nubank.
+    if (!(await pularEfi())) {
+      try {
+        const r = await cobrancaEfi(id, valor, 'Livro Mágico', { produto: 'livro' }), agora = Date.now();
+        g.criadoEm = g.criadoEm || agora;
+        g.pagamento = { provedor: 'efi', txid: r.txid, status: 'ATIVA', valor, duracao: 'vitalicio', criadoEm: agora, payload: r.payload, pacote: tipo, tema2 };
+        g.pacote = { tipo, tema2 };
+        await presentes.setJSON(id, g);
+        try { await indexarDia('p', id); if (g.whatsapp) await indexar(g.whatsapp, 'p', id); } catch (e) {}
+        return json({ payload: r.payload, id, valor, provedor: 'efi', teste: false });
+      } catch (e) { console.error('livro Efí falhou (vai pro Nubank):', e && e.message); await marcarEfiFalhou('livro: ' + (e && e.message)); }
+    }
     const ref = refPedido(id), payload = (await lerCfgPix().catch(() => null), brcode(valor, ref)), agora = Date.now();
     g.criadoEm = g.criadoEm || agora;
     g.pagamento = { provedor: 'manual', txid: ref, status: 'AGUARDANDO', valor, duracao: 'vitalicio', manualEm: agora, payload, pacote: tipo, tema2 };

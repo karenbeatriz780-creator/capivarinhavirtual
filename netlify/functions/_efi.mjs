@@ -144,3 +144,25 @@ export async function listarPixRecebidos(token, inicio, fim, maxPaginas = 5) {
   }
   return todos;
 }
+
+/* 26/11: cobrança Pix na Efí pra qualquer pedido (livro, etc.). Liga o txid ao pedido (o webhook libera sozinho).
+   Devolve { payload, txid } ou lança erro (aí quem chamou cai no Pix do Nubank). */
+export async function cobrancaEfi(giftId, valor, descricao, extra = {}) {
+  const chave = (process.env.EFI_PIX_KEY || '').trim();
+  if (!chave) throw new Error('sem EFI_PIX_KEY');
+  const { default: crypto } = await import('node:crypto');
+  const txid = crypto.createHash('sha256').update(String(giftId) + ':' + Date.now() + ':' + crypto.randomUUID()).digest('hex').slice(0, 32);
+  const { getStore } = await import('@netlify/blobs');
+  await getStore('efi-txid').setJSON(txid, Object.assign({ giftId, valor, criadoEm: Date.now() }, extra));
+  const token = await obterToken();
+  const cob = await efiRequest('/v2/cob/' + encodeURIComponent(txid), { method: 'PUT', token, body: {
+    calendario: { expiracao: 7200 }, valor: { original: Number(valor).toFixed(2) }, chave,
+    solicitacaoPagador: (String(descricao || 'Pedido') + ' - Capivarinha Love').slice(0, 140),
+    infoAdicionais: [{ nome: 'Pedido', valor: String(giftId).slice(0, 50) }] } });
+  if (!cob.ok) throw new Error('cobrança: ' + erroEfi(cob.data, cob.status));
+  const locId = cob.data && cob.data.loc && cob.data.loc.id;
+  if (locId == null) throw new Error('sem loc');
+  const qr = await efiRequest('/v2/loc/' + encodeURIComponent(locId) + '/qrcode', { token });
+  if (!qr.ok || !qr.data || !qr.data.qrcode) throw new Error('QR: ' + erroEfi(qr.data, qr.status));
+  return { payload: qr.data.qrcode, txid };
+}
