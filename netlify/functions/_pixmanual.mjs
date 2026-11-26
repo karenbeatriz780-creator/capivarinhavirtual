@@ -47,9 +47,7 @@ export async function salvarCfgPix(m) { const c = Object.assign({}, await lerCfg
 // 26/11 (Gusthavo): VOLTOU a Efí — Pix automático (o banco avisa e libera sozinho). Se a Efí falhar → Pix do Nubank por 10 min.
 export async function pularEfi() {
   try {
-    const c = await lerCfgPix();
-    if (c.modo === 'manual') return true;
-    if (c.modo === 'efi') return false;
+    // 26/11 (Gusthavo): a Efí é SEMPRE a principal (ignora o "Só o meu Pix" do painel). Só cai no Nubank se a Efí falhar (10 min).
     const f = (await cfgLoja().get('cfg_pixmanual', { type: 'json' }).catch(() => null)) || {};
     return !!(f.efiFalhouEm && Date.now() - f.efiFalhouEm < 10 * 60e3);
   } catch (e) { return false; }

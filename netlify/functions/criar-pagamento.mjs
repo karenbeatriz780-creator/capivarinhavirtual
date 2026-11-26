@@ -215,7 +215,7 @@ export default async (req) => {
       };
       const pixManual = pixManualFn;
       // 💳 INFINITEPAY (principal): link de pagamento (Pix ou cartão) — libera sozinho quando a InfinitePay confirma
-      if (await ipLigada()) {
+      if ((await pularEfi()) && await ipLigada()) { // 26/11: Efí principal; InfinitePay só se a Efí estiver fora
         try {
           const desc = (pacote6 ? '6 Músicas Personalizadas' : comboDaMusica ? ('4 Músicas + ' + pacote.nome) : (presente.ofertaM1 || quatro) ? '4 Músicas Personalizadas' : pacote.nome) + extrasPix.map((k) => ' + ' + EXTRAS_PIX[k].nome).join('') + ' - Capivarinha Love';
           const lk = await criarLinkIP(presente.id, precoFinal, desc, { nome: salvo.meuNome || presente.meuNome, tel: salvo.musicaWhatsapp || salvo.whatsapp || presente.musicaWhatsapp || presente.whatsapp });
