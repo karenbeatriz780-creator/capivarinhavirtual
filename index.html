@@ -1186,6 +1186,7 @@ textarea.inp{resize:vertical;min-height:7rem;line-height:1.6;}
 .dsh-proj span{display:block;font-size:.72rem;color:#9A7A88;}
 .dsh-proj b{font-size:1.02rem;font-weight:900;color:#2A0F1C;font-variant-numeric:tabular-nums;}
 .dsh-card{border:1.5px solid #F2E4EA;border-radius:20px;padding:.9rem;}
+.of-grade{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.5rem 0}.of-grade>div{background:rgba(194,24,91,.06);border-radius:12px;padding:.55rem .6rem}.of-grade b{display:block;font-size:1.45rem;font-weight:900;color:#C2185B}.of-grade span{font-size:.78rem}.of-grade i{font-style:normal;font-weight:800;color:#1F8A4C;margin-left:.2rem}.of-fat{font-size:.9rem;margin:.3rem 0}.of-leg{display:flex;gap:.8rem;flex-wrap:wrap;font-size:.75rem;margin:.3rem 0 .6rem}.of-leg i{display:inline-block;width:.7rem;height:.7rem;border-radius:3px;margin-right:.25rem;vertical-align:-1px}.of-graf{display:flex;gap:.35rem;align-items:flex-end;height:170px}.of-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%}.of-bars{flex:1;width:100%;display:flex;gap:2px;align-items:flex-end}.of-bar{flex:1;border-radius:4px 4px 0 0;position:relative;min-height:2px}.of-bar em{position:absolute;top:-1.05rem;left:0;right:0;text-align:center;font-style:normal;font-size:.62rem;font-weight:800}.of-col small{font-size:.66rem;margin-top:.2rem}.of-col .of-r{color:#1F8A4C;font-weight:800;margin-top:0}
 .dsh-t{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;font-weight:900;font-size:.95rem;margin-bottom:.6rem;color:#2A0F1C;}
 .dsh-t small{font-weight:600;font-size:.72rem;color:#9A7A88;display:flex;align-items:center;gap:.3rem;}
 .lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:.4rem;}
@@ -9774,6 +9775,7 @@ function pnlCampLigar(body){
   if(_pnlAba==='aprender'){ if(!_pnlApr) pnlAprCarregar(); pnlAprLigar(); }
   if(_pnlAba==='especial'){ if(!_pnlEs) pnlEsCarregar(); pnlEsLigar(); }
   if(_pnlAba==='vendas5'){ if(!_pnlV5) pnlV5Carregar(); pnlV5Ligar(); }
+  if(_pnlAba==='ofertas'){ if(!_pnlOf || Date.now()-_pnlOfEm>120000) pnlOfCarregar(); }
   if(_pnlAba==='aumento'){ if(!_pnlAu) pnlAuCarregar(); pnlAuLigar(); }
   if(_pnlAba==='desistem'){ if(!_pnlFm||_pnlFm.p!==_pnlFmP) pnlFmCarregar(); pnlFmLigar(); }
   if(_pnlAba==='pagos' && el('pnlRefIds')){ try{ el('pnlRefIds').value=localStorage.getItem('cl_ref_ids')||''; el('pnlRefTestes').value=localStorage.getItem('cl_ref_testes')||''; }catch(x){} }
@@ -9860,6 +9862,40 @@ function pnlEsLigar(){
     if(!confirm('Ativar o MODO ESPECIAL nessa campanha'+(orc?' com R$ '+orc+'/dia':'')+'?\n\nO robô liga agora e desliga se gastar R$ 30 sem venda ou R$ 40 com só 1 venda.')) return;
     post({acao:'ativar',id:x.dataset.esativar,orc:orc}, x, '⭐ Modo especial ativado'); }; });
   document.querySelectorAll('[data-estirar]').forEach(function(x){ x.onclick=function(){ post({acao:'tirar',id:x.dataset.estirar}, x, 'Tirada do modo especial'); }; });
+}
+/* 🎁 OFERTAS (26/11): depois da venda — clipe/retrato, "para sempre", outras — por dia, com gráfico */
+var _pnlOf=null,_pnlOfEm=0,_pnlOfCarr=false;
+function pnlOfCarregar(){
+  if(_pnlOfCarr) return; _pnlOfCarr=true;
+  fetch('/.netlify/functions/admin-ofertas',{cache:'no-store'}).then(function(r){ return r.json(); })
+    .then(function(d){ _pnlOfCarr=false; _pnlOf=d||{}; _pnlOfEm=Date.now(); if(_pnlAba==='ofertas') pnlRedesenhar(); })
+    .catch(function(){ _pnlOfCarr=false; _pnlOf={erro:'Sem conexão.'}; if(_pnlAba==='ofertas') pnlRedesenhar(); });
+}
+function pnlOfHtml(){
+  var topo='<div class="dsh-card"><div class="dsh-t">🎁 Ofertas depois da venda</div><div class="dsh-nota">Quanto entra <b>a mais</b> além da música: clipe + retrato (no Pix ou na oferta de R$ 7,99), "para sempre" (R$ 5) e outras ofertas. Últimos 7 dias.</div></div>';
+  var D=_pnlOf;
+  if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando…</div></div>';
+  if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
+  var ds=D.dias||[], R=function(n){ return 'R$ '+Number(n||0).toFixed(2).replace('.',','); }, pc=function(a,b){ return b?Math.round(a*100/b)+'%':'—'; };
+  var h=ds[ds.length-1]||{}, sem={clientes:0,noPix:0,cq:0,sempre:0,outras:0,fatNoPix:0,fatCq:0,fatSempre:0,fatOutras:0,total:0};
+  ds.forEach(function(d){ Object.keys(sem).forEach(function(k){ sem[k]+=Number(d[k]||0); }); });
+  function bloco(t,x,rot){
+    var extra=x.fatNoPix+x.fatCq+x.fatSempre+x.fatOutras;
+    return '<div class="dsh-card"><div class="dsh-t">'+t+'</div><div class="of-grade">'+
+      '<div><b>'+x.clientes+'</b><span>clientes</span></div>'+
+      '<div><b>'+(x.noPix+x.cq)+'</b><span>🎬 clipe + 🖼️ retrato <i>'+pc(x.noPix+x.cq,x.clientes)+'</i></span></div>'+
+      '<div><b>'+x.sempre+'</b><span>♾️ para sempre <i>'+pc(x.sempre,x.clientes)+'</i></span></div>'+
+      '<div><b>'+x.outras+'</b><span>outras ofertas</span></div></div>'+
+      '<div class="of-fat">Faturou com ofertas: <b>'+R(extra)+'</b> · total do dia: <b>'+R(x.total)+'</b></div>'+
+      '<div class="dsh-nota">Clipe + retrato: '+x.noPix+' no Pix ('+R(x.fatNoPix)+') + '+x.cq+' na oferta de R$ 7,99 ('+R(x.fatCq)+') · Para sempre: '+R(x.fatSempre)+' · Outras: '+R(x.fatOutras)+'</div></div>';
+  }
+  var max=1; ds.forEach(function(d){ max=Math.max(max,d.clientes,d.noPix+d.cq,d.sempre); });
+  var cores=[['#C2185B','clientes'],['#E9B94F','clipe + retrato'],['#5B7FE0','para sempre']];
+  var graf='<div class="dsh-card"><div class="dsh-t">📊 Por dia</div><div class="of-leg">'+cores.map(function(c){ return '<span><i style="background:'+c[0]+'"></i>'+c[1]+'</span>'; }).join('')+'</div><div class="of-graf">'+
+    ds.map(function(d){ var v=[d.clientes,d.noPix+d.cq,d.sempre];
+      return '<div class="of-col"><div class="of-bars">'+v.map(function(n,i){ return '<div class="of-bar" style="height:'+Math.max(2,Math.round(n*100/max))+'%;background:'+cores[i][0]+'"><em>'+(n||'')+'</em></div>'; }).join('')+'</div><small>'+d.dia.slice(8)+'/'+d.dia.slice(5,7)+'</small><small class="of-r">'+R(d.fatNoPix+d.fatCq+d.fatSempre+d.fatOutras).replace('R$ ','+')+'</small></div>'; }).join('')+
+    '</div><div class="dsh-nota">Embaixo de cada dia: quanto entrou a mais com ofertas.</div></div>';
+  return topo+bloco('📅 Hoje',h,'total do dia')+graf+bloco('🗓️ Últimos 7 dias',sem,'total dos 7 dias')+'<button type="button" class="pnl-mais" onclick="_pnlOf=null;pnlOfCarregar();pnlRedesenhar()">↻ Atualizar</button>';
 }
 /* ✅ VENDAS 5 DIAS: campanhas que venderam nos últimos 5 dias (ligadas e desligadas), com botão de ligar */
 var _pnlV5=null, _pnlV5Carr=false;
@@ -10623,7 +10659,7 @@ function desenharPainel(pedidos, visitas, musicas){
 
   body.innerHTML=
     '<div class="pnl-abas pnl-abas-main" id="pnlAbas">'+
-      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['desistem','🔻','Onde desistem'],['aumento','📈','Aumento'],['vendas5','✅','Vendas 5 dias'],['especial','⭐','Modo especial'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
+      [['hoje','📊','Dashboard'],['campanhas','📣','Campanhas'],['subir','⬆️','Subir'],['vigiar','🛡️','Vigiar'],['meianoite','🌙','Meia-noite'],['aprender','🎓','Aprendizagem'],['desistem','🔻','Onde desistem'],['aumento','📈','Aumento'],['vendas5','✅','Vendas 5 dias'],['especial','⭐','Modo especial'],['ofertas','🎁','Ofertas'],['musicas','🎵','Músicas'],['livros','📚','Livros'],['pagos','💰','Pagamentos'],['gastos','💸','Gastos']].map(function(a){
         return '<button type="button" class="pnl-aba'+(_pnlAba===a[0]?' on':'')+'" data-aba="'+a[0]+'"><i>'+a[1]+'</i><span>'+a[2]+'</span></button>'; }).join('')+
     '</div>'+
     '<div class="pnl-abas pnl-abas-mais"><small>Mais:</small>'+
@@ -10645,6 +10681,7 @@ function desenharPainel(pedidos, visitas, musicas){
     (_pnlAba==='desistem' ? pnlFmHtml() : '')+
     (_pnlAba==='aumento' ? pnlAuHtml() : '')+
     (_pnlAba==='vendas5' ? pnlV5Html() : '')+
+    (_pnlAba==='ofertas' ? pnlOfHtml() : '')+
     (_pnlAba==='especial' ? pnlEsHtml() : '')+
     (_pnlAba==='hoje' ? pnlHojeHtml(pedidos, _pnlCache.custos||{}) : '')+
     (_pnlAba==='pagos'
