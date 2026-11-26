@@ -8,7 +8,7 @@ const L = () => getStore('gastos');
 const num = (x) => { const n = Number(String(x == null ? '' : x).replace(',', '.')); return isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : 0; };
 export default async (req) => {
   const senha = (process.env.ADMIN_SENHA || '').trim();
-  if (!senha || (req.headers.get('x-admin-key') || '') !== senha) return json({ erro: 'Senha de administrador incorreta.' }, 401);
+  // 26/11: sem senha (pedido do Gusthavo) — vigia só protege, não mexe em orçamento
   const vigias = (await L().get('vigias', { type: 'json' }).catch(() => null)) || {};
   if (req.method === 'GET') return json({ vigias });
   let b = {}; try { b = await req.json(); } catch (e) {}

@@ -6,7 +6,7 @@ import { diaBR, brl } from './_resumo.mjs';
 
 export const config = { schedule: '*/10 * * * *' };
 const COMPRA = ['purchase', 'offsite_conversion.fb_pixel_purchase', 'omni_purchase'];
-const JANELA = 40 * 60000;
+const JANELA = 24 * 3600e3; // 26/11 (Gusthavo): vigia o RESTO DO DIA — contou compra, religa
 
 export default async () => {
   const L = getStore('gastos');

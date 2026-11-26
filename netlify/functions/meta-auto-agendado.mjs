@@ -148,12 +148,12 @@ export async function rodarRobo(simular) {
           catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui desligar à meia-noite: ' + e.message }); }
           continue;
         }
-        if (fora.indexOf(String(c.id)) >= 0 || !/PAUSED/.test(String(c.status || ''))) continue;
-        if (!top.has(c.id)) continue; // 🏆 só liga as 10 melhores (as outras só se VOCÊ ligar)
+        if (!/PAUSED/.test(String(c.status || ''))) continue;
+        if ((mn.dentro || []).map(String).indexOf(String(c.id)) < 0) continue; // 26/11 (Gusthavo): à meia-noite SÓ liga as que VOCÊ marcou na aba 🌙
         if (jaAgora) { const ap = acoes[c.id]; if (ap && ap.tipo === 'pausar' && diaBR(ap.em) === hoje) continue; } // desligada hoje pela regra do dia → não religa agora
         if (mc) mc.status = 'ACTIVE';
         try { if (!simular) { await aplicarAcao(c, 'ativar', 'robô (meia-noite)'); acoes[c.id] = { tipo: 'ativar', quem: 'robô (meia-noite)', em: agora }; }
-          feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: (jaAgora ? '⚡ análise de agora' : '🌙 dia novo') + ': liguei — 🏆 está entre as 10 melhores (' + txt + ')' }); }
+          feitas.push({ tipo: 'religou', camp: c.nome, id: c.id, aviso: false, motivo: (jaAgora ? '⚡ análise de agora' : '🌙 dia novo') + ': liguei — você marcou pra meia-noite (' + txt + ')' }); }
         catch (e) { feitas.push({ tipo: 'erro', camp: c.nome, id: c.id, aviso: true, motivo: 'não consegui ligar à meia-noite: ' + e.message }); }
       }
     }
@@ -257,15 +257,16 @@ export async function rodarRobo(simular) {
     let diasRuins = 0; for (const d of [ontem, diaBR(agora - 2 * 864e5), diaBR(agora - 3 * 864e5)]) { const x = (c.dias || {})[d] || {}; if ((x.gasto || 0) >= 5 && !(x.compras || 0) && !(s.porDia[d] || 0)) diasRuins++; }
     const semChance = !boa && diasRuins >= 2, LIM_SEM = boa ? 20 : semChance ? 5 : 7; // 22/11: campanha boa pode gastar até R$ 20 sem compra
     let semCompra = false;
-    if (cfg.autoPausar && !voceAtivou && !eua) { // REGRA DE 15/11 (Brasil)
-      if (vH === 0 && gH >= LIM_SEM) { pausar = 'hoje gastou ' + brl(gH) + ' sem nenhuma compra (' + (boa ? '⭐ campanha boa, limite R$ 20' : semChance ? 'sem chance: ' + diasRuins + ' dos últimos 3 dias sem nenhuma venda, limite R$ 5' : 'campanha nova/parada, limite R$ 7') + ')'; semCompra = true; }
-      // 22/11 (Gusthavo): NÃO existe média — vale o custo por compra DO DIA. Passou de R$ 10 hoje → desliga; não passou → fica.
-      //   Campanha ⭐ boa (vendeu bem nos dias anteriores) começa cara e termina positiva → fica ligada (só a regra do "sem compra" vale pra ela).
-      else if (!boa && vDia > 0 && gH / vDia > CPA_DIA) pausar = 'hoje o custo por compra está ' + brl(gH / vDia) + ' (' + vDia + ' compra(s), gasto ' + brl(gH) + ') — passou de ' + brl(CPA_DIA) + ' no dia';
-      // 22/11 13h: ⭐ campanha boa → 1 compra: pode gastar até R$ 20
-      // 23/11 (Gusthavo): o corte de R$ 8 derrubou campanha LUCRANDO (12z a R$ 8,08) → campanha boa com 2+ compras só sai se passar de R$ 10 por compra, igual às outras
-      else if (boa && vDia === 1 && gH > 20) pausar = '⭐ campanha boa: 1 compra e já gastou ' + brl(gH) + ' (limite R$ 20)';
-      else if (boa && vDia >= 2 && gH / vDia > CPA_DIA) pausar = '⭐ campanha boa: ' + vDia + ' compras a ' + brl(gH / vDia) + ' cada (gasto ' + brl(gH) + ') — passou de ' + brl(CPA_DIA) + ' por compra';
+    const vgP = vigias[c.id] && vigias[c.id].ligado; // 🛡️ campanha POTENCIAL (você ligou o vigia): só vale o SEU limite (vazio = solta)
+    if (cfg.autoPausar && !voceAtivou && !eua && !vgP) { // 26/11 (Gusthavo): REGRA ÚNICA DO BRASIL
+      // R$ 7 sem nenhuma compra no dia → desliga (e fica vigiando o resto do dia: apareceu compra, religa sozinho)
+      if (vH === 0 && gH >= 7) { pausar = 'hoje gastou ' + brl(gH) + ' sem nenhuma compra (limite R$ 7)'; semCompra = true; }
+      // com compra: deixa solta (de manhã pode estar a R$ 11, R$ 14 — vai baixando). Só 1 aviso por dia se passar de R$ 15 por compra.
+      else if (vDia > 0 && gH / vDia > 15) {
+        const kC = 'cpa15_' + c.id + '_' + hoje;
+        if (simular || !(await L().get(kC).catch(() => null))) { if (!simular) await L().set(kC, '1').catch(() => {});
+          feitas.push({ tipo: 'alerta', camp: c.nome, id: c.id, aviso: true, motivo: '👀 está a ' + brl(gH / vDia) + ' por compra hoje (' + vDia + ' compra(s), gasto ' + brl(gH) + '). Deixei ligada — só te aviso 1 vez hoje.' }); }
+      }
     } else if (cfg.autoPausar && !voceAtivou && aprendeu) { // 🇺🇸 EUA: média de 3 dias
       if (v3 === 0 && g3 >= PRIM_C) pausar = 'em 3 dias gastou ' + brl(g3) + ' e não fez nenhuma compra' + (eua ? ' (EUA, limite ' + brl(PRIM_C) + ')' : '');
       else if (v3 > 0 && g3 / v3 > CPA_C) pausar = 'média de 3 dias: custo por compra ' + brl(g3 / v3) + ' (' + v3 + ' compra(s), gasto ' + brl(g3) + ') — passou do máximo de ' + brl(CPA_C);

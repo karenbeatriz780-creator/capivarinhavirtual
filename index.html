@@ -9812,20 +9812,19 @@ function pnlVigCarregar(){
 var _pnlMN=null, _pnlMNCarr=false, _pnlMNT=null;
 function pnlMNCarregar(){
   if(_pnlMNCarr) return; _pnlMNCarr=true;
-  fetch('/.netlify/functions/admin-meianoite',{headers:{'x-admin-key':_pnlChave},cache:'no-store'}).then(function(r){ return r.json(); })
+  fetch('/.netlify/functions/admin-meianoite',{cache:'no-store'}).then(function(r){ return r.json(); })
     .then(function(d){ _pnlMNCarr=false; _pnlMN=d||{}; if(_pnlAba==='meianoite') pnlRedesenhar(); })
     .catch(function(){ _pnlMNCarr=false; _pnlMN={erro:'Sem conexão.'}; if(_pnlAba==='meianoite') pnlRedesenhar(); });
 }
 function pnlMNHtml(){
   var D=_pnlMN;
-  var topo='<div class="dsh-card"><div class="dsh-t">🌙 Ligar à meia-noite</div><div class="dsh-nota">À meia-noite o robô <b>só liga as 🏆 10 melhores</b>: as que mais venderam na última semana com custo médio <b>até R$ 9,50 por venda</b> (empate: a mais barata). As outras ele não liga — só se você ligar. Pra tirar uma das 10, desmarque aqui que entra a próxima da fila. (Hoje começa às 23h.) E as ligadas sem futuro que já gastaram R$ 10+ na semana sem provar que vendem, ele <b>desliga</b> à meia-noite (campanha nova fica). Desmarque as que você não quer que liguem de jeito nenhum.<br><br>'+
-    '<b>Durante o dia</b> (gasto sem nenhuma compra): ⭐ boa → até <b>R$ 10</b>; nova → até <b>R$ 7</b>; sem chance → até <b>R$ 5</b>. Vendendo, mas a média de 3 dias passou de <b>R$ 9,50</b> por venda → desliga. <b>ROAS 1,5 é a meta geral da conta</b> — não desliga campanha por isso. 🎓 Campanhas de aprendizagem nunca são desligadas. Campanha que você ligou na mão hoje é respeitada até a meia-noite.</div></div>';
+  var topo='<div class="dsh-card"><div class="dsh-t">🌙 Ligar à meia-noite</div><div class="dsh-nota">À meia-noite o robô <b>só liga as que você marcar aqui</b>. As marcadas com <b style="color:#1F8A4C">🏆</b> são as 10 que mais se destacaram na semana (vendas constantes com custo bom) — é a indicação do robô; você escolhe.<br><b>Durante o dia</b>: gastou <b>R$ 7 sem nenhuma compra</b> → desliga. Se depois aparecer a compra (o Meta atrasa), ele <b>religa sozinho</b> (vigia o resto do dia). Com compra, fica <b>solta</b> — só 1 aviso por dia se passar de R$ 15 por compra.<br><b>Campanha potencial</b> (ex.: Aterfato 1): ligue o vigia na aba 🛡️ <b>Vigiar</b> e coloque o seu limite — ela não segue os R$ 7. Limite vazio = solta.</div></div>';
   if(!D) return topo+'<div class="dsh-card"><div class="pnl-nota">Carregando campanhas…</div></div>';
   if(D.erro) return topo+'<div class="dsh-card"><div class="pnl-nota">⚠️ '+esc(D.erro)+'</div></div>';
-  var fora=D.fora||[], cs=D.campanhas||[], marc=cs.filter(function(c){ return fora.indexOf(c.id)<0; }).length;
+  var dentro=D.dentro||(D.dentro=[]), cs=D.campanhas||[], marc=cs.filter(function(c){ return dentro.indexOf(c.id)>=0; }).length;
   return topo+'<div class="dsh-card"><div class="mn-bar"><b id="mnCont">'+marc+' de '+cs.length+' marcadas</b><span><a href="#" id="mnTodas">marcar todas</a> · <a href="#" id="mnNenhuma">desmarcar todas</a></span></div>'+
     '<input type="search" id="mnBusca" class="mn-busca" placeholder="Buscar pelo nome…">'+
-    '<div class="mn-lista">'+cs.map(function(c){ var on=fora.indexOf(c.id)<0, at=c.status==='ACTIVE';
+    '<div class="mn-lista">'+cs.map(function(c){ var on=dentro.indexOf(c.id)>=0, at=c.status==='ACTIVE';
       return '<label class="mn-it" data-mnnome="'+esc(String(c.nome||'').toLowerCase())+'"><input type="checkbox" data-mn="'+esc(c.id)+'"'+(on?' checked':'')+'><span>'+esc(c.nome||c.id)+(c.fut?'<br><small style="color:'+(c.top||c.aprend?'#1F8A4C':'#b23')+'">'+(c.aprend?'🎓 aprendizagem (sempre ligada)':c.top?'🏆 entre as 10 melhores — vai ligar':'✖ fora das 10 — não liga')+' · '+c.fut.vendas+' venda(s) na semana'+(c.fut.cpa!=null?' a R$ '+fmtPreco(c.fut.cpa)+' cada':'')+'</small>':'')+'</span><i class="'+(at?'on':'')+'">'+(at?'ligada':'desligada')+'</i></label>'; }).join('')+'</div>'+
     '<div class="sub" id="mnSalvo" style="margin-top:.4rem">As mudanças salvam sozinhas.</div></div>';
 }
@@ -10074,12 +10073,12 @@ function pnlAprLigar(){
 function pnlMNLigar(){
   if(!_pnlMN||!_pnlMN.campanhas) return;
   function salvar(){ clearTimeout(_pnlMNT); var sv=el('mnSalvo'); if(sv) sv.textContent='Salvando…';
-    _pnlMNT=setTimeout(function(){ fetch('/.netlify/functions/admin-meianoite',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({fora:_pnlMN.fora})}).then(function(r){ return r.json(); })
+    _pnlMNT=setTimeout(function(){ fetch('/.netlify/functions/admin-meianoite',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':_pnlChave},body:JSON.stringify({dentro:_pnlMN.dentro})}).then(function(r){ return r.json(); })
       .then(function(d){ var sv=el('mnSalvo'); if(sv) sv.textContent=d&&d.ok?'Salvo ✓':'⚠️ Não salvou: '+((d&&d.erro)||''); }).catch(function(){ var sv=el('mnSalvo'); if(sv) sv.textContent='⚠️ Sem conexão — não salvou'; }); },600); }
-  function cont(){ var c=el('mnCont'), n=_pnlMN.campanhas.length; if(c) c.textContent=(n-_pnlMN.fora.length)+' de '+n+' marcadas'; }
-  document.querySelectorAll('[data-mn]').forEach(function(x){ x.onchange=function(){ var id=x.dataset.mn, f=_pnlMN.fora, i=f.indexOf(id); if(x.checked){ if(i>=0) f.splice(i,1); } else if(i<0) f.push(id); cont(); salvar(); }; });
-  var t=el('mnTodas'); if(t) t.onclick=function(e){ e.preventDefault(); _pnlMN.fora=[]; document.querySelectorAll('[data-mn]').forEach(function(x){ x.checked=true; }); cont(); salvar(); };
-  var n=el('mnNenhuma'); if(n) n.onclick=function(e){ e.preventDefault(); if(!confirm('Desmarcar todas? Aí o robô não liga nenhuma à meia-noite.')) return; _pnlMN.fora=_pnlMN.campanhas.map(function(c){ return c.id; }); document.querySelectorAll('[data-mn]').forEach(function(x){ x.checked=false; }); cont(); salvar(); };
+  function cont(){ var c=el('mnCont'), n=_pnlMN.campanhas.length; if(c) c.textContent=_pnlMN.dentro.length+' de '+n+' marcadas'; }
+  document.querySelectorAll('[data-mn]').forEach(function(x){ x.onchange=function(){ var id=x.dataset.mn, f=_pnlMN.dentro, i=f.indexOf(id); if(!x.checked){ if(i>=0) f.splice(i,1); } else if(i<0) f.push(id); cont(); salvar(); }; });
+  var t=el('mnTodas'); if(t) t.onclick=function(e){ e.preventDefault(); _pnlMN.dentro=_pnlMN.campanhas.map(function(c){ return c.id; }); document.querySelectorAll('[data-mn]').forEach(function(x){ x.checked=true; }); cont(); salvar(); };
+  var n=el('mnNenhuma'); if(n) n.onclick=function(e){ e.preventDefault(); if(!confirm('Desmarcar todas? Aí o robô não liga nenhuma à meia-noite.')) return; _pnlMN.dentro=[]; document.querySelectorAll('[data-mn]').forEach(function(x){ x.checked=false; }); cont(); salvar(); };
   var b=el('mnBusca'); if(b) b.oninput=function(){ var q=b.value.trim().toLowerCase(); document.querySelectorAll('.mn-it').forEach(function(l){ l.style.display=!q||l.dataset.mnnome.indexOf(q)>=0?'':'none'; }); };
 }
 function pnlVigiarHtml(){
