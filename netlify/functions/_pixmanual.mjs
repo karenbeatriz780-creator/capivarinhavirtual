@@ -45,13 +45,8 @@ export async function salvarCfgPix(m) { const c = Object.assign({}, await lerCfg
 // Efí recusou há pouco? (não fica batendo nela a cada pedido: pula por 10 min)
 // 16/11 (regra do Gusthavo): TODOS os pagamentos no Pix do Nubank (+ cartão pelo Stripe) — a Efí não é mais usada pra gerar Pix
 // 26/11 (Gusthavo): VOLTOU a Efí — Pix automático (o banco avisa e libera sozinho). Se a Efí falhar → Pix do Nubank por 10 min.
-export async function pularEfi() {
-  try {
-    // 26/11 (Gusthavo): a Efí é SEMPRE a principal (ignora o "Só o meu Pix" do painel). Só cai no Nubank se a Efí falhar (10 min).
-    const f = (await cfgLoja().get('cfg_pixmanual', { type: 'json' }).catch(() => null)) || {};
-    return !!(f.efiFalhouEm && Date.now() - f.efiFalhouEm < 10 * 60e3);
-  } catch (e) { return false; }
-}
+// 26/11 (Gusthavo): NUBANK é o principal (a conta da Efí está bloqueada pela Efí). Pra voltar a Efí, trocar pra false.
+export async function pularEfi() { return true; }
 export async function marcarEfiFalhou(erro) { try { await salvarCfgPix({ efiFalhouEm: Date.now(), efiErro: String(erro || '').slice(0, 200) }); } catch (e) {} }
 export async function podeManual() { return true; }
 

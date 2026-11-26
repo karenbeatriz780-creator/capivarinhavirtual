@@ -8,7 +8,8 @@ import { entregarPedidoPagoZap } from './_zap.mjs';
 // ligado a cada um (pelo txid da cobrança). Assim, mesmo se o aviso automático
 // da Efí (webhook) falhar, ninguém fica pago e sem a música.
 // Pix que caiu e não tem pedido ligado fica guardado pro painel mostrar.
-export const config = { schedule: '*/10 * * * *' }; // 26/11: Efí religada — reserva caso o aviso do banco falhe
+// 26/11: DESLIGADO — Nubank é o principal (Efí bloqueada). Pra religar, volte a linha abaixo.
+// export const config = { schedule: '*/10 * * * *' };
 
 export default async () => {
   const t0 = Date.now();
