@@ -129,6 +129,8 @@ async function criarMusicaKie(input) {
     prompt: custom ? String(input.prompt || '').slice(0, 5000) : String(input.gpt_description_prompt || input.prompt || '').slice(0, 500)
   };
   if (custom) { corpo.style = String(input.tags || '').slice(0, 1000); corpo.title = String(input.title || 'Nossa música').slice(0, 80); }
+  // 🎤 27/11: música na VOZ DO CLIENTE (Suno Voice criada na Kie)
+  if (input.persona_id) { corpo.personaId = String(input.persona_id); corpo.personaModel = 'voice_persona'; if (corpo.model === 'V6_MINI') corpo.model = 'V6'; }
   try {
     const r = await fetch(KIEAPI + '/api/v1/generate', {
       method: 'POST', headers: { Authorization: 'Bearer ' + ch, 'Content-Type': 'application/json' }, body: JSON.stringify(corpo)
@@ -256,7 +258,8 @@ export async function sunoFetch(url, init) {
   if (corpo.model === 'suno-ai/music') kid = await criarMusicaKie(corpo.input || {});
   else if (IMG_KIE[corpo.model]) kid = await criarImagemKie(corpo.model, corpo.input || {});
   if (kid) return jsonResp({ data: { task_id: kid } }, 200);
-  // 2º Unifically (reserva)
+  // 2º Unifically (reserva) — sem a voz do cliente (ela só existe na Kie)
+  if (corpo.input && corpo.input.persona_id) { delete corpo.input.persona_id; init = Object.assign({}, init, { body: JSON.stringify(corpo) }); }
   if (kieChave() && (corpo.model === 'suno-ai/music' || IMG_KIE[corpo.model])) console.log('Kie falhou — usando Unifically (' + corpo.model + ')');
   try { return await fetch(url, init); } catch (e) { return jsonResp({ error: 'rede' }, 502); }
 }

@@ -340,6 +340,7 @@ export default async (req) => {
     const frase = String((body && body.frase) || '').trim();
     const voz = String((body && body.voz) || '').trim();
     const letraAprovada = String((body && body.letraAprovada) || '').trim();
+    const vozId = /^[A-Za-z0-9_-]{6,80}$/.test(String((body && body.vozId) || '')) ? String(body.vozId) : ''; // 🎤 voz do cliente (Kie)
     const idioma = (body && body.idioma) === 'en' ? 'en' : 'pt';
 
     if (!estilo) return json({ erro: 'Escolhe um estilo primeiro.' }, 400);
@@ -415,6 +416,7 @@ export default async (req) => {
           title: idioma === 'en' ? 'Our Song' : 'Nossa música'
         };
 
+    if (vozId) { inputSuno.persona_id = vozId; console.log('🎤 VOZ DO CLIENTE >> ' + vozId); }
     // Registra exatamente o que vai pra Suno — é o que permite conferir,
     // quando a música sai fora do estilo, se o erro foi nosso ou dela.
     console.log('PEDIDO DE MUSICA >> genero=' + estilo + ' | clima=' + clima +
@@ -466,6 +468,7 @@ export default async (req) => {
         nomes: nomesLetra,
         historia: texto.slice(0, 400),
         letraAprovada: usarLetraLiteral ? inputSuno.prompt : null,
+        vozId: vozId || null,
         idioma: idioma,
         whatsapp: String((body && body.whatsapp) || '').trim(),
         // Gerada pelo painel (ajuste de letra) → fica ligada ao pedido original
