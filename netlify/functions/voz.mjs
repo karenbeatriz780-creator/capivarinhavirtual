@@ -25,6 +25,12 @@ export default async (req) => {
         if (!buf) return new Response('', { status: 404 });
         return new Response(buf, { headers: { 'Content-Type': 'audio/wav', 'Content-Length': String(buf.byteLength), 'Cache-Control': 'private, max-age=86400' } });
       }
+      if (u.searchParams.get('diag')) { // últimos avisos da Kie (pra entender o erro)
+        const l = await st().list({ prefix: 'cb_' }).catch(() => ({ blobs: [] }));
+        const ks = (l.blobs || []).map((x) => x.key).sort().slice(-6);
+        const itens = await Promise.all(ks.map((k) => st().get(k, { type: 'json' }).catch(() => null)));
+        return json({ avisos: itens });
+      }
       const t = u.searchParams.get('t');
       if (!t || !/^[A-Za-z0-9_-]{6,80}$/.test(t)) return json({ erro: 'tarefa?' }, 400);
       const d = await kie('/api/v1/jobs/recordInfo?taskId=' + encodeURIComponent(t));
