@@ -35,7 +35,7 @@ $('b1').onclick=function(){$('b1').disabled=true;gravar(15,function(t){st('s1',t
 $('b2').onclick=function(){$('b2').disabled=true;var seg=Math.max(6,Math.min(15,Math.ceil($('fr').textContent.split(' ').length*0.8)+3));
  gravar(seg,function(t){st('s2',t>0?'Gravando… '+t+'s':'Enviando…')}).then(function(r){return subir(r.wav)}).then(function(url){return post({acao:'criar',taskId:estado.task,url:url})})
  .then(function(){st('s2','✅ Enviado. Criando sua voz (até 1-2 min)…');return esperar(function(x){return x.estado==='success'},4000,60)})
- .then(function(){st('s2','✅ Voz criada! ID: '+estado.task);$('c3').classList.remove('off')}).catch(function(e){st('s2','❌ '+e.message+' — tente gravar a frase de novo');$('b2').disabled=false})};
+ .then(function(){st('s2','✅ Voz criada! ID: '+estado.task);$('c3').classList.remove('off')}).catch(function(e){st('s2','❌ '+e.message+' — comece de novo pelo passo 1');$('b1').disabled=false;st('s1','');$('c2').classList.add('off');$('b2').disabled=false})};
 $('b3').onclick=function(){$('b3').disabled=true;st('s3','Gerando…');
  fetch('/.netlify/functions/gerar-musica',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({estilo:'sertanejo',texto:'Teste da música cantada com a voz do próprio cliente, para conferir a qualidade em português.',letraAprovada:$('letra').value,vozId:estado.task,origem:'painel',relacao:'namorada',ocasiao:'Surpresa'})})
  .then(function(r){return r.json()}).then(function(d){if(!d.taskId)throw new Error(d.erro||'não começou');var n=0;(function v(){fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(d.taskId)).then(function(r){return r.json()}).then(function(x){

@@ -32,8 +32,10 @@ export default async (req) => {
       const frase = (res.data && (res.data.verify_phrase_text || res.data.verifyPhraseText)) || res.verify_phrase_text || null;
       return json({ estado: String(d.state || '').toLowerCase(), frase, erro: d.failMsg || null });
     }
-    if (!chave()) return json({ erro: 'Kie não configurada.' }, 503);
     const b = await req.json().catch(() => ({}));
+    // callback da Kie (ela exige uma URL que responda 200) — guarda o último resultado pra conferência
+    if (u.searchParams.get('cb')) { try { await st().setJSON('cb_' + Date.now(), { b, em: Date.now() }); } catch (e) {} return json({ ok: true }); }
+    if (!chave()) return json({ erro: 'Kie não configurada.' }, 503);
     if (b.acao === 'subir') {
       const bin = Buffer.from(String(b.b64 || ''), 'base64');
       if (bin.length < 8000 || bin.length > 6e6) return json({ erro: 'Áudio muito curto ou muito grande.' }, 400);
@@ -44,12 +46,12 @@ export default async (req) => {
     if (b.acao === 'frase') {
       if (!/\/\.netlify\/functions\/voz\?a=/.test(String(b.url || ''))) return json({ erro: 'url?' }, 400);
       const dur = Math.max(5, Math.min(30, Math.floor(Number(b.dur) || 15)));
-      const d = await kie('/api/v1/jobs/createTask', { model: 'ai-music-api/validation-phrase', input: { voice_url: b.url, vocal_start_s: 0, vocal_end_s: dur, language: b.idioma === 'en' ? 'en' : 'pt' } });
+      const d = await kie('/api/v1/jobs/createTask', { model: 'ai-music-api/validation-phrase', callBackUrl: BASE() + '/.netlify/functions/voz?cb=1', input: { voice_url: b.url, vocal_start_s: 0, vocal_end_s: dur, language: b.idioma === 'en' ? 'en' : 'pt' } });
       return json({ taskId: d.taskId || d.task_id });
     }
     if (b.acao === 'criar') {
       if (!/\/\.netlify\/functions\/voz\?a=/.test(String(b.url || '')) || !/^[A-Za-z0-9_-]{6,80}$/.test(String(b.taskId || ''))) return json({ erro: 'dados?' }, 400);
-      const d = await kie('/api/v1/jobs/createTask', { model: 'ai-music-api/create-voice', input: { task_id: b.taskId, verify_url: b.url, voice_name: 'Cliente Capivarinha', singer_skill_level: 'beginner' } });
+      const d = await kie('/api/v1/jobs/createTask', { model: 'ai-music-api/create-voice', callBackUrl: BASE() + '/.netlify/functions/voz?cb=1', input: { task_id: b.taskId, verify_url: b.url, voice_name: 'Cliente Capivarinha', singer_skill_level: 'beginner' } });
       return json({ ok: true, criarId: d.taskId || d.task_id });
     }
     return json({ erro: 'ação?' }, 400);
