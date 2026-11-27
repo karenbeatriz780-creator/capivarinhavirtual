@@ -10,9 +10,9 @@ button{width:100%;padding:1rem;border:0;border-radius:14px;font-size:1.05rem;fon
 audio{width:100%;margin-top:.6rem}textarea{width:100%;box-sizing:border-box;min-height:110px;border-radius:10px;padding:.6rem;font-size:.95rem;text-align:left}</style></head><body>
 <h1>🎤 Teste: música com a minha voz</h1>
 <div class="card" id="cv">
-  <div class="rot" id="rot">Cante junto, é rapidinho</div>
+  <div class="rot" id="rot">Cante junto · uns 40 segundos no total</div>
   <div class="cont" id="cont">🎤</div>
-  <div class="kara" id="kara">Toque no botão e cante as frases que aparecerem, como num karaokê.</div>
+  <div class="kara" id="kara">Lugar silencioso, celular a um palmo da boca. Cante com a sua voz normal as frases que aparecerem.</div>
   <button id="bv">▶ Começar</button>
   <div class="st" id="sv"></div>
 </div>
@@ -24,7 +24,17 @@ Capivarinha Love, minha emoção
 Cada nota é uma declaração</textarea><button id="bm">🎶 Gerar música na minha voz</button><div class="st" id="sm"></div><div id="aud"></div></div>
 <script>
 // Frase fixa (nossa) = amostra da voz. Depois a Kie manda a frase de verificação, que aparece igual karaokê.
-var FRASE1='Essa música é pra você, com todo amor do meu coração, lá lá lá';
+var LINHAS1=['Essa música é pra você','Com todo amor do meu coração','Cada dia ao seu lado é uma canção','Lá lá lá, lá lá lá, minha emoção','Vou cantar pra sempre essa paixão'];
+var SEG1=28;
+// amostra longa (~28 s): as linhas vão aparecendo uma a uma, como karaokê, numa gravação só
+function cantarLongo(linhas,seg){var por=seg/linhas.length,atual=-1;
+ return contagem().then(function(){return new Promise(function(ok,erro){var rec=new MediaRecorder(stream),pd=[];rec.ondataavailable=function(e){if(e.data.size)pd.push(e.data)};
+  rec.onstop=function(){new Blob(pd).arrayBuffer().then(function(ab){return new (window.AudioContext||window.webkitAudioContext)().decodeAudioData(ab)}).then(function(b){ok({wav:wav(b),dur:b.duration})}).catch(erro)};
+  rec.start();var t0=Date.now(),iv=setInterval(function(){var el=(Date.now()-t0)/1000,i=Math.min(linhas.length-1,Math.floor(el/por));
+   if(i!==atual){atual=i;karaoke(linhas[i]);$('rot').textContent='Frase '+(i+1)+' de '+linhas.length+' · '+Math.max(0,Math.ceil(seg-el))+'s';}
+   var f=(el-i*por)/(por*0.85),sp=$('kara').querySelectorAll('span');sp.forEach(function(s,j){s.className=(j<f*sp.length)?'on':''});
+   $('rot').textContent='Linha '+(i+1)+' de '+linhas.length+' · '+Math.max(0,Math.ceil(seg-el))+'s';
+   if(el>=seg){clearInterval(iv);rec.stop()}},120)})})}
 var $=function(i){return document.getElementById(i)},F='/.netlify/functions/voz',task=null,stream=null;
 function wav(buf){var ch=buf.getChannelData(0),sr=buf.sampleRate,alvo=24000,k=sr/alvo,n=Math.floor(ch.length/k),dv=new DataView(new ArrayBuffer(44+n*2));
  function w(o,s){for(var i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i))}
@@ -43,10 +53,10 @@ function subir(w){return fetch(F,{method:'POST',headers:{'Content-Type':'applica
 function post(o){return fetch(F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(function(r){return r.json()}).then(function(d){if(d.erro)throw new Error(d.erro);return d})}
 function esperarKie(cond,ms,tent){return new Promise(function(ok,erro){var n=0;(function v(){fetch(F+'?t='+encodeURIComponent(task)).then(function(r){return r.json()}).then(function(d){if(cond(d))return ok(d);if(d.estado==='fail')return erro(new Error(d.erro||'falhou'));if(++n>tent)return erro(new Error('demorou demais'));setTimeout(v,ms)}).catch(function(){setTimeout(v,ms)})})()})}
 $('bv').onclick=function(){$('bv').disabled=true;$('sv').textContent='';
- navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false}}).then(function(s){stream=s;$('rot').textContent='Frase 1 de 2';return cantar(FRASE1)})
+ navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false}}).then(function(s){stream=s;return cantarLongo(LINHAS1,SEG1)})
  .then(function(r){$('cont').textContent='⏳';$('kara').textContent='Ouvindo sua voz…';return subir(r.wav).then(function(url){return post({acao:'frase',url:url,dur:r.dur})})})
  .then(function(d){task=d.taskId;return esperarKie(function(x){return !!x.frase},2500,60)})
- .then(function(d){$('rot').textContent='Frase 2 de 2';$('kara').textContent=d.frase;$('cont').textContent='👀';return espera(2500).then(function(){return cantar(d.frase)})})
+ .then(function(d){$('rot').textContent='Última frase (verificação)';$('kara').textContent=d.frase;$('cont').textContent='👀';return espera(2500).then(function(){return cantar(d.frase)})})
  .then(function(r){$('cont').textContent='⏳';$('kara').textContent='Criando a sua voz… (até 1 minuto)';return subir(r.wav).then(function(url){return post({acao:'criar',taskId:task,url:url})})})
  .then(function(){return esperarKie(function(x){return x.estado==='success'},4000,60)})
  .then(function(){if(stream)stream.getTracks().forEach(function(t){t.stop()});$('cont').textContent='✅';$('rot').textContent='Pronto';$('kara').textContent='Sua voz foi criada!';$('cm').style.display='block'})
