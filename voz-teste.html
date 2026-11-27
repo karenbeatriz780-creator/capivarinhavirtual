@@ -24,17 +24,19 @@ Capivarinha Love, minha emoção
 Cada nota é uma declaração</textarea><button id="bm">🎶 Gerar música na minha voz</button><div class="st" id="sm"></div><div id="aud"></div></div>
 <script>
 // Frase fixa (nossa) = amostra da voz. Depois a Kie manda a frase de verificação, que aparece igual karaokê.
-var LINHAS1=['Essa música é pra você','Com todo amor do meu coração','Cada dia ao seu lado é uma canção','Lá lá lá, lá lá lá, minha emoção','Vou cantar pra sempre essa paixão'];
+var LINHAS1=['Hoje o dia amanheceu bonito','O sol brilhando lá no céu azul','Eu canto alto e canto devagar','Lá lá lá, ô ô ô, ê ê ê','Essa é a minha voz, pode escutar']; // neutras (sem romance) e com vogais abertas pra testar a voz
 var SEG1=28;
 // amostra longa (~28 s): as linhas vão aparecendo uma a uma, como karaokê, numa gravação só
-function cantarLongo(linhas,seg){var por=seg/linhas.length,atual=-1;
+function cantarLongo(linhas,seg){var por=seg/linhas.length,atual=-1;$('bv').style.display='none';var bt=document.createElement('button');bt.id='bfim';bt.textContent='✓ Terminei de cantar';$('cv').appendChild(bt);
  return contagem().then(function(){return new Promise(function(ok,erro){var rec=new MediaRecorder(stream),pd=[];rec.ondataavailable=function(e){if(e.data.size)pd.push(e.data)};
   rec.onstop=function(){new Blob(pd).arrayBuffer().then(function(ab){return new (window.AudioContext||window.webkitAudioContext)().decodeAudioData(ab)}).then(function(b){ok({wav:wav(b),dur:b.duration})}).catch(erro)};
-  rec.start();var t0=Date.now(),iv=setInterval(function(){var el=(Date.now()-t0)/1000,i=Math.min(linhas.length-1,Math.floor(el/por));
+  rec.start();var t0=Date.now(),parar=function(){clearInterval(iv);var b=$('bfim');if(b)b.remove();$('bv').style.display='';if(rec.state!=='inactive')rec.stop()};
+  bt.onclick=function(){if(Date.now()-t0<15000){$('sv').textContent='Cante pelo menos até a 3ª linha 🙂';return}$('sv').textContent='';parar()};
+  var iv=setInterval(function(){var el=(Date.now()-t0)/1000,i=Math.min(linhas.length-1,Math.floor(el/por));
    if(i!==atual){atual=i;karaoke(linhas[i]);$('rot').textContent='Frase '+(i+1)+' de '+linhas.length+' · '+Math.max(0,Math.ceil(seg-el))+'s';}
    var f=(el-i*por)/(por*0.85),sp=$('kara').querySelectorAll('span');sp.forEach(function(s,j){s.className=(j<f*sp.length)?'on':''});
    $('rot').textContent='Linha '+(i+1)+' de '+linhas.length+' · '+Math.max(0,Math.ceil(seg-el))+'s';
-   if(el>=seg){clearInterval(iv);rec.stop()}},120)})})}
+   if(el>=seg)parar()},120)})})}
 var $=function(i){return document.getElementById(i)},F='/.netlify/functions/voz',task=null,stream=null;
 function wav(buf){var ch=buf.getChannelData(0),sr=buf.sampleRate,alvo=24000,k=sr/alvo,n=Math.floor(ch.length/k),dv=new DataView(new ArrayBuffer(44+n*2));
  function w(o,s){for(var i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i))}
