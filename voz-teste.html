@@ -1,45 +1,60 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <title>Teste — cantar com a minha voz</title>
 <style>body{font-family:system-ui,sans-serif;background:#fff5f8;color:#3a0a1e;margin:0;padding:1.2rem;max-width:520px;margin:auto}h1{font-size:1.3rem;color:#c2185b}
-.card{background:#fff;border-radius:16px;padding:1rem;margin:1rem 0;box-shadow:0 4px 16px rgba(194,24,91,.12)}.card.off{opacity:.45;pointer-events:none}
-button{width:100%;padding:.9rem;border:0;border-radius:12px;font-size:1rem;font-weight:800;background:#c2185b;color:#fff;margin-top:.6rem}button.gr{background:#3a0a1e}
-.frase{font-size:1.25rem;font-weight:800;background:#ffe1e9;border-radius:12px;padding:.8rem;margin:.6rem 0;text-align:center}.st{font-size:.9rem;margin-top:.5rem;white-space:pre-wrap}audio{width:100%;margin-top:.6rem}textarea{width:100%;box-sizing:border-box;min-height:110px;border-radius:10px;padding:.6rem;font-size:.95rem}</style></head><body>
+.card{background:#fff;border-radius:18px;padding:1.1rem;margin:1rem 0;box-shadow:0 4px 16px rgba(194,24,91,.12);text-align:center}
+button{width:100%;padding:1rem;border:0;border-radius:14px;font-size:1.05rem;font-weight:800;background:#c2185b;color:#fff;margin-top:.7rem}button:disabled{opacity:.5}
+.cont{font-size:4.5rem;font-weight:900;color:#c2185b;height:5.2rem;line-height:5.2rem}
+.kara{font-size:1.45rem;font-weight:800;line-height:1.5;min-height:4.4rem;padding:.4rem}.kara span{transition:color .2s}.kara span.on{color:#c2185b}
+.rot{font-size:.85rem;font-weight:700;color:#8a5a6a;text-transform:uppercase;letter-spacing:.05em}.st{font-size:.92rem;margin-top:.6rem;min-height:1.2rem}
+.rec{display:inline-block;width:.7rem;height:.7rem;background:#e53935;border-radius:50%;margin-right:.3rem;animation:p 1s infinite}@keyframes p{50%{opacity:.2}}
+audio{width:100%;margin-top:.6rem}textarea{width:100%;box-sizing:border-box;min-height:110px;border-radius:10px;padding:.6rem;font-size:.95rem;text-align:left}</style></head><body>
 <h1>🎤 Teste: música com a minha voz</h1>
-<p>Página só pra teste (o cliente não vê). Use fone se puder e grave em lugar silencioso.</p>
-<div class="card" id="c1"><b>1. Cante qualquer trecho por 15 segundos</b><div class="st">Pode ser um pedaço de uma música que você gosta. Cante, não fale.</div><button id="b1">● Gravar 15 segundos</button><div class="st" id="s1"></div></div>
-<div class="card off" id="c2"><b>2. Agora cante esta frase</b><div class="frase" id="fr">…</div><button id="b2">● Gravar a frase</button><div class="st" id="s2"></div></div>
-<div class="card off" id="c3"><b>3. Gerar uma música com a sua voz</b><textarea id="letra">[Verso]
+<div class="card" id="cv">
+  <div class="rot" id="rot">Cante junto, é rapidinho</div>
+  <div class="cont" id="cont">🎤</div>
+  <div class="kara" id="kara">Toque no botão e cante as frases que aparecerem, como num karaokê.</div>
+  <button id="bv">▶ Começar</button>
+  <div class="st" id="sv"></div>
+</div>
+<div class="card" id="cm" style="display:none"><b>Gerar uma música com a sua voz</b><textarea id="letra">[Verso]
 Gusthavo canta essa canção
 Com a voz que vem do coração
 [Refrão]
 Capivarinha Love, minha emoção
-Cada nota é uma declaração</textarea><button id="b3">🎶 Gerar música na minha voz</button><div class="st" id="s3"></div><div id="aud"></div></div>
+Cada nota é uma declaração</textarea><button id="bm">🎶 Gerar música na minha voz</button><div class="st" id="sm"></div><div id="aud"></div></div>
 <script>
-var $=function(i){return document.getElementById(i)},F='/.netlify/functions/voz',estado={};
-function st(i,t){$(i).textContent=t}
+// Frase fixa (nossa) = amostra da voz. Depois a Kie manda a frase de verificação, que aparece igual karaokê.
+var FRASE1='Essa música é pra você, com todo amor do meu coração, lá lá lá';
+var $=function(i){return document.getElementById(i)},F='/.netlify/functions/voz',task=null,stream=null;
 function wav(buf){var ch=buf.getChannelData(0),sr=buf.sampleRate,alvo=24000,k=sr/alvo,n=Math.floor(ch.length/k),dv=new DataView(new ArrayBuffer(44+n*2));
  function w(o,s){for(var i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i))}
  w(0,'RIFF');dv.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,alvo,true);dv.setUint32(28,alvo*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,n*2,true);
  for(var i=0;i<n;i++){var v=Math.max(-1,Math.min(1,ch[Math.floor(i*k)]));dv.setInt16(44+i*2,v<0?v*32768:v*32767,true)}return dv.buffer}
 function b64(ab){var s='',u=new Uint8Array(ab);for(var i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)}
-function gravar(seg,onTick){return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false}}).then(function(stream){
- return new Promise(function(ok,erro){var rec=new MediaRecorder(stream),pd=[];rec.ondataavailable=function(e){if(e.data.size)pd.push(e.data)};
-  rec.onstop=function(){stream.getTracks().forEach(function(t){t.stop()});new Blob(pd).arrayBuffer().then(function(ab){var ac=new (window.AudioContext||window.webkitAudioContext)();return ac.decodeAudioData(ab)}).then(function(buf){ok({wav:wav(buf),dur:buf.duration})}).catch(erro)};
-  rec.start();var t=seg;onTick(t);var iv=setInterval(function(){t--;onTick(t);if(t<=0){clearInterval(iv);rec.stop()}},1000)})})}
-function subir(w){return fetch(F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'subir',b64:b64(w)})}).then(function(r){return r.json()}).then(function(d){if(!d.url)throw new Error(d.erro||'falhou ao subir');return d.url})}
+function espera(ms){return new Promise(function(ok){setTimeout(ok,ms)})}
+function contagem(){var n=[3,2,1],i=0;return new Promise(function(ok){(function t(){if(i<n.length){$('cont').textContent=n[i++];setTimeout(t,800)}else{$('cont').innerHTML='<span class="rec"></span>Cante!';ok()}})()})}
+function karaoke(frase){var ws=frase.split(/\s+/);$('kara').innerHTML=ws.map(function(w){return '<span>'+w.replace(/</g,'')+'</span>'}).join(' ');return ws.length}
+// grava cantando a frase: contagem 3-2-1, destaca palavra por palavra, para sozinho e devolve o WAV
+function cantar(frase){var nw=karaoke(frase),seg=Math.max(5,Math.min(14,nw*0.65+2));
+ return contagem().then(function(){return new Promise(function(ok,erro){var rec=new MediaRecorder(stream),pd=[];rec.ondataavailable=function(e){if(e.data.size)pd.push(e.data)};
+  rec.onstop=function(){new Blob(pd).arrayBuffer().then(function(ab){return new (window.AudioContext||window.webkitAudioContext)().decodeAudioData(ab)}).then(function(b){ok({wav:wav(b),dur:b.duration})}).catch(erro)};
+  rec.start();var sp=$('kara').querySelectorAll('span'),t0=Date.now(),iv=setInterval(function(){var f=(Date.now()-t0)/((seg-1.2)*1000);sp.forEach(function(s,i){s.className=(i<f*sp.length)?'on':''});if(Date.now()-t0>=seg*1000){clearInterval(iv);rec.stop()}},120)})})}
+function subir(w){return fetch(F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'subir',b64:b64(w)})}).then(function(r){return r.json()}).then(function(d){if(!d.url)throw new Error(d.erro||'falhou ao enviar');return d.url})}
 function post(o){return fetch(F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(function(r){return r.json()}).then(function(d){if(d.erro)throw new Error(d.erro);return d})}
-function esperar(cond,ms,tent){return new Promise(function(ok,erro){var n=0;(function v(){fetch(F+'?t='+encodeURIComponent(estado.task)).then(function(r){return r.json()}).then(function(d){if(cond(d))return ok(d);if(d.estado==='fail')return erro(new Error(d.erro||'falhou'));if(++n>tent)return erro(new Error('demorou demais'));setTimeout(v,ms)}).catch(function(){setTimeout(v,ms)})})()})}
-$('b1').onclick=function(){$('b1').disabled=true;gravar(15,function(t){st('s1',t>0?'Gravando… '+t+'s':'Enviando…')}).then(function(r){return subir(r.wav).then(function(url){return post({acao:'frase',url:url,dur:r.dur})})})
- .then(function(d){estado.task=d.taskId;st('s1','✅ Amostra enviada. Preparando a frase…');return esperar(function(x){return !!x.frase},3000,60)})
- .then(function(d){$('fr').textContent=d.frase;$('c2').classList.remove('off');st('s1','✅ Pronto')}).catch(function(e){st('s1','❌ '+e.message);$('b1').disabled=false})};
-$('b2').onclick=function(){$('b2').disabled=true;var seg=Math.max(6,Math.min(15,Math.ceil($('fr').textContent.split(' ').length*0.8)+3));
- gravar(seg,function(t){st('s2',t>0?'Gravando… '+t+'s':'Enviando…')}).then(function(r){return subir(r.wav)}).then(function(url){return post({acao:'criar',taskId:estado.task,url:url})})
- .then(function(){st('s2','✅ Enviado. Criando sua voz (até 1-2 min)…');return esperar(function(x){return x.estado==='success'},4000,60)})
- .then(function(){st('s2','✅ Voz criada! ID: '+estado.task);$('c3').classList.remove('off')}).catch(function(e){st('s2','❌ '+e.message+' — comece de novo pelo passo 1');$('b1').disabled=false;st('s1','');$('c2').classList.add('off');$('b2').disabled=false})};
-$('b3').onclick=function(){$('b3').disabled=true;st('s3','Gerando…');
- fetch('/.netlify/functions/gerar-musica',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({estilo:'sertanejo',texto:'Teste da música cantada com a voz do próprio cliente, para conferir a qualidade em português.',letraAprovada:$('letra').value,vozId:estado.task,origem:'painel',relacao:'namorada',ocasiao:'Surpresa'})})
+function esperarKie(cond,ms,tent){return new Promise(function(ok,erro){var n=0;(function v(){fetch(F+'?t='+encodeURIComponent(task)).then(function(r){return r.json()}).then(function(d){if(cond(d))return ok(d);if(d.estado==='fail')return erro(new Error(d.erro||'falhou'));if(++n>tent)return erro(new Error('demorou demais'));setTimeout(v,ms)}).catch(function(){setTimeout(v,ms)})})()})}
+$('bv').onclick=function(){$('bv').disabled=true;$('sv').textContent='';
+ navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false}}).then(function(s){stream=s;$('rot').textContent='Frase 1 de 2';return cantar(FRASE1)})
+ .then(function(r){$('cont').textContent='⏳';$('kara').textContent='Ouvindo sua voz…';return subir(r.wav).then(function(url){return post({acao:'frase',url:url,dur:r.dur})})})
+ .then(function(d){task=d.taskId;return esperarKie(function(x){return !!x.frase},2500,60)})
+ .then(function(d){$('rot').textContent='Frase 2 de 2';$('kara').textContent=d.frase;$('cont').textContent='👀';return espera(2500).then(function(){return cantar(d.frase)})})
+ .then(function(r){$('cont').textContent='⏳';$('kara').textContent='Criando a sua voz… (até 1 minuto)';return subir(r.wav).then(function(url){return post({acao:'criar',taskId:task,url:url})})})
+ .then(function(){return esperarKie(function(x){return x.estado==='success'},4000,60)})
+ .then(function(){if(stream)stream.getTracks().forEach(function(t){t.stop()});$('cont').textContent='✅';$('rot').textContent='Pronto';$('kara').textContent='Sua voz foi criada!';$('cm').style.display='block'})
+ .catch(function(e){if(stream)stream.getTracks().forEach(function(t){t.stop()});$('cont').textContent='😕';$('kara').textContent='Não deu certo dessa vez.';$('sv').textContent='❌ '+e.message;$('bv').textContent='↻ Tentar de novo';$('bv').disabled=false})};
+$('bm').onclick=function(){$('bm').disabled=true;$('sm').textContent='Gerando…';
+ fetch('/.netlify/functions/gerar-musica',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({estilo:'sertanejo',texto:'Teste da música cantada com a voz do próprio cliente, para conferir a qualidade em português.',letraAprovada:$('letra').value,vozId:task,origem:'painel',relacao:'namorada',ocasiao:'Surpresa'})})
  .then(function(r){return r.json()}).then(function(d){if(!d.taskId)throw new Error(d.erro||'não começou');var n=0;(function v(){fetch('/.netlify/functions/gerar-musica-status?taskId='+encodeURIComponent(d.taskId)).then(function(r){return r.json()}).then(function(x){
-  if(x.url){st('s3','✅ Pronta!');$('aud').innerHTML='<audio controls src="'+x.url+'"></audio>'+(x.url2?'<audio controls src="'+x.url2+'"></audio>':'');$('b3').disabled=false;return}
-  if(x.erro||x.status==='failed'){st('s3','❌ '+(x.erro||x.message||'falhou'));$('b3').disabled=false;return}
-  st('s3','Gerando… '+(++n*5)+'s');setTimeout(v,5000)}).catch(function(){setTimeout(v,5000)})})()}).catch(function(e){st('s3','❌ '+e.message);$('b3').disabled=false})};
+  if(x.url){$('sm').textContent='✅ Pronta!';$('aud').innerHTML='<audio controls src="'+x.url+'"></audio>'+(x.url2?'<audio controls src="'+x.url2+'"></audio>':'');$('bm').disabled=false;return}
+  if(x.erro||x.status==='failed'){$('sm').textContent='❌ '+(x.erro||x.message||'falhou');$('bm').disabled=false;return}
+  $('sm').textContent='Gerando… '+(++n*5)+'s';setTimeout(v,5000)}).catch(function(){setTimeout(v,5000)})})()}).catch(function(e){$('sm').textContent='❌ '+e.message;$('bm').disabled=false})};
 </script></body></html>
