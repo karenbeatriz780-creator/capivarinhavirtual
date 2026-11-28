@@ -121,7 +121,10 @@ export async function rodarRobo(simular) {
   // 🏆 estratégia das 10 melhores começa hoje às 23h (depois: todo dia à meia-noite)
   const FLAG_23 = 'top10_23h_20261117';
   if (cfg.autoPausar && !simular && hoje === '2026-11-17' && horaBR(agora) === 23 && !(await L().get(FLAG_23, { type: 'json' }).catch(() => null))) { await L().setJSON(FLAG_23, { em: agora }).catch(() => {}); jaAgora = true; }
-  if (cfg.autoPausar && (jaAgora || !(await L().get(flagMN, { type: 'json' }).catch(() => null)))) {
+  // 27/11 22h (Gusthavo): À MEIA-NOITE O ROBÔ NÃO FAZ NADA — não liga nenhuma (nem as marcadas, nem aprendizagem) e não desliga as que estão ligadas.
+  // Pra voltar a regra da aba 🌙, trocar MEIA_NOITE_LIGADA pra true.
+  const MEIA_NOITE_LIGADA = false;
+  if (MEIA_NOITE_LIGADA && cfg.autoPausar && (jaAgora || !(await L().get(flagMN, { type: 'json' }).catch(() => null)))) {
     if (!simular && !jaAgora) await L().setJSON(flagMN, { em: agora }).catch(() => {});
     if (horaBR(agora) === 0 || jaAgora) { // só na primeira rodada do dia novo (00h17) — ou na aplicação única
       const mn = (await L().get('meianoite_cfg', { type: 'json' }).catch(() => null)) || {}, fora = mn.fora || [];
